@@ -1,0 +1,43 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Sombras Sutiles -->
+    <DropShadowEffect x:Key="SombraSuave"
+                      BlurRadius="8"
+                      ShadowDepth="2"
+                      Opacity="0.08"
+                      Color="#0F172A"/>
+
+    <DropShadowEffect x:Key="SombraMedia"
+                      BlurRadius="12"
+                      ShadowDepth="4"
+                      Opacity="0.12"
+                      Color="#0F172A"/>
+
+    <DropShadowEffect x:Key="SombraAlta"
+                      BlurRadius="16"
+                      ShadowDepth="6"
+                      Opacity="0.16"
+                      Color="#0F172A"/>
+
+    <DropShadowEffect x:Key="SombraFuerte"
+                      BlurRadius="24"
+                      ShadowDepth="8"
+                      Opacity="0.2"
+                      Color="#0F172A"/>
+
+    <!-- Sombra para Hover -->
+    <DropShadowEffect x:Key="SombraHover"
+                      BlurRadius="20"
+                      ShadowDepth="8"
+                      Opacity="0.15"
+                      Color="#0F172A"/>
+
+    <!-- Sombra para Focus -->
+    <DropShadowEffect x:Key="SombraFocus"
+                      BlurRadius="0"
+                      ShadowDepth="0"
+                      Opacity="0.4"
+                      Color="#2563EB"/>
+
+</ResourceDictionary>

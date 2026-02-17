@@ -1,0 +1,46 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Geometrias de Iconos (usando Segoe MDL2 Assets) -->
+
+    <!-- Iconos Comunes -->
+    <system:String x:Key="IconoHome" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE80F;</system:String>
+    <system:String x:Key="IconoBuscar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE721;</system:String>
+    <system:String x:Key="IconoAgregar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE710;</system:String>
+    <system:String x:Key="IconoEditar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE70F;</system:String>
+    <system:String x:Key="IconoEliminar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE74D;</system:String>
+    <system:String x:Key="IconoGuardar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE74E;</system:String>
+    <system:String x:Key="IconoCancelar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE711;</system:String>
+    <system:String x:Key="IconoRefresh" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE72C;</system:String>
+    <system:String x:Key="IconoFiltro" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE71C;</system:String>
+    <system:String x:Key="IconoOpciones" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE713;</system:String>
+
+    <!-- Iconos de Navegacion -->
+    <system:String x:Key="IconoAtras" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE72B;</system:String>
+    <system:String x:Key="IconoSiguiente" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE72A;</system:String>
+    <system:String x:Key="IconoMenu" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE700;</system:String>
+    <system:String x:Key="IconoCerrar" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE8BB;</system:String>
+
+    <!-- Iconos de Comercio -->
+    <system:String x:Key="IconoCarrito" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE7BF;</system:String>
+    <system:String x:Key="IconoVenta" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE7BF;</system:String>
+    <system:String x:Key="IconoProducto" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE7C1;</system:String>
+    <system:String x:Key="IconoInventario" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE8F1;</system:String>
+    <system:String x:Key="IconoReporte" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE9F9;</system:String>
+    <system:String x:Key="IconoCliente" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE77B;</system:String>
+    <system:String x:Key="IconoProveedor" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE8D4;</system:String>
+    <system:String x:Key="IconoDinero" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE8D0;</system:String>
+    <system:String x:Key="IconoCaja" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE74C;</system:String>
+
+    <!-- Iconos de Estado -->
+    <system:String x:Key="IconoExito" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE73E;</system:String>
+    <system:String x:Key="IconoError" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE783;</system:String>
+    <system:String x:Key="IconoAdvertencia" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE7BA;</system:String>
+    <system:String x:Key="IconoInfo" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE946;</system:String>
+
+    <!-- Iconos de Usuario -->
+    <system:String x:Key="IconoUsuario" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE77B;</system:String>
+    <system:String x:Key="IconoConfiguracion" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xE713;</system:String>
+    <system:String x:Key="IconoCerrarSesion" xmlns:system="clr-namespace:System;assembly=mscorlib">&#xF3B1;</system:String>
+
+</ResourceDictionary>

@@ -1,0 +1,19 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+
+    <ResourceDictionary.MergedDictionaries>
+
+        <!-- Diccionarios base -->
+        <ResourceDictionary Source="Diccionarios/Colores.xaml"/>
+        <ResourceDictionary Source="Diccionarios/Fuentes.xaml"/>
+        <ResourceDictionary Source="Diccionarios/Espaciado.xaml"/>
+        <ResourceDictionary Source="Diccionarios/Elevaciones.xaml"/>
+
+        <!-- Estilos -->
+        <ResourceDictionary Source="Estilos/Botones.xaml"/>
+        <ResourceDictionary Source="Estilos/DataGrid.xaml"/>
+        <ResourceDictionary Source="Estilos/Tarjetas.xaml"/>
+
+    </ResourceDictionary.MergedDictionaries>
+
+</ResourceDictionary>

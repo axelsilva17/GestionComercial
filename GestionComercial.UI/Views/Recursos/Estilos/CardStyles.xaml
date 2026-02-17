@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Definicion de los recursos de color requeridos para evitar XDG-0001 -->
+    <SolidColorBrush x:Key="ColorFondoPrincipalBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ColorFondoSecundarioBrush" Color="#FFF6F6F6"/>
+    <SolidColorBrush x:Key="ColorBordeBrush" Color="#FFE0E0E0"/>
+
+    <!-- Recursos locales necesarios -->
+    <Thickness x:Key="PaddingL">16</Thickness>
+    <CornerRadius x:Key="RadiusL">8</CornerRadius>
+
+    <DropShadowEffect x:Key="SombraSuave"
+                      BlurRadius="8"
+                      ShadowDepth="2"
+                      Opacity="0.08"
+                      Color="#0F172A"/>
+
+    <DropShadowEffect x:Key="SombraMedia"
+                      BlurRadius="12"
+                      ShadowDepth="4"
+                      Opacity="0.12"
+                      Color="#0F172A"/>
+
+    <!-- Estilo Base de Card -->
+    <Style x:Key="CardBase" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ColorFondoPrincipalBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBordeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusL}"/>
+        <Setter Property="Padding" Value="{StaticResource PaddingL}"/>
+        <Setter Property="Effect" Value="{StaticResource SombraSuave}"/>
+    </Style>
+
+    <!-- Card con Hover -->
+    <Style x:Key="CardHoverable" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Effect" Value="{StaticResource SombraMedia}"/>
+                <Setter Property="Background" Value="{StaticResource ColorFondoSecundarioBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Card Elevada -->
+    <Style x:Key="CardElevada" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Setter Property="Effect" Value="{StaticResource SombraMedia}"/>
+    </Style>
+
+    <!-- Card sin Borde -->
+    <Style x:Key="CardSinBorde" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+</ResourceDictionary>

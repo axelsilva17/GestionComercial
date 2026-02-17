@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
+    <ProjectReference Include="..\GestionComercial.Dominio\GestionComercial.Dominio.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Impresion\" />
+    <Folder Include="Logs\" />
+    <Folder Include="Backups\" />
+  </ItemGroup>
+
+</Project>
