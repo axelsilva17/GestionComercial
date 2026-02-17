@@ -8,7 +8,7 @@ namespace GestionComercial.UI.Views.Main
         public LoginView()
         {
             InitializeComponent();
-            
+
             // Permitir arrastrar la ventana
             MouseLeftButtonDown += (s, e) => DragMove();
         }
@@ -62,10 +62,15 @@ namespace GestionComercial.UI.Views.Main
         {
             ErrorText.Text = mensaje;
             ErrorContainer.Visibility = Visibility.Visible;
-            
+
             // Animar el mensaje de error
             var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.3));
             ErrorContainer.BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        private void UsuarioBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+
         }
     }
 }

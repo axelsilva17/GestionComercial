@@ -1,54 +1,35 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Colores Primarios -->
-    <SolidColorBrush x:Key="ColorPrimarioBrush" Color="#2563EB"/>
-    <SolidColorBrush x:Key="ColorPrimarioHoverBrush" Color="#1D4ED8"/>
-    <SolidColorBrush x:Key="ColorPrimarioPressBrush" Color="#1E40AF"/>
-    <SolidColorBrush x:Key="ColorPrimarioLightBrush" Color="#DBEAFE"/>
+    <!-- Fondos -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#0F172A"/>
+    <!-- Fondo principal oscuro -->
+    <SolidColorBrush x:Key="CardBrush" Color="#1E293B"/>
+    <!-- Tarjetas / sidebar -->
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#243447"/>
+    <!-- Superficie secundaria -->
 
-    <!-- Colores Secundarios -->
-    <SolidColorBrush x:Key="ColorSecundarioBrush" Color="#64748B"/>
-    <SolidColorBrush x:Key="ColorSecundarioHoverBrush" Color="#475569"/>
-    <SolidColorBrush x:Key="ColorSecundarioLightBrush" Color="#F1F5F9"/>
+    <!-- Texto -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#7DD3FC"/>
+    <!-- Texto principal claro -->
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#7DD3FC"/>
+    <!-- Texto secundario -->
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="#38BDF8"/>
+    <!-- Texto terciario / secciones -->
 
-    <!-- Colores de Estado -->
-    <SolidColorBrush x:Key="ColorExitoBrush" Color="#10B981"/>
-    <SolidColorBrush x:Key="ColorExitoHoverBrush" Color="#059669"/>
-    <SolidColorBrush x:Key="ColorExitoLightBrush" Color="#D1FAE5"/>
+    <!-- Bordes y hover -->
+    <SolidColorBrush x:Key="BorderBrush" Color="#2A3D52"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#2A3D52"/>
 
-    <SolidColorBrush x:Key="ColorPeligroBrush" Color="#EF4444"/>
-    <SolidColorBrush x:Key="ColorPeligroHoverBrush" Color="#DC2626"/>
-    <SolidColorBrush x:Key="ColorPeligroLightBrush" Color="#FEE2E2"/>
+    <!-- Acciones / colores principales -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#38BDF8"/>
+    <!-- Color primario botones activos -->
+    <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
+    <!-- Color error / cerrar -->
 
-    <SolidColorBrush x:Key="ColorAdvertenciaBrush" Color="#F59E0B"/>
-    <SolidColorBrush x:Key="ColorAdvertenciaHoverBrush" Color="#D97706"/>
-    <SolidColorBrush x:Key="ColorAdvertenciaLightBrush" Color="#FEF3C7"/>
-
-    <SolidColorBrush x:Key="ColorInfoBrush" Color="#3B82F6"/>
-    <SolidColorBrush x:Key="ColorInfoHoverBrush" Color="#2563EB"/>
-    <SolidColorBrush x:Key="ColorInfoLightBrush" Color="#DBEAFE"/>
-
-    <!-- Colores de Texto -->
-    <SolidColorBrush x:Key="ColorTextoPrincipalBrush" Color="#0F172A"/>
-    <SolidColorBrush x:Key="ColorTextoSecundarioBrush" Color="#64748B"/>
-    <SolidColorBrush x:Key="ColorTextoTerciarioBrush" Color="#94A3B8"/>
-    <SolidColorBrush x:Key="ColorTextoClaroBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ColorTextoPlaceholderBrush" Color="#CBD5E1"/>
-
-    <!-- Colores de Fondo -->
-    <SolidColorBrush x:Key="ColorFondoPrincipalBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ColorFondoSecundarioBrush" Color="#F8FAFC"/>
-    <SolidColorBrush x:Key="ColorFondoTerciarioBrush" Color="#F1F5F9"/>
-    <SolidColorBrush x:Key="ColorFondoOscuroBrush" Color="#0F172A"/>
-
-    <!-- Colores de Borde -->
-    <SolidColorBrush x:Key="ColorBordeBrush" Color="#E2E8F0"/>
-    <SolidColorBrush x:Key="ColorBordeHoverBrush" Color="#CBD5E1"/>
-    <SolidColorBrush x:Key="ColorBordeFocusBrush" Color="#2563EB"/>
-
-    <!-- Colores de Superficie -->
-    <SolidColorBrush x:Key="ColorSuperficieBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ColorSuperficieHoverBrush" Color="#F8FAFC"/>
-
+    <SolidColorBrush x:Key="SuccessBrush" Color="#10B981"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="InfoBrush" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="LightBackgroundBrush" Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="DarkBackgroundBrush" Color="#0F1419"/>
 </ResourceDictionary>

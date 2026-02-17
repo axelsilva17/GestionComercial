@@ -1,4 +1,4 @@
-// C#
+
 using Caliburn.Micro;
 
 public class Bootstrapper : BootstrapperBase

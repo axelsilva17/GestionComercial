@@ -10,15 +10,15 @@ namespace GestionComercial.UI.Views.Main
         public ShellView()
         {
             InitializeComponent();
-            
+
             // Cargar vista inicial
             LoadDashboard();
         }
 
-        private void Sidebar_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Animar entrada del sidebar
-            var storyboard = (Storyboard)FindResource("SidebarIn");
+            // Animar entrada de la ventana
+            var storyboard = (Storyboard)FindResource("FadeIn");
             var border = sender as Border;
             border?.BeginStoryboard(storyboard);
         }
@@ -42,40 +42,58 @@ namespace GestionComercial.UI.Views.Main
             if (button != null)
             {
                 button.Tag = "Active";
-                
-                // Cambiar título de página según el botón
+
+                // Cambiar título y subtítulo según el botón
                 switch (button.Name)
                 {
                     case "BtnDashboard":
                         PageTitle.Text = "Dashboard";
+                        PageSubtitle.Text = "Resumen general del sistema";
                         LoadDashboard();
                         break;
                     case "BtnVentas":
                         PageTitle.Text = "Ventas";
+                        PageSubtitle.Text = "Gestión de ventas y facturación";
                         LoadVentas();
+                        break;
+                    case "BtnCompras":
+                        PageTitle.Text = "Compras";
+                        PageSubtitle.Text = "Gestión de órdenes de compra";
+                        LoadCompras();
+                        break;
+                    case "BtnCaja":
+                        PageTitle.Text = "Caja";
+                        PageSubtitle.Text = "Control de movimientos de caja";
+                        LoadCaja();
                         break;
                     case "BtnProductos":
                         PageTitle.Text = "Productos";
+                        PageSubtitle.Text = "Catálogo de productos";
                         LoadProductos();
+                        break;
+                    case "BtnInventario":
+                        PageTitle.Text = "Inventario";
+                        PageSubtitle.Text = "Control de stock y movimientos";
+                        LoadInventario();
                         break;
                     case "BtnClientes":
                         PageTitle.Text = "Clientes";
+                        PageSubtitle.Text = "Base de datos de clientes";
                         LoadClientes();
                         break;
                     case "BtnProveedores":
                         PageTitle.Text = "Proveedores";
+                        PageSubtitle.Text = "Gestión de proveedores";
                         LoadProveedores();
-                        break;
-                    case "BtnInventario":
-                        PageTitle.Text = "Inventario";
-                        LoadInventario();
                         break;
                     case "BtnReportes":
                         PageTitle.Text = "Reportes";
+                        PageSubtitle.Text = "Análisis y reportes estadísticos";
                         LoadReportes();
                         break;
                     case "BtnConfiguracion":
                         PageTitle.Text = "Configuración";
+                        PageSubtitle.Text = "Ajustes del sistema";
                         LoadConfiguracion();
                         break;
                 }
@@ -86,123 +104,142 @@ namespace GestionComercial.UI.Views.Main
         {
             BtnDashboard.Tag = null;
             BtnVentas.Tag = null;
+            BtnCompras.Tag = null;
+            BtnCaja.Tag = null;
             BtnProductos.Tag = null;
+            BtnInventario.Tag = null;
             BtnClientes.Tag = null;
             BtnProveedores.Tag = null;
-            BtnInventario.Tag = null;
             BtnReportes.Tag = null;
             BtnConfiguracion.Tag = null;
         }
 
-        // Métodos para cargar vistas (placeholder)
+        // Métodos para cargar vistas (placeholder - reemplazá con tus vistas reales)
         private void LoadDashboard()
         {
-            var content = new TextBlock
+            var content = new Border
             {
-                Text = "📊 Dashboard\n\nBienvenido al sistema de gestión comercial",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
+                Background = (System.Windows.Media.Brush)FindResource("CardBrush"),
+                CornerRadius = new CornerRadius(16),
+                Padding = new Thickness(40),
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "📊",
+                            FontSize = 48,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 0, 0, 20)
+                        },
+                        new TextBlock
+                        {
+                            Text = "Panel de Control",
+                            FontSize = 28,
+                            FontWeight = FontWeights.SemiBold,
+                            Foreground = (System.Windows.Media.Brush)FindResource("TextPrimaryBrush"),
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 0, 0, 12)
+                        },
+                        new TextBlock
+                        {
+                            Text = "Aquí se mostrará el dashboard con métricas y estadísticas del negocio",
+                            FontSize = 16,
+                            Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush"),
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            TextAlignment = TextAlignment.Center,
+                            TextWrapping = TextWrapping.Wrap
+                        }
+                    }
+                }
             };
             PageContent.Content = content;
         }
 
         private void LoadVentas()
         {
-            var content = new TextBlock
-            {
-                Text = "💰 Ventas\n\nMódulo de ventas en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
-            };
-            PageContent.Content = content;
+            CreatePlaceholder("💳", "Módulo de Ventas", "Sistema de punto de venta y facturación");
+        }
+
+        private void LoadCompras()
+        {
+            CreatePlaceholder("🛒", "Módulo de Compras", "Gestión de órdenes de compra a proveedores");
+        }
+
+        private void LoadCaja()
+        {
+            CreatePlaceholder("💰", "Módulo de Caja", "Control de ingresos, egresos y arqueos");
         }
 
         private void LoadProductos()
         {
-            var content = new TextBlock
-            {
-                Text = "📦 Productos\n\nMódulo de productos en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
-            };
-            PageContent.Content = content;
-        }
-
-        private void LoadClientes()
-        {
-            var content = new TextBlock
-            {
-                Text = "👥 Clientes\n\nMódulo de clientes en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
-            };
-            PageContent.Content = content;
-        }
-
-        private void LoadProveedores()
-        {
-            var content = new TextBlock
-            {
-                Text = "🏢 Proveedores\n\nMódulo de proveedores en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
-            };
-            PageContent.Content = content;
+            CreatePlaceholder("📦", "Módulo de Productos", "Gestión del catálogo de productos y servicios");
         }
 
         private void LoadInventario()
         {
-            var content = new TextBlock
-            {
-                Text = "📋 Inventario\n\nMódulo de inventario en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
-            };
-            PageContent.Content = content;
+            CreatePlaceholder("📋", "Módulo de Inventario", "Control de stock y movimientos de mercadería");
+        }
+
+        private void LoadClientes()
+        {
+            CreatePlaceholder("👥", "Módulo de Clientes", "Gestión de la base de datos de clientes");
+        }
+
+        private void LoadProveedores()
+        {
+            CreatePlaceholder("🏢", "Módulo de Proveedores", "Administración de proveedores y contactos");
         }
 
         private void LoadReportes()
         {
-            var content = new TextBlock
-            {
-                Text = "📈 Reportes\n\nMódulo de reportes en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
-            };
-            PageContent.Content = content;
+            CreatePlaceholder("📈", "Módulo de Reportes", "Análisis estadístico y reportes del negocio");
         }
 
         private void LoadConfiguracion()
         {
-            var content = new TextBlock
+            CreatePlaceholder("⚙️", "Configuración", "Ajustes generales del sistema");
+        }
+
+        private void CreatePlaceholder(string emoji, string title, string description)
+        {
+            var content = new Border
             {
-                Text = "⚙️ Configuración\n\nMódulo de configuración en desarrollo",
-                FontSize = 20,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
+                Background = (System.Windows.Media.Brush)FindResource("CardBrush"),
+                CornerRadius = new CornerRadius(16),
+                Padding = new Thickness(40),
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = emoji,
+                            FontSize = 48,
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 0, 0, 20)
+                        },
+                        new TextBlock
+                        {
+                            Text = title,
+                            FontSize = 28,
+                            FontWeight = FontWeights.SemiBold,
+                            Foreground = (System.Windows.Media.Brush)FindResource("TextPrimaryBrush"),
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            Margin = new Thickness(0, 0, 0, 12)
+                        },
+                        new TextBlock
+                        {
+                            Text = description,
+                            FontSize = 16,
+                            Foreground = (System.Windows.Media.Brush)FindResource("TextSecondaryBrush"),
+                            HorizontalAlignment = HorizontalAlignment.Center,
+                            TextAlignment = TextAlignment.Center,
+                            TextWrapping = TextWrapping.Wrap
+                        }
+                    }
+                }
             };
             PageContent.Content = content;
         }
@@ -222,8 +259,8 @@ namespace GestionComercial.UI.Views.Main
 
         private void Maximize_Click(object sender, RoutedEventArgs e)
         {
-            WindowState = WindowState == WindowState.Maximized 
-                ? WindowState.Normal 
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
                 : WindowState.Maximized;
         }
 
