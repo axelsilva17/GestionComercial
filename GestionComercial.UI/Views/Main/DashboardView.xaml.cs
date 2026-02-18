@@ -8,5 +8,10 @@ namespace GestionComercial.UI.Views.Main
         {
             InitializeComponent();
         }
+
+        private void IrVentas_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+
+        }
     }
 }

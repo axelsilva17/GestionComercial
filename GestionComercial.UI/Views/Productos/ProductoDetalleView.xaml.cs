@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace GestionComercial.UI.Views.Main.Productos
+namespace GestionComercial.UI.Views.Productos
 {
     public partial class ProductoDetalleView : UserControl
     {
@@ -8,5 +8,6 @@ namespace GestionComercial.UI.Views.Main.Productos
         {
             InitializeComponent();
         }
+
     }
 }

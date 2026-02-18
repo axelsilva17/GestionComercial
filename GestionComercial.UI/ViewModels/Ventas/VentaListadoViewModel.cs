@@ -136,21 +136,20 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public ObservableCollection<VentaResumenDto> Ventas { get; set; }
 
         // ── Comandos ──────────────────────────────────────────────────
-        public void Buscar() { /* TODO: cargar desde BD con filtros */ }
+        public void Buscar() { /*  cargar desde BD con filtros */ }
 
-        public async void NuevaVenta()
+        public async Task NuevaVenta()
         {
-            var vm = IoC.Get<VentaViewModel>();
-            await _shell.ActivateItemAsync(vm, CancellationToken.None);
+            await IoC.Get<ShellViewModel>()
+                     .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
-
         public void CerrarDetalle() => VentaSeleccionada = null;
 
-        public void VerDetalle() { /* TODO: navegar a VentaDetalleViewModel */ }
+        public void VerDetalle() { /* navegar a VentaDetalleViewModel */ }
 
-        public void ImprimirVenta() { /* TODO: servicio de impresión */ }
+        public void ImprimirVenta() { /*  servicio de impresión */ }
 
-        public void CancelarVenta() { /* TODO: confirmar y cancelar */ }
+        public void CancelarVenta() { /*  confirmar y cancelar */ }
 
         public bool CanPaginaAnterior => PaginaActual > 1;
         public void PaginaAnterior()
@@ -163,6 +162,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             if (PaginaActual < TotalPaginas) PaginaActual++;
         }
+     
     }
 
     public class VentaResumenDto

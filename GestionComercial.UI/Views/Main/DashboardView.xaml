@@ -5,387 +5,411 @@
              Background="{DynamicResource BackgroundBrush}">
 
     <UserControl.Resources>
+        <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
-        <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
+
+        <!-- Card métrica grande -->
+        <Style x:Key="MetricCard" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="14"/>
+            <Setter Property="Padding"         Value="22,18"/>
+        </Style>
+
+        <!-- Card secundaria -->
+        <Style x:Key="SubCard" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="12"/>
+            <Setter Property="Padding"         Value="18,14"/>
+        </Style>
+
+        <!-- Fila actividad reciente -->
+        <Style x:Key="ActivityRow" TargetType="Border">
+            <Setter Property="Padding"      Value="14,12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin"       Value="0,2"/>
+            <Setter Property="Background"   Value="Transparent"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="0,0,0,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- Saludo -->
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>  <!-- Métricas principales -->
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>  <!-- Fila secundaria -->
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>  <!-- Actividad + stock crítico -->
+            </Grid.RowDefinitions>
 
-        <!-- ── Loading overlay ─────────────────────────────────────────────── -->
-        <Grid Panel.ZIndex="10"
-              Background="#80000000"
-              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <ProgressBar IsIndeterminate="True" Width="200" Height="4"
-                             Foreground="{DynamicResource PrimaryBrush}"
-                             BorderThickness="0"
-                             Background="{DynamicResource SurfaceBrush}"/>
-                <TextBlock Text="Cargando dashboard..."
-                           Foreground="{DynamicResource TextPrimaryBrush}"
-                           FontSize="14" HorizontalAlignment="Center"
-                           Margin="0,12,0,0"/>
-            </StackPanel>
-        </Grid>
+            <!-- SALUDO -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <Grid Margin="32">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>  <!-- Bienvenida -->
-                    <RowDefinition Height="24"/>
-                    <RowDefinition Height="Auto"/>  <!-- Tarjetas métricas -->
-                    <RowDefinition Height="24"/>
-                    <RowDefinition Height="Auto"/>  <!-- Error (si hay) -->
-                    <RowDefinition Height="Auto"/>  <!-- Accesos rápidos -->
-                </Grid.RowDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock FontSize="24" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}">
+                        <Run Text="Buen día, "/>
+                        <Run Text="{Binding UsuarioNombre, Mode=OneWay}"
+                             Foreground="{DynamicResource PrimaryBrush}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding FechaHoy, Mode=OneWay}"
+                               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
 
-                <!-- ══════════════════════════════════════════════════════════
-                     FILA 0 — Bienvenida + fecha + botón actualizar
-                ═══════════════════════════════════════════════════════════ -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="👋 Bienvenido, "
-                                       FontSize="28" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock Text="{Binding UsuarioNombre}"
-                                       FontSize="28" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryBrush}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <TextBlock Text="📅 "
-                                       FontSize="14"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding FechaHoy}"
-                                       FontSize="14"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="  ·  "
-                                       FontSize="14"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"/>
-                            <TextBlock Text="{Binding HoraActual}"
-                                       FontSize="14" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"/>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- Botón Actualizar — Caliburn lo conecta a DashboardViewmodel.Actualizar() -->
-                    <Button x:Name="Actualizar"
-                            Grid.Column="1"
-                            Content="⟳  Actualizar"
-                            Style="{StaticResource PrimaryButton}"
-                            Height="40" Padding="18,0"
-                            FontSize="13"
-                            VerticalAlignment="Center"/>
-                </Grid>
-
-                <!-- ══════════════════════════════════════════════════════════
-                     FILA 2 — Tarjetas métricas
-                ═══════════════════════════════════════════════════════════ -->
-                <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Tarjeta: Total ventas del día -->
-                    <Border Grid.Column="0"
-                            Background="{DynamicResource CardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="14" Padding="24">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="12"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="8"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                <Border Width="40" Height="40" Background="#1A38BDF8" CornerRadius="10">
-                                    <TextBlock Text="💳" FontSize="20"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-                                <TextBlock Text="Ventas del Día"
-                                           FontSize="14" FontWeight="Medium"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center" Margin="12,0,0,0"/>
-                            </StackPanel>
-
-                            <TextBlock Grid.Row="2"
-                                       Text="{Binding TotalVentasDia, Converter={StaticResource DecimalToMoneda}}"
-                                       FontSize="32" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                            <!-- Badge comparación vs ayer -->
-                            <Border Grid.Row="4" CornerRadius="6" Padding="8,4"
-                                    HorizontalAlignment="Left">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#1AEF4444"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ComparacionPositiva}" Value="True">
-                                                <Setter Property="Background" Value="#1A22C55E"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="{Binding ComparacionAyer}"
-                                           FontSize="12" FontWeight="SemiBold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#EF4444"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ComparacionPositiva}" Value="True">
-                                                    <Setter Property="Foreground" Value="#22C55E"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                    <!-- Tarjeta: Transacciones -->
-                    <Border Grid.Column="2"
-                            Background="{DynamicResource CardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="14" Padding="24">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="12"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="8"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                <Border Width="40" Height="40" Background="#1A22C55E" CornerRadius="10">
-                                    <TextBlock Text="🧾" FontSize="20"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-                                <TextBlock Text="Transacciones"
-                                           FontSize="14" FontWeight="Medium"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center" Margin="12,0,0,0"/>
-                            </StackPanel>
-
-                            <TextBlock Grid.Row="2"
-                                       Text="{Binding CantidadVentasDia}"
-                                       FontSize="32" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                            <TextBlock Grid.Row="4" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}">
-                                <Run Text="Ticket promedio:"/>
-                                <Run Text="{Binding TicketPromedio, Converter={StaticResource DecimalToMoneda}}"
-                                     FontWeight="SemiBold"/>
-                            </TextBlock>
-                        </Grid>
-                    </Border>
-
-                    <!-- Tarjeta: Estado de Caja -->
-                    <Border Grid.Column="4"
-                            BorderThickness="1" CornerRadius="14" Padding="24">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background"    Value="#120A0A"/>
-                                <Setter Property="BorderBrush"   Value="#EF4444"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CajaAbierta}" Value="True">
-                                        <Setter Property="Background"  Value="#0A120A"/>
-                                        <Setter Property="BorderBrush" Value="#22C55E"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="12"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="8"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                <Border Width="40" Height="40" CornerRadius="10">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#1AEF4444"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CajaAbierta}" Value="True">
-                                                    <Setter Property="Background" Value="#1A22C55E"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="💰" FontSize="20"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-                                <TextBlock Text="Estado de Caja"
-                                           FontSize="14" FontWeight="Medium"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center" Margin="12,0,0,0"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2" Orientation="Horizontal">
-                                <TextBlock Text="{Binding EstadoCajaIcono}"
-                                           FontSize="22" VerticalAlignment="Center"
-                                           Margin="0,0,10,0"/>
-                                <TextBlock Text="{Binding EstadoCajaTexto}"
-                                           FontSize="26" FontWeight="Bold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#EF4444"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CajaAbierta}" Value="True">
-                                                    <Setter Property="Foreground" Value="#22C55E"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
-
-                            <TextBlock Grid.Row="4" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}">
-                                <Run Text="Apertura:"/>
-                                <Run Text="{Binding CajaApertura}" FontWeight="SemiBold"/>
-                                <Run Text="  ·  Monto inicial:"/>
-                                <Run Text="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}"
-                                     FontWeight="SemiBold"/>
-                            </TextBlock>
-                        </Grid>
-                    </Border>
-                </Grid>
-
-                <!-- ══════════════════════════════════════════════════════════
-                     FILA 4 — Error (solo visible si hay error)
-                ═══════════════════════════════════════════════════════════ -->
-                <Border Grid.Row="4"
-                        Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}"
-                        Background="#1A0A0A"
-                        BorderBrush="{DynamicResource ErrorBrush}"
-                        BorderThickness="1" CornerRadius="8"
-                        Padding="14,10" Margin="0,0,0,16">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠  "
-                                   Foreground="{DynamicResource ErrorBrush}"
-                                   FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   Foreground="{DynamicResource ErrorBrush}"
-                                   FontSize="13" TextWrapping="Wrap"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- ══════════════════════════════════════════════════════════
-                     FILA 5 — Accesos rápidos
-                ═══════════════════════════════════════════════════════════ -->
-                <Border Grid.Row="5"
-                        Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1" CornerRadius="14" Padding="24">
-                    <StackPanel>
-                        <TextBlock Text="Accesos rápidos"
-                                   FontSize="16" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                   Margin="0,0,0,20"/>
-                        <WrapPanel>
-
-                            <Border Width="150" Height="110"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="12"
-                                    Margin="0,0,12,12" Cursor="Hand">
-                                <Border.InputBindings>
-                                    <MouseBinding MouseAction="LeftClick"
-                                                  Command="{Binding ActualizarCommand}"/>
-                                </Border.InputBindings>
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="💳" FontSize="32" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Nueva Venta"
-                                               FontSize="13" FontWeight="Medium"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Width="150" Height="110"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="12"
-                                    Margin="0,0,12,12" Cursor="Hand">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="📦" FontSize="32" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Productos"
-                                               FontSize="13" FontWeight="Medium"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Width="150" Height="110"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="12"
-                                    Margin="0,0,12,12" Cursor="Hand">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="🛒" FontSize="32" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Nueva Compra"
-                                               FontSize="13" FontWeight="Medium"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Width="150" Height="110"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="12"
-                                    Margin="0,0,12,12" Cursor="Hand">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="👥" FontSize="32" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Clientes"
-                                               FontSize="13" FontWeight="Medium"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Width="150" Height="110"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="12"
-                                    Margin="0,0,0,12" Cursor="Hand">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="📈" FontSize="32" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Reportes"
-                                               FontSize="13" FontWeight="Medium"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                        </WrapPanel>
-                    </StackPanel>
-                </Border>
-
+               
             </Grid>
-        </ScrollViewer>
-    </Grid>
+
+            <!-- MÉTRICAS PRINCIPALES -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Ventas hoy -->
+                <Border Grid.Column="0" Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="VENTAS HOY" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding TotalVentasHoy, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="32" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+
+                        <TextBlock Grid.Row="4" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="{Binding CantidadVentasHoy, Mode=OneWay}"/>
+                            <Run Text=" transacciones"/>
+                        </TextBlock>
+
+                        <!-- Barra progreso vs ayer -->
+                        <ProgressBar Grid.Row="6" Height="3" Value="{Binding ProgresoVentasHoy, Mode=OneWay}"
+                                     Maximum="100" BorderThickness="0"
+                                     Background="{DynamicResource SurfaceBrush}"
+                                     Foreground="{DynamicResource SuccessBrush}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Ventas mes -->
+                <Border Grid.Column="2" Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="VENTAS MES" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding TotalVentasMes, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="32" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+
+                        <TextBlock Grid.Row="4" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="{Binding CantidadVentasMes, Mode=OneWay}"/>
+                            <Run Text=" transacciones"/>
+                        </TextBlock>
+
+                        <ProgressBar Grid.Row="6" Height="3" Value="{Binding ProgresoVentasMes, Mode=OneWay}"
+                                     Maximum="100" BorderThickness="0"
+                                     Background="{DynamicResource SurfaceBrush}"
+                                     Foreground="{DynamicResource PrimaryBrush}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Caja actual -->
+                <Border Grid.Column="4" Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="CAJA ACTUAL" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <Border Background="{DynamicResource SuccessBrush}"
+                                    CornerRadius="4" Padding="6,2" Margin="8,0,0,0">
+                                <TextBlock Text="ABIERTA" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding SaldoCaja, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="32" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}"/>
+
+                        <TextBlock Grid.Row="4" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="Apertura: "/>
+                            <Run Text="{Binding HoraAperturaCaja, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+
+                <!-- Productos críticos -->
+                <Border Grid.Column="6" Style="{StaticResource MetricCard}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="STOCK CRÍTICO" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding ProductosCriticos, Mode=OneWay}"
+                                   FontSize="32" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}"/>
+
+                        <TextBlock Grid.Row="4" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="productos requieren atención"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- FILA SECUNDARIA: Ticket promedio + Margen + Pendientes -->
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource SubCard}">
+                    <StackPanel>
+                        <TextBlock Text="TICKET PROMEDIO" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TicketPromedio, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,8,0,0"/>
+                        <TextBlock Text="por venta este mes" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource SubCard}">
+                    <StackPanel>
+                        <TextBlock Text="MARGEN BRUTO" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding MargenBrutoMes, StringFormat='{}{0:N1}%'}"
+                                   FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource SuccessBrush}" Margin="0,8,0,0"/>
+                        <TextBlock Text="este mes" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="4" Style="{StaticResource SubCard}">
+                    <StackPanel>
+                        <TextBlock Text="VENTAS PENDIENTES" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding VentasPendientes, Mode=OneWay}"
+                                   FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningBrush}" Margin="0,8,0,0"/>
+                        <TextBlock Text="por cobrar" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- FILA INFERIOR: Actividad reciente + Stock crítico -->
+            <Grid Grid.Row="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="340"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Actividad reciente -->
+                <Border Grid.Column="0" Style="{StaticResource MetricCard}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Grid Grid.Row="0" Margin="20,16,20,0">
+                            <TextBlock Text="ACTIVIDAD RECIENTE" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="IrVentasCompleto" Content="Ver todo →"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource PrimaryBrush}"
+                                    FontSize="12" Cursor="Hand"
+                                    HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding VentasRecientes}"
+                                      Margin="12,10,12,12">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border>
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource ActivityRow}">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Ícono -->
+                                            <Border Grid.Column="0" Width="36" Height="36"
+                                                    CornerRadius="8" Background="{DynamicResource SurfaceBrush}">
+                                                <TextBlock Text="◈" FontSize="16"
+                                                           Foreground="{DynamicResource PrimaryBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                                <TextBlock FontSize="13" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}">
+                                                    <Run Text="Venta #"/>
+                                                    <Run Text="{Binding IdVenta, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding ClienteNombre, Mode=OneWay}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding TotalFinal, Converter={StaticResource DecimalToMoneda}, Mode=OneWay}"
+                                                           FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource SuccessBrush}"
+                                                           HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding Fecha, StringFormat='HH:mm', Mode=OneWay}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Right" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <!-- Stock crítico -->
+                <Border Grid.Column="2" Style="{StaticResource MetricCard}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="18,16,18,0">
+                            <TextBlock Text="STOCK CRÍTICO" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="IrProductosStock" Content="Ver todo →"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource PrimaryBrush}"
+                                    FontSize="12" Cursor="Hand"
+                                    HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding ProductosCriticosList}"
+                                      Margin="10,10,10,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="10,10" CornerRadius="8" Margin="0,2">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nombre, Mode=OneWay}"
+                                                           FontSize="13" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                <TextBlock FontSize="11" Margin="0,3,0,0">
+                                                    <Run Text="Mín: " Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Run Text="{Binding StockMinimo, Mode=OneWay}"
+                                                         Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <Border Grid.Column="1"
+                                                    CornerRadius="6" Padding="10,4"
+                                                    VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{DynamicResource WarningBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding StockActual}" Value="0">
+                                                                <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding StockActual, Mode=OneWay}"
+                                                           FontSize="13" FontWeight="Bold" Foreground="White"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

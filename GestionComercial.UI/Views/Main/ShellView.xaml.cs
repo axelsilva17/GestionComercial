@@ -29,7 +29,7 @@ namespace GestionComercial.UI.Views.Main
 
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
-            _ = ViewModel?.CerrarSesion();
+            ViewModel?.CerrarSesion();
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
