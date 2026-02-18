@@ -7,11 +7,16 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
+	  <EmbeddedResource Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
+	  <None Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
+	  <Page Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
+	</ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<Folder Include="Comandos\" />
-		<Folder Include="ViewModel\" />
+		<Folder Include="Views\Comandos\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Caliburn.Micro" Version="4.0.212" />

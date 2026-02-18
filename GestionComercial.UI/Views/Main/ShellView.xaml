@@ -16,7 +16,6 @@
         d:Background="#0F1419">
 
     <Window.Resources>
-        <!-- Colores para el diseñador -->
         <SolidColorBrush x:Key="BackgroundBrush" Color="#0F1419"/>
         <SolidColorBrush x:Key="CardBrush" Color="#1A2332"/>
         <SolidColorBrush x:Key="SurfaceBrush" Color="#243447"/>
@@ -30,11 +29,9 @@
 
         <DropShadowEffect x:Key="CardShadow" BlurRadius="40" ShadowDepth="0" Opacity="0.3" Color="#000000"/>
 
-        <!-- Animación de entrada -->
         <Storyboard x:Key="FadeIn">
             <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                             From="0"
-                             To="1"
+                             From="0" To="1"
                              Duration="0:0:0.4">
                 <DoubleAnimation.EasingFunction>
                     <CubicEase EasingMode="EaseOut"/>
@@ -42,7 +39,6 @@
             </DoubleAnimation>
         </Storyboard>
 
-        <!-- Estilo para botones del menú -->
         <Style x:Key="SidebarMenuButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
@@ -59,7 +55,7 @@
                                 CornerRadius="10"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                            VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -104,23 +100,20 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- ===== HEADER CON LOGO ===== -->
+                    <!-- HEADER CON LOGO -->
                     <StackPanel Grid.Row="0" Margin="24,0,24,24">
-                        <Border Width="48"
-                                Height="48"
+                        <Border Width="48" Height="48"
                                 Background="{DynamicResource PrimaryBrush}"
                                 CornerRadius="12"
                                 Margin="0,0,0,16">
                             <TextBlock Text="GC"
-                                     FontSize="20"
-                                     FontWeight="Bold"
-                                     Foreground="White"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"/>
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Gestión Comercial"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
+                                   FontSize="18" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock Text="Sistema de gestión"
                                    FontSize="13"
@@ -128,21 +121,25 @@
                                    Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <!-- ===== MENÚ DE NAVEGACIÓN ===== -->
+                    <!-- MENÚ DE NAVEGACIÓN -->
                     <ScrollViewer Grid.Row="1"
-                                VerticalScrollBarVisibility="Auto"
-                                Margin="12,0">
+                                  VerticalScrollBarVisibility="Auto"
+                                  Margin="12,0">
                         <StackPanel>
+
                             <!-- Sección Principal -->
                             <TextBlock Text="PRINCIPAL"
-                                     FontSize="11"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextTertiaryBrush}"
-                                     Margin="12,0,0,8"/>
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       Margin="12,0,0,8"/>
 
-                            <Button x:Name="BtnDashboard"
+                            <!--
+                                CAMBIO CLAVE: x:Name="IrDashboard"
+                                Caliburn conecta esto al método IrDashboard() del Shellusing GestionComercial.UI.using GestionComercial.UI.ViewModels
+                                Sin Click handler — Caliburn lo maneja solo.
+                            -->
+                            <Button x:Name="IrDashboard"
                                     Tag="Active"
-                                    Click="MenuButton_Click"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📊" FontSize="18" Margin="0,0,14,0"/>
@@ -152,13 +149,11 @@
 
                             <!-- Sección Operaciones -->
                             <TextBlock Text="OPERACIONES"
-                                     FontSize="11"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextTertiaryBrush}"
-                                     Margin="12,20,0,8"/>
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       Margin="12,20,0,8"/>
 
-                            <Button x:Name="BtnVentas"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrVentas"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="💳" FontSize="18" Margin="0,0,14,0"/>
@@ -166,8 +161,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnCompras"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrCompras"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🛒" FontSize="18" Margin="0,0,14,0"/>
@@ -175,8 +169,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnCaja"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrCaja"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="💰" FontSize="18" Margin="0,0,14,0"/>
@@ -186,13 +179,11 @@
 
                             <!-- Sección Gestión -->
                             <TextBlock Text="GESTIÓN"
-                                     FontSize="11"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextTertiaryBrush}"
-                                     Margin="12,20,0,8"/>
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       Margin="12,20,0,8"/>
 
-                            <Button x:Name="BtnProductos"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrProductos"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📦" FontSize="18" Margin="0,0,14,0"/>
@@ -200,8 +191,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnInventario"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrInventario"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📋" FontSize="18" Margin="0,0,14,0"/>
@@ -209,8 +199,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnClientes"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrClientes"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="👥" FontSize="18" Margin="0,0,14,0"/>
@@ -218,8 +207,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <Button x:Name="BtnProveedores"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrProveedores"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🏢" FontSize="18" Margin="0,0,14,0"/>
@@ -229,13 +217,11 @@
 
                             <!-- Sección Análisis -->
                             <TextBlock Text="ANÁLISIS"
-                                     FontSize="11"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextTertiaryBrush}"
-                                     Margin="12,20,0,8"/>
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       Margin="12,20,0,8"/>
 
-                            <Button x:Name="BtnReportes"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrReportes"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📈" FontSize="18" Margin="0,0,14,0"/>
@@ -248,18 +234,18 @@
                                     Background="{DynamicResource BorderBrush}"
                                     Margin="12,16"/>
 
-                            <Button x:Name="BtnConfiguracion"
-                                    Click="MenuButton_Click"
+                            <Button x:Name="IrConfiguracion"
                                     Style="{StaticResource SidebarMenuButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="⚙️" FontSize="18" Margin="0,0,14,0"/>
                                     <TextBlock Text="Configuración" FontSize="14" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
+
                         </StackPanel>
                     </ScrollViewer>
 
-                    <!-- ===== FOOTER CON USUARIO ===== -->
+                    <!-- FOOTER CON USUARIO -->
                     <Border Grid.Row="2"
                             Background="{DynamicResource SurfaceBrush}"
                             CornerRadius="12"
@@ -272,32 +258,28 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Width="42"
-                                    Height="42"
+                            <Border Width="42" Height="42"
                                     Background="{DynamicResource PrimaryBrush}"
                                     CornerRadius="10">
                                 <TextBlock Text="A"
-                                         FontSize="18"
-                                         FontWeight="SemiBold"
-                                         Foreground="White"
-                                         HorizontalAlignment="Center"
-                                         VerticalAlignment="Center"/>
+                                           FontSize="18" FontWeight="SemiBold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                             </Border>
 
                             <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="Administrador"
-                                         FontSize="14"
-                                         FontWeight="SemiBold"
-                                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock Text="admin@sistema.com"
-                                         FontSize="12"
-                                         Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding UsuarioNombre}"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding UsuarioSucursal}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
 
                             <Button Grid.Column="2"
                                     Content="⏻"
-                                    Width="36"
-                                    Height="36"
+                                    Width="36" Height="36"
                                     FontSize="18"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
@@ -314,7 +296,7 @@
                                                             Background="{TemplateBinding Background}"
                                                             CornerRadius="8">
                                                         <ContentPresenter HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
+                                                                          VerticalAlignment="Center"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
@@ -340,7 +322,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- ===== HEADER CON TÍTULO Y CONTROLES ===== -->
+                <!-- HEADER CON CONTROLES DE VENTANA -->
                 <Border Grid.Row="0"
                         Background="Transparent"
                         Padding="32,24"
@@ -351,48 +333,26 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Título y breadcrumb -->
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock x:Name="PageTitle"
-                                     Text="Dashboard"
-                                     FontSize="28"
-                                     FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock x:Name="PageSubtitle"
-                                     Text="Resumen general del sistema"
-                                     FontSize="14"
-                                     Foreground="{DynamicResource TextSecondaryBrush}"
-                                     Margin="0,4,0,0"/>
-                        </StackPanel>
-
                         <!-- Controles de ventana -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Notificaciones -->
                             <Button Content="🔔"
-                                    Width="40"
-                                    Height="40"
-                                    FontSize="18"
+                                    Width="40" Height="40" FontSize="18"
                                     Margin="0,0,8,0"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
-                                    BorderThickness="0"
-                                    Cursor="Hand"
+                                    BorderThickness="0" Cursor="Hand"
                                     ToolTip="Notificaciones">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="border"
-                                                            Background="{TemplateBinding Background}"
-                                                            CornerRadius="10">
-                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
                                                             <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -402,36 +362,28 @@
                                 </Button.Style>
                             </Button>
 
-                            <Border Width="1"
-                                    Height="24"
+                            <Border Width="1" Height="24"
                                     Background="{DynamicResource BorderBrush}"
                                     Margin="8,0"/>
 
                             <Button Content="—"
-                                    Width="40"
-                                    Height="40"
-                                    FontSize="20"
+                                    Width="40" Height="40" FontSize="20"
                                     Margin="8,0,0,0"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
-                                    BorderThickness="0"
-                                    Cursor="Hand"
+                                    BorderThickness="0" Cursor="Hand"
                                     Click="Minimize_Click">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="border"
-                                                            Background="{TemplateBinding Background}"
-                                                            CornerRadius="10">
-                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
                                                             <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -442,30 +394,23 @@
                             </Button>
 
                             <Button Content="🗖"
-                                    Width="40"
-                                    Height="40"
-                                    FontSize="16"
+                                    Width="40" Height="40" FontSize="16"
                                     Margin="8,0,0,0"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
-                                    BorderThickness="0"
-                                    Cursor="Hand"
+                                    BorderThickness="0" Cursor="Hand"
                                     Click="Maximize_Click">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="border"
-                                                            Background="{TemplateBinding Background}"
-                                                            CornerRadius="10">
-                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
                                                             <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -476,25 +421,19 @@
                             </Button>
 
                             <Button Content="✕"
-                                    Width="40"
-                                    Height="40"
-                                    FontSize="18"
+                                    Width="40" Height="40" FontSize="18"
                                     Margin="8,0,0,0"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
-                                    BorderThickness="0"
-                                    Cursor="Hand"
+                                    BorderThickness="0" Cursor="Hand"
                                     Click="Close_Click">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border x:Name="border"
-                                                            Background="{TemplateBinding Background}"
-                                                            CornerRadius="10">
-                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
@@ -512,10 +451,14 @@
                     </Grid>
                 </Border>
 
-                <!-- ===== CONTENIDO DE LA PÁGINA ===== -->
-                <ContentControl x:Name="PageContent"
-                              Grid.Row="1"
-                              Margin="32,0,32,32"/>
+                <!--
+                    CAMBIO CLAVE: x:Name="ActiveItem"
+                    Caliburn usa este nombre para bindear el using GestionComercial.UI.using GestionComercial.UI.Viewmodels. activo
+                    y renderizar su View correspondiente automáticamente.
+                -->
+                <ContentControl x:Name="ActiveItem"
+                                Grid.Row="1"
+                                Margin="32,0,32,32"/>
             </Grid>
         </Grid>
     </Border>
