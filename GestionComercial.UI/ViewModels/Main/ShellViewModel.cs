@@ -20,7 +20,7 @@ namespace GestionComercial.UI.ViewModels.Main
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            await IrProductos();
+            await IrDashboard();
         }
 
         public async Task IrDashboard()

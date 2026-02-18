@@ -8,7 +8,6 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
 
-        <!-- TextBox con borde redondeado y highlight al foco -->
         <Style x:Key="FormTextBox" TargetType="TextBox">
             <Setter Property="Height"                   Value="44"/>
             <Setter Property="Padding"                  Value="12,0"/>
@@ -45,7 +44,6 @@
             </Setter>
         </Style>
 
-        <!-- Label de campo -->
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="FontSize"   Value="13"/>
             <Setter Property="FontWeight" Value="Medium"/>
@@ -53,13 +51,12 @@
             <Setter Property="Margin"     Value="0,0,0,8"/>
         </Style>
 
-        <!-- Botón secundario (Cancelar) -->
         <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background"   Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="Foreground"   Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="BorderBrush"  Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor"       Value="Hand"/>
+            <Setter Property="Cursor"          Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -68,13 +65,11 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background"
-                                        Value="{DynamicResource HoverBrush}"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -82,13 +77,12 @@
             </Setter>
         </Style>
 
-        <!-- Botón ícono (SKU, código de barras) -->
         <Style x:Key="IconButton" TargetType="Button">
-            <Setter Property="Width"          Value="44"/>
-            <Setter Property="Height"         Value="44"/>
-            <Setter Property="Background"     Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="Foreground"     Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="BorderBrush"    Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Width"           Value="44"/>
+            <Setter Property="Height"          Value="44"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontSize"        Value="18"/>
             <Setter Property="Cursor"          Value="Hand"/>
@@ -100,13 +94,11 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background"
-                                        Value="{DynamicResource HoverBrush}"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -118,18 +110,16 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="32">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>  <!-- Encabezado -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="20"/>
-                <RowDefinition Height="Auto"/>  <!-- Datos básicos -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="16"/>
-                <RowDefinition Height="Auto"/>  <!-- Precios y stock -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="24"/>
-                <RowDefinition Height="Auto"/>  <!-- Botones -->
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- ═══════════════════════════════════════════════════
-                 FILA 0 — Título + volver
-            ════════════════════════════════════════════════════ -->
+            <!-- FILA 0 — Título + volver -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -142,26 +132,23 @@
                         Foreground="{DynamicResource PrimaryBrush}"
                         Background="Transparent"
                         BorderThickness="0"
-                        FontSize="14"
-                        Cursor="Hand"
+                        FontSize="14" Cursor="Hand"
                         VerticalAlignment="Center"
                         Margin="0,0,20,0"
                         Style="{StaticResource SecondaryButton}"/>
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding TituloFormulario}"
+                    <TextBlock Text="{Binding TituloFormulario, Mode=OneWay}"
                                FontSize="28" FontWeight="Bold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{Binding SubtituloFormulario}"
+                    <TextBlock Text="{Binding SubtituloFormulario, Mode=OneWay}"
                                FontSize="14"
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                Margin="0,4,0,0"/>
                 </StackPanel>
             </Grid>
 
-            <!-- ═══════════════════════════════════════════════════
-                 FILA 2 — Información del producto
-            ════════════════════════════════════════════════════ -->
+            <!-- FILA 2 — Información del producto -->
             <Border Grid.Row="2"
                     Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
@@ -203,8 +190,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="SKU"
-                                         Style="{StaticResource FormTextBox}"/>
+                                <TextBox x:Name="SKU" Style="{StaticResource FormTextBox}"/>
                                 <Button x:Name="GenerarSKU"
                                         Grid.Column="1"
                                         Content="⟳"
@@ -223,8 +209,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="CodigoBarra"
-                                         Style="{StaticResource FormTextBox}"/>
+                                <TextBox x:Name="CodigoBarra" Style="{StaticResource FormTextBox}"/>
                                 <Button Grid.Column="1"
                                         Content="📷"
                                         Style="{StaticResource IconButton}"
@@ -272,7 +257,6 @@
                                           Content="Producto activo"
                                           FontSize="14"
                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                          IsChecked="True"
                                           VerticalAlignment="Center"/>
                             </Border>
                         </StackPanel>
@@ -281,9 +265,7 @@
                         <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
                             <TextBlock Text="Descripción" Style="{StaticResource FieldLabel}"/>
                             <TextBox x:Name="Descripcion"
-                                     Height="80"
-                                     Padding="12,10"
-                                     FontSize="14"
+                                     Height="80" Padding="12,10" FontSize="14"
                                      Background="{DynamicResource SurfaceBrush}"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      BorderBrush="{DynamicResource BorderBrush}"
@@ -315,9 +297,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ═══════════════════════════════════════════════════
-                 FILA 4 — Precios y Stock
-            ════════════════════════════════════════════════════ -->
+            <!-- FILA 4 — Precios y Stock -->
             <Border Grid.Row="4"
                     Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
@@ -386,10 +366,11 @@
                                              TextAlignment="Right" Padding="0,0,12,0"/>
                                 </Grid>
                             </Border>
+                            <!-- ✅ CORREGIDO: Mode=OneWay en Run para propiedad calculada -->
                             <TextBlock Foreground="{DynamicResource SuccessBrush}"
                                        FontSize="12" Margin="0,6,0,0">
-                                <Run Text="Margen:"/>
-                                <Run Text="{Binding MargenCalculado}" FontWeight="SemiBold"/>
+                                <Run Text="Margen: "/>
+                                <Run Text="{Binding MargenCalculado, Mode=OneWay}" FontWeight="SemiBold"/>
                             </TextBlock>
                         </StackPanel>
 
@@ -414,8 +395,8 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Error de validación -->
-                    <Border Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}"
+                    <!-- ✅ CORREGIDO: ErrorVisible en lugar de TieneError -->
+                    <Border Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}"
                             Background="#1A0A0A"
                             BorderBrush="{DynamicResource ErrorBrush}"
                             BorderThickness="1" CornerRadius="8"
@@ -424,7 +405,7 @@
                             <TextBlock Text="⚠  "
                                        Foreground="{DynamicResource ErrorBrush}"
                                        FontSize="14" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding ErrorMessage}"
+                            <TextBlock Text="{Binding ErrorMessage, Mode=OneWay}"
                                        Foreground="{DynamicResource ErrorBrush}"
                                        FontSize="13" TextWrapping="Wrap"
                                        VerticalAlignment="Center"/>
@@ -434,9 +415,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ═══════════════════════════════════════════════════
-                 FILA 6 — Botones
-            ════════════════════════════════════════════════════ -->
+            <!-- FILA 6 — Botones -->
             <Grid Grid.Row="6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -445,7 +424,6 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Loading guardar -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
@@ -463,15 +441,13 @@
                         Grid.Column="1"
                         Content="Cancelar"
                         Style="{StaticResource SecondaryButton}"
-                        Height="44" Padding="28,0"
-                        FontSize="14"/>
+                        Height="44" Padding="28,0" FontSize="14"/>
 
                 <Button x:Name="Guardar"
                         Grid.Column="3"
                         Content="💾  Guardar Producto"
                         Style="{StaticResource PrimaryButton}"
-                        Height="44" Padding="28,0"
-                        FontSize="14"/>
+                        Height="44" Padding="28,0" FontSize="14"/>
             </Grid>
 
         </Grid>

@@ -36,6 +36,17 @@ namespace GestionComercial.UI
             ViewLocator.ConfigureTypeMappings(config);
             ViewModelLocator.ConfigureTypeMappings(config);
 
+            // Mapeos explícitos por módulo
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Main", "GestionComercial.UI.Views.Main");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Productos", "GestionComercial.UI.Views.Main.Productos");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Ventas", "GestionComercial.UI.Views.Main.Ventas");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Compras", "GestionComercial.UI.Views.Main.Compras");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Caja", "GestionComercial.UI.Views.Main.Caja");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Clientes", "GestionComercial.UI.Views.Main.Clientes");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Proveedores", "GestionComercial.UI.Views.Main.Proveedores");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Reportes", "GestionComercial.UI.Views.Main.Reportes");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Configuracion", "GestionComercial.UI.Views.Main.Configuracion");
+
             // ── Registro dinámico de todos los ViewModels ─────────────────────
             // Busca todas las clases no abstractas en el namespace ViewModels
             // que hereden de Screen o Conductor<T>
