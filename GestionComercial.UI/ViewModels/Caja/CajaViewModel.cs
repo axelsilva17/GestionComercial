@@ -5,6 +5,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.DTOs.Caja;
+
 
 namespace GestionComercial.UI.ViewModels.Caja
 {
@@ -118,6 +123,10 @@ namespace GestionComercial.UI.ViewModels.Caja
         }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+     
+
+    
+        
             => await CargarAsync();
 
         private async Task CargarAsync()
@@ -152,26 +161,10 @@ namespace GestionComercial.UI.ViewModels.Caja
             // TODO: abrir diálogo de ingreso manual
         }
 
-    
-
-        private void RecalcularSaldo()
-            => SaldoActual = MontoInicial + TotalIngresos - TotalEgresos;
-    }
 
 
-    // ── DTOs locales ──────────────────────────────────────────────────────────────
-    public class MovimientoCajaDto
-    {
-        public DateTime Fecha    { get; set; }
-        public bool     EsIngreso { get; set; }
-        public string   Concepto { get; set; }
-        public decimal  Monto    { get; set; }
-    }
-
-    public class DesglosePagoDto
-    {
-        public string  Icono        { get; set; }
-        public string  MetodoNombre { get; set; }
-        public decimal Total        { get; set; }
+        private void RecalcularSaldo() => SaldoActual = MontoInicial + TotalIngresos - TotalEgresos;
     }
 }
+
+

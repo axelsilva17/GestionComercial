@@ -2,6 +2,8 @@ using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Productos;
 
 public class AperturaCajaViewModel : NavigableViewModel
 {

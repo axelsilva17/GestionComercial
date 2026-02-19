@@ -8,9 +8,27 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
+    // DTOs locales de pago — no están en capa Aplicación porque son específicos de esta pantalla
+    public class MetodoPagoItemDto
+    {
+        public int    Id             { get; set; }
+        public string Nombre         { get; set; }
+        public string Icono          { get; set; }
+        public bool   EsEfectivo     { get; set; }
+        public bool   IsSeleccionado { get; set; }
+    }
+
+    public class PagoIngresadoDto
+    {
+        public int     MetodoId     { get; set; }
+        public string  MetodoNombre { get; set; }
+        public string  Icono        { get; set; }
+        public decimal Monto        { get; set; }
+    }
+
     public class PagoViewModel : NavigableViewModel
     {
-        // ─── Datos de la venta ────────────────────────────────────────────────────
+        // ── Datos de la venta ─────────────────────────────────────────────────
         private string _clienteNombre;
         public string ClienteNombre
         {
@@ -49,7 +67,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _itemsVenta = value; NotifyOfPropertyChange(() => ItemsVenta); }
         }
 
-        // ─── Métodos de pago ──────────────────────────────────────────────────────
+        // ── Métodos de pago ───────────────────────────────────────────────────
         private ObservableCollection<MetodoPagoItemDto> _metodosPago = new();
         public ObservableCollection<MetodoPagoItemDto> MetodosPago
         {
@@ -64,7 +82,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _metodoSeleccionado = value; NotifyOfPropertyChange(() => MetodoSeleccionado); }
         }
 
-        // ─── Pagos ingresados ─────────────────────────────────────────────────────
+        // ── Pagos ingresados ──────────────────────────────────────────────────
         private ObservableCollection<PagoIngresadoDto> _pagosIngresados = new();
         public ObservableCollection<PagoIngresadoDto> PagosIngresados
         {
@@ -79,7 +97,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _montoIngresado = value; NotifyOfPropertyChange(() => MontoIngresado); }
         }
 
-        // ─── Totales cobro ────────────────────────────────────────────────────────
+        // ── Totales cobro ─────────────────────────────────────────────────────
         private decimal _totalPagado;
         public decimal TotalPagado
         {
@@ -101,9 +119,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _pagoCompleto = value; NotifyOfPropertyChange(() => PagoCompleto); }
         }
 
-        // ─── Comandos ─────────────────────────────────────────────────────────────
-        public RelayCommand<MetodoPagoItemDto>  SeleccionarMetodoCommand { get; }
-        public RelayCommand<PagoIngresadoDto>   QuitarPagoCommand        { get; }
+        // ── Comandos ──────────────────────────────────────────────────────────
+        public RelayCommand<MetodoPagoItemDto> SeleccionarMetodoCommand { get; }
+        public RelayCommand<PagoIngresadoDto>  QuitarPagoCommand        { get; }
 
         public PagoViewModel()
         {
@@ -111,7 +129,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             QuitarPagoCommand        = new RelayCommand<PagoIngresadoDto>(QuitarPago);
         }
 
-        // ─── Inicialización desde VentaViewModel ──────────────────────────────────
+        // ── Inicialización ────────────────────────────────────────────────────
         public void InicializarConVenta(VentaViewModel venta)
         {
             ClienteNombre  = venta.ClienteNombre;
@@ -120,18 +138,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
             TotalFinal     = venta.TotalFinal;
             ItemsVenta     = new ObservableCollection<VentaItemDto>(venta.Items);
 
-            // Métodos de pago de ejemplo — reemplazar con servicio real
             MetodosPago = new ObservableCollection<MetodoPagoItemDto>
             {
-                new() { Id = 1, Nombre = "Efectivo",    Icono = "💵", EsEfectivo = true  },
-                new() { Id = 2, Nombre = "Débito",      Icono = "💳", EsEfectivo = false },
-                new() { Id = 3, Nombre = "Crédito",     Icono = "💳", EsEfectivo = false },
-                new() { Id = 4, Nombre = "Transferencia",Icono = "🏦", EsEfectivo = false },
+                new() { Id = 1, Nombre = "Efectivo",         Icono = "💵", EsEfectivo = true  },
+                new() { Id = 2, Nombre = "Débito",           Icono = "💳", EsEfectivo = false },
+                new() { Id = 3, Nombre = "Crédito",          Icono = "💳", EsEfectivo = false },
+                new() { Id = 4, Nombre = "Transferencia",    Icono = "🏦", EsEfectivo = false },
                 new() { Id = 5, Nombre = "QR / MercadoPago", Icono = "📱", EsEfectivo = false },
             };
         }
 
-        // ─── Métodos bindeados por Caliburn ───────────────────────────────────────
+        // ── Acciones Caliburn ─────────────────────────────────────────────────
         public void AgregarPago()
         {
             if (MetodoSeleccionado == null) return;
@@ -152,14 +169,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public async Task ConfirmarCobro()
         {
             if (!PagoCompleto) return;
-
             IsLoading = true;
             try
             {
-                // TODO: await _ventaServicio.ConfirmarAsync(ventaDto, pagosIngresados)
+                // TODO: await _ventaServicio.ConfirmarAsync(...)
                 await Task.Delay(300);
-
-                // Volver al listado
                 await IoC.Get<ShellViewModel>()
                          .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
             }
@@ -172,12 +186,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                      .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
 
-        // ─── Comandos ─────────────────────────────────────────────────────────────
+        // ── Lógica interna ────────────────────────────────────────────────────
         private void SeleccionarMetodo(MetodoPagoItemDto metodo)
         {
             if (metodo == null) return;
             MetodoSeleccionado = metodo;
-            // Precargar el saldo restante como monto sugerido
             if (TotalFinal - TotalPagado > 0)
                 MontoIngresado = (TotalFinal - TotalPagado).ToString("F2");
         }
@@ -191,34 +204,16 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         private void RecalcularTotalPagado()
         {
-            decimal total = 0;
-            foreach (var p in PagosIngresados) total += p.Monto;
-            TotalPagado = total;
+            decimal t = 0;
+            foreach (var p in PagosIngresados) t += p.Monto;
+            TotalPagado = t;
         }
 
         private void RecalcularVuelto()
         {
-            var diff    = TotalPagado - TotalFinal;
-            PagoCompleto  = diff >= 0;
-            VueltoOSaldo  = System.Math.Abs(diff);
+            var diff     = TotalPagado - TotalFinal;
+            PagoCompleto = diff >= 0;
+            VueltoOSaldo = System.Math.Abs(diff);
         }
-    }
-
-    // ─── DTOs locales ─────────────────────────────────────────────────────────────
-    public class MetodoPagoItemDto
-    {
-        public int    Id          { get; set; }
-        public string Nombre      { get; set; }
-        public string Icono       { get; set; }
-        public bool   EsEfectivo  { get; set; }
-        public bool   IsSeleccionado { get; set; }
-    }
-
-    public class PagoIngresadoDto
-    {
-        public int     MetodoId     { get; set; }
-        public string  MetodoNombre { get; set; }
-        public string  Icono        { get; set; }
-        public decimal Monto        { get; set; }
     }
 }

@@ -1,11 +1,11 @@
-﻿// ══════════════════════════════════════════════════════════════════════════════
-// COMPRA DETALLE VIEW MODEL
-// ══════════════════════════════════════════════════════════════════════════════
+﻿
 using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Compras;
 using GestionComercial.UI.ViewModels.Main;
 using System.Collections.ObjectModel;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Productos;
 
 public class CompraDetalleViewModel : NavigableViewModel
 {
@@ -86,7 +86,7 @@ public class CompraDetalleViewModel : NavigableViewModel
         set { _items = value; NotifyOfPropertyChange(() => Items); }
     }
 
-    public void InicializarConCompra(CompraResumenDto compra)
+    public void InicializarConCompra(CompraDto compra)
     {
         IdCompra = compra.IdCompra;
         Fecha = compra.Fecha;

@@ -1,91 +1,182 @@
 using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.Aplicacion.DTOs.Productos;  // ProductoItemDto + CategoriaItemDto
+using System.Collections.ObjectModel;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Productos
 {
     public class ProductoListadoViewModel : NavigableViewModel
     {
-        private readonly ShellViewModel _shell;
-
-        private int _totalProductos;
-        private int _productosActivos;
-        private int _productosStockBajo;
-        private int _productosSinStock;
-        private int _productosMostrados;
-        private int _paginaActual = 1;
-        private int _totalPaginas = 1;
-        private string _textoBusqueda;
-
-        public ProductoListadoViewModel(Main.ShellViewModel shell)
+        public ProductoListadoViewModel()
         {
-            _shell = shell;
-            Titulo = "Productos";
+            Titulo    = "Productos";
             Subtitulo = "Catálogo de productos";
         }
 
+        // ── Métricas ──────────────────────────────────────────────────
+        private int _totalProductos;
         public int TotalProductos
         {
             get => _totalProductos;
             set { _totalProductos = value; NotifyOfPropertyChange(() => TotalProductos); }
         }
+
+        private int _productosActivos;
         public int ProductosActivos
         {
             get => _productosActivos;
             set { _productosActivos = value; NotifyOfPropertyChange(() => ProductosActivos); }
         }
+
+        private int _productosStockBajo;
         public int ProductosStockBajo
         {
             get => _productosStockBajo;
             set { _productosStockBajo = value; NotifyOfPropertyChange(() => ProductosStockBajo); }
         }
+
+        private int _productosSinStock;
         public int ProductosSinStock
         {
             get => _productosSinStock;
             set { _productosSinStock = value; NotifyOfPropertyChange(() => ProductosSinStock); }
         }
-        public int ProductosMostrados
+
+        // ── Listas ────────────────────────────────────────────────────
+        private ObservableCollection<ProductoItemDto> _productos = new();
+        public ObservableCollection<ProductoItemDto> Productos
         {
-            get => _productosMostrados;
-            set { _productosMostrados = value; NotifyOfPropertyChange(() => ProductosMostrados); }
+            get => _productos;
+            set { _productos = value; NotifyOfPropertyChange(() => Productos); }
         }
-        public int PaginaActual
+
+        private ObservableCollection<CategoriaItemDto> _categorias = new();
+        public ObservableCollection<CategoriaItemDto> Categorias
         {
-            get => _paginaActual;
-            set { _paginaActual = value; NotifyOfPropertyChange(() => PaginaActual); }
+            get => _categorias;
+            set { _categorias = value; NotifyOfPropertyChange(() => Categorias); }
         }
-        public int TotalPaginas
+
+        // ── Selección (sidebar) ───────────────────────────────────────
+        private ProductoItemDto _productoSeleccionado;
+        public ProductoItemDto ProductoSeleccionado
         {
-            get => _totalPaginas;
-            set { _totalPaginas = value; NotifyOfPropertyChange(() => TotalPaginas); }
+            get => _productoSeleccionado;
+            set { _productoSeleccionado = value; NotifyOfPropertyChange(() => ProductoSeleccionado); }
         }
+
+        // ── Filtros ───────────────────────────────────────────────────
+        private string _textoBusqueda = string.Empty;
         public string TextoBusqueda
         {
             get => _textoBusqueda;
             set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
         }
 
-        public void Buscar() { /* TODO: búsqueda contra BD */ }
-
-        public async void NuevoProducto()
+        private CategoriaItemDto _categoriaSeleccionada;
+        public CategoriaItemDto CategoriaSeleccionada
         {
-            var vm = IoC.Get<ProductoFormularioViewModel>();
-            vm.EsModoEdicion = false;
-            await _shell.ActivateItemAsync(vm, CancellationToken.None);
+            get => _categoriaSeleccionada;
+            set { _categoriaSeleccionada = value; NotifyOfPropertyChange(() => CategoriaSeleccionada); }
         }
 
-        public bool CanPaginaAnterior => PaginaActual > 1;
-        public void PaginaAnterior()
+        // ── Paginación ────────────────────────────────────────────────
+        private int _productosMostrados;
+        public int ProductosMostrados
         {
-            if (PaginaActual > 1) PaginaActual--;
+            get => _productosMostrados;
+            set { _productosMostrados = value; NotifyOfPropertyChange(() => ProductosMostrados); }
+        }
+
+        private int _paginaActual = 1;
+        public int PaginaActual
+        {
+            get => _paginaActual;
+            set { _paginaActual = value; NotifyOfPropertyChange(() => PaginaActual); }
+        }
+
+        private int _totalPaginas = 1;
+        public int TotalPaginas
+        {
+            get => _totalPaginas;
+            set { _totalPaginas = value; NotifyOfPropertyChange(() => TotalPaginas); }
+        }
+
+        // ── Lifecycle ─────────────────────────────────────────────────
+        protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+            => await CargarAsync();
+
+        private async Task CargarAsync()
+        {
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                // TODO: cargar desde servicios reales
+                await Task.Delay(200);
+                Productos          = new ObservableCollection<ProductoItemDto>();
+                Categorias         = new ObservableCollection<CategoriaItemDto>();
+                TotalProductos     = 0;
+                ProductosMostrados = 0;
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
+        }
+
+        // ── Acciones ──────────────────────────────────────────────────
+        public async Task Buscar()
+        {
+            PaginaActual = 1;
+            await CargarAsync();
+        }
+
+        public async Task NuevoProducto()
+        {
+            // ProductoFormularioViewModel sirve tanto para crear como para editar
+            var vm = IoC.Get<ProductoFormularioViewModel>();
+            vm.InicializarParaCrear();
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public async Task EditarProducto()
+        {
+            if (ProductoSeleccionado == null) return;
+            var vm = IoC.Get<ProductoFormularioViewModel>();
+            vm.InicializarParaEditar(ProductoSeleccionado.IdProducto);
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public void CerrarDetalle() => ProductoSeleccionado = null;
+
+        public async Task VerMovimientos()
+        {
+            // TODO: navegar a movimientos filtrado por ProductoSeleccionado
+            await Task.CompletedTask;
+        }
+
+        public async Task DesactivarProducto()
+        {
+            if (ProductoSeleccionado == null) return;
+            // TODO: await _productoServicio.DesactivarAsync(ProductoSeleccionado.IdProducto);
+            await CargarAsync();
+        }
+
+        // ── Paginación ────────────────────────────────────────────────
+        public bool CanPaginaAnterior => PaginaActual > 1;
+        public async Task PaginaAnterior()
+        {
+            if (PaginaActual > 1) { PaginaActual--; await CargarAsync(); }
             NotifyOfPropertyChange(() => CanPaginaAnterior);
             NotifyOfPropertyChange(() => CanPaginaSiguiente);
         }
+
         public bool CanPaginaSiguiente => PaginaActual < TotalPaginas;
-        public void PaginaSiguiente()
+        public async Task PaginaSiguiente()
         {
-            if (PaginaActual < TotalPaginas) PaginaActual++;
+            if (PaginaActual < TotalPaginas) { PaginaActual++; await CargarAsync(); }
             NotifyOfPropertyChange(() => CanPaginaAnterior);
             NotifyOfPropertyChange(() => CanPaginaSiguiente);
         }

@@ -2,6 +2,9 @@ using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.DTOs.Ventas;
 
 namespace GestionComercial.UI.ViewModels.Main
 {
@@ -24,7 +27,7 @@ namespace GestionComercial.UI.ViewModels.Main
         {
             Titulo = "Dashboard";
             Subtitulo = "Resumen general";
-            VentasRecientes = new ObservableCollection<VentaResumenDash>();
+            VentasRecientes = new ObservableCollection<VentaResumenDto>();
             ProductosCriticosList = new ObservableCollection<ProductoCriticoDash>();
         }
 
@@ -92,7 +95,7 @@ namespace GestionComercial.UI.ViewModels.Main
             set { _progresoVentasMes = value; NotifyOfPropertyChange(() => ProgresoVentasMes); }
         }
 
-        public ObservableCollection<VentaResumenDash> VentasRecientes { get; set; }
+        public ObservableCollection<VentaResumenDto> VentasRecientes { get; set; }
         public ObservableCollection<ProductoCriticoDash> ProductosCriticosList { get; set; }
 
         // Navegación rápida desde dashboard
@@ -106,18 +109,4 @@ namespace GestionComercial.UI.ViewModels.Main
         public async void IrProductosStock() => await IoC.Get<ShellViewModel>().IrProductos();
     }
 
-    public class VentaResumenDash
-    {
-        public int IdVenta { get; set; }
-        public string ClienteNombre { get; set; }
-        public decimal TotalFinal { get; set; }
-        public DateTime Fecha { get; set; }
-    }
-
-    public class ProductoCriticoDash
-    {
-        public string Nombre { get; set; }
-        public int StockActual { get; set; }
-        public int StockMinimo { get; set; }
-    }
 }

@@ -3,9 +3,10 @@ using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Threading;
 
-namespace GestionComercial.UI.ViewModels.Productos
-{
-    public class ProductoFormularioViewModel : NavigableViewModel
+using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.UI.ViewModels.Productos;
+
+public class ProductoFormularioViewModel : NavigableViewModel
     {
         private readonly ShellViewModel _shell;
 
@@ -126,5 +127,14 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             await _shell.ActivateItemAsync(IoC.Get<ProductoListadoViewModel>(), CancellationToken.None);
         }
+
+    internal void InicializarParaCrear()
+    {
+        throw new NotImplementedException();
+    }
+
+    internal void InicializarParaEditar(int idProducto)
+    {
+        throw new NotImplementedException();
     }
 }

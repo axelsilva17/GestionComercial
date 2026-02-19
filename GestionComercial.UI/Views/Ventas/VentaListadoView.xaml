@@ -209,6 +209,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
+                    <!-- Búsqueda texto -->
                     <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="38">
                         <Grid>
@@ -225,22 +226,26 @@
                         </Grid>
                     </Border>
 
+                    <!-- Fecha desde -->
                     <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="38" Padding="10,0">
                         <DatePicker x:Name="FechaDesde" Background="Transparent" BorderThickness="0"
                                     Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center"/>
                     </Border>
 
+                    <!-- Fecha hasta -->
                     <Border Grid.Column="4" Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="38" Padding="10,0">
                         <DatePicker x:Name="FechaHasta" Background="Transparent" BorderThickness="0"
                                     Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center"/>
                     </Border>
 
-                    <ComboBox x:Name="FiltroEstado" Grid.Column="6" Height="38" FontSize="13"
+                    <!-- FIX: sin x:Name para que Caliburn no intente bindearlo a ItemsSource -->
+                    <ComboBox Grid.Column="6" Height="38" FontSize="13"
                               Background="{DynamicResource SurfaceBrush}"
                               Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" SelectedIndex="0">
+                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                              SelectedIndex="0">
                         <ComboBoxItem Content="Todos"/>
                         <ComboBoxItem Content="Completada"/>
                         <ComboBoxItem Content="Pendiente"/>
@@ -346,6 +351,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -478,7 +484,7 @@
                         <Button x:Name="VerDetalle" Content="Ver detalle completo"
                                 Height="40" FontSize="13" Style="{StaticResource PrimaryButton}" Margin="0,0,0,8"/>
 
-                        <Button x:Name="ImprimirVenta" Content="🖨  Imprimir comprobante"
+                        <Button x:Name="ImprimirVenta" Content="Imprimir comprobante"
                                 Height="40" FontSize="13" Style="{StaticResource GhostButton}" Margin="0,0,0,8"/>
 
                         <Button x:Name="CancelarVenta" Content="Cancelar venta"
