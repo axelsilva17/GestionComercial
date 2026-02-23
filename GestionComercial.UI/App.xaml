@@ -1,11 +1,16 @@
 <Application x:Class="GestionComercial.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-            >
+             xmlns:local="clr-namespace:GestionComercial.UI">
     <Application.Resources>
         
         <ResourceDictionary>
+            
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <local:Bootstrapper x:Key="Bootstrapper"/>
+                </ResourceDictionary>
+
                 <!-- Tema dinamico -->
                 <ResourceDictionary Source="/Views/Recursos/Estilos/ThemeLight.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Diccionarios/Colors.xaml"/>
@@ -18,6 +23,7 @@
                 <ResourceDictionary Source="/Views/Recursos/Estilos/DataGridStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/TextBoxStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/Animations.xaml"/>
+                
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

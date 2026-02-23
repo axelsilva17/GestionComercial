@@ -140,14 +140,23 @@ namespace GestionComercial.UI.ViewModels.Caja
             }
             finally { IsLoading = false; }
         }
-
         public async Task AbrirCaja()
         {
-            var vm = IoC.Get<AperturaCajaViewModel>();
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(vm, CancellationToken.None);
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("[AbrirCaja] Iniciando...");
+                var vm = IoC.Get<AperturaCajaViewModel>();
+                System.Diagnostics.Debug.WriteLine($"[AbrirCaja] VM obtenido: {vm?.GetType().Name ?? "NULL"}");
+                var shell = IoC.Get<ShellViewModel>();
+                System.Diagnostics.Debug.WriteLine("[AbrirCaja] Shell obtenido");
+                await shell.ActivateItemAsync(vm, CancellationToken.None);
+                System.Diagnostics.Debug.WriteLine("[AbrirCaja] ActivateItem completado");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AbrirCaja] Error: {ex}");
+            }
         }
-
         public async Task CerrarCaja()
         {
             var vm = IoC.Get<CierreCajaViewModel>();

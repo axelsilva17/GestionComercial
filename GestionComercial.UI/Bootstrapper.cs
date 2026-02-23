@@ -24,28 +24,26 @@ namespace GestionComercial.UI
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
 
-            // 1. PRIMERO TypeMappingConfiguration
             var config = new TypeMappingConfiguration
             {
                 DefaultSubNamespaceForViewModels = "ViewModels",
-                DefaultSubNamespaceForViews      = "Views"
+                DefaultSubNamespaceForViews = "Views"
             };
             ViewLocator.ConfigureTypeMappings(config);
             ViewModelLocator.ConfigureTypeMappings(config);
 
-            // 2. DESPUÉS namespace mappings explícitos por módulo
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Main",          "GestionComercial.UI.Views.Main");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Productos",     "GestionComercial.UI.Views.Productos");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Ventas",        "GestionComercial.UI.Views.Ventas");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Compras",       "GestionComercial.UI.Views.Compras");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Caja",          "GestionComercial.UI.Views.Caja");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Clientes",      "GestionComercial.UI.Views.Clientes");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Proveedores",   "GestionComercial.UI.Views.Proveedores");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Reportes",      "GestionComercial.UI.Views.Reportes");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Main", "GestionComercial.UI.Views.Main");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Productos", "GestionComercial.UI.Views.Productos");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Ventas", "GestionComercial.UI.Views.Ventas");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Compras", "GestionComercial.UI.Views.Compras");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Caja", "GestionComercial.UI.Views.Caja");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Clientes", "GestionComercial.UI.Views.Clientes");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Proveedores", "GestionComercial.UI.Views.Proveedores");
+            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Reportes", "GestionComercial.UI.Views.Reportes");
             ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Configuracion", "GestionComercial.UI.Views.Configuracion");
             ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Inventario", "GestionComercial.UI.Views.Inventario");
 
-            // 3. Debug hook DESPUÉS de los mappings para que capture la config final
+            // Debug hook
             var baseLocate = ViewLocator.LocateForModelType;
             ViewLocator.LocateForModelType = (modelType, displayLocation, context) =>
             {
@@ -55,15 +53,14 @@ namespace GestionComercial.UI
                 return view;
             };
 
-            // 4. Registro dinámico de todos los ViewModels
+            // Registro dinámico — sin duplicados manuales
             var assembly = Assembly.GetExecutingAssembly();
             var viewModelTypes = assembly.GetTypes()
                 .Where(t => t.IsClass
                          && !t.IsAbstract
                          && t.Namespace != null
                          && t.Namespace.StartsWith("GestionComercial.UI.ViewModels")
-                         && (IsSubclassOfRawGeneric(typeof(Conductor<>), t)
-                             || typeof(Screen).IsAssignableFrom(t)));
+                         && typeof(Screen).IsAssignableFrom(t));
 
             foreach (var vmType in viewModelTypes)
             {

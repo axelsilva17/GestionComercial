@@ -21,8 +21,6 @@ namespace GestionComercial.UI.Views.Main
             var storyboard = (Storyboard)FindResource("FadeIn");
             MainContainer.BeginStoryboard(storyboard);
         }
-
-        // PasswordBox no soporta binding directo — pasamos el valor al VM manualmente
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             ViewModel?.SetPassword(PasswordBox.Password);
@@ -30,7 +28,7 @@ namespace GestionComercial.UI.Views.Main
 
         private void UsuarioBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            // Caliburn bindea x:Name="Usuario" automáticamente al VM, este handler queda vacío
+         
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -1,16 +1,18 @@
-﻿using System;
-using System.Windows;
+﻿using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
 using Microsoft.Win32;
+using System;
+using System.Windows;
 
 namespace GestionComercial.UI
 {
     public partial class App : Application
     {
-        private Bootstrapper _bootstrapper;
+     
 
         public App()
         {
-            _bootstrapper = new Bootstrapper();
+            LiveCharts.Configure(config => config.AddSkiaSharp().AddDefaultMappers().AddDarkTheme());
             ApplyTheme();
         }
 
