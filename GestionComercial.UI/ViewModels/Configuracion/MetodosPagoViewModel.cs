@@ -6,33 +6,39 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Configuracion
 {
-    public class RolesViewModel : NavigableViewModel
+    public class MetodosPagoViewModel : NavigableViewModel
     {
-        private ObservableCollection<RolDto> _items = new();
-        public ObservableCollection<RolDto> Items
+        private ObservableCollection<MetodoPagoDto> _items = new();
+        public ObservableCollection<MetodoPagoDto> Items
         {
             get => _items;
             set { _items = value; NotifyOfPropertyChange(() => Items); }
         }
 
-        private RolDto _seleccionado;
-        public RolDto Seleccionado
+        private MetodoPagoDto _seleccionado;
+        public MetodoPagoDto Seleccionado
         {
             get => _seleccionado;
             set { _seleccionado = value; NotifyOfPropertyChange(() => Seleccionado); }
         }
 
-        private string _editNombre = string.Empty;
+        private string _editNombre    = string.Empty;
+        private bool   _editEfectivo  = false;
+        private bool   _esNuevo;
+
         public string EditNombre
         {
             get => _editNombre;
             set { _editNombre = value; NotifyOfPropertyChange(() => EditNombre); }
         }
+        public bool EditEfectivo
+        {
+            get => _editEfectivo;
+            set { _editEfectivo = value; NotifyOfPropertyChange(() => EditEfectivo); }
+        }
 
         private bool   _panelVisible;
-        private string _tituloPanel = "Nuevo Rol";
-        private bool   _esNuevo;
-
+        private string _tituloPanel = "Nuevo Método";
         public bool PanelVisible
         {
             get => _panelVisible;
@@ -47,28 +53,31 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public async Task CargarAsync()
         {
             await Task.Delay(100);
-            Items = new ObservableCollection<RolDto>
+            Items = new ObservableCollection<MetodoPagoDto>
             {
-                new() { IdRol = 1, Nombre = "Administrador" },
-                new() { IdRol = 2, Nombre = "Vendedor"      },
-                new() { IdRol = 3, Nombre = "Cajero"        },
+                new() { IdMetodoPago = 1, Nombre = "Efectivo",      EsEfectivo = true  },
+                new() { IdMetodoPago = 2, Nombre = "Débito",        EsEfectivo = false },
+                new() { IdMetodoPago = 3, Nombre = "Crédito",       EsEfectivo = false },
+                new() { IdMetodoPago = 4, Nombre = "Transferencia", EsEfectivo = false },
             };
         }
 
-        public void NuevoRol()
+        public void NuevoMetodo()
         {
-            _esNuevo     = true;
-            TituloPanel  = "Nuevo Rol";
-            EditNombre   = string.Empty;
-            PanelVisible = true;
+            _esNuevo      = true;
+            TituloPanel   = "Nuevo Método de Pago";
+            EditNombre    = string.Empty;
+            EditEfectivo  = false;
+            PanelVisible  = true;
         }
 
-        public void Editar(RolDto item)
+        public void Editar(MetodoPagoDto item)
         {
             _esNuevo     = false;
-            TituloPanel  = "Editar Rol";
+            TituloPanel  = "Editar Método de Pago";
             Seleccionado = item;
             EditNombre   = item.Nombre;
+            EditEfectivo = item.EsEfectivo;
             PanelVisible = true;
         }
 
@@ -84,11 +93,17 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 await Task.Delay(300);
                 if (_esNuevo)
                 {
-                    Items.Add(new RolDto { IdRol = Items.Count + 1, Nombre = EditNombre });
+                    Items.Add(new MetodoPagoDto
+                    {
+                        IdMetodoPago = Items.Count + 1,
+                        Nombre       = EditNombre,
+                        EsEfectivo   = EditEfectivo
+                    });
                 }
                 else if (Seleccionado != null)
                 {
-                    Seleccionado.Nombre = EditNombre;
+                    Seleccionado.Nombre     = EditNombre;
+                    Seleccionado.EsEfectivo = EditEfectivo;
                     var idx = Items.IndexOf(Seleccionado);
                     Items.RemoveAt(idx);
                     Items.Insert(idx, Seleccionado);
@@ -99,12 +114,12 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             finally { IsLoading = false; }
         }
 
-        public async Task Eliminar(RolDto item)
+        public async Task Eliminar(MetodoPagoDto item)
         {
             IsLoading = true;
             try
             {
-                await Task.Delay(200); // TODO: await servicio
+                await Task.Delay(200);
                 Items.Remove(item);
             }
             finally { IsLoading = false; }
