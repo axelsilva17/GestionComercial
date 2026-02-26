@@ -48,12 +48,5 @@ namespace GestionComercial.Aplicacion.DTOs.Proveedores
     /// <summary>
     /// DTO liviano para mostrar proveedores en ComboBox.
     /// </summary>
-    public class ProveedorItemDto
-    {
-        public int    IdProveedor { get; set; }
-        public string Nombre      { get; set; }
-        public string Telefono    { get; set; }
-        public string Email       { get; set; }
-        public string Inicial     => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
-    }
+   
 }

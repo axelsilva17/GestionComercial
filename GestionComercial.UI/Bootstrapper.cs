@@ -1,10 +1,8 @@
 using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Main;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Windows;
+
 
 namespace GestionComercial.UI
 {
@@ -23,6 +21,7 @@ namespace GestionComercial.UI
 
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
+   
 
             var config = new TypeMappingConfiguration
             {

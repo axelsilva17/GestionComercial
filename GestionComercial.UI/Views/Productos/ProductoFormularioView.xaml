@@ -112,19 +112,22 @@
                 <RowDefinition Height="Auto"/>  <!-- Acciones -->
             </Grid.RowDefinitions>
 
-            <!-- HEADER -->
+            <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>  <!-- Volver -->
+                    <ColumnDefinition Width="*"/>     <!-- Título -->
+                    <ColumnDefinition Width="Auto"/>  <!-- Importar desde Excel -->
                 </Grid.ColumnDefinitions>
 
-                <Button x:Name="Volver" Grid.Column="0"
+                <!-- Volver -->
+                <Button x:Name="VolverBtn" Grid.Column="0"
                         Content="← Volver"
                         Background="Transparent" BorderThickness="0"
                         Foreground="{DynamicResource TextSecondaryBrush}"
                         FontSize="13" Cursor="Hand" VerticalAlignment="Center"
-                        Margin="0,0,20,0">
+                        Margin="0,0,20,0"
+                        Click="Volver_Click">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="b" Background="{TemplateBinding Background}"
@@ -141,6 +144,7 @@
                     </Button.Template>
                 </Button>
 
+                <!-- Título -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="{Binding TituloFormulario, Mode=OneWay}"
                                FontSize="26" FontWeight="Bold"
@@ -149,6 +153,48 @@
                                FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                Margin="0,4,0,0"/>
                 </StackPanel>
+
+                <!-- ── Importar desde Excel (solo visible en modo Crear) ── -->
+                <Button x:Name="ImportarExcelBtn" Grid.Column="2"
+                        Height="40" Padding="16,0" FontSize="13" Cursor="Hand"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding MostrarBotonImportar, Converter={StaticResource BoolToVisibility}}"
+                        Click="ImportarExcel_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+                            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="b"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"
+                                                              Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                <Setter TargetName="b" Property="BorderBrush"  Value="{DynamicResource PrimaryBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⬆ " FontSize="14" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="Importar desde Excel" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </Grid>
 
             <!-- SECCIÓN: INFORMACIÓN DEL PRODUCTO -->
@@ -177,7 +223,8 @@
                         <!-- Nombre -->
                         <StackPanel Grid.Row="0" Grid.Column="0">
                             <TextBlock Text="NOMBRE *" Style="{StaticResource FieldLabel}"/>
-                            <TextBox x:Name="Nombre" Style="{StaticResource FormField}"/>
+                            <TextBox x:Name="NombreField" Style="{StaticResource FormField}"
+                                     Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
 
                         <!-- SKU -->
@@ -188,12 +235,14 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="SKU" Style="{StaticResource FormField}"
-                                         FontFamily="Consolas"/>
-                                <Button x:Name="GenerarSKU" Grid.Column="1"
+                                <TextBox x:Name="SKUField" Style="{StaticResource FormField}"
+                                         FontFamily="Consolas"
+                                         Text="{Binding SKU, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button x:Name="GenerarSKUBtn" Grid.Column="1"
                                         Content="⟳" Style="{StaticResource IconBtn}"
                                         Foreground="{DynamicResource PrimaryBrush}"
-                                        Margin="8,0,0,0" ToolTip="Generar SKU automático"/>
+                                        Margin="8,0,0,0" ToolTip="Generar SKU automático"
+                                        Click="GenerarSKU_Click"/>
                             </Grid>
                         </StackPanel>
 
@@ -205,8 +254,9 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="CodigoBarra" Style="{StaticResource FormField}"
-                                         FontFamily="Consolas"/>
+                                <TextBox x:Name="CodigoBarraField" Style="{StaticResource FormField}"
+                                         FontFamily="Consolas"
+                                         Text="{Binding CodigoBarra, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Button Grid.Column="1" Content="📷" Style="{StaticResource IconBtn}"
                                         Foreground="{DynamicResource TextSecondaryBrush}"
                                         Margin="8,0,0,0" ToolTip="Escanear código"/>
@@ -216,7 +266,7 @@
                         <!-- Categoría -->
                         <StackPanel Grid.Row="2" Grid.Column="2">
                             <TextBlock Text="CATEGORÍA *" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox x:Name="CategoriaId" Height="42" FontSize="14"
+                            <ComboBox x:Name="CategoriaIdField" Height="42" FontSize="14"
                                       Background="{DynamicResource SurfaceBrush}"
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
@@ -228,7 +278,7 @@
                         <!-- Unidad -->
                         <StackPanel Grid.Row="4" Grid.Column="0">
                             <TextBlock Text="UNIDAD DE MEDIDA *" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox x:Name="UnidadMedidaId" Height="42" FontSize="14"
+                            <ComboBox x:Name="UnidadMedidaIdField" Height="42" FontSize="14"
                                       Background="{DynamicResource SurfaceBrush}"
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
@@ -242,22 +292,25 @@
                             <Border Background="{DynamicResource SurfaceBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1" CornerRadius="8" Height="42" Padding="14,0">
-                                <CheckBox x:Name="Activo" Content="Producto activo"
+                                <CheckBox x:Name="ActivoField" Content="Producto activo"
                                           FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"
-                                          VerticalAlignment="Center"/>
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding Activo}"/>
                             </Border>
                         </StackPanel>
 
                         <!-- Descripción -->
                         <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
                             <TextBlock Text="DESCRIPCIÓN" Style="{StaticResource FieldLabel}"/>
-                            <TextBox x:Name="Descripcion"
+                            <TextBox x:Name="DescripcionField"
                                      Height="80" Padding="12,10" FontSize="14"
                                      Background="{DynamicResource SurfaceBrush}"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                      TextWrapping="Wrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto" Style="{x:Null}">
+                                     VerticalScrollBarVisibility="Auto"
+                                     Text="{Binding Descripcion, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{x:Null}">
                                 <TextBox.Template>
                                     <ControlTemplate TargetType="TextBox">
                                         <Border x:Name="border"
@@ -312,12 +365,13 @@
                                     <TextBlock Text="$" FontSize="15" FontWeight="Bold"
                                                Foreground="{DynamicResource SuccessBrush}"
                                                VerticalAlignment="Center" Margin="12,0,6,0"/>
-                                    <TextBox x:Name="PrecioVentaActual" Grid.Column="1"
+                                    <TextBox x:Name="PrecioVentaField" Grid.Column="1"
                                              Background="Transparent" BorderThickness="0"
                                              Foreground="{DynamicResource TextPrimaryBrush}"
                                              FontSize="15" FontWeight="SemiBold"
                                              VerticalContentAlignment="Center"
-                                             TextAlignment="Right" Padding="0,0,12,0"/>
+                                             TextAlignment="Right" Padding="0,0,12,0"
+                                             Text="{Binding PrecioVentaActual, UpdateSourceTrigger=PropertyChanged}"/>
                                 </Grid>
                             </Border>
                         </StackPanel>
@@ -336,15 +390,15 @@
                                     <TextBlock Text="$" FontSize="15" FontWeight="Bold"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
                                                VerticalAlignment="Center" Margin="12,0,6,0"/>
-                                    <TextBox x:Name="PrecioCostoActual" Grid.Column="1"
+                                    <TextBox x:Name="PrecioCostoField" Grid.Column="1"
                                              Background="Transparent" BorderThickness="0"
                                              Foreground="{DynamicResource TextPrimaryBrush}"
                                              FontSize="15" FontWeight="SemiBold"
                                              VerticalContentAlignment="Center"
-                                             TextAlignment="Right" Padding="0,0,12,0"/>
+                                             TextAlignment="Right" Padding="0,0,12,0"
+                                             Text="{Binding PrecioCostoActual, UpdateSourceTrigger=PropertyChanged}"/>
                                 </Grid>
                             </Border>
-                            <!-- Margen calculado -->
                             <TextBlock Margin="0,6,0,0" FontSize="12">
                                 <Run Text="Margen: " Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <Run Text="{Binding MargenCalculado, Mode=OneWay}"
@@ -355,15 +409,17 @@
                         <!-- Stock actual -->
                         <StackPanel Grid.Column="4">
                             <TextBlock Text="STOCK ACTUAL" Style="{StaticResource FieldLabel}"/>
-                            <TextBox x:Name="StockActual" Style="{StaticResource FormField}"
-                                     TextAlignment="Right" FontFamily="Consolas" FontSize="16"/>
+                            <TextBox x:Name="StockActualField" Style="{StaticResource FormField}"
+                                     TextAlignment="Right" FontFamily="Consolas" FontSize="16"
+                                     Text="{Binding StockActual, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
 
                         <!-- Stock mínimo -->
                         <StackPanel Grid.Column="6">
                             <TextBlock Text="STOCK MÍNIMO" Style="{StaticResource FieldLabel}"/>
-                            <TextBox x:Name="StockMinimo" Style="{StaticResource FormField}"
-                                     TextAlignment="Right" FontFamily="Consolas" FontSize="16"/>
+                            <TextBox x:Name="StockMinimoField" Style="{StaticResource FormField}"
+                                     TextAlignment="Right" FontFamily="Consolas" FontSize="16"
+                                     Text="{Binding StockMinimo, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Text="Alerta de reposición" FontSize="11"
                                        Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
                         </StackPanel>
@@ -403,14 +459,17 @@
                                FontSize="13" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <Button x:Name="Cancelar" Grid.Column="1"
+                <Button x:Name="CancelarBtn" Grid.Column="1"
                         Content="Cancelar" Style="{StaticResource GhostButton}"
-                        Height="42" Padding="24,0" FontSize="14"/>
+                        Height="42" Padding="24,0" FontSize="14"
+                        Click="Cancelar_Click"/>
 
-                <Button x:Name="Guardar" Grid.Column="3"
+                <Button x:Name="GuardarBtn" Grid.Column="3"
                         Content="Guardar Producto"
                         Style="{StaticResource PrimaryButton}"
-                        Height="42" Padding="28,0" FontSize="14"/>
+                        Height="42" Padding="28,0" FontSize="14"
+                        IsEnabled="{Binding CanGuardar}"
+                        Click="Guardar_Click"/>
             </Grid>
         </Grid>
     </ScrollViewer>

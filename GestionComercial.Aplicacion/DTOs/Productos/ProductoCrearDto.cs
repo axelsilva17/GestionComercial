@@ -10,6 +10,6 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
         public int     StockMinimo       { get; set; }
         public int     IdEmpresa         { get; set; }
         public int     IdCategoria       { get; set; }
-        public int     IdUnidadMedia     { get; set; }
+        public int     IdUnidadMedida    { get; set; }
     }
 }

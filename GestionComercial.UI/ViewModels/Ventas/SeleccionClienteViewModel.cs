@@ -51,7 +51,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public async Task Confirmar()
         {
             if (ClienteSeleccionado == null || VentaOrigen == null) return;
-            VentaOrigen.ClienteId     = ClienteSeleccionado.Id;
+            VentaOrigen.ClienteId     = ClienteSeleccionado.IdCliente;
             VentaOrigen.ClienteNombre = ClienteSeleccionado.Nombre;
             await IoC.Get<ShellViewModel>().ActivateItemAsync(VentaOrigen, CancellationToken.None);
         }

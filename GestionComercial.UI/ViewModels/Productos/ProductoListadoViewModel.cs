@@ -16,6 +16,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             Subtitulo = "Catálogo de productos";
         }
 
+
         // ── Métricas ──────────────────────────────────────────────────
         private int _totalProductos;
         public int TotalProductos

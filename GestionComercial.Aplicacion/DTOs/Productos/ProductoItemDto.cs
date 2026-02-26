@@ -6,17 +6,17 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
     /// </summary>
     public class ProductoItemDto
     {
-        public int     IdProducto        { get; set; }
-        public string  Nombre            { get; set; }
-        public string  CodigoBarra       { get; set; }
+        public int IdProducto { get; set; }
+        public string Nombre { get; set; }
+        public string CodigoBarra { get; set; }
         public decimal PrecioVentaActual { get; set; }
         public decimal PrecioCostoActual { get; set; }
-        public int     StockActual       { get; set; }
-        public int     StockMinimo       { get; set; }
-        public bool    Activo            { get; set; }
-        public string  CategoriaNombre   { get; set; }
-        public string  UnidadMedida      { get; set; }
-        public string  Inicial           => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
+        public int StockActual { get; set; }
+        public int StockMinimo { get; set; }
+        public bool Activo { get; set; }
+        public string CategoriaNombre { get; set; }
+        public string UnidadMedida { get; set; }
+        public string Inicial => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
     }
 
     /// <summary>
@@ -24,8 +24,18 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
     /// </summary>
     public class CategoriaItemDto
     {
-        public int    IdCategoria    { get; set; }
-        public string Nombre         { get; set; }
-        public int?   CategoriaPadre { get; set; }
+        public int IdCategoria { get; set; }
+        public string Nombre { get; set; }
+        public int? CategoriaPadre { get; set; }
+    }
+
+    /// <summary>
+    /// DTO liviano para poblar el ComboBox de unidades de medida en formularios.
+    /// </summary>
+    public class UnidadMedidaItemDto
+    {
+        public int IdUnidadMedida { get; set; }
+        public string Nombre { get; set; }
+        public string Abreviatura { get; set; }
     }
 }

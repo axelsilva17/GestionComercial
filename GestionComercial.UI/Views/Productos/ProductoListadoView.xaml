@@ -227,6 +227,7 @@
                             <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center"
                                        Margin="10,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBox x:Name="TextoBusqueda" Grid.Column="1"
+                                     Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="13" VerticalContentAlignment="Center"
@@ -239,7 +240,8 @@
                               Background="{DynamicResource SurfaceBrush}"
                               Foreground="{DynamicResource TextPrimaryBrush}"
                               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                              ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"/>
+                              ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
+                              SelectedItem="{Binding CategoriaSeleccionada}"/>
 
                     <ComboBox x:Name="FiltroActivo" Grid.Column="4"
                               Height="38" FontSize="13"
@@ -252,13 +254,17 @@
                         <ComboBoxItem Content="Inactivos"/>
                     </ComboBox>
 
-                    <Button x:Name="Buscar" Grid.Column="6"
+                    <!-- ── Buscar ── -->
+                    <Button x:Name="BuscarBtn" Grid.Column="6"
                             Content="Buscar" Height="38" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}"/>
+                            Style="{StaticResource PrimaryButton}"
+                            Click="Buscar_Click"/>
 
-                    <Button x:Name="NuevoProducto" Grid.Column="8"
+                    <!-- ── Nuevo Producto → navega a ProductoFormularioView ── -->
+                    <Button x:Name="NuevoProductoBtn" Grid.Column="8"
                             Height="38" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}">
+                            Style="{StaticResource PrimaryButton}"
+                            Click="NuevoProducto_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="+" FontSize="18" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -273,9 +279,10 @@
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="12" ClipToBounds="True">
                 <Grid>
-                    <DataGrid x:Name="ProductoSeleccionado"
+                    <DataGrid x:Name="ProductosGrid"
                               Style="{StaticResource ProductosGrid}"
                               ItemsSource="{Binding Productos}"
+                              SelectionChanged="ProductoSeleccionado_SelectionChanged"
                               Margin="4,4">
                         <DataGrid.Columns>
 
@@ -437,9 +444,10 @@
                 </TextBlock>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button x:Name="PaginaAnterior" Content="Anterior"
+                    <Button x:Name="PaginaAnteriorBtn" Content="Anterior"
                             Height="34" Padding="14,0" FontSize="12"
-                            Style="{StaticResource PrimaryButton}" Margin="0,0,6,0"/>
+                            Style="{StaticResource PrimaryButton}" Margin="0,0,6,0"
+                            Click="PaginaAnterior_Click"/>
                     <Border Background="{DynamicResource CardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1" CornerRadius="8"
@@ -451,9 +459,10 @@
                             <Run Text="{Binding TotalPaginas, Mode=OneWay}"/>
                         </TextBlock>
                     </Border>
-                    <Button x:Name="PaginaSiguiente" Content="Siguiente"
+                    <Button x:Name="PaginaSiguienteBtn" Content="Siguiente"
                             Height="34" Padding="14,0" FontSize="12"
-                            Style="{StaticResource PrimaryButton}" Margin="6,0,0,0"/>
+                            Style="{StaticResource PrimaryButton}" Margin="6,0,0,0"
+                            Click="PaginaSiguiente_Click"/>
                 </StackPanel>
             </Grid>
         </Grid>
@@ -481,11 +490,12 @@
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
-                            <Button Grid.Column="1" x:Name="CerrarDetalle"
+                            <Button Grid.Column="1" x:Name="CerrarDetalleBtn"
                                     Content="X" Width="28" Height="28" FontSize="12"
                                     Background="Transparent" BorderThickness="0"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
-                                    Cursor="Hand" VerticalAlignment="Top"/>
+                                    Cursor="Hand" VerticalAlignment="Top"
+                                    Click="CerrarDetalle_Click"/>
                         </Grid>
 
                         <Border CornerRadius="6" Padding="12,6"
@@ -562,25 +572,28 @@
                             </StackPanel>
                         </Border>
 
-                        <Button x:Name="EditarProducto"
+                        <Button x:Name="EditarProductoBtn"
                                 Content="Editar producto"
                                 Height="40" FontSize="13"
                                 Style="{StaticResource PrimaryButton}"
-                                Margin="0,0,0,8"/>
+                                Margin="0,0,0,8"
+                                Click="EditarProducto_Click"/>
 
-                        <Button x:Name="VerMovimientos"
+                        <Button x:Name="VerMovimientosBtn"
                                 Content="Ver movimientos"
                                 Height="40" FontSize="13"
                                 Style="{StaticResource GhostBtn}"
-                                Margin="0,0,0,8"/>
+                                Margin="0,0,0,8"
+                                Click="VerMovimientos_Click"/>
 
-                        <Button x:Name="DesactivarProducto"
+                        <Button x:Name="DesactivarProductoBtn"
                                 Content="Desactivar"
                                 Height="40" FontSize="13"
                                 Background="Transparent"
                                 Foreground="{DynamicResource ErrorBrush}"
                                 BorderBrush="{DynamicResource ErrorBrush}"
-                                BorderThickness="1" Cursor="Hand">
+                                BorderThickness="1" Cursor="Hand"
+                                Click="DesactivarProducto_Click">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b"
