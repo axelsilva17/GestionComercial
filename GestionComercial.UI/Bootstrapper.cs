@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.Views;
 using System.Reflection;
 using System.Windows;
 

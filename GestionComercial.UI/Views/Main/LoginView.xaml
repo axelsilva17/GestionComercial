@@ -38,7 +38,7 @@
         </Storyboard>
     </Window.Resources>
 
-    <Border 
+    <Border Background="{DynamicResource BackgroundBrush}"
             CornerRadius="20"
             Effect="{DynamicResource CardShadow}">
 
@@ -69,7 +69,24 @@
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Center">
 
-                        <Image Source="/Views/Recursos/Imagenes/Fondo.png"/>
+                        <Border x:Name="LogoContainer"
+                                Width="180" Height="180"
+                                Background="#243447"
+                                CornerRadius="30"
+                                Margin="0,0,0,40">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="40" ShadowDepth="0"
+                                                  Opacity="0.3" Color="#000000"/>
+                            </Border.Effect>
+                            <Viewbox Margin="40">
+                                <TextBlock Text="GC"
+                                           FontSize="120"
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Viewbox>
+                        </Border>
 
                         <TextBlock Text="Gestión Comercial"
                                    FontSize="36"
