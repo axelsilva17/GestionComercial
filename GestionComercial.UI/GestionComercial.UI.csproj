@@ -9,12 +9,9 @@
 	<ItemGroup>
 	  <Compile Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
 	  <EmbeddedResource Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
-	  <None Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
 	  <Page Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
 	</ItemGroup>
-	<ItemGroup>
-	  <None Remove="Views\Recursos\Imagenes\Fondo.png" />
-	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
 	</ItemGroup>

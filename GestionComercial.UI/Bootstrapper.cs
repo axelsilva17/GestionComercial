@@ -22,8 +22,8 @@ namespace GestionComercial.UI
 
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
-   
 
+             
             var config = new TypeMappingConfiguration
             {
                 DefaultSubNamespaceForViewModels = "ViewModels",
@@ -43,16 +43,7 @@ namespace GestionComercial.UI
             ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Configuracion", "GestionComercial.UI.Views.Configuracion");
             ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Inventario", "GestionComercial.UI.Views.Inventario");
 
-            // Debug hook
-            var baseLocate = ViewLocator.LocateForModelType;
-            ViewLocator.LocateForModelType = (modelType, displayLocation, context) =>
-            {
-                var view = baseLocate(modelType, displayLocation, context);
-                System.Diagnostics.Debug.WriteLine(
-                    $"[ViewLocator] VM={modelType.FullName} → Vista={(view?.GetType().FullName ?? "NULL")}");
-                return view;
-            };
-
+             
             // Registro dinámico — sin duplicados manuales
             var assembly = Assembly.GetExecutingAssembly();
             var viewModelTypes = assembly.GetTypes()

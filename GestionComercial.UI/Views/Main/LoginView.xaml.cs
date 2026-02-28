@@ -1,5 +1,4 @@
 using GestionComercial.UI.ViewModels.Main;
-using GestionComercial.UI.ViewModels.Main;
 using System.Windows;
 using System.Windows.Media.Animation;
 

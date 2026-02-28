@@ -15,7 +15,7 @@ namespace GestionComercial.UI.ViewModels.Main
         public LoginViewModel(IWindowManager windowManager, ShellViewModel shell)
         {
             _windowManager = windowManager;
-            _shell = shell;
+            _shell         = shell;
         }
 
         public string Usuario
@@ -40,26 +40,42 @@ namespace GestionComercial.UI.ViewModels.Main
             !string.IsNullOrWhiteSpace(_passwordValue) &&
             !IsLoading;
 
+        // =====================================================================
+        // CREDENCIALES DE PRUEBA
+        // usuario: gerente       password: gerente123
+        // usuario: administrador password: admin123
+        // usuario: vendedor      password: venta123
+        // =====================================================================
         public async Task LoginCommand()
         {
             IsLoading = true;
             LimpiarError();
             try
             {
-                await Task.Delay(500);
-                if (Usuario == "admin" && _passwordValue == "admin")
+                await Task.Delay(500); // simula llamada al servidor
+
+                var (ok, nombre, rol) = (Usuario?.ToLower(), _passwordValue) switch
                 {
+                    ("gerente",       "gerente123") => (true,  "Carlos Rodriguez", "Gerente"),
+                    ("administrador", "admin123")   => (true,  "Maria Gonzalez",   "Administrador"),
+                    ("vendedor",      "venta123")   => (true,  "Juan Perez",       "Vendedor"),
+                    _                               => (false, "",                 ""),
+                };
+
+                if (ok)
+                {
+                    _shell.ConfigurarSesion(nombre, rol, "Casa Central");
                     await _windowManager.ShowWindowAsync(_shell);
                     await TryCloseAsync();
                 }
                 else
                 {
-                    MostrarError("Usuario o contraseña incorrectos.");
+                    MostrarError("Usuario o contrasena incorrectos.");
                 }
             }
             catch (Exception ex)
             {
-                MostrarError($"Error al iniciar sesión: {ex.Message}");
+                MostrarError($"Error al iniciar sesion: {ex.Message}");
             }
             finally
             {
