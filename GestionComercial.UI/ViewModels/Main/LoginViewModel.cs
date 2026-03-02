@@ -1,81 +1,85 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
-using System;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GestionComercial.UI.ViewModels.Main
 {
     public class LoginViewModel : ViewModelBase
     {
-        private readonly IWindowManager _windowManager;
-        private readonly ShellViewModel _shell;
-        private string _usuario;
-        private string _passwordValue;
+        private readonly AutenticacionServicio _authServicio;
+        private readonly IWindowManager        _windowManager;
 
-        public LoginViewModel(IWindowManager windowManager, ShellViewModel shell)
+        public LoginViewModel(AutenticacionServicio authServicio, IWindowManager windowManager)
         {
+            _authServicio  = authServicio;
             _windowManager = windowManager;
-            _shell         = shell;
         }
 
-        public string Usuario
+        // ── Propiedades ───────────────────────────────────────────────────────
+        private string _email = string.Empty;
+        public string Email
         {
-            get => _usuario;
-            set
+            get => _email;
+            set { _email = value; NotifyOfPropertyChange(() => Email); }
+        }
+
+        private string _password = string.Empty;
+        public string Password
+        {
+            get => _password;
+            set { _password = value; NotifyOfPropertyChange(() => Password); }
+        }
+
+        private string _errorMessage = string.Empty;
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set { _errorMessage = value; NotifyOfPropertyChange(() => ErrorMessage); NotifyOfPropertyChange(() => TieneError); }
+        }
+
+        public bool TieneError => !string.IsNullOrEmpty(ErrorMessage);
+
+        // ── Login ─────────────────────────────────────────────────────────────
+        public async Task Ingresar()
+        {
+            if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {
-                _usuario = value;
-                NotifyOfPropertyChange(() => Usuario);
-                NotifyOfPropertyChange(() => CanLoginCommand);
+                ErrorMessage = "Ingresá email y contraseña.";
+                return;
             }
-        }
 
-        public void SetPassword(string password)
-        {
-            _passwordValue = password;
-            NotifyOfPropertyChange(() => CanLoginCommand);
-        }
+            IsLoading    = true;
+            ErrorMessage = string.Empty;
 
-        public bool CanLoginCommand =>
-            !string.IsNullOrWhiteSpace(Usuario) &&
-            !string.IsNullOrWhiteSpace(_passwordValue) &&
-            !IsLoading;
-
-        // =====================================================================
-        // CREDENCIALES DE PRUEBA
-        // usuario: gerente       password: gerente123
-        // usuario: administrador password: admin123
-        // usuario: vendedor      password: venta123
-        // =====================================================================
-        public async Task LoginCommand()
-        {
-            IsLoading = true;
-            LimpiarError();
             try
             {
-                await Task.Delay(500); // simula llamada al servidor
+                var sesion = await _authServicio.LoginAsync(Email, Password);
 
-                var (ok, nombre, rol) = (Usuario?.ToLower(), _passwordValue) switch
+                if (sesion == null)
                 {
-                    ("gerente",       "gerente123") => (true,  "Carlos Rodriguez", "Gerente"),
-                    ("administrador", "admin123")   => (true,  "Maria Gonzalez",   "Administrador"),
-                    ("vendedor",      "venta123")   => (true,  "Juan Perez",       "Vendedor"),
-                    _                               => (false, "",                 ""),
-                };
+                    ErrorMessage = "Email o contraseña incorrectos.";
+                    return;
+                }
 
-                if (ok)
-                {
-                    _shell.ConfigurarSesion(nombre, rol, "Casa Central");
-                    await _windowManager.ShowWindowAsync(_shell);
-                    await TryCloseAsync();
-                }
-                else
-                {
-                    MostrarError("Usuario o contrasena incorrectos.");
-                }
+                // Abrir ShellViewModel con los datos de sesión
+                var shell = IoC.Get<ShellViewModel>();
+                shell.UsuarioNombre   = sesion.NombreCompleto;
+                shell.UsuarioRol      = sesion.Rol;
+                shell.UsuarioSucursal = sesion.Sucursal;
+                shell.IdEmpresaActual = sesion.IdEmpresa;
+                shell.IdSucursalActual = sesion.IdSucursal;
+
+                await _windowManager.ShowWindowAsync(shell);
+
+                // Cerrar ventana de login
+                await TryCloseAsync();
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                MostrarError($"Error al iniciar sesion: {ex.Message}");
+                ErrorMessage = $"Error al conectar: {ex.Message}";
             }
             finally
             {

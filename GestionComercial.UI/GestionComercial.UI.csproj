@@ -1,39 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
-		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
+
+	<!-- UI depende de todo -->
 	<ItemGroup>
-	  <Compile Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
-	  <EmbeddedResource Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
-	  <Page Remove="using GestionComercial.UI.using GestionComercial.UI.Viewmodels.s\**" />
+		<ProjectReference Include="..\GestionComercial.Dominio\GestionComercial.Dominio.csproj" />
+		<ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
+		<ProjectReference Include="..\GestionComercial.Persistencia\GestionComercial.Persistencia.csproj" />
+		<ProjectReference Include="..\GestionComercial.Infraestructura\GestionComercial.Infraestructura.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="Views\Comandos\" />
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="Caliburn.Micro" Version="4.0.212" />
-		<PackageReference Include="ClosedXML" Version="0.105.0" />
 		<PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc6.1" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Resource Include="Views\Recursos\Imagenes\Fondo.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </Resource>
-	</ItemGroup>
-	<ItemGroup>
-	  <Page Update="Views\Recursos\Estilos\ThemeDark.xaml">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </Page>
-	  <Page Update="Views\Recursos\Estilos\ThemeLight.xaml">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </Page>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
 	</ItemGroup>
 </Project>

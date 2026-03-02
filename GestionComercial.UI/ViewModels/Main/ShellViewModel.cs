@@ -79,6 +79,10 @@ namespace GestionComercial.UI.ViewModels.Main
         public bool MostrarProveedores  => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
         public bool MostrarReportes     => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
         public bool MostrarConfiguracion=> Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
+
+        public int IdEmpresaActual { get; internal set; }
+        public int IdSucursalActual { get; internal set; }
+
         // Caja y Clientes los ven todos
 
         // ── Configurar sesión desde Login ─────────────────────────────────────

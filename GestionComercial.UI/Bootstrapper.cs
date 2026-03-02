@@ -1,50 +1,62 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Persistencia.Contexto;
+using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.ViewModels.Main;
-using GestionComercial.UI.Views;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using System.Windows;
-
 
 namespace GestionComercial.UI
 {
     public class Bootstrapper : BootstrapperBase
     {
-        private SimpleContainer _container;
+        private SimpleContainer _container = null!;
 
-        public Bootstrapper()
-        {
-            Initialize();
-        }
+        public Bootstrapper() => Initialize();
 
         protected override void Configure()
         {
             _container = new SimpleContainer();
 
+            // ── Caliburn ──────────────────────────────────────────────────────
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
 
-             
-            var config = new TypeMappingConfiguration
-            {
-                DefaultSubNamespaceForViewModels = "ViewModels",
-                DefaultSubNamespaceForViews = "Views"
-            };
-            ViewLocator.ConfigureTypeMappings(config);
-            ViewModelLocator.ConfigureTypeMappings(config);
+            // ── Configuración ─────────────────────────────────────────────────
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
 
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Main", "GestionComercial.UI.Views.Main");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Productos", "GestionComercial.UI.Views.Productos");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Ventas", "GestionComercial.UI.Views.Ventas");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Compras", "GestionComercial.UI.Views.Compras");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Caja", "GestionComercial.UI.Views.Caja");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Clientes", "GestionComercial.UI.Views.Clientes");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Proveedores", "GestionComercial.UI.Views.Proveedores");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Reportes", "GestionComercial.UI.Views.Reportes");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Configuracion", "GestionComercial.UI.Views.Configuracion");
-            ViewLocator.AddNamespaceMapping("GestionComercial.UI.ViewModels.Inventario", "GestionComercial.UI.Views.Inventario");
+            var connectionString = config.GetConnectionString("DefaultConnection")!;
 
-             
-            // Registro dinámico — sin duplicados manuales
+            // ── DbContext ─────────────────────────────────────────────────────
+            _container.Handler<GestionComercialContext>(
+                _ => new GestionComercialContext(
+                    new DbContextOptionsBuilder<GestionComercialContext>()
+                        .UseSqlServer(connectionString)
+                        .Options));
+
+            // ── UnitOfWork ────────────────────────────────────────────────────
+            _container.Handler<IUnitOfWork>(
+                c => new UnitOfWork(c.GetInstance<GestionComercialContext>()));
+
+            // ── Servicios ─────────────────────────────────────────────────────
+            _container.PerRequest<AutenticacionServicio>();
+            _container.PerRequest<ClienteServicio>();
+            _container.PerRequest<ProductoServicio>();
+            _container.PerRequest<VentaServicio>();
+            _container.PerRequest<CompraServicio>();
+            _container.PerRequest<CajaServicio>();
+            _container.PerRequest<ProveedorServicio>();
+            _container.PerRequest<StockServicio>();
+            _container.PerRequest<ReporteServicio>();
+            _container.PerRequest<UsuarioServicio>();
+
+            // ── ViewModels ────────────────────────────────────────────────────
             var assembly = Assembly.GetExecutingAssembly();
             var viewModelTypes = assembly.GetTypes()
                 .Where(t => t.IsClass
@@ -60,17 +72,19 @@ namespace GestionComercial.UI
                 else
                     _container.RegisterPerRequest(vmType, null, vmType);
             }
-        }
 
-        private static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
-        {
-            while (toCheck != null && toCheck != typeof(object))
+            // ── ViewLocator ───────────────────────────────────────────────────
+            ViewLocator.LocateTypeForModelType = (modelType, displayLocation, context) =>
             {
-                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-                if (generic == cur) return true;
-                toCheck = toCheck.BaseType;
-            }
-            return false;
+                var vmName   = modelType.FullName ?? string.Empty;
+                var viewName = vmName
+                    .Replace(".ViewModels.", ".Views.")
+                    .Replace("ViewModel", "View");
+                var viewType = modelType.Assembly.GetType(viewName);
+                System.Diagnostics.Debug.WriteLine(
+                    $"[ViewLocator] {modelType.Name} -> {viewType?.Name ?? "NO ENCONTRADO"}");
+                return viewType;
+            };
         }
 
         protected override object GetInstance(Type service, string key)
@@ -83,8 +97,6 @@ namespace GestionComercial.UI
             => _container.BuildUp(instance);
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
-        {
-            await DisplayRootViewForAsync<LoginViewModel>();
-        }
+            => await DisplayRootViewForAsync<LoginViewModel>();
     }
 }
