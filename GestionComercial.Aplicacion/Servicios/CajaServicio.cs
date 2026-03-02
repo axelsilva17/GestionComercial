@@ -1,7 +1,7 @@
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Interfaces;
-
+using GestionComercial.Dominio.Interfaces.Repositorios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -69,7 +69,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Descripcion = descripcion,
             };
 
-            await _uow.MovimientosCaja.AgregarAsync(movimiento);
+            await _uow.MovimientosCaja.ObtenerConMovimientosAsync(movimiento);
 
             // Actualizar saldo
             caja.MontoFinal += tipo == TipoMovimientoCaja.Ingreso ? monto : -monto;
