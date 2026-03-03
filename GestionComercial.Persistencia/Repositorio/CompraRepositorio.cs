@@ -11,8 +11,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<Compra?> ObtenerConDetallesAsync(int idCompra)
             => await _dbSet
-                .Include(c => c.Detalles)
-                    .ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
                 .Include(c => c.Proveedor)
                 .Include(c => c.Usuario)
                 .FirstOrDefaultAsync(c => c.Id == idCompra);
@@ -20,6 +19,13 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<IEnumerable<Compra>> ObtenerPorProveedorAsync(int idProveedor)
             => await _dbSet
                 .Where(c => c.Id_proveedor == idProveedor)
+                .OrderByDescending(c => c.Fecha)
+                .ToListAsync();
+
+        public async Task<IEnumerable<Compra>> ObtenerPorSucursalAsync(int idSucursal)
+            => await _dbSet
+                .Where(c => c.Id_sucursal == idSucursal)
+                .Include(c => c.Proveedor)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
     }

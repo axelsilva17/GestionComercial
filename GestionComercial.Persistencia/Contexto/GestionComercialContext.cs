@@ -34,7 +34,7 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<CompraDetalle>  CompraDetalles  { get; set; }
         public DbSet<MovimientoStock> MovimientosStock { get; set; }
         public DbSet<Caja>           Cajas           { get; set; }
-        public DbSet<MovimientoCaja> MovimientosCaja { get; set; }
+        public DbSet<TipoMovimientoCaja> MovimientosCaja { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

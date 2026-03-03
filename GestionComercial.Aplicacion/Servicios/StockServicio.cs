@@ -1,9 +1,7 @@
 using GestionComercial.Aplicacion.DTOs.Productos;
-using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Interfaces;
-
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -18,8 +16,10 @@ namespace GestionComercial.Aplicacion.Servicios
             if (producto == null) return null;
             return new StockDto
             {
-                IdProducto  = producto.Id,
-                ProductoNombre      = producto.Nombre,
+                IdProducto = producto.Id,
+                ProductoNombre = producto.Nombre,
+                IdSucursal = 0,
+                SucursalNombre = string.Empty,
                 StockActual = (int)producto.StockActual,
                 StockMinimo = (int)producto.StockMinimo,
             };
@@ -30,20 +30,21 @@ namespace GestionComercial.Aplicacion.Servicios
             var producto = await _uow.Productos.ObtenerPorIdAsync(idProducto)
                 ?? throw new KeyNotFoundException($"Producto {idProducto} no encontrado");
 
-            var tipo = cantidad >= 0 ? TipoMovimiento.AjustePositivo : TipoMovimiento.AjusteNegativo;
-
+            var stockAnterior = producto.StockActual;
             producto.StockActual += cantidad;
             _uow.Productos.Actualizar(producto);
 
             await _uow.MovimientosStock.AgregarAsync(new MovimientoStock
             {
-                Id_producto  = idProducto,
-                Id_sucursal  = idSucursal,
-                Id_usuario   = idUsuario,
-                Cantidad     = Math.Abs(cantidad),
-                TipoMovimiento         = tipo,
-                Observacion  = motivo,
-                Fecha        = DateTime.Now,
+                Id_producto = idProducto,
+                Id_sucursal = idSucursal,
+                Id_usuario = idUsuario,
+                Cantidad = Math.Abs(cantidad),
+                TipoMovimiento = cantidad >= 0 ? 1 : 2, // 1=Entrada 3=Ajuste
+                Observacion = motivo,
+                Fecha = DateTime.Now,
+                StockAnterior = stockAnterior,
+                StockNuevo = producto.StockActual,
             });
 
             await _uow.GuardarCambiosAsync();

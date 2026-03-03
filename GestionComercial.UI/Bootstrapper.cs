@@ -1,8 +1,8 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
-using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.ViewModels.Main;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -76,7 +76,7 @@ namespace GestionComercial.UI
             // ── ViewLocator ───────────────────────────────────────────────────
             ViewLocator.LocateTypeForModelType = (modelType, displayLocation, context) =>
             {
-                var vmName   = modelType.FullName ?? string.Empty;
+                var vmName = modelType.FullName ?? string.Empty;
                 var viewName = vmName
                     .Replace(".ViewModels.", ".Views.")
                     .Replace("ViewModel", "View");

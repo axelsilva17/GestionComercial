@@ -11,13 +11,11 @@ using GestionComercial.Dominio.Entidades.Ventas;
 namespace GestionComercial.Dominio.Interfaces.Repositorios
 {
 
-
-    public interface IClienteRepositorio : IRepositorioBase<Cliente>
+    public interface IMovimientoStockRepositorio : IRepositorioBase<MovimientoStock>
     {
-        Task<Cliente?> ObtenerPorDocumentoAsync(string documento, int idEmpresa);
-        Task<IEnumerable<Cliente>> BuscarPorNombreAsync(string nombre, int idEmpresa);
-        Task<IEnumerable<Cliente>> ObtenerPorEmpresaAsync(int idEmpresa);
+        Task<IEnumerable<MovimientoStock>> ObtenerPorProductoAsync(int idProducto);
+        Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal);
     }
 
- 
+   
 }

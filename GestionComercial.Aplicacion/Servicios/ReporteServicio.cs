@@ -1,8 +1,6 @@
 using GestionComercial.Aplicacion.DTOs.Reportes;
-using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Interfaces;
-using GestionComercial.Dominio.Interfaces.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -13,15 +11,20 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<ReporteVendedorDto>> VentasPorVendedorAsync(int idSucursal, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerPorSucursalYFechaAsync(idSucursal, desde, hasta);
+            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(desde, hasta, idSucursal);
             return ventas
                 .GroupBy(v => v.Id_usuario)
                 .Select(g => new ReporteVendedorDto
                 {
-                    NombreVendedor  = $"{g.First().Usuario?.Nombre} {g.First().Usuario?.Apellido}".Trim(),
-                    CantidadVentas  = g.Count(),
-                    TotalVentas     = g.Sum(v => v.TotalFinal),
-                    TicketPromedio  = g.Average(v => v.TotalFinal),
+                    IdUsuario      = g.Key,
+                    UsuarioNombre  = g.First().Usuario != null
+                        ? $"{g.First().Usuario!.Nombre} {g.First().Usuario!.Apellido}"
+                        : string.Empty,
+                    Sucursal       = g.First().Sucursal?.Nombre ?? string.Empty,
+                    CantidadVentas = g.Count(),
+                    TotalVendido   = g.Sum(v => v.TotalFinal),
+                    PromedioVenta  = g.Average(v => v.TotalFinal),
+                    TotalDescuentos = g.Sum(v => v.TotalDescuento),
                 });
         }
 
@@ -31,16 +34,23 @@ namespace GestionComercial.Aplicacion.Servicios
             return ventas
                 .SelectMany(v => v.Detalles)
                 .GroupBy(d => d.Id_producto)
-                .Select(g => new ReporteMargenDto
+                .Select(g =>
                 {
-                    NombreProducto  = g.First().Producto?.Nombre ?? string.Empty,
-                    CantidadVendida = g.Sum(d => d.Cantidad),
-                    Ingresos        = g.Sum(d => d.Subtotal),
-                    Costo           = g.Sum(d => d.CostoUnitario * d.Cantidad),
-                    Margen          = g.Sum(d => d.Subtotal) > 0
-                        ? (double)((g.Sum(d => d.Subtotal) - g.Sum(d => d.CostoUnitario * d.Cantidad))
-                          / g.Sum(d => d.Subtotal) * 100)
-                        : 0,
+                    var ingresos   = g.Sum(d => d.Subtotal);
+                    var costo      = g.Sum(d => d.CostoUnitario * d.Cantidad);
+                    var margenTotal = ingresos - costo;
+                    return new ReporteMargenDto
+                    {
+                        IdProducto       = g.Key,
+                        ProductoNombre   = g.First().Producto?.Nombre ?? string.Empty,
+                        Categoria        = g.First().Producto?.Categoria?.Nombre ?? string.Empty,
+                        PrecioVenta      = g.First().PrecioUnitario,
+                        PrecioCosto      = g.First().CostoUnitario,
+                        MargenUnitario   = g.First().PrecioUnitario - g.First().CostoUnitario,
+                        MargenPorcentaje = ingresos > 0 ? (margenTotal / ingresos) * 100 : 0,
+                        CantidadVendida  = (int)g.Sum(d => d.Cantidad),
+                        MargenTotal      = margenTotal,
+                    };
                 });
         }
 
@@ -49,10 +59,12 @@ namespace GestionComercial.Aplicacion.Servicios
             var productos = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
             return productos.Select(p => new ReportesStockDto
             {
-                NombreProducto = p.Nombre,
-                StockActual    = p.StockActual,
-                StockMinimo    = p.StockMinimo,
+                IdProducto     = p.Id,
+                ProductoNombre = p.Nombre,
                 Categoria      = p.Categoria?.Nombre ?? string.Empty,
+                Sucursal       = string.Empty,
+                StockActual    = (int)p.StockActual,
+                StockMinimo    = (int)p.StockMinimo,
             });
         }
 
@@ -64,9 +76,19 @@ namespace GestionComercial.Aplicacion.Servicios
                 .GroupBy(d => d.Id_producto)
                 .Select(g => new ReporteRotacionDto
                 {
-                    NombreProducto  = g.First().Producto?.Nombre ?? string.Empty,
-                    CantidadVendida = g.Sum(d => d.Cantidad),
-                    Ingresos        = g.Sum(d => d.Subtotal),
+                    IdProducto       = g.Key,
+                    ProductoNombre   = g.First().Producto?.Nombre ?? string.Empty,
+                    Categoria        = g.First().Producto?.Categoria?.Nombre ?? string.Empty,
+                    StockActual      = (int)(g.First().Producto?.StockActual ?? 0),
+                    CantidadVendida  = (int)g.Sum(d => d.Cantidad),
+                    CantidadComprada = 0, // requiere cruzar con compras
+                    IndiceRotacion   = g.First().Producto?.StockActual > 0
+                        ? g.Sum(d => d.Cantidad) / g.First().Producto!.StockActual
+                        : 0,
+                    UltimaVenta  = ventas
+                        .Where(v => v.Detalles.Any(d => d.Id_producto == g.Key))
+                        .Max(v => v.Fecha),
+                    UltimaCompra = DateTime.MinValue,
                 })
                 .OrderByDescending(r => r.CantidadVendida);
         }

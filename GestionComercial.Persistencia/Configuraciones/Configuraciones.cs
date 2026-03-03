@@ -297,9 +297,9 @@ namespace GestionComercial.Persistencia.Configuraciones
         }
     }
 
-    public class MovimientoCajaConfiguracion : IEntityTypeConfiguration<MovimientoCaja>
+    public class MovimientoCajaConfiguracion : IEntityTypeConfiguration<TipoMovimientoCaja>
     {
-        public void Configure(EntityTypeBuilder<MovimientoCaja> b)
+        public void Configure(EntityTypeBuilder<TipoMovimientoCaja> b)
         {
             b.ToTable("MovimientoCaja");
             b.HasKey(m => m.Id);

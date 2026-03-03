@@ -10,14 +10,9 @@ using GestionComercial.Dominio.Entidades.Ventas;
 
 namespace GestionComercial.Dominio.Interfaces.Repositorios
 {
-
-
-    public interface IClienteRepositorio : IRepositorioBase<Cliente>
+  
+    public interface ISucursalRepositorio : IRepositorioBase<Sucursal>
     {
-        Task<Cliente?> ObtenerPorDocumentoAsync(string documento, int idEmpresa);
-        Task<IEnumerable<Cliente>> BuscarPorNombreAsync(string nombre, int idEmpresa);
-        Task<IEnumerable<Cliente>> ObtenerPorEmpresaAsync(int idEmpresa);
+        Task<IEnumerable<Sucursal>> ObtenerPorEmpresaAsync(int idEmpresa);
     }
-
- 
 }

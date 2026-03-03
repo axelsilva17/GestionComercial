@@ -9,28 +9,30 @@ namespace GestionComercial.Dominio.Repositorio
     {
         private readonly GestionComercialContext _context;
 
-        public IProductoRepositorio           Productos        { get; }
-        public IClienteRepositorio            Clientes         { get; }
-        public IProveedorRepositorio          Proveedores      { get; }
-        public IVentaRepostorio               Ventas           { get; }
-        public ICompraRepositorio             Compras          { get; }
-        public ICajaRepositorio               Cajas            { get; }
-        public IMovimientoStockRepositorio    MovimientosStock { get; }
-        public IUsuarioRepositorio            Usuarios         { get; }
-        public ICateogoriaRepositorio         Categorias       { get; }
-        public IEmpresaRepositorio            Empresas         { get; }
-        public ISucursalRepositorio           Sucursales       { get; }
+        public IProductoRepositorio          Productos        { get; }
+        public IClienteRepositorio           Clientes         { get; }
+        public IProveedorRepositorio         Proveedores      { get; }
+        public IVentaRepostorio              Ventas           { get; }
+        public ICompraRepositorio            Compras          { get; }
+        public ICajaRepositorio              Cajas            { get; }
+        public IMovimientoStockRepositorio   MovimientosStock { get; }
+        public IMovimientoCajaRepositorio    MovimientosCaja  { get; }
+        public IUsuarioRepositorio           Usuarios         { get; }
+        public ICateogoriaRepositorio        Categorias       { get; }
+        public IEmpresaRepositorio           Empresas         { get; }
+        public ISucursalRepositorio          Sucursales       { get; }
 
-        public UnitOfWork(GestionComercialContext context, object value, IClienteRepositorio ClienteRepositorio)
+        public UnitOfWork(GestionComercialContext context)
         {
             _context         = context;
             Productos        = new ProductoRepositorio(context);
-            Clientes         = ClienteRepositorio;
+            Clientes         = new ClienteRepositorio(context);
             Proveedores      = new ProveedorRepositorio(context);
             Ventas           = new VentaRepositorio(context);
             Compras          = new CompraRepositorio(context);
             Cajas            = new CajaRepositorio(context);
             MovimientosStock = new MovimientoStockRepositorio(context);
+            MovimientosCaja  = new MovimientoCajaRepositorio(context);
             Usuarios         = new UsuarioRepositorio(context);
             Categorias       = new CategoriaRepositorio(context);
             Empresas         = new EmpresaRepositorio(context);

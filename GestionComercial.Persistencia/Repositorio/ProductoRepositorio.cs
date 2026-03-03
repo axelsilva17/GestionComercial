@@ -29,5 +29,18 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(p => p.UnidadMedida)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
+
+        public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa)
+            => await _dbSet
+                .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
+                .Include(p => p.Categoria)
+                .OrderBy(p => p.StockActual)
+                .ToListAsync();
+
+        public async Task<Producto?> ObtenerPorIdConDetallesAsync(int id)
+            => await _dbSet
+                .Include(p => p.Categoria)
+                .Include(p => p.UnidadMedida)
+                .FirstOrDefaultAsync(p => p.Id == id);
     }
 }

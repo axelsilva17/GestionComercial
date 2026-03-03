@@ -19,7 +19,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
         public Sucursal  Sucursal        { get; set; } = null!;
         public Usuario   UsuarioApertura { get; set; } = null!;
         public Usuario?  UsuarioCierre   { get; set; }
-        public ICollection<MovimientoCaja> Movimientos { get; set; } = new List<MovimientoCaja>();
+        public ICollection<TipoMovimientoCaja> Movimientos { get; set; } = new List<TipoMovimientoCaja>();
         public ICollection<Venta>          Ventas      { get; set; } = new List<Venta>();
 
         public bool EstaAbierta => Estado == 1;

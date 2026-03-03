@@ -8,12 +8,12 @@ namespace GestionComercial.UI
 {
     public partial class App : Application
     {
-     
-
         public App()
         {
-            LiveCharts.Configure(config => config.AddSkiaSharp().AddDefaultMappers().AddDarkTheme());
-            ApplyTheme();
+            LiveCharts.Configure(config =>
+                config.AddSkiaSharp()
+                      .AddDefaultMappers()
+                      .AddDarkTheme());
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -24,18 +24,16 @@ namespace GestionComercial.UI
             SystemEvents.UserPreferenceChanged += (s, args) =>
             {
                 if (args.Category == UserPreferenceCategory.General)
-                {
                     ApplyTheme();
-                }
             };
+
+            ApplyTheme();
         }
+
         private void ApplyTheme()
         {
             bool isDark = IsDarkModeEnabled();
-            var dictionaries = Resources.MergedDictionaries;
-            dictionaries.Clear();
-
-            string assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            string assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name!;
             string path = isDark
                 ? "/Views/Recursos/Estilos/ThemeDark.xaml"
                 : "/Views/Recursos/Estilos/ThemeLight.xaml";
@@ -45,26 +43,24 @@ namespace GestionComercial.UI
                 Source = new Uri($"pack://application:,,,/{assemblyName};component/{path}", UriKind.Absolute)
             };
 
-            dictionaries.Add(theme);
+            // Reemplazar solo el tema (primer diccionario), sin tocar el Bootstrapper ni los demás
+            var merged = Resources.MergedDictionaries;
+            if (merged.Count > 0)
+                merged[0] = theme;
+            else
+                merged.Add(theme);
         }
+
         private bool IsDarkModeEnabled()
         {
             try
             {
-                using var key = Registry.CurrentUser.OpenSubKey(
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
                     @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-
-                object value = key?.GetValue("AppsUseLightTheme");
-
-                if (value is int intValue)
-                {
-                    return intValue == 0; // 0 = Dark
-                }
+                if (key?.GetValue("AppsUseLightTheme") is int val)
+                    return val == 0;
             }
-            catch
-            {
-            }
-
+            catch { }
             return false;
         }
     }

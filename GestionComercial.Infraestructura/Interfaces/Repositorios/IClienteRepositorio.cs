@@ -16,7 +16,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     {
         Task<Cliente?> ObtenerPorDocumentoAsync(string documento, int idEmpresa);
         Task<IEnumerable<Cliente>> BuscarPorNombreAsync(string nombre, int idEmpresa);
-        Task<IEnumerable<Cliente>> ObtenerPorEmpresaAsync(int idEmpresa);
+        Task<IEnumerable<object>> ObtenerPorEmpresaAsync(int idEmpresa);
     }
 
  

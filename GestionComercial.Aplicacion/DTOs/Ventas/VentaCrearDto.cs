@@ -8,6 +8,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public int                    IdSucursal     { get; set; }
         public int                    IdCliente      { get; set; }
         public int                    IdUsuario      { get; set; }
+        public int                      IdCaja        { get; set; }
         public decimal                TotalBruto     { get; set; }
         public decimal                TotalDescuento { get; set; }
         public decimal                TotalFinal     { get; set; }

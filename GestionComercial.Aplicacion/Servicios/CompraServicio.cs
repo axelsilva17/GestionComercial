@@ -49,7 +49,7 @@ namespace GestionComercial.Aplicacion.Servicios
                     Id_producto  = item.IdProducto,
                     Cantidad     = item.Cantidad,
                     PrecioCosto  = item.PrecioCosto,
-                    SubTotal     = subtotal,
+                    Subtotal     = subtotal,
                 });
 
                 // Actualizar stock y precio costo
@@ -70,13 +70,13 @@ namespace GestionComercial.Aplicacion.Servicios
             IdCompra        = c.Id,
             Fecha           = c.Fecha,
             Total           = c.Total,
-            NombreProveedor = c.Proveedor?.Nombre ?? string.Empty,
-            Items           = c.Detalles.Select(d => new CompraDetalle
+            ProveedorNombre = c.Proveedor?.Nombre ?? string.Empty,
+            Items           = c.Detalles.Select(d => new CompraDetalleDto
             {
-                Id_producto = d.Id_producto,
-                Cantidad    = d.Cantidad,
+                IdProducto = d.Id_producto,
+                Cantidad    = (int)d.Cantidad,
                 PrecioCosto = d.PrecioCosto,
-                SubTotal    = d.SubTotal,
+                SubTotal    = d.Subtotal,
             }).ToList(),
         };
     }

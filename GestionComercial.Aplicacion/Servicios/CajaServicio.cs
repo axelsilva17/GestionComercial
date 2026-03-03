@@ -1,7 +1,7 @@
+using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Interfaces;
-using GestionComercial.Dominio.Interfaces.Repositorios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -21,12 +21,12 @@ namespace GestionComercial.Aplicacion.Servicios
 
             var caja = new Caja
             {
-                FechaApertura       = DateTime.Now,
-                MontoInicial        = montoInicial,
-                MontoFinal          = montoInicial,
-                Estado              = EstadoCaja.Abierta,
-                Id_sucursal         = idSucursal,
-                UsuarioApertura_id  = idUsuario,
+                FechaApertura = DateTime.Now,
+                MontoInicial = montoInicial,
+                MontoFinal = montoInicial,
+                Estado = 1, // 1=Abierta
+                Id_sucursal = idSucursal,
+                UsuarioApertura_id = idUsuario,
             };
 
             await _uow.Cajas.AgregarAsync(caja);
@@ -39,42 +39,40 @@ namespace GestionComercial.Aplicacion.Servicios
             var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
                 ?? throw new CajaNoAbiertaException();
 
-            if (caja.Estado != EstadoCaja.Abierta)
+            if (!caja.EstaAbierta)
                 throw new CajaNoAbiertaException();
 
-            caja.FechaCierre     = DateTime.Now;
-            caja.MontoFinal      = montoFinal;
-            caja.Estado          = EstadoCaja.Cerrada;
-            caja.UsuarioCierreId = idUsuario;
+            caja.FechaCierre = DateTime.Now;
+            caja.MontoFinal = montoFinal;
+            caja.Estado = 2; // 2=Cerrada
+            caja.UsuarioCierre_id = idUsuario;
 
             _uow.Cajas.Actualizar(caja);
             await _uow.GuardarCambiosAsync();
             return caja;
         }
 
-        public async Task RegistrarMovimientoAsync(int idCaja, TipoMovimientoCaja tipo, decimal monto, string descripcion)
+        public async Task RegistrarMovimientoAsync(int idCaja, TipoMovimientoCajaEnum tipo, decimal monto, string descripcion)
         {
             var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
                 ?? throw new CajaNoAbiertaException();
 
-            if (caja.Estado != EstadoCaja.Abierta)
+            if (!caja.EstaAbierta)
                 throw new CajaNoAbiertaException();
 
-            var movimiento = new MovimientoCaja
+            var movimiento = new TipoMovimientoCaja
             {
-                Id_caja     = idCaja,
-                Tipo        = tipo,
-                Monto       = monto,
-                Fecha       = DateTime.Now,
-                Descripcion = descripcion,
+                Id_caja = idCaja,
+                Tipo = (int)tipo,
+                Monto = monto,
+                Fecha = DateTime.Now,
+                Concepto = descripcion,
             };
 
-            await _uow.MovimientosCaja.ObtenerConMovimientosAsync(movimiento);
+            await _uow.MovimientosCaja.AgregarAsync(movimiento);
 
-            // Actualizar saldo
-            caja.MontoFinal += tipo == TipoMovimientoCaja.Ingreso ? monto : -monto;
+            caja.MontoFinal += tipo == TipoMovimientoCajaEnum.Ingreso ? monto : -monto;
             _uow.Cajas.Actualizar(caja);
-
             await _uow.GuardarCambiosAsync();
         }
     }

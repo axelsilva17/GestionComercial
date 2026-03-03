@@ -1,9 +1,7 @@
 using GestionComercial.Aplicacion.DTOs.Clientes;
-using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Interfaces;
-using GestionComercial.Dominio.Interfaces.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -15,44 +13,23 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<IEnumerable<ClienteDto>> ObtenerTodosAsync(int idEmpresa)
         {
             var clientes = await _uow.Clientes.ObtenerPorEmpresaAsync(idEmpresa);
-            return clientes.Select(c => new ClienteDto
-            {
-                IdCliente  = c.Id,
-                Nombre     = c.Nombre,
-                Apellido   = c.Apellido,
-                Documento  = c.Documento,
-                Telefono   = c.Telefono,
-                Email      = c.Email,
-                Activo     = c.Activo,
-            });
+            return clientes.Select(MapearDto);
         }
 
         public async Task<ClienteDto?> ObtenerPorIdAsync(int id)
         {
             var c = await _uow.Clientes.ObtenerPorIdAsync(id);
-            if (c == null) return null;
-            return new ClienteDto
-            {
-                IdCliente = c.Id,
-                Nombre    = c.Nombre,
-                Apellido  = c.Apellido,
-                Documento = c.Documento,
-                Telefono  = c.Telefono,
-                Email     = c.Email,
-                Activo    = c.Activo,
-            };
+            return c == null ? null : MapearDto(c);
         }
 
         public async Task<ClienteDto> CrearAsync(ClienteCrearDto dto)
         {
-            var cliente = new Clientes
+            var cliente = new Cliente
             {
-                Nombre    = dto.Nombre,
-                Apellido  = dto.Apellido,
-                Documento = dto.Documento,
-                Telefono  = dto.Telefono,
-                Email     = dto.Email,
-                Activo    = true,
+                Nombre     = dto.Nombre,
+                Documento  = dto.Documento.ToString(),
+                Telefono   = dto.Telefono,
+                Email      = dto.Email,
                 Id_empresa = dto.IdEmpresa,
             };
             await _uow.Clientes.AgregarAsync(cliente);
@@ -62,12 +39,12 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task ActualizarAsync(ClienteActualizarDto dto)
         {
-            var cliente = await _uow.Clientes.ObtenerPorIdAsync(dto.IdCliente)
-                ?? throw new KeyNotFoundException($"Cliente {dto.IdCliente} no encontrado");
-            cliente.Nombre   = dto.Nombre;
-            cliente.Apellido = dto.Apellido;
-            cliente.Telefono = dto.Telefono;
-            cliente.Email    = dto.Email;
+            var cliente = await _uow.Clientes.ObtenerPorIdAsync(dto.Id)
+                ?? throw new KeyNotFoundException($"Cliente {dto.Id} no encontrado");
+            cliente.Nombre    = dto.Nombre;
+            cliente.Documento = dto.Documento.ToString();
+            cliente.Telefono  = dto.Telefono;
+            cliente.Email     = dto.Email;
             _uow.Clientes.Actualizar(cliente);
             await _uow.GuardarCambiosAsync();
         }
@@ -76,9 +53,19 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Cliente {id} no encontrado");
-            cliente.Activo = false;
-            _uow.Clientes.Actualizar(cliente);
+            // La entidad no tiene Activo — soft delete via eliminación o flag adicional
+            _uow.Clientes.Eliminar(cliente);
             await _uow.GuardarCambiosAsync();
         }
+
+        private static ClienteDto MapearDto(Cliente c) => new()
+        {
+            IdCliente = c.Id,
+            Nombre    = c.Nombre,
+            Documento = int.TryParse(c.Documento, out var doc) ? doc : 0,
+            Telefono  = uint.TryParse(c.Telefono, out var tel) ? tel : 0,
+            Email     = c.Email ?? string.Empty,
+            IdEmpresa = c.Id_empresa,
+        };
     }
 }

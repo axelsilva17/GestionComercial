@@ -5,7 +5,7 @@ using GestionComercial.Dominio.Entidades.Ventas;
 namespace GestionComercial.Dominio.Entidades.Caja
 {
 
-    public class MovimientoCaja
+    public class TipoMovimientoCaja
     {
         public int      Id           { get; set; }
         public int      Tipo         { get; set; } // 1=Ingreso 2=Egreso
