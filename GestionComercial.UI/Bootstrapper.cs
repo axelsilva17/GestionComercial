@@ -3,6 +3,8 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
+using GestionComercial.Persistencia.Repositorio;
+using GestionComercial.UI.ViewModel.Main;
 using GestionComercial.UI.ViewModels.Main;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,11 +23,9 @@ namespace GestionComercial.UI
         {
             _container = new SimpleContainer();
 
-            // ── Caliburn ──────────────────────────────────────────────────────
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
 
-            // ── Configuración ─────────────────────────────────────────────────
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false)
@@ -33,18 +33,15 @@ namespace GestionComercial.UI
 
             var connectionString = config.GetConnectionString("DefaultConnection")!;
 
-            // ── DbContext ─────────────────────────────────────────────────────
             _container.Handler<GestionComercialContext>(
                 _ => new GestionComercialContext(
                     new DbContextOptionsBuilder<GestionComercialContext>()
                         .UseSqlServer(connectionString)
                         .Options));
 
-            // ── UnitOfWork ────────────────────────────────────────────────────
             _container.Handler<IUnitOfWork>(
                 c => new UnitOfWork(c.GetInstance<GestionComercialContext>()));
 
-            // ── Servicios ─────────────────────────────────────────────────────
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<ClienteServicio>();
             _container.PerRequest<ProductoServicio>();
@@ -56,13 +53,12 @@ namespace GestionComercial.UI
             _container.PerRequest<ReporteServicio>();
             _container.PerRequest<UsuarioServicio>();
 
-            // ── ViewModels ────────────────────────────────────────────────────
             var assembly = Assembly.GetExecutingAssembly();
             var viewModelTypes = assembly.GetTypes()
                 .Where(t => t.IsClass
                          && !t.IsAbstract
                          && t.Namespace != null
-                         && t.Namespace.StartsWith("GestionComercial.UI.ViewModels")
+                         && t.Namespace.StartsWith("GestionComercial.UI.ViewModel")
                          && typeof(Screen).IsAssignableFrom(t));
 
             foreach (var vmType in viewModelTypes)
@@ -73,12 +69,11 @@ namespace GestionComercial.UI
                     _container.RegisterPerRequest(vmType, null, vmType);
             }
 
-            // ── ViewLocator ───────────────────────────────────────────────────
             ViewLocator.LocateTypeForModelType = (modelType, displayLocation, context) =>
             {
                 var vmName = modelType.FullName ?? string.Empty;
                 var viewName = vmName
-                    .Replace(".ViewModels.", ".Views.")
+                    .Replace(".ViewModel.", ".Views.")
                     .Replace("ViewModel", "View");
                 var viewType = modelType.Assembly.GetType(viewName);
                 System.Diagnostics.Debug.WriteLine(
@@ -97,6 +92,14 @@ namespace GestionComercial.UI
             => _container.BuildUp(instance);
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
-            => await DisplayRootViewForAsync<LoginViewModel>();
+        {
+            // Aplicar tema antes de mostrar la ventana
+            var hash = BCrypt.Net.BCrypt.HashPassword("Admin1234", 12);
+            var verify = BCrypt.Net.BCrypt.Verify("Admin1234", hash);
+            System.Diagnostics.Debug.WriteLine($">>> Hash: {hash}");
+            System.Diagnostics.Debug.WriteLine($">>> Verify directo: {verify}");
+            (Application.Current as App)?.ApplyTheme();
+            await DisplayRootViewForAsync<LoginViewModel>();
+        }
     }
 }

@@ -15,9 +15,9 @@ namespace GestionComercial.Aplicacion.DTOs.Compras
         private decimal _subTotal;
 
         public int    ProductoId     { get; set; }
-        public string ProductoNombre { get; set; }
-        public string CodigoBarra    { get; set; }
-        public string CategoriaNombre { get; set; }
+        public string? ProductoNombre { get; set; }
+        public string? CodigoBarra    { get; set; }
+        public string? CategoriaNombre { get; set; }
 
         public int Cantidad
         {
@@ -38,7 +38,7 @@ namespace GestionComercial.Aplicacion.DTOs.Compras
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

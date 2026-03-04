@@ -12,28 +12,20 @@
         Background="Transparent">
 
     <Window.Resources>
-        <!-- Converters -->
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
         <converters:FechaToStringConverter    x:Key="FechaToString"/>
         <converters:EstadoToColorConverter    x:Key="EstadoToColor"/>
 
-        <!-- Animación de entrada -->
         <Storyboard x:Key="FadeIn">
             <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                             From="0" To="1"
-                             Duration="0:0:0.5">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
+                             From="0" To="1" Duration="0:0:0.5">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                             From="20" To="0"
-                             Duration="0:0:0.5">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
-                </DoubleAnimation.EasingFunction>
+                             From="20" To="0" Duration="0:0:0.5">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
     </Window.Resources>
@@ -41,14 +33,13 @@
     <Border Background="{DynamicResource BackgroundBrush}"
             CornerRadius="20"
             Effect="{DynamicResource CardShadow}">
-
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="500"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ========== LADO IZQUIERDO - BRANDING ========== -->
+            <!-- LADO IZQUIERDO -->
             <Border Grid.Column="0" CornerRadius="20,0,0,20">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -57,69 +48,37 @@
                         <GradientStop Color="#1E3A5F" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
-
                 <Grid Margin="60">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="1"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Center">
-
-                        <Border x:Name="LogoContainer"
-                                Width="180" Height="180"
-                                Background="#243447"
-                                CornerRadius="30"
-                                Margin="0,0,0,40">
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Border Width="180" Height="180" Background="#243447" CornerRadius="30" Margin="0,0,0,40">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="40" ShadowDepth="0"
-                                                  Opacity="0.3" Color="#000000"/>
+                                <DropShadowEffect BlurRadius="40" ShadowDepth="0" Opacity="0.3" Color="#000000"/>
                             </Border.Effect>
                             <Viewbox Margin="40">
-                                <TextBlock Text="GC"
-                                           FontSize="120"
-                                           FontWeight="Bold"
-                                           Foreground="White"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="GC" FontSize="120" FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Viewbox>
                         </Border>
-
-                        <TextBlock Text="Gestión Comercial"
-                                   FontSize="36"
-                                   FontWeight="Bold"
-                                   Foreground="#E0F2FE"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,12"/>
-
+                        <TextBlock Text="Gestión Comercial" FontSize="36" FontWeight="Bold"
+                                   Foreground="#E0F2FE" HorizontalAlignment="Center" Margin="0,0,0,12"/>
                         <TextBlock Text="Sistema integral de administración empresarial"
-                                   FontSize="16"
-                                   Foreground="#7DD3FC"
-                                   HorizontalAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   TextAlignment="Center"
-                                   MaxWidth="400"/>
+                                   FontSize="16" Foreground="#7DD3FC" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" TextAlignment="Center" MaxWidth="400"/>
                     </StackPanel>
-
-                    <StackPanel Grid.Row="2"
-                                VerticalAlignment="Bottom"
-                                HorizontalAlignment="Center">
-                        <TextBlock Text="© 2025 Gestión Comercial"
-                                   FontSize="12"
-                                   Foreground="#7DD3FC"
-                                   HorizontalAlignment="Center"/>
+                    <StackPanel Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+                        <TextBlock Text="© 2025 Gestión Comercial" FontSize="12"
+                                   Foreground="#7DD3FC" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ========== LADO DERECHO - FORMULARIO ========== -->
-            <Border Grid.Column="1"
-                    Background="{DynamicResource CardBrush}"
-                    CornerRadius="0,20,20,0">
-
+            <!-- LADO DERECHO -->
+            <Border Grid.Column="1" Background="{DynamicResource CardBrush}" CornerRadius="0,20,20,0">
                 <Grid Margin="60,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -128,34 +87,21 @@
                     </Grid.RowDefinitions>
 
                     <!-- Botón cerrar -->
-                    <Button Content="✕"
-                            Width="36" Height="36"
-                            FontSize="18"
-                            Background="Transparent"
-                            Foreground="{DynamicResource TextSecondaryBrush}"
-                            BorderThickness="0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Margin="0,20,20,0"
-                            Cursor="Hand"
-                            Click="CloseButton_Click">
+                    <Button Content="✕" Width="36" Height="36" FontSize="18"
+                            Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}"
+                            BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="0,20,20,0" Cursor="Hand" Click="CloseButton_Click">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <Border x:Name="border"
-                                                    Background="{TemplateBinding Background}"
-                                                    CornerRadius="8">
-                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"/>
+                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background"
-                                                            Value="{DynamicResource HoverBrush}"/>
-                                                    <Setter Property="Foreground"
-                                                            Value="{DynamicResource TextPrimaryBrush}"/>
+                                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -165,80 +111,40 @@
                         </Button.Style>
                     </Button>
 
-                    <!-- Formulario centrado -->
-                    <!-- 
-                        x:Name="MainContainer" para la animación de entrada.
-                        Opacity="0" porque la animación FadeIn la lleva a 1.
-                        Loaded="Grid_Loaded" dispara la animación.
-                    -->
-                    <StackPanel Grid.Row="1"
-                                x:Name="MainContainer"
-                                VerticalAlignment="Center"
-                                Opacity="0"
-                                Loaded="Grid_Loaded">
+                    <StackPanel Grid.Row="1" x:Name="MainContainer" VerticalAlignment="Center"
+                                Opacity="0" Loaded="Grid_Loaded">
+                        <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
 
-                        <StackPanel.RenderTransform>
-                            <TranslateTransform/>
-                        </StackPanel.RenderTransform>
-
-                        <!-- Encabezado -->
-                        <TextBlock Text="Bienvenido"
-                                   FontSize="32"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                   Margin="0,0,0,8"/>
-
+                        <TextBlock Text="Bienvenido" FontSize="32" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
                         <TextBlock Text="Ingresá tus credenciales para continuar"
-                                   FontSize="15"
-                                   Margin="0,0,0,48"
+                                   FontSize="15" Margin="0,0,0,48"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                        <!-- Campo Usuario -->
-                        <TextBlock Text="Usuario"
-                                   FontSize="14"
-                                   FontWeight="Medium"
-                                   Margin="0,0,0,10"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                        <!--
-                            x:Name="Usuario" — Caliburn bindea automáticamente
-                            esto a la propiedad Usuario del using GestionComercial.UI.using GestionComercial.UI.Viewmodels.
-                        -->
-                        <TextBox x:Name="Usuario"
-                                 Height="52"
-                                 Padding="18,0"
-                                 FontSize="15"
-                                  Background="{DynamicResource SurfaceBrush}"
+                        <!-- Usuario -->
+                        <TextBlock Text="Usuario" FontSize="14" FontWeight="Medium"
+                                   Margin="0,0,0,10" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBox x:Name="Usuario" Height="52" Padding="18,0" FontSize="15"
+                                 Background="{DynamicResource SurfaceBrush}"
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  CaretBrush="{DynamicResource TextPrimaryBrush}"
-                                 BorderThickness="1"
-                                 VerticalContentAlignment="Center"
-                                 Margin="0,0,0,24"
-                                 TextChanged="UsuarioBox_TextChanged">
+                                 BorderThickness="1" VerticalContentAlignment="Center"
+                                 Margin="0,0,0,24" TextChanged="UsuarioBox_TextChanged">
                             <TextBox.Style>
                                 <Style TargetType="TextBox">
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="TextBox">
-                                                <Border x:Name="border"
-                                                        Background="{TemplateBinding Background}"
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
                                                         BorderBrush="{TemplateBinding BorderBrush}"
-                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                        CornerRadius="12">
+                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
                                                     <ScrollViewer x:Name="PART_ContentHost"
-                                                                  Margin="{TemplateBinding Padding}"
-                                                                  VerticalAlignment="Center"/>
+                                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="border" Property="BorderBrush"
-                                                                Value="{DynamicResource TextTertiaryBrush}"/>
-                                                    </Trigger>
                                                     <Trigger Property="IsFocused" Value="True">
-                                                        <Setter TargetName="border" Property="BorderBrush"
-                                                                Value="{DynamicResource PrimaryBrush}"/>
-                                                        <Setter TargetName="border" Property="BorderThickness"
-                                                                Value="2"/>
+                                                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -248,120 +154,126 @@
                             </TextBox.Style>
                         </TextBox>
 
-                        <!-- Campo Contraseña -->
-                        <TextBlock Text="Contraseña"
-                                   FontSize="14"
-                                   FontWeight="Medium"
-                                   Margin="0,0,0,10"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <!-- Contraseña -->
+                        <TextBlock Text="Contraseña" FontSize="14" FontWeight="Medium"
+                                   Margin="0,0,0,10" Foreground="{DynamicResource TextPrimaryBrush}"/>
 
-                        <!--
-                            PasswordBox nunca usa binding directo.
-                            PasswordChanged llama a SetPassword() en el Viewmodel desde el code-behind.
-                        -->
-                        <PasswordBox x:Name="PasswordBox"
-                                     Height="52"
-                                     Padding="18,0"
-                                     FontSize="15"
+                        <!-- Contenedor PasswordBox + ojo -->
+                        <Grid Margin="0,0,0,12" Height="52">
+                            <PasswordBox x:Name="PasswordBox" Padding="18,0" FontSize="15"
+                                         Background="{DynamicResource SurfaceBrush}"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                         BorderThickness="1" VerticalContentAlignment="Center"
+                                         PasswordChanged="PasswordBox_PasswordChanged">
+                                <PasswordBox.Style>
+                                    <Style TargetType="PasswordBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="PasswordBox">
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
+                                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                                      Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsFocused" Value="True">
+                                                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                            <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </PasswordBox.Style>
+                            </PasswordBox>
+
+                            <!-- TextBox visible cuando se muestra contraseña -->
+                            <TextBox x:Name="PasswordVisible"
+                                     Padding="18,0" FontSize="15"
                                      Background="{DynamicResource SurfaceBrush}"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      CaretBrush="{DynamicResource TextPrimaryBrush}"
-                                     BorderThickness="1"
-                                     VerticalContentAlignment="Center"
-                                     Margin="0,0,0,12"
-                                     PasswordChanged="PasswordBox_PasswordChanged">
-                            <PasswordBox.Style>
-                                <Style TargetType="PasswordBox">
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="PasswordBox">
-                                                <Border x:Name="border"
-                                                        Background="{TemplateBinding Background}"
-                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                        CornerRadius="12">
-                                                    <ScrollViewer x:Name="PART_ContentHost"
-                                                                  Margin="{TemplateBinding Padding}"
-                                                                  VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="border" Property="BorderBrush"
-                                                                Value="{DynamicResource TextTertiaryBrush}"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsFocused" Value="True">
-                                                        <Setter TargetName="border" Property="BorderBrush"
-                                                                Value="{DynamicResource PrimaryBrush}"/>
-                                                        <Setter TargetName="border" Property="BorderThickness"
-                                                                Value="2"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </PasswordBox.Style>
-                        </PasswordBox>
+                                     BorderThickness="1" VerticalContentAlignment="Center"
+                                     Visibility="Collapsed"
+                                     IsReadOnly="True">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderBrush="{DynamicResource PrimaryBrush}"
+                                                            BorderThickness="2" CornerRadius="12">
+                                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                                      Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
 
-                        <!-- Mensaje de error — bindeado al Viewmodel -->
+                            <!-- Botón ojo -->
+                            <Button x:Name="TogglePassword"
+                                    Width="36" Height="36"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,10,0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Content="○"
+                                    FontSize="16"
+                                    Click="TogglePassword_Click">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="Transparent" CornerRadius="6">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+
+                        <!-- Error -->
                         <Border Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}"
-                                Background="#1A0A0A"
-                                BorderBrush="{DynamicResource ErrorBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Padding="14,12"
-                                Margin="0,0,0,24">
+                                Background="#1A0A0A" BorderBrush="{DynamicResource ErrorBrush}"
+                                BorderThickness="1" CornerRadius="10" Padding="14,12" Margin="0,0,0,24">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource ErrorBrush}"
-                                           Margin="0,0,10,0"
-                                           VerticalAlignment="Center"/>
-                                <!-- Text bindeado al Viewmodel -->
-                                <TextBlock Text="{Binding ErrorMessage}"
-                                           Foreground="{DynamicResource ErrorBrush}"
-                                           FontSize="14"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="⚠" FontSize="16" Foreground="{DynamicResource ErrorBrush}"
+                                           Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorBrush}"
+                                           FontSize="14" TextWrapping="Wrap" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Botón Login -->
-                        <!--
-                            x:Name="LoginCommand" — Caliburn conecta esto al método
-                            LoginCommand() del Viewmodel y usa CanLoginCommand para habilitarlo.
-                        -->
-                        <Button x:Name="LoginCommand"
-                                Content="Iniciar Sesión"
-                                Height="52"
-                                Background="{DynamicResource PrimaryBrush}"
-                                Foreground="White"
-                                BorderThickness="0"
-                                FontSize="16"
-                                FontWeight="SemiBold"
-                                Cursor="Hand">
+                        <Button x:Name="LoginCommand" Content="Iniciar Sesión" Height="52"
+                                Background="{DynamicResource PrimaryBrush}" Foreground="White"
+                                BorderThickness="0" FontSize="16" FontWeight="SemiBold" Cursor="Hand">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="border"
-                                                        Background="{TemplateBinding Background}"
-                                                        CornerRadius="12"
-                                                        Padding="{TemplateBinding Padding}">
-                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"/>
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                        CornerRadius="12" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="border" Property="Background"
-                                                                Value="{DynamicResource PrimaryHoverBrush}"/>
+                                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource PrimaryHoverBrush}"/>
                                                     </Trigger>
-                                                    <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="border" Property="Background"
-                                                                Value="{DynamicResource PrimaryActiveBrush}"/>
-                                                    </Trigger>
-                                                    <!-- Estilo cuando el botón está deshabilitado -->
                                                     <Trigger Property="IsEnabled" Value="False">
                                                         <Setter TargetName="border" Property="Opacity" Value="0.5"/>
                                                     </Trigger>
@@ -373,22 +285,14 @@
                             </Button.Style>
                         </Button>
 
-                        <!-- Indicador de carga -->
-                        <ProgressBar IsIndeterminate="True"
-                                     Height="3"
-                                     Margin="0,8,0,0"
-                                     Foreground="{DynamicResource PrimaryBrush}"
-                                     BorderThickness="0"
+                        <ProgressBar IsIndeterminate="True" Height="3" Margin="0,8,0,0"
+                                     Foreground="{DynamicResource PrimaryBrush}" BorderThickness="0"
                                      Background="Transparent"
                                      Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>
 
-                        <!-- Footer -->
-                        <TextBlock Text="¿Olvidaste tu contraseña?"
-                                   FontSize="13"
+                        <TextBlock Text="¿Olvidaste tu contraseña?" FontSize="13"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,24,0,0"
-                                   Cursor="Hand">
+                                   HorizontalAlignment="Center" Margin="0,24,0,0" Cursor="Hand">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Style.Triggers>
@@ -400,7 +304,6 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
-
                     </StackPanel>
                 </Grid>
             </Border>

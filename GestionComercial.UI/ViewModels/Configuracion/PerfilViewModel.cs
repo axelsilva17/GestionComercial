@@ -83,10 +83,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 Nombre         = "Juan",
                 Apellido       = "García",
                 IdSucursal     = 1,
-                SucursalNombre = "Casa Central",
+                Sucursal = "Casa Central",
                 IdEmpresa      = 1,
-                EmpresaNombre  = "Mi Empresa S.R.L.",
-                RolNombre      = "Administrador"
+                Empresa  = "Mi Empresa S.R.L.",
+                Rol     = "Administrador"
             };
         }
 
@@ -117,10 +117,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     Nombre         = EditNombre,
                     Apellido       = EditApellido,
                     IdSucursal     = Sesion.IdSucursal,
-                    SucursalNombre = Sesion.SucursalNombre,
+                    Sucursal = Sesion.Sucursal,
                     IdEmpresa      = Sesion.IdEmpresa,
-                    EmpresaNombre  = Sesion.EmpresaNombre,
-                    RolNombre      = Sesion.RolNombre
+                    Empresa  = Sesion.Empresa,
+                    Rol     = Sesion.Rol
                 };
                 MensajeExito      = "Datos actualizados correctamente.";
                 PanelDatosVisible = false;

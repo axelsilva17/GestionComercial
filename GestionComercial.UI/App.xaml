@@ -5,9 +5,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary>
-                    <local:Bootstrapper x:Key="Bootstrapper"/>
-                </ResourceDictionary>
+               
 
                 <!-- Tema dinamico -->
                 <ResourceDictionary Source="/Views/Recursos/Estilos/ThemeLight.xaml"/>

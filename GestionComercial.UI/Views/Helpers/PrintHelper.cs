@@ -34,8 +34,8 @@ namespace GestionComercial.UI.Helpers
             };
 
             // Encabezado empresa
-            doc.Blocks.Add(CentradoBold(sesion.EmpresaNombre, 13));
-            doc.Blocks.Add(Centrado(sesion.SucursalNombre));
+            doc.Blocks.Add(CentradoBold(sesion.Empresa, 13));
+            doc.Blocks.Add(Centrado(sesion.Sucursal));
             doc.Blocks.Add(Separador());
 
             // Datos ticket

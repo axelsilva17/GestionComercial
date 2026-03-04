@@ -1,6 +1,6 @@
-using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.ViewModel.Main;
 using System.Windows;
-using System.Windows.Media.Animation;
+using System.Windows.Controls;
 
 namespace GestionComercial.UI.Views.Main
 {
@@ -9,36 +9,42 @@ namespace GestionComercial.UI.Views.Main
         public LoginView()
         {
             InitializeComponent();
-            MouseLeftButtonDown += (s, e) => DragMove();
-        }
-
-        // Acceso tipado al ViewModel inyectado por Caliburn
-        private LoginViewModel ViewModel => DataContext as LoginViewModel;
-
-        private void Grid_Loaded(object sender, RoutedEventArgs e)
-        {
-            var storyboard = (Storyboard)FindResource("FadeIn");
-            MainContainer.BeginStoryboard(storyboard);
-        }
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            ViewModel?.SetPassword(PasswordBox.Password);
-        }
-
-        private void UsuarioBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-        {
-         
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
+            => Application.Current.Shutdown();
+
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            if (DataContext is LoginViewModel vm)
+                vm.SetPassword(((PasswordBox)sender).Password);
         }
 
-        private void Login_Click(object sender, RoutedEventArgs e)
+        private void UsuarioBox_TextChanged(object sender, TextChangedEventArgs e) { }
+
+        private void Grid_Loaded(object sender, RoutedEventArgs e)
         {
-            if (ViewModel?.CanLoginCommand == true)
-                _ = ViewModel.LoginCommand();
+            if (Resources["FadeIn"] is System.Windows.Media.Animation.Storyboard sb)
+                sb.Begin((FrameworkElement)sender);
+        }
+
+        private void TogglePassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (PasswordBox.Visibility == Visibility.Visible)
+            {
+                // Mostrar texto plano
+                PasswordVisible.Text       = PasswordBox.Password;
+                PasswordBox.Visibility     = Visibility.Collapsed;
+                PasswordVisible.Visibility = Visibility.Visible;
+                TogglePassword.Content     = "●";
+            }
+            else
+            {
+                // Volver a ocultar
+                PasswordBox.Visibility     = Visibility.Visible;
+                PasswordVisible.Visibility = Visibility.Collapsed;
+                TogglePassword.Content     = "○";
+            }
         }
     }
 }

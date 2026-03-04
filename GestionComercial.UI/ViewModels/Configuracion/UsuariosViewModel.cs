@@ -107,10 +107,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             };
             Items = new ObservableCollection<UsuarioDto>
             {
-                new() { IdUsuario = 1, Nombre = "Juan",   Apellido = "García",    Activo = true,  IdSucursal = 1, SucursalNombre = "Casa Central",   RolNombre = "Administrador" },
-                new() { IdUsuario = 2, Nombre = "María",  Apellido = "López",     Activo = true,  IdSucursal = 2, SucursalNombre = "Sucursal Norte",  RolNombre = "Vendedor"      },
-                new() { IdUsuario = 3, Nombre = "Carlos", Apellido = "Martínez",  Activo = true,  IdSucursal = 1, SucursalNombre = "Casa Central",    RolNombre = "Cajero"        },
-                new() { IdUsuario = 4, Nombre = "Ana",    Apellido = "Rodríguez", Activo = false, IdSucursal = 3, SucursalNombre = "Sucursal Sur",    RolNombre = "Vendedor"      },
+                new() { IdUsuario = 1, Nombre = "Juan",   Apellido = "García",    Activo = true,  IdSucursal = 1, SucursalNombre = "Casa Central",   Rol = "Administrador" },
+                new() { IdUsuario = 2, Nombre = "María",  Apellido = "López",     Activo = true,  IdSucursal = 2, SucursalNombre = "Sucursal Norte",  Rol = "Vendedor"      },
+                new() { IdUsuario = 3, Nombre = "Carlos", Apellido = "Martínez",  Activo = true,  IdSucursal = 1, SucursalNombre = "Casa Central",    Rol = "Cajero"        },
+                new() { IdUsuario = 4, Nombre = "Ana",    Apellido = "Rodríguez", Activo = false, IdSucursal = 3, SucursalNombre = "Sucursal Sur",    Rol = "Vendedor"      },
             };
         }
 
@@ -162,7 +162,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         Activo         = EditActivo,
                         IdSucursal     = EditSucursal?.IdSucursal ?? 0,
                         SucursalNombre = EditSucursal?.Nombre ?? string.Empty,
-                        RolNombre      = EditRol?.Nombre ?? string.Empty
+                        Rol      = EditRol?.Nombre ?? string.Empty
                     });
                 }
                 else if (Seleccionado != null)

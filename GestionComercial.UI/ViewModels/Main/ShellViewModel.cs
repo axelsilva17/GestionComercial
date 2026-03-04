@@ -1,4 +1,5 @@
 using Caliburn.Micro;
+using GestionComercial.UI.ViewModel.Main;
 using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Clientes;
 using GestionComercial.UI.ViewModels.Compras;

@@ -8,6 +8,7 @@ using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.Dominio.Entidades.Seguridad;
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Persistencia.Contexto
@@ -41,6 +42,15 @@ namespace GestionComercial.Persistencia.Contexto
             // Aplica todas las IEntityTypeConfiguration del assembly automáticamente
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(GestionComercialContext).Assembly);
             base.OnModelCreating(modelBuilder);
+           
+
+            SemillaRoles.Sembrar(modelBuilder);
+            //SemillaEstadoVenta.Sembrar(modelBuilder);
+            //SemillaEstadoCaja.Sembrar(modelBuilder);
+            SemillaTipoMovimiento.Sembrar(modelBuilder);
+            SemillaTipoDocumento.Sembrar(modelBuilder);
+            SemillaPermisos.Sembrar(modelBuilder);
+            SemillaInicial.Sembrar(modelBuilder);
         }
     }
 }
