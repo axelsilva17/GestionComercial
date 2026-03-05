@@ -84,7 +84,7 @@ namespace GestionComercial.Aplicacion.Servicios
             StockMinimo = (int)p.StockMinimo,
             Activo = p.Activo,
             CategoriaNombre = p.Categoria?.Nombre ?? string.Empty,
-            UnidadMedida = p.UnidadMedida?.nombre ?? string.Empty,
+            UnidadMedida = p.UnidadMedida?.Nombre ?? string.Empty,
         };
 
         private static ProductoDto MapearDto(Producto p) => new()
@@ -100,7 +100,7 @@ namespace GestionComercial.Aplicacion.Servicios
             IdCategoria = p.Id_categoria,
             CategoriaNombre = p.Categoria?.Nombre ?? string.Empty,
             IdUnidadMedia = p.Id_unidadMedida,
-            UnidadMedida = p.UnidadMedida?.nombre ?? string.Empty,
+            UnidadMedida = p.UnidadMedida?.Nombre ?? string.Empty,
         };
     }
 }

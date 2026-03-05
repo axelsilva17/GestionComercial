@@ -23,7 +23,7 @@ namespace GestionComercial.Persistencia.Contexto
 
             var connectionString =
                 config.GetConnectionString("DefaultConnection")
-                ?? "Server=localhost;Database=GestionComercial;Trusted_Connection=True;TrustServerCertificate=True;";
+                ?? "Server=DESKTOP-ECOJDUTSQLEXPRESS;Database=GestionComercial;Trusted_Connection=True;TrustServerCertificate=True;";
 
             var options = new DbContextOptionsBuilder<GestionComercialContext>()
                 .UseSqlServer(connectionString)

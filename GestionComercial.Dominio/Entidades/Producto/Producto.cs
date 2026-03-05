@@ -9,7 +9,6 @@ namespace GestionComercial.Dominio.Entidades.Producto
     {
         public int    Id          { get; set; }
         public string Nombre      { get; set; } = string.Empty;
-        public string? nombre { get; set; }
         public string Abreviatura { get; set; } = string.Empty;
 
         public ICollection<Producto> Productos { get; set; } = new List<Producto>();
