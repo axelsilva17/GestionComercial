@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace GestionComercial.Persistencia.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Inicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,17 +33,67 @@ namespace GestionComercial.Persistencia.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Permiso",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    FechaAlta = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Permiso", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Rol",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Descripcion = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
+                    Descripcion = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    FechaAlta = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Rol", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TipoDocumento",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    FechaAlta = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TipoDocumento", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TipoMovimientoStock",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    FechaAlta = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TipoMovimientoStock", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -51,6 +103,7 @@ namespace GestionComercial.Persistencia.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    nombre = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Abreviatura = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
@@ -179,6 +232,34 @@ namespace GestionComercial.Persistencia.Migrations
                         name: "FK_Sucursal_Empresa_Id_empresa",
                         column: x => x.Id_empresa,
                         principalTable: "Empresa",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RolPermiso",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id_rol = table.Column<int>(type: "int", nullable: false),
+                    Id_permiso = table.Column<int>(type: "int", nullable: false),
+                    FechaAlta = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RolPermiso", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RolPermiso_Permiso_Id_permiso",
+                        column: x => x.Id_permiso,
+                        principalTable: "Permiso",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RolPermiso_Rol_Id_rol",
+                        column: x => x.Id_rol,
+                        principalTable: "Rol",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -546,6 +627,117 @@ namespace GestionComercial.Persistencia.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "Empresa",
+                columns: new[] { "Id", "Activo", "CUIT", "Direccion", "Email", "FechaAlta", "Nombre", "Telefono" },
+                values: new object[] { 1, true, "20-12345678-9", "Dirección Principal 123", "admin@miempresa.com", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9146), "Mi Empresa", "3794000000" });
+
+            migrationBuilder.InsertData(
+                table: "Permiso",
+                columns: new[] { "Id", "Activo", "Descripcion", "FechaAlta", "Nombre" },
+                values: new object[,]
+                {
+                    { 1, true, "Ver ventas", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8934), "Ventas.Ver" },
+                    { 2, true, "Crear ventas", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8936), "Ventas.Crear" },
+                    { 3, true, "Anular ventas", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8937), "Ventas.Anular" },
+                    { 4, true, "Ver compras", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8938), "Compras.Ver" },
+                    { 5, true, "Crear compras", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8940), "Compras.Crear" },
+                    { 6, true, "Ver productos", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8941), "Productos.Ver" },
+                    { 7, true, "Crear productos", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8942), "Productos.Crear" },
+                    { 8, true, "Editar productos", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8943), "Productos.Editar" },
+                    { 9, true, "Ver clientes", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8944), "Clientes.Ver" },
+                    { 10, true, "Crear clientes", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8946), "Clientes.Crear" },
+                    { 11, true, "Ver reportes", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8947), "Reportes.Ver" },
+                    { 12, true, "Abrir caja", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8948), "Caja.Abrir" },
+                    { 13, true, "Cerrar caja", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8949), "Caja.Cerrar" },
+                    { 14, true, "Ver configuración", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8950), "Configuracion.Ver" },
+                    { 15, true, "Gestionar usuarios", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8951), "Usuarios.Gestionar" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Rol",
+                columns: new[] { "Id", "Activo", "Descripcion", "FechaAlta", "Nombre" },
+                values: new object[,]
+                {
+                    { 1, true, "Acceso total al sistema", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8625), "Gerente" },
+                    { 2, true, "Administración general", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8637), "Administrador" },
+                    { 3, true, "Operaciones de venta", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8639), "Vendedor" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "TipoDocumento",
+                columns: new[] { "Id", "Activo", "Descripcion", "FechaAlta", "Nombre" },
+                values: new object[,]
+                {
+                    { 1, true, "Documento Nacional de Identidad", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8878), "DNI" },
+                    { 2, true, "Clave Única de Identificación Tributaria", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8879), "CUIT" },
+                    { 3, true, "Pasaporte", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8888), "Pasaporte" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "TipoMovimientoStock",
+                columns: new[] { "Id", "Activo", "Descripcion", "FechaAlta", "Nombre" },
+                values: new object[,]
+                {
+                    { 1, true, "Ingreso de mercadería", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8834), "Entrada" },
+                    { 2, true, "Egreso de mercadería", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8836), "Salida" },
+                    { 3, true, "Ajuste positivo de stock", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8837), "Ajuste Positivo" },
+                    { 4, true, "Ajuste negativo de stock", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8838), "Ajuste Negativo" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "RolPermiso",
+                columns: new[] { "Id", "Activo", "FechaAlta", "Id_permiso", "Id_rol" },
+                values: new object[,]
+                {
+                    { 1, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9021), 1, 1 },
+                    { 2, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9022), 2, 1 },
+                    { 3, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9023), 3, 1 },
+                    { 4, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9024), 4, 1 },
+                    { 5, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9024), 5, 1 },
+                    { 6, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9025), 6, 1 },
+                    { 7, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9026), 7, 1 },
+                    { 8, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9026), 8, 1 },
+                    { 9, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9027), 9, 1 },
+                    { 10, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9027), 10, 1 },
+                    { 11, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9028), 11, 1 },
+                    { 12, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9029), 12, 1 },
+                    { 13, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9029), 13, 1 },
+                    { 14, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9030), 14, 1 },
+                    { 15, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9031), 15, 1 },
+                    { 16, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9066), 1, 2 },
+                    { 17, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9067), 2, 2 },
+                    { 18, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9068), 3, 2 },
+                    { 19, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9068), 4, 2 },
+                    { 20, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9069), 5, 2 },
+                    { 21, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9070), 6, 2 },
+                    { 22, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9070), 7, 2 },
+                    { 23, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9071), 8, 2 },
+                    { 24, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9071), 9, 2 },
+                    { 25, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9072), 10, 2 },
+                    { 26, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9073), 11, 2 },
+                    { 27, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9073), 12, 2 },
+                    { 28, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9074), 13, 2 },
+                    { 29, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9075), 14, 2 },
+                    { 30, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9102), 1, 3 },
+                    { 31, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9103), 2, 3 },
+                    { 32, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9104), 6, 3 },
+                    { 33, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9105), 9, 3 },
+                    { 34, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9106), 10, 3 },
+                    { 35, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9107), 12, 3 },
+                    { 36, true, new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9108), 13, 3 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Sucursal",
+                columns: new[] { "Id", "Activo", "Direccion", "FechaAlta", "Id_empresa", "Nombre", "Telefono" },
+                values: new object[] { 1, true, "Dirección Principal 123", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9185), 1, "Casa Central", "3794000000" });
+
+            migrationBuilder.InsertData(
+                table: "Usuario",
+                columns: new[] { "Id", "Activo", "Apellido", "Email", "FechaAlta", "Id_rol", "Id_sucursal", "Nombre", "PasswordHash", "UltimoAcceso" },
+                values: new object[] { 1, true, "Sistema", "admin@sistema.com", new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9215), 1, 1, "Admin", "$2a$12$xTXms.c66F43LdABY4LZjeXhAJmZSwEeYircoRBHDnBy4cqkklYFu", null });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Caja_Id_sucursal_Estado",
                 table: "Caja",
@@ -648,6 +840,12 @@ namespace GestionComercial.Persistencia.Migrations
                 column: "Id_venta");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Permiso_Nombre",
+                table: "Permiso",
+                column: "Nombre",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Producto_CodigoBarra",
                 table: "Producto",
                 column: "CodigoBarra",
@@ -679,6 +877,16 @@ namespace GestionComercial.Persistencia.Migrations
                 table: "Rol",
                 column: "Nombre",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolPermiso_Id_permiso",
+                table: "RolPermiso",
+                column: "Id_permiso");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolPermiso_Id_rol",
+                table: "RolPermiso",
+                column: "Id_rol");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sucursal_Id_empresa",
@@ -753,6 +961,15 @@ namespace GestionComercial.Persistencia.Migrations
                 name: "Pago");
 
             migrationBuilder.DropTable(
+                name: "RolPermiso");
+
+            migrationBuilder.DropTable(
+                name: "TipoDocumento");
+
+            migrationBuilder.DropTable(
+                name: "TipoMovimientoStock");
+
+            migrationBuilder.DropTable(
                 name: "VentaDetalle");
 
             migrationBuilder.DropTable(
@@ -760,6 +977,9 @@ namespace GestionComercial.Persistencia.Migrations
 
             migrationBuilder.DropTable(
                 name: "MetodoPago");
+
+            migrationBuilder.DropTable(
+                name: "Permiso");
 
             migrationBuilder.DropTable(
                 name: "Producto");

@@ -1,22 +1,10 @@
-
-using GestionComercial.Dominio.Entidades.Organizacion;
-
 namespace GestionComercial.Dominio.Entidades.Seguridad
 {
-
-    public class Rol
+    public class Rol : EntidadBase
     {
-        public int    Id_rol         { get; set; }
-        public string Nombre      { get; set; } = string.Empty;
-        public string Descripcion { get; set; } = string.Empty;
-
+        public string Nombre { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
         public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
-
-        public static implicit operator Rol(int v)
-        {
-            throw new NotImplementedException();
-        }
+        public ICollection<RolPermiso> RolPermisos { get; set; } = new List<RolPermiso>();
     }
-
-
 }

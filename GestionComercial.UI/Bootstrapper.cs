@@ -93,6 +93,8 @@ namespace GestionComercial.UI
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
         {
+
+
             // Aplicar tema antes de mostrar la ventana
             var hash = BCrypt.Net.BCrypt.HashPassword("Admin1234", 12);
             var verify = BCrypt.Net.BCrypt.Verify("Admin1234", hash);
@@ -100,6 +102,8 @@ namespace GestionComercial.UI
             System.Diagnostics.Debug.WriteLine($">>> Verify directo: {verify}");
             (Application.Current as App)?.ApplyTheme();
             await DisplayRootViewForAsync<LoginViewModel>();
+       
+
         }
     }
 }

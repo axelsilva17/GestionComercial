@@ -8,10 +8,10 @@ namespace GestionComercial.Persistencia.Semillas
         public static void Sembrar(ModelBuilder builder)
         {
             builder.Entity<Rol>().HasData(
-                new Rol { Id_rol = 1, Nombre = "Gerente",       Descripcion = "Acceso total al sistema" },
-                new Rol { Id_rol = 2, Nombre = "Administrador", Descripcion = "Administración general" },
-                new Rol { Id_rol = 3, Nombre = "Vendedor",      Descripcion = "Operaciones de venta" }
-            );
+                  new Rol { Id = 1, Nombre = "Gerente", Descripcion = "Acceso total al sistema" },
+                  new Rol { Id = 2, Nombre = "Administrador", Descripcion = "Administración general" },
+                  new Rol { Id = 3, Nombre = "Vendedor", Descripcion = "Operaciones de venta" }
+              );
         }
     }
 }

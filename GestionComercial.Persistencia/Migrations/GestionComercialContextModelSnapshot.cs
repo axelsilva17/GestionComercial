@@ -75,7 +75,7 @@ namespace GestionComercial.Persistencia.Migrations
                     b.ToTable("Caja", (string)null);
                 });
 
-            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Caja.MovimientoCaja", b =>
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Caja.TipoMovimientoCaja", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -154,6 +154,60 @@ namespace GestionComercial.Persistencia.Migrations
                     b.HasIndex("Id_empresa");
 
                     b.ToTable("Cliente", (string)null);
+                });
+
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Cliente.TipoDocumento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TipoDocumento", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Descripcion = "Documento Nacional de Identidad",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8878),
+                            Nombre = "DNI"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Descripcion = "Clave Única de Identificación Tributaria",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8879),
+                            Nombre = "CUIT"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            Descripcion = "Pasaporte",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8888),
+                            Nombre = "Pasaporte"
+                        });
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Compras.Compra", b =>
@@ -285,6 +339,68 @@ namespace GestionComercial.Persistencia.Migrations
                     b.ToTable("MovimientoStock", (string)null);
                 });
 
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Movimientos.TipoMovimientoStock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TipoMovimientoStock", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Descripcion = "Ingreso de mercadería",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8834),
+                            Nombre = "Entrada"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Descripcion = "Egreso de mercadería",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8836),
+                            Nombre = "Salida"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            Descripcion = "Ajuste positivo de stock",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8837),
+                            Nombre = "Ajuste Positivo"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Activo = true,
+                            Descripcion = "Ajuste negativo de stock",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8838),
+                            Nombre = "Ajuste Negativo"
+                        });
+                });
+
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Organizacion.Empresa", b =>
                 {
                     b.Property<int>("Id")
@@ -328,6 +444,19 @@ namespace GestionComercial.Persistencia.Migrations
                         .IsUnique();
 
                     b.ToTable("Empresa", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            CUIT = "20-12345678-9",
+                            Direccion = "Dirección Principal 123",
+                            Email = "admin@miempresa.com",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9146),
+                            Nombre = "Mi Empresa",
+                            Telefono = "3794000000"
+                        });
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Organizacion.Sucursal", b =>
@@ -366,6 +495,18 @@ namespace GestionComercial.Persistencia.Migrations
                     b.HasIndex("Id_empresa");
 
                     b.ToTable("Sucursal", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Direccion = "Dirección Principal 123",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9185),
+                            Id_empresa = 1,
+                            Nombre = "Casa Central",
+                            Telefono = "3794000000"
+                        });
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Pagos.MetodoPago", b =>
@@ -541,6 +682,9 @@ namespace GestionComercial.Persistencia.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("nombre")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("UnidadMedida", (string)null);
@@ -587,6 +731,159 @@ namespace GestionComercial.Persistencia.Migrations
                     b.ToTable("Proveedor", (string)null);
                 });
 
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Permiso", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("Permiso", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Descripcion = "Ver ventas",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8934),
+                            Nombre = "Ventas.Ver"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Descripcion = "Crear ventas",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8936),
+                            Nombre = "Ventas.Crear"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            Descripcion = "Anular ventas",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8937),
+                            Nombre = "Ventas.Anular"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Activo = true,
+                            Descripcion = "Ver compras",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8938),
+                            Nombre = "Compras.Ver"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Activo = true,
+                            Descripcion = "Crear compras",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8940),
+                            Nombre = "Compras.Crear"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Activo = true,
+                            Descripcion = "Ver productos",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8941),
+                            Nombre = "Productos.Ver"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Activo = true,
+                            Descripcion = "Crear productos",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8942),
+                            Nombre = "Productos.Crear"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Activo = true,
+                            Descripcion = "Editar productos",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8943),
+                            Nombre = "Productos.Editar"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Activo = true,
+                            Descripcion = "Ver clientes",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8944),
+                            Nombre = "Clientes.Ver"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Activo = true,
+                            Descripcion = "Crear clientes",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8946),
+                            Nombre = "Clientes.Crear"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Activo = true,
+                            Descripcion = "Ver reportes",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8947),
+                            Nombre = "Reportes.Ver"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Activo = true,
+                            Descripcion = "Abrir caja",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8948),
+                            Nombre = "Caja.Abrir"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Activo = true,
+                            Descripcion = "Cerrar caja",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8949),
+                            Nombre = "Caja.Cerrar"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Activo = true,
+                            Descripcion = "Ver configuración",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8950),
+                            Nombre = "Configuracion.Ver"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Activo = true,
+                            Descripcion = "Gestionar usuarios",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8951),
+                            Nombre = "Usuarios.Gestionar"
+                        });
+                });
+
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Rol", b =>
                 {
                     b.Property<int>("Id")
@@ -595,10 +892,15 @@ namespace GestionComercial.Persistencia.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Descripcion")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -611,6 +913,351 @@ namespace GestionComercial.Persistencia.Migrations
                         .IsUnique();
 
                     b.ToTable("Rol", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Descripcion = "Acceso total al sistema",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8625),
+                            Nombre = "Gerente"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Descripcion = "Administración general",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8637),
+                            Nombre = "Administrador"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            Descripcion = "Operaciones de venta",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(8639),
+                            Nombre = "Vendedor"
+                        });
+                });
+
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.RolPermiso", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Id_permiso")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id_rol")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id_permiso");
+
+                    b.HasIndex("Id_rol");
+
+                    b.ToTable("RolPermiso", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9021),
+                            Id_permiso = 1,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9022),
+                            Id_permiso = 2,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9023),
+                            Id_permiso = 3,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9024),
+                            Id_permiso = 4,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9024),
+                            Id_permiso = 5,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9025),
+                            Id_permiso = 6,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9026),
+                            Id_permiso = 7,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9026),
+                            Id_permiso = 8,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9027),
+                            Id_permiso = 9,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9027),
+                            Id_permiso = 10,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9028),
+                            Id_permiso = 11,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9029),
+                            Id_permiso = 12,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9029),
+                            Id_permiso = 13,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9030),
+                            Id_permiso = 14,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9031),
+                            Id_permiso = 15,
+                            Id_rol = 1
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9066),
+                            Id_permiso = 1,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9067),
+                            Id_permiso = 2,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9068),
+                            Id_permiso = 3,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9068),
+                            Id_permiso = 4,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9069),
+                            Id_permiso = 5,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9070),
+                            Id_permiso = 6,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9070),
+                            Id_permiso = 7,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9071),
+                            Id_permiso = 8,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 24,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9071),
+                            Id_permiso = 9,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 25,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9072),
+                            Id_permiso = 10,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 26,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9073),
+                            Id_permiso = 11,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 27,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9073),
+                            Id_permiso = 12,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 28,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9074),
+                            Id_permiso = 13,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 29,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9075),
+                            Id_permiso = 14,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 30,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9102),
+                            Id_permiso = 1,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 31,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9103),
+                            Id_permiso = 2,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 32,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9104),
+                            Id_permiso = 6,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 33,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9105),
+                            Id_permiso = 9,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 34,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9106),
+                            Id_permiso = 10,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 35,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9107),
+                            Id_permiso = 12,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 36,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9108),
+                            Id_permiso = 13,
+                            Id_rol = 3
+                        });
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Usuario", b =>
@@ -666,6 +1313,20 @@ namespace GestionComercial.Persistencia.Migrations
                     b.HasIndex("Id_sucursal");
 
                     b.ToTable("Usuario", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Apellido = "Sistema",
+                            Email = "admin@sistema.com",
+                            FechaAlta = new DateTime(2026, 3, 4, 22, 8, 4, 233, DateTimeKind.Local).AddTicks(9215),
+                            Id_rol = 1,
+                            Id_sucursal = 1,
+                            Nombre = "Admin",
+                            PasswordHash = "$2a$12$xTXms.c66F43LdABY4LZjeXhAJmZSwEeYircoRBHDnBy4cqkklYFu"
+                        });
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Ventas.Venta", b =>
@@ -795,7 +1456,7 @@ namespace GestionComercial.Persistencia.Migrations
                     b.Navigation("UsuarioCierre");
                 });
 
-            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Caja.MovimientoCaja", b =>
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Caja.TipoMovimientoCaja", b =>
                 {
                     b.HasOne("GestionComercial.Dominio.Entidades.Caja.Caja", "Caja")
                         .WithMany("Movimientos")
@@ -995,6 +1656,25 @@ namespace GestionComercial.Persistencia.Migrations
                     b.Navigation("Empresa");
                 });
 
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.RolPermiso", b =>
+                {
+                    b.HasOne("GestionComercial.Dominio.Entidades.Seguridad.Permiso", "Permiso")
+                        .WithMany("RolPermisos")
+                        .HasForeignKey("Id_permiso")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GestionComercial.Dominio.Entidades.Seguridad.Rol", "Rol")
+                        .WithMany("RolPermisos")
+                        .HasForeignKey("Id_rol")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Permiso");
+
+                    b.Navigation("Rol");
+                });
+
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Usuario", b =>
                 {
                     b.HasOne("GestionComercial.Dominio.Entidades.Seguridad.Rol", "Rol")
@@ -1141,8 +1821,15 @@ namespace GestionComercial.Persistencia.Migrations
                     b.Navigation("Compras");
                 });
 
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Permiso", b =>
+                {
+                    b.Navigation("RolPermisos");
+                });
+
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Rol", b =>
                 {
+                    b.Navigation("RolPermisos");
+
                     b.Navigation("Usuarios");
                 });
 

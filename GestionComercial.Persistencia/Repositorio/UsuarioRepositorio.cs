@@ -10,7 +10,8 @@ namespace GestionComercial.Persistencia.Repositorio
         public UsuarioRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<Usuario?> ObtenerPorEmailAsync(string email)
-            => await _dbSet
+            => 
+            await _dbSet
                 .Include(u => u.Rol)
                 .Include(u => u.Sucursal)
                     .ThenInclude(s => s.Empresa)
