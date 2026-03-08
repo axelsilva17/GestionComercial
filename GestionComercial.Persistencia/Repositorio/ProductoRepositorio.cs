@@ -14,7 +14,19 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .FirstOrDefaultAsync(p => p.CodigoBarra == codigoBarra && p.Activo);
+        public async Task<bool> ExisteCodigoBarraAsync(string codigo, int idEmpresa)
+    => await _dbSet.AnyAsync(p => p.CodigoBarra == codigo && p.Id_empresa == idEmpresa);
 
+        public async Task<bool> ExisteNombreEnCategoriaAsync(string nombre, int idCategoria, int idEmpresa)
+            => await _dbSet.AnyAsync(p => p.Nombre == nombre
+                                       && p.Id_categoria == idCategoria
+                                       && p.Id_empresa == idEmpresa);
+
+        public async Task<int> ObtenerStockAsync(int idProducto)
+            => (int)await _dbSet
+                .Where(p => p.Id == idProducto)
+                .Select(p => p.StockActual)
+                .FirstOrDefaultAsync();
         public async Task<IEnumerable<Producto>> ObtenerConStockBajoAsync(int idEmpresa)
             => await _dbSet
                 .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)

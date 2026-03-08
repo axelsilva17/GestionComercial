@@ -2,7 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
-
+using GestionComercial.Aplicacion.DTOs.Usuarios;
 namespace GestionComercial.UI.ViewModel.Main
 {
     public class LoginViewModel : ViewModelBase
@@ -55,13 +55,8 @@ namespace GestionComercial.UI.ViewModel.Main
 
         public bool ErrorVisible => !string.IsNullOrEmpty(ErrorMessage);
 
-        // Llamado desde el code-behind cuando cambia el PasswordBox
-        public void SetPassword(string password)
-        {
-            Password = password;
-        }
+        public void SetPassword(string password) => Password = password;
 
-        // Caliburn usa esto para habilitar/deshabilitar el botón LoginCommand
         public bool CanLoginCommand =>
             !string.IsNullOrWhiteSpace(Usuario) &&
             !string.IsNullOrWhiteSpace(Password) &&
@@ -77,6 +72,7 @@ namespace GestionComercial.UI.ViewModel.Main
             try
             {
                 var sesion = await _authServicio.LoginAsync(Usuario, Password);
+
                 if (sesion == null)
                 {
                     ErrorMessage = "Email o contraseña incorrectos.";
@@ -84,11 +80,15 @@ namespace GestionComercial.UI.ViewModel.Main
                 }
 
                 var shell = IoC.Get<ShellViewModel>();
-                shell.UsuarioNombre = sesion.NombreCompleto;
-                shell.UsuarioRol = sesion.Rol;
-                shell.UsuarioSucursal = sesion.Sucursal;
+
+                // Datos sueltos (para el header/menú)
                 shell.IdEmpresaActual = sesion.IdEmpresa;
                 shell.IdSucursalActual = sesion.IdSucursal;
+                shell.SesionActual = sesion;
+                shell.ConfigurarSesion(sesion.NombreCompleto, sesion.Rol, sesion.Sucursal, sesion);
+
+                // DTO completo (para Perfil, recuperación, etc.)
+                shell.SesionActual = sesion;
 
                 await _windowManager.ShowWindowAsync(shell);
                 await TryCloseAsync();

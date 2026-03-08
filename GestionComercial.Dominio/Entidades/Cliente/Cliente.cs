@@ -6,7 +6,7 @@ namespace GestionComercial.Dominio.Entidades.Cliente
     public class Cliente : EntidadBase
     {
         public string  Nombre     { get; set; } = string.Empty;
-        public string  Documento  { get; set; } = string.Empty;
+        public int  Documento  { get; set; } 
         public string? Telefono   { get; set; }
         public string? Email      { get; set; }
         public int     Id_empresa { get; set; }

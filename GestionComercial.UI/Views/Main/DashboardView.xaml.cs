@@ -7,32 +7,38 @@ namespace GestionComercial.UI.Views.Main
 {
     public partial class DashboardView : UserControl
     {
-        private DashboardViewModel VM => DataContext as DashboardViewModel;
-
         public DashboardView() => InitializeComponent();
 
-        private async void NuevaVenta_Click(object sender, RoutedEventArgs e)
-            => await IoC.Get<ShellViewModel>().IrVentas();
+        private ShellViewModel Shell => IoC.Get<ShellViewModel>();
 
-        private async void IrCaja_Click(object sender, RoutedEventArgs e)
-            => await IoC.Get<ShellViewModel>().IrCaja();
-
-        private async void IrClientes_Click(object sender, RoutedEventArgs e)
-            => await IoC.Get<ShellViewModel>().IrClientes();
-
-        private async void IrCompras_Click(object sender, RoutedEventArgs e)
-            => await IoC.Get<ShellViewModel>().IrCompras();
-
-        private async void IrReportes_Click(object sender, RoutedEventArgs e)
-            => await IoC.Get<ShellViewModel>().IrReportes();
-
-        private async void IrProductos_Click(object sender, RoutedEventArgs e)
-            => await IoC.Get<ShellViewModel>().IrProductos();
+        private void NuevaVenta_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrVentas();
 
         private void IrVentasCompleto_Click(object sender, RoutedEventArgs e)
-            => VM?.IrVentasCompleto();
+            => Shell?.IrVentas();
+
+        private void IrCaja_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrCaja();
+
+        private void IrClientes_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrClientes();
+
+        private void IrCompras_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrCompras();
+
+        private void IrProductos_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrProductos();
 
         private void IrProductosStock_Click(object sender, RoutedEventArgs e)
-            => VM?.IrProductosStock();
+            => Shell?.IrProductos();
+
+        private void IrInventario_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrInventario();
+
+        private void IrReportes_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrReportes();
+
+        private void IrConfiguracion_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrConfiguracion();
     }
 }

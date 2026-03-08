@@ -1,4 +1,5 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Usuarios;
 using GestionComercial.UI.ViewModel.Main;
 using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Clientes;
@@ -46,13 +47,13 @@ namespace GestionComercial.UI.ViewModels.Main
                 NotifyOfPropertyChange(() => EsGerente);
                 NotifyOfPropertyChange(() => EsAdministrador);
                 NotifyOfPropertyChange(() => EsVendedor);
-                // Menú principal
                 NotifyOfPropertyChange(() => MostrarVentas);
+                NotifyOfPropertyChange(() => MostrarCaja);
                 NotifyOfPropertyChange(() => MostrarCompras);
-                // Catálogo
+                NotifyOfPropertyChange(() => MostrarCatalogo);
                 NotifyOfPropertyChange(() => MostrarProductos);
                 NotifyOfPropertyChange(() => MostrarInventario);
-                // Gestión
+                NotifyOfPropertyChange(() => MostrarClientes);
                 NotifyOfPropertyChange(() => MostrarProveedores);
                 NotifyOfPropertyChange(() => MostrarReportes);
                 NotifyOfPropertyChange(() => MostrarConfiguracion);
@@ -62,33 +63,36 @@ namespace GestionComercial.UI.ViewModels.Main
         public string UsuarioInicial =>
             string.IsNullOrEmpty(UsuarioNombre) ? "?" : UsuarioNombre[0].ToString().ToUpper();
 
-        // ── Identidad de rol ──────────────────────────────────────────────────
+        // ── Identidad ─────────────────────────────────────────────────────────
         public bool EsGerente       => Rol == RolUsuario.Gerente;
         public bool EsAdministrador => Rol == RolUsuario.Administrador;
         public bool EsVendedor      => Rol == RolUsuario.Vendedor;
 
-        // ── Visibilidad de módulos en el menú ─────────────────────────────────
+        // ── Visibilidad módulos ───────────────────────────────────────────────
         //
-        // GERENTE:        todo visible
-        // ADMINISTRADOR:  sin Ventas, sin Productos
-        // VENDEDOR:       solo Dashboard, Ventas, Caja, Clientes
+        // GERENTE:        Dashboard, Ventas(lectura), Compras(lectura), Reportes, Configuración
+        // ADMINISTRADOR:  Dashboard, Caja, Compras, Catálogo(Productos+Inventario), Clientes, Proveedores, Reportes(operativo)
+        // VENDEDOR:       Dashboard, Ventas, Caja, Clientes
         //
-        public bool MostrarVentas       => Rol == RolUsuario.Gerente || Rol == RolUsuario.Vendedor;
-        public bool MostrarCompras      => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
-        public bool MostrarProductos    => Rol == RolUsuario.Gerente;
-        public bool MostrarInventario   => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
-        public bool MostrarProveedores  => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
-        public bool MostrarReportes     => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
-        public bool MostrarConfiguracion=> Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
+        public bool MostrarVentas        => Rol == RolUsuario.Gerente   || Rol == RolUsuario.Vendedor;
+        public bool MostrarCaja          => Rol == RolUsuario.Vendedor;
+        public bool MostrarCompras       => Rol == RolUsuario.Gerente   || Rol == RolUsuario.Administrador;
+        public bool MostrarCatalogo      => Rol == RolUsuario.Administrador;
+        public bool MostrarProductos     => Rol == RolUsuario.Administrador;
+        public bool MostrarInventario    => Rol == RolUsuario.Administrador;
+        public bool MostrarClientes      => Rol == RolUsuario.Administrador || Rol == RolUsuario.Vendedor;
+        public bool MostrarProveedores   => Rol == RolUsuario.Administrador;
+        public bool MostrarReportes      => Rol == RolUsuario.Gerente   || Rol == RolUsuario.Administrador;
+        public bool MostrarConfiguracion => Rol == RolUsuario.Gerente;
 
-        public int IdEmpresaActual { get; internal set; }
-        public int IdSucursalActual { get; internal set; }
+        public int              IdEmpresaActual  { get; internal set; }
+        public int              IdSucursalActual { get; internal set; }
+        public UsuarioSesionDto SesionActual     { get; set; } = new();
 
-        // Caja y Clientes los ven todos
-
-        // ── Configurar sesión desde Login ─────────────────────────────────────
-        public void ConfigurarSesion(string nombre, string rol, string sucursal)
+        // ── Configurar sesión ─────────────────────────────────────────────────
+        public void ConfigurarSesion(string nombre, string rol, string sucursal, UsuarioSesionDto sesion)
         {
+            SesionActual    = sesion;
             UsuarioSucursal = sucursal;
             Rol = rol?.ToLower() switch
             {
@@ -96,7 +100,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 "administrador" or "admin"       => RolUsuario.Administrador,
                 _                                => RolUsuario.Vendedor,
             };
-            UsuarioRol    = Rol switch
+            UsuarioRol = Rol switch
             {
                 RolUsuario.Gerente       => "Gerente",
                 RolUsuario.Administrador => "Administrador",
@@ -119,7 +123,7 @@ namespace GestionComercial.UI.ViewModels.Main
         public async Task IrProveedores()   => await ActivateItemAsync(IoC.Get<ProveedorListadoViewModel>(), CancellationToken.None);
         public async Task IrConfiguracion() => await ActivateItemAsync(IoC.Get<ConfiguracionViewModel>(),    CancellationToken.None);
 
-        // Reportes: redirige al reporte correcto según rol
+        // Reportes diferenciados por rol
         public async Task IrReportes()
         {
             if (EsGerente)

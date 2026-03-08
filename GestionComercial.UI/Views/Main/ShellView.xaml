@@ -7,13 +7,17 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        MinWidth="1200" MinHeight="700"
+        MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        SizeChanged="Window_SizeChanged">
 
     <Window.Resources>
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <!-- Sidebar colapsado cuando el ancho de ventana es menor a 1100px
+             Se controla desde code-behind toggling SidebarCollapsed -->
 
         <Style x:Key="NavButton" TargetType="Button">
             <Setter Property="Background"      Value="Transparent"/>
@@ -38,11 +42,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style x:Key="NavButtonActive" TargetType="Button" BasedOn="{StaticResource NavButton}">
-            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
         </Style>
 
         <Style x:Key="WindowButton" TargetType="Button">
@@ -70,24 +69,125 @@
             </Setter>
         </Style>
 
-        <!-- Badge de rol coloreado -->
+        <Style x:Key="AccionBtn" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Padding"         Value="8,4"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CancelBtn" TargetType="Button">
+            <Setter Property="Height"          Value="38"/>
+            <Setter Property="Padding"         Value="16,0"/>
+            <Setter Property="Margin"          Value="0,0,8,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FormLabel" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Margin"     Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="FormInput" TargetType="TextBox">
+            <Setter Property="Height"          Value="40"/>
+            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="CaretBrush"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FormPassword" TargetType="PasswordBox">
+            <Setter Property="Height"          Value="40"/>
+            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="CaretBrush"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="RolBadge" TargetType="Border">
             <Setter Property="CornerRadius"      Value="4"/>
             <Setter Property="Padding"           Value="6,2"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <!-- Color por defecto: Vendedor (gris) -->
             <Setter Property="Background"        Value="{DynamicResource TextSecondaryBrush}"/>
             <Style.Triggers>
-                <!-- Gerente: verde -->
-                <DataTrigger Binding="{Binding EsGerente}" Value="True">
+                <DataTrigger Binding="{Binding EsGerente}"       Value="True">
                     <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
                 </DataTrigger>
-                <!-- Administrador: azul primario -->
                 <DataTrigger Binding="{Binding EsAdministrador}" Value="True">
                     <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
                 </DataTrigger>
-                <!-- Vendedor: gris -->
-                <DataTrigger Binding="{Binding EsVendedor}" Value="True">
+                <DataTrigger Binding="{Binding EsVendedor}"      Value="True">
                     <Setter Property="Background" Value="{DynamicResource TextSecondaryBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -99,157 +199,148 @@
             BorderThickness="1" CornerRadius="12">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220"/>
+                <!-- Sidebar: ancho dinámico controlado desde code-behind -->
+                <ColumnDefinition x:Name="SidebarColumn" Width="220" MinWidth="56"/>
                 <ColumnDefinition Width="1"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ══ SIDEBAR ══ -->
-            <Grid Grid.Column="0">
+            <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
+            <Grid Grid.Column="0" x:Name="Sidebar">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>   <!-- PRINCIPAL -->
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="16"/>
-                    <RowDefinition Height="Auto"/>   <!-- CATALOGO -->
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="16"/>
-                    <RowDefinition Height="Auto"/>   <!-- GESTION -->
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>   <!-- Footer -->
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Logo -->
+                <!-- Logo / nombre sistema -->
                 <Border Grid.Row="0" Padding="16,20,16,0">
                     <StackPanel>
                         <TextBlock Text="⬡" FontSize="22" Foreground="{DynamicResource PrimaryBrush}"/>
-                        <TextBlock Text="GestiónComercial" FontSize="15" FontWeight="Bold"
+                        <!-- Solo visible cuando sidebar expandido -->
+                        <TextBlock x:Name="TxtSistema" Text="GestiónComercial" FontSize="15" FontWeight="Bold"
                                    Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,0"/>
-                        <TextBlock Text="{Binding UsuarioSucursal}" FontSize="11"
+                        <TextBlock x:Name="TxtSucursal" Text="{Binding UsuarioSucursal}" FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- ── PRINCIPAL ── -->
                 <StackPanel Grid.Row="2" Margin="10,0">
-                    <TextBlock Text="PRINCIPAL" FontSize="9" FontWeight="Bold"
+                    <TextBlock x:Name="LblPrincipal" Text="PRINCIPAL" FontSize="9" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,8"/>
 
-                    <!-- Dashboard: todos los roles -->
                     <Button x:Name="IrDashboard" Style="{StaticResource NavButton}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⊞" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Dashboard" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtDashboard" Text="Dashboard" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Ventas: Gerente y Vendedor -->
                     <Button x:Name="IrVentas" Style="{StaticResource NavButton}"
                             Visibility="{Binding MostrarVentas, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◈" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Ventas" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtVentas" Text="Ventas" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Caja: todos los roles -->
                     <Button x:Name="IrCaja" Style="{StaticResource NavButton}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="▣" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Caja" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtCaja" Text="Caja" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Compras: Gerente y Administrador -->
                     <Button x:Name="IrCompras" Style="{StaticResource NavButton}"
                             Visibility="{Binding MostrarCompras, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◉" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Compras" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtCompras" Text="Compras" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
                 <!-- ── CATÁLOGO ── -->
                 <StackPanel Grid.Row="4" Margin="10,0"
-                            Visibility="{Binding MostrarProductos, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="CATÁLOGO" FontSize="9" FontWeight="Bold"
+                            Visibility="{Binding MostrarCatalogo, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock x:Name="LblCatalogo" Text="CATÁLOGO" FontSize="9" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,8"/>
 
-                    <!-- Productos: solo Gerente -->
-                    <Button x:Name="IrProductos" Style="{StaticResource NavButton}">
+                    <Button x:Name="IrProductos" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarProductos, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◧" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Productos" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtProductos" Text="Productos" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Inventario: solo Gerente (en este bloque) -->
-                    <Button x:Name="IrInventario" Style="{StaticResource NavButton}">
+                    <Button x:Name="IrInventario" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarInventario, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◪" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Inventario" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-
-                <!-- Inventario para Administrador (fuera del bloque Catálogo) -->
-                <StackPanel Grid.Row="4" Margin="10,0"
-                            Visibility="{Binding EsAdministrador, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="CATÁLOGO" FontSize="9" FontWeight="Bold"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,8"/>
-                    <Button x:Name="IrInventarioAdmin" Style="{StaticResource NavButton}"
-                            Click="IrInventario_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="◪" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Inventario" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtInventario" Text="Inventario" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
                 <!-- ── GESTIÓN ── -->
                 <StackPanel Grid.Row="6" Margin="10,0">
-                    <TextBlock Text="GESTIÓN" FontSize="9" FontWeight="Bold"
+                    <TextBlock x:Name="LblGestion" Text="GESTIÓN" FontSize="9" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,8"/>
 
-                    <!-- Clientes: todos los roles -->
                     <Button x:Name="IrClientes" Style="{StaticResource NavButton}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="○" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Clientes" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtClientes" Text="Clientes" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Proveedores: Gerente y Administrador -->
                     <Button x:Name="IrProveedores" Style="{StaticResource NavButton}"
                             Visibility="{Binding MostrarProveedores, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◌" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Proveedores" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtProveedores" Text="Proveedores" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Reportes: Gerente y Administrador (cada uno ve el suyo via ShellViewModel.IrReportes) -->
                     <Button x:Name="IrReportes" Style="{StaticResource NavButton}"
                             Visibility="{Binding MostrarReportes, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◫" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Reportes" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtReportes" Text="Reportes" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Configuración: Gerente y Administrador -->
+                    <!-- Configuración: solo Gerente -->
                     <Button x:Name="IrConfiguracion" Style="{StaticResource NavButton}"
                             Visibility="{Binding MostrarConfiguracion, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⊙" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock Text="Configuración" FontSize="13" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock x:Name="TxtConfiguracion" Text="Configuración" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
                 <!-- ── Footer usuario ── -->
                 <Border Grid.Row="8" BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="0,1,0,0" Padding="16,14">
+                        BorderThickness="0,1,0,0" Padding="12,14">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -257,16 +348,20 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Avatar inicial -->
-                        <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8"
-                                Background="{DynamicResource PrimaryBrush}">
-                            <TextBlock Text="{Binding UsuarioInicial}" FontSize="14" FontWeight="Bold"
-                                       Foreground="{DynamicResource BackgroundBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        <!-- Avatar — clic abre panel perfil -->
+                        <Button Grid.Column="0" Background="Transparent" BorderThickness="0"
+                                Cursor="Hand" Click="AbrirPerfil_Click" ToolTip="Mi perfil">
+                            <Border Width="34" Height="34" CornerRadius="8"
+                                    Background="{DynamicResource PrimaryBrush}">
+                                <TextBlock Text="{Binding UsuarioInicial}" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource BackgroundBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Button>
 
-                        <!-- Nombre + badge de rol -->
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <!-- Nombre + rol — solo visible expandido -->
+                        <StackPanel x:Name="FooterNombre" Grid.Column="1"
+                                    VerticalAlignment="Center" Margin="10,0,0,0">
                             <TextBlock Text="{Binding UsuarioNombre}" FontSize="13" FontWeight="Medium"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <Border Style="{StaticResource RolBadge}" HorizontalAlignment="Left" Margin="0,3,0,0">
@@ -275,7 +370,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Botón cerrar sesión -->
+                        <!-- Cerrar sesión -->
                         <Button Grid.Column="2" x:Name="CerrarSesion" Content="⏻" FontSize="16"
                                 Width="30" Height="30" Background="Transparent" BorderThickness="0"
                                 Foreground="{DynamicResource TextSecondaryBrush}"
@@ -298,10 +393,10 @@
                 </Border>
             </Grid>
 
-            <!-- Divisor vertical -->
+            <!-- Divisor -->
             <Rectangle Grid.Column="1" Fill="{DynamicResource BorderBrush}"/>
 
-            <!-- ══ ÁREA CONTENIDO ══ -->
+            <!-- ══ ÁREA CONTENIDO ══════════════════════════════════════════ -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="48"/>
@@ -312,11 +407,17 @@
                 <!-- Topbar -->
                 <Grid Grid.Row="0" Margin="20,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Botón colapsar sidebar -->
+                    <Button Grid.Column="0" x:Name="BtnToggleSidebar" Content="☰"
+                            Style="{StaticResource WindowButton}" FontSize="16"
+                            Click="ToggleSidebar_Click" Margin="0,0,12,0" ToolTip="Expandir / colapsar menú"/>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="{Binding ActiveItem.Titulo, FallbackValue='Dashboard'}"
                                    FontSize="15" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -326,7 +427,7 @@
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="MinimizeWindow" Content="─"
                                 Style="{StaticResource WindowButton}" Click="Minimize_Click"/>
                         <Button x:Name="MaximizeWindow" Content="□"
@@ -352,6 +453,194 @@
                 <Rectangle Grid.Row="1" Fill="{DynamicResource BorderBrush}"/>
                 <ContentControl Grid.Row="2" x:Name="ActiveItem" Margin="0"/>
             </Grid>
+
+            <!-- ══ OVERLAY ══════════════════════════════════════════════════ -->
+            <Rectangle x:Name="Overlay" Grid.ColumnSpan="3" Fill="#88000000"
+                       Opacity="0" IsHitTestVisible="False"/>
+
+            <!-- ══ PANEL PERFIL SLIDE-IN ════════════════════════════════════ -->
+            <Border x:Name="PanelPerfil" Grid.ColumnSpan="3" Width="400"
+                    HorizontalAlignment="Right"
+                    Background="{DynamicResource CardBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                    Visibility="Collapsed">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="PanelPerfilTransform"/>
+                </Border.RenderTransform>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header del panel -->
+                    <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="0,0,0,1" Padding="24,20">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="44" Height="44" CornerRadius="12"
+                                        Background="{DynamicResource PrimaryBrush}" Margin="0,0,14,0">
+                                    <TextBlock Text="{Binding UsuarioInicial}" FontSize="18" FontWeight="Bold"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding UsuarioNombre}" FontSize="16" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding UsuarioRol}" FontSize="12"
+                                               Foreground="{DynamicResource PrimaryBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Content="✕" Style="{StaticResource AccionBtn}"
+                                    FontSize="14" Click="CerrarPerfil_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Contenido scroll -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="24">
+
+                            <!-- ── Datos personales ── -->
+                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10"
+                                    Padding="16" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="Datos personales" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Nombre y apellido de tu cuenta" FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                        <Button HorizontalAlignment="Right" Content="✏️ Editar"
+                                                Style="{StaticResource AccionBtn}"
+                                                Click="AbrirEditarDatos_Click"/>
+                                    </Grid>
+
+                                    <!-- Formulario edición (oculto por defecto) -->
+                                    <StackPanel x:Name="FormDatos" Visibility="Collapsed">
+                                        <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                                        <TextBox x:Name="TxtNombre" Style="{StaticResource FormInput}" Margin="0,0,0,12"/>
+                                        <TextBlock Text="APELLIDO" Style="{StaticResource FormLabel}"/>
+                                        <TextBox x:Name="TxtApellido" Style="{StaticResource FormInput}" Margin="0,0,0,12"/>
+                                        <Border x:Name="ErrorDatos" Background="#1AEF4444" CornerRadius="8"
+                                                Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
+                                            <TextBlock x:Name="TxtErrorDatos" FontSize="12"
+                                                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="Cancelar" Style="{StaticResource CancelBtn}"
+                                                    Click="CancelarDatos_Click"/>
+                                            <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                                                    Height="38" Padding="16,0" Click="GuardarDatos_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── Cambiar contraseña ── -->
+                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10"
+                                    Padding="16" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="Contraseña" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Mínimo 8 caracteres" FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                        <Button HorizontalAlignment="Right" Content="🔑 Cambiar"
+                                                Style="{StaticResource AccionBtn}"
+                                                Click="AbrirCambiarPassword_Click"/>
+                                    </Grid>
+
+                                    <StackPanel x:Name="FormPassword" Visibility="Collapsed">
+                                        <TextBlock Text="CONTRASEÑA ACTUAL" Style="{StaticResource FormLabel}"/>
+                                        <PasswordBox x:Name="PbActual" Style="{StaticResource FormPassword}"
+                                                     PasswordChanged="PbActual_PasswordChanged" Margin="0,0,0,12"/>
+                                        <TextBlock Text="NUEVA CONTRASEÑA" Style="{StaticResource FormLabel}"/>
+                                        <PasswordBox x:Name="PbNuevo" Style="{StaticResource FormPassword}"
+                                                     PasswordChanged="PbNuevo_PasswordChanged" Margin="0,0,0,12"/>
+                                        <TextBlock Text="CONFIRMAR CONTRASEÑA" Style="{StaticResource FormLabel}"/>
+                                        <PasswordBox x:Name="PbConfirmar" Style="{StaticResource FormPassword}"
+                                                     PasswordChanged="PbConfirmar_PasswordChanged" Margin="0,0,0,12"/>
+                                        <Border x:Name="ErrorPassword" Background="#1AEF4444" CornerRadius="8"
+                                                Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
+                                            <TextBlock x:Name="TxtErrorPassword" FontSize="12"
+                                                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="Cancelar" Style="{StaticResource CancelBtn}"
+                                                    Click="CancelarPassword_Click"/>
+                                            <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                                                    Height="38" Padding="16,0" Click="GuardarPassword_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── Pregunta secreta ── -->
+                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10"
+                                    Padding="16" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="Pregunta secreta" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock x:Name="TxtEstadoPregunta"
+                                                       Text="⚠️ Sin configurar — necesaria para recuperar contraseña"
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                        <Button x:Name="BtnEditarPregunta" HorizontalAlignment="Right"
+                                                Content="🔐 Configurar" Style="{StaticResource AccionBtn}"
+                                                Click="AbrirPreguntaSecreta_Click"/>
+                                    </Grid>
+
+                                    <StackPanel x:Name="FormPregunta" Visibility="Collapsed">
+                                        <TextBlock Text="PREGUNTA SECRETA" Style="{StaticResource FormLabel}"/>
+                                        <ComboBox x:Name="CbPreguntas" Height="40" Margin="0,0,0,12"
+                                                  Background="{DynamicResource SurfaceBrush}"
+                                                  Foreground="{DynamicResource TextPrimaryBrush}"
+                                                  BorderBrush="{DynamicResource BorderBrush}" FontSize="12"/>
+                                        <TextBlock Text="TU RESPUESTA" Style="{StaticResource FormLabel}"/>
+                                        <PasswordBox x:Name="PbRespuesta" Style="{StaticResource FormPassword}"
+                                                     PasswordChanged="PbRespuesta_PasswordChanged" Margin="0,0,0,12"/>
+                                        <TextBlock Text="CONFIRMÁ TU RESPUESTA" Style="{StaticResource FormLabel}"/>
+                                        <PasswordBox x:Name="PbConfirmarRespuesta" Style="{StaticResource FormPassword}"
+                                                     PasswordChanged="PbConfirmarRespuesta_PasswordChanged" Margin="0,0,0,4"/>
+                                        <TextBlock Text="La respuesta no distingue mayúsculas." FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                                        <Border x:Name="ErrorPregunta" Background="#1AEF4444" CornerRadius="8"
+                                                Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
+                                            <TextBlock x:Name="TxtErrorPregunta" FontSize="12"
+                                                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="Cancelar" Style="{StaticResource CancelBtn}"
+                                                    Click="CancelarPregunta_Click"/>
+                                            <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                                                    Height="38" Padding="16,0" Click="GuardarPregunta_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Mensaje éxito global -->
+                            <Border x:Name="MensajeExito" Background="#1A22C55E" CornerRadius="8"
+                                    Padding="14,10" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="✅ " FontSize="13" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtExito" FontSize="13"
+                                               Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>

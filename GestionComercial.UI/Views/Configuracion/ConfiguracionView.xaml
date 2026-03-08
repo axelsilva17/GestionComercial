@@ -7,7 +7,6 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
 
-        <!-- TabControl -->
         <Style TargetType="TabControl">
             <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -66,7 +65,6 @@
             </Setter>
         </Style>
 
-        <!-- Botón acción pequeño -->
         <Style x:Key="AccionBtn" TargetType="Button">
             <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -92,7 +90,6 @@
             </Setter>
         </Style>
 
-        <!-- Botón cancelar reutilizable -->
         <Style x:Key="CancelBtn" TargetType="Button">
             <Setter Property="Height"          Value="38"/>
             <Setter Property="Padding"         Value="16,0"/>
@@ -121,7 +118,6 @@
             </Setter>
         </Style>
 
-        <!-- Label formulario -->
         <Style x:Key="FormLabel" TargetType="TextBlock">
             <Setter Property="FontSize"   Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -129,7 +125,6 @@
             <Setter Property="Margin"     Value="0,0,0,6"/>
         </Style>
 
-        <!-- TextBox formulario -->
         <Style x:Key="FormInput" TargetType="TextBox">
             <Setter Property="Height"          Value="40"/>
             <Setter Property="Padding"         Value="12,0"/>
@@ -144,10 +139,8 @@
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          VerticalAlignment="Center"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
                                           Margin="{TemplateBinding Padding}"/>
                         </Border>
                     </ControlTemplate>
@@ -155,7 +148,6 @@
             </Setter>
         </Style>
 
-        <!-- PasswordBox formulario -->
         <Style x:Key="FormPassword" TargetType="PasswordBox">
             <Setter Property="Height"          Value="40"/>
             <Setter Property="Padding"         Value="12,0"/>
@@ -170,10 +162,8 @@
                     <ControlTemplate TargetType="PasswordBox">
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          VerticalAlignment="Center"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
                                           Margin="{TemplateBinding Padding}"/>
                         </Border>
                     </ControlTemplate>
@@ -181,7 +171,6 @@
             </Setter>
         </Style>
 
-        <!-- Badge estado -->
         <Style x:Key="BadgeActivo" TargetType="Border">
             <Setter Property="CornerRadius"        Value="6"/>
             <Setter Property="Padding"             Value="10,3"/>
@@ -189,7 +178,6 @@
             <Setter Property="VerticalAlignment"   Value="Center"/>
         </Style>
 
-        <!-- Style para BadgeActivo con triggers para Activa (Sucursales) -->
         <Style x:Key="BadgeSucursalActivo" TargetType="Border" BasedOn="{StaticResource BadgeActivo}">
             <Setter Property="Background" Value="#1A22C55E"/>
             <Style.Triggers>
@@ -199,7 +187,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Style para BadgeActivo con triggers para Activo (Usuarios) -->
         <Style x:Key="BadgeUsuarioActivo" TargetType="Border" BasedOn="{StaticResource BadgeActivo}">
             <Setter Property="Background" Value="#1A22C55E"/>
             <Style.Triggers>
@@ -210,7 +197,6 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Root grid: contenido + paneles superpuestos -->
     <Grid>
 
         <!-- ══ CONTENIDO PRINCIPAL ══════════════════════════════════════════ -->
@@ -319,8 +305,7 @@
                                 <TextBlock Text="Sucursales del negocio" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
-                                        Height="36" Padding="14,0" FontSize="12"
-                                        Click="NuevaSucursal_Click">
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevaSucursal_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Text="Nueva Sucursal" VerticalAlignment="Center"/>
@@ -367,8 +352,7 @@
                                                     </Border>
                                                     <Button Grid.Column="3" Content="✏️ Editar"
                                                             Style="{StaticResource AccionBtn}"
-                                                            Tag="{Binding}"
-                                                            Click="EditarSucursal_Click"/>
+                                                            Tag="{Binding}" Click="EditarSucursal_Click"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -403,8 +387,7 @@
                                 <TextBlock Text="Usuarios del sistema" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
-                                        Height="36" Padding="14,0" FontSize="12"
-                                        Click="NuevoUsuario_Click">
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevoUsuario_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Text="Nuevo Usuario" VerticalAlignment="Center"/>
@@ -436,7 +419,8 @@
                                                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                                             <TextBlock Text="{Binding RolNombre}" FontSize="11"
                                                                        Foreground="{DynamicResource PrimaryBrush}"/>
-                                                            <TextBlock Text=" · " FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text=" · " FontSize="11"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                             <TextBlock Text="{Binding SucursalNombre}" FontSize="11"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                         </StackPanel>
@@ -459,8 +443,7 @@
                                                     </Border>
                                                     <Button Grid.Column="3" Content="✏️ Editar"
                                                             Style="{StaticResource AccionBtn}"
-                                                            Tag="{Binding}"
-                                                            Click="EditarUsuario_Click"/>
+                                                            Tag="{Binding}" Click="EditarUsuario_Click"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -495,8 +478,7 @@
                                 <TextBlock Text="Roles de usuario" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
-                                        Height="36" Padding="14,0" FontSize="12"
-                                        Click="NuevoRol_Click">
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevoRol_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Text="Nuevo Rol" VerticalAlignment="Center"/>
@@ -563,8 +545,7 @@
                                 <TextBlock Text="Métodos de pago aceptados" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
-                                        Height="36" Padding="14,0" FontSize="12"
-                                        Click="NuevoMetodo_Click">
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevoMetodo_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Text="Nuevo Método" VerticalAlignment="Center"/>
@@ -611,103 +592,10 @@
                     </Border>
                 </TabItem>
 
-                <!-- ── MI PERFIL ──────────────────────────────────────────── -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="👤" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Mi Perfil" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0" Background="{DynamicResource CardBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="12" Padding="24">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <Border Width="56" Height="56" CornerRadius="16"
-                                            Background="{DynamicResource PrimaryBrush}" Margin="0,0,16,0">
-                                        <TextBlock Text="{Binding Perfil.Sesion.Inicial}" FontSize="22" FontWeight="Bold"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Perfil.Sesion.NombreCompleto}" FontSize="18" FontWeight="Bold"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding Perfil.Sesion.RolNombre}" FontSize="12"
-                                                   Foreground="{DynamicResource PrimaryBrush}" Margin="0,3,0,0"/>
-                                    </StackPanel>
-                                </StackPanel>
-                                <Grid Margin="0,0,0,16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="12"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="SUCURSAL" Style="{StaticResource FormLabel}"/>
-                                        <TextBlock Text="{Binding Perfil.Sesion.SucursalNombre}" FontSize="13"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="EMPRESA" Style="{StaticResource FormLabel}"/>
-                                        <TextBlock Text="{Binding Perfil.Sesion.EmpresaNombre}" FontSize="13"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </StackPanel>
-                                </Grid>
-                                <Border Background="#1A22C55E" CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
-                                        Visibility="{Binding Perfil.TieneExito, Converter={StaticResource BoolToVisibility}}">
-                                    <TextBlock Text="{Binding Perfil.MensajeExito}" FontSize="12"
-                                               Foreground="{DynamicResource SuccessBrush}"/>
-                                </Border>
-                                <Button Content="✏️  Editar datos personales"
-                                        Style="{StaticResource PrimaryButton}"
-                                        Height="40" HorizontalAlignment="Left" Padding="16,0"
-                                        Click="AbrirPanelDatos_Click"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Grid.Column="2" Background="{DynamicResource CardBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="12" Padding="24">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <Border Width="46" Height="46" CornerRadius="12"
-                                            Background="#1A3B82F6" Margin="0,0,14,0">
-                                        <TextBlock Text="🔒" FontSize="20"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Seguridad" FontSize="16" FontWeight="Bold"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="Cambiá tu contraseña periódicamente" FontSize="11"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
-                                    </StackPanel>
-                                </StackPanel>
-                                <TextBlock Text="Tu contraseña debe tener al menos 6 caracteres." FontSize="12"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                           TextWrapping="Wrap" Margin="0,0,0,16"/>
-                                <Button Content="🔑  Cambiar contraseña"
-                                        Style="{StaticResource CancelBtn}"
-                                        Height="40" HorizontalAlignment="Left" Margin="0"
-                                        Click="AbrirPanelPassword_Click"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </TabItem>
-
             </TabControl>
         </Grid>
 
-        <!-- ══ PANELES SLIDE-IN (superpuestos, gestionados desde code-behind) ══ -->
-
-        <!-- Overlay oscuro compartido — se muestra cuando cualquier panel está abierto -->
+        <!-- ══ OVERLAY ══════════════════════════════════════════════════════ -->
         <Rectangle x:Name="Overlay" Fill="#88000000" Opacity="0" IsHitTestVisible="False"/>
 
         <!-- Panel Empresa -->
@@ -715,9 +603,7 @@
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelEmpresaTransform"/>
-            </Border.RenderTransform>
+            <Border.RenderTransform><TranslateTransform x:Name="PanelEmpresaTransform"/></Border.RenderTransform>
             <Grid Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -760,9 +646,7 @@
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelSucursalTransform"/>
-            </Border.RenderTransform>
+            <Border.RenderTransform><TranslateTransform x:Name="PanelSucursalTransform"/></Border.RenderTransform>
             <Grid Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -804,9 +688,7 @@
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelUsuarioTransform"/>
-            </Border.RenderTransform>
+            <Border.RenderTransform><TranslateTransform x:Name="PanelUsuarioTransform"/></Border.RenderTransform>
             <Grid Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -876,9 +758,7 @@
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelRolTransform"/>
-            </Border.RenderTransform>
+            <Border.RenderTransform><TranslateTransform x:Name="PanelRolTransform"/></Border.RenderTransform>
             <Grid Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -915,9 +795,7 @@
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelMetodoTransform"/>
-            </Border.RenderTransform>
+            <Border.RenderTransform><TranslateTransform x:Name="PanelMetodoTransform"/></Border.RenderTransform>
             <Grid Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -947,93 +825,6 @@
                     <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
                     <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
                             Height="38" Padding="16,0" Click="GuardarMetodo_Click"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Panel Perfil - Datos -->
-        <Border x:Name="PanelPerfilDatos" Width="360" HorizontalAlignment="Right"
-                Background="{DynamicResource CardBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
-                Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelPerfilDatosTransform"/>
-            </Border.RenderTransform>
-            <Grid Margin="28">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid>
-                    <TextBlock Text="Editar datos personales" FontSize="17" FontWeight="Bold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
-                            FontSize="14" Click="CerrarPanel_Click"/>
-                </Grid>
-                <StackPanel Grid.Row="2">
-                    <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
-                    <TextBox Text="{Binding Perfil.EditNombre, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
-                    <TextBlock Text="APELLIDO" Style="{StaticResource FormLabel}"/>
-                    <TextBox Text="{Binding Perfil.EditApellido, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FormInput}"/>
-                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
-                            Visibility="{Binding Perfil.TieneError, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding Perfil.MensajeError}" FontSize="12"
-                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
-                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
-                            Height="38" Padding="16,0" Click="GuardarDatosPerfil_Click"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Panel Perfil - Contraseña -->
-        <Border x:Name="PanelPerfilPassword" Width="360" HorizontalAlignment="Right"
-                Background="{DynamicResource CardBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
-                Visibility="Collapsed">
-            <Border.RenderTransform>
-                <TranslateTransform x:Name="PanelPerfilPasswordTransform"/>
-            </Border.RenderTransform>
-            <Grid Margin="28">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid>
-                    <TextBlock Text="Cambiar contraseña" FontSize="17" FontWeight="Bold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
-                            FontSize="14" Click="CerrarPanel_Click"/>
-                </Grid>
-                <StackPanel Grid.Row="2">
-                    <TextBlock Text="CONTRASEÑA ACTUAL" Style="{StaticResource FormLabel}"/>
-                    <PasswordBox x:Name="PbActual" Style="{StaticResource FormPassword}"
-                                 PasswordChanged="PbActual_PasswordChanged" Margin="0,0,0,16"/>
-                    <TextBlock Text="NUEVA CONTRASEÑA" Style="{StaticResource FormLabel}"/>
-                    <PasswordBox x:Name="PbNuevo" Style="{StaticResource FormPassword}"
-                                 PasswordChanged="PbNuevo_PasswordChanged" Margin="0,0,0,16"/>
-                    <TextBlock Text="CONFIRMAR CONTRASEÑA" Style="{StaticResource FormLabel}"/>
-                    <PasswordBox x:Name="PbConfirmar" Style="{StaticResource FormPassword}"
-                                 PasswordChanged="PbConfirmar_PasswordChanged"/>
-                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
-                            Visibility="{Binding Perfil.TieneError, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding Perfil.MensajeError}" FontSize="12"
-                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
-                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
-                            Height="38" Padding="16,0" Click="GuardarPassword_Click"/>
                 </StackPanel>
             </Grid>
         </Border>

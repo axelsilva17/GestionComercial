@@ -1,13 +1,25 @@
 using Caliburn.Micro;
-using GestionComercial.Aplicacion.DTOs.Configuracion;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Configuracion
 {
     public class PerfilViewModel : NavigableViewModel
     {
+        private readonly AutenticacionServicio        _authServicio;
+        private readonly RecuperacionContrasenaServicio _recuperacionServicio;
+
+        public PerfilViewModel(
+            AutenticacionServicio authServicio,
+            RecuperacionContrasenaServicio recuperacionServicio)
+        {
+            _authServicio         = authServicio;
+            _recuperacionServicio = recuperacionServicio;
+        }
+
         // ── Datos del usuario logueado ────────────────────────────────────────
         private UsuarioSesionDto _sesion = new();
         public UsuarioSesionDto Sesion
@@ -64,7 +76,48 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _passConfirmar = value; NotifyOfPropertyChange(() => PassConfirmar); }
         }
 
-        // ── Mensaje éxito ─────────────────────────────────────────────────────
+        // ── Panel pregunta secreta ────────────────────────────────────────────
+        private bool   _panelPreguntaVisible;
+        private string _preguntaSeleccionada = string.Empty;
+        private string _respuestaPregunta    = string.Empty;
+        private string _confirmarRespuesta   = string.Empty;
+
+        public bool PanelPreguntaVisible
+        {
+            get => _panelPreguntaVisible;
+            set { _panelPreguntaVisible = value; NotifyOfPropertyChange(() => PanelPreguntaVisible); }
+        }
+
+        public List<string> PreguntasDisponibles => PreguntasSecretas.Lista;
+
+        public string PreguntaSeleccionada
+        {
+            get => _preguntaSeleccionada;
+            set { _preguntaSeleccionada = value; NotifyOfPropertyChange(() => PreguntaSeleccionada); }
+        }
+        public string RespuestaPregunta
+        {
+            get => _respuestaPregunta;
+            set { _respuestaPregunta = value; NotifyOfPropertyChange(() => RespuestaPregunta); }
+        }
+        public string ConfirmarRespuesta
+        {
+            get => _confirmarRespuesta;
+            set { _confirmarRespuesta = value; NotifyOfPropertyChange(() => ConfirmarRespuesta); }
+        }
+
+        // Indica si el usuario ya tiene configurada la pregunta
+        private bool _tienePreguntaConfigurada;
+        public bool TienePreguntaConfigurada
+        {
+            get => _tienePreguntaConfigurada;
+            set { _tienePreguntaConfigurada = value; NotifyOfPropertyChange(() => TienePreguntaConfigurada); NotifyOfPropertyChange(() => TextoBotonPregunta); }
+        }
+        public string TextoBotonPregunta => TienePreguntaConfigurada
+            ? "Cambiar pregunta secreta"
+            : "Configurar pregunta secreta";
+
+        // ── Mensaje éxito / error ─────────────────────────────────────────────
         private string _mensajeExito = string.Empty;
         public string MensajeExito
         {
@@ -73,21 +126,21 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         }
         public bool TieneExito => !string.IsNullOrEmpty(MensajeExito);
 
-        public async Task CargarAsync()
+        // ── Carga ─────────────────────────────────────────────────────────────
+        public async Task CargarAsync(UsuarioSesionDto sesion)
         {
-            await Task.Delay(100);
-            // TODO: obtener del servicio de sesión actual
-            Sesion = new UsuarioSesionDto
+            Sesion = sesion;
+
+            // Verificar si ya tiene pregunta configurada
+            try
             {
-                IdUsuario      = 1,
-                Nombre         = "Juan",
-                Apellido       = "García",
-                IdSucursal     = 1,
-                Sucursal = "Casa Central",
-                IdEmpresa      = 1,
-                Empresa  = "Mi Empresa S.R.L.",
-                Rol     = "Administrador"
-            };
+                var pregunta = await _recuperacionServicio.ObtenerPreguntaAsync(sesion.Email);
+                TienePreguntaConfigurada = !string.IsNullOrEmpty(pregunta);
+            }
+            catch
+            {
+                TienePreguntaConfigurada = false;
+            }
         }
 
         // ── Datos personales ──────────────────────────────────────────────────
@@ -97,6 +150,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             EditApellido      = Sesion.Apellido;
             MensajeExito      = string.Empty;
             LimpiarError();
+            CerrarTodosLosPaneles();
             PanelDatosVisible = true;
         }
 
@@ -106,21 +160,23 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         {
             if (string.IsNullOrWhiteSpace(EditNombre))   { MostrarError("El nombre es obligatorio.");   return; }
             if (string.IsNullOrWhiteSpace(EditApellido)) { MostrarError("El apellido es obligatorio."); return; }
+
             IsLoading = true;
             LimpiarError();
             try
             {
-                await Task.Delay(300); // TODO: await servicio
+                await Task.Delay(300); // TODO: await _usuarioServicio.ActualizarDatosAsync(...)
                 Sesion = new UsuarioSesionDto
                 {
-                    IdUsuario      = Sesion.IdUsuario,
-                    Nombre         = EditNombre,
-                    Apellido       = EditApellido,
-                    IdSucursal     = Sesion.IdSucursal,
-                    Sucursal = Sesion.Sucursal,
-                    IdEmpresa      = Sesion.IdEmpresa,
-                    Empresa  = Sesion.Empresa,
-                    Rol     = Sesion.Rol
+                    IdUsuario  = Sesion.IdUsuario,
+                    Nombre     = EditNombre,
+                    Apellido   = EditApellido,
+                    Email      = Sesion.Email,
+                    IdSucursal = Sesion.IdSucursal,
+                    Sucursal   = Sesion.Sucursal,
+                    IdEmpresa  = Sesion.IdEmpresa,
+                    Empresa    = Sesion.Empresa,
+                    Rol        = Sesion.Rol
                 };
                 MensajeExito      = "Datos actualizados correctamente.";
                 PanelDatosVisible = false;
@@ -137,6 +193,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             PassConfirmar        = string.Empty;
             MensajeExito         = string.Empty;
             LimpiarError();
+            CerrarTodosLosPaneles();
             PanelPasswordVisible = true;
         }
 
@@ -144,21 +201,71 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
         public async Task GuardarPassword()
         {
-            if (string.IsNullOrWhiteSpace(PassActual))    { MostrarError("Ingresá tu contraseña actual."); return; }
-            if (string.IsNullOrWhiteSpace(PassNuevo))     { MostrarError("Ingresá la nueva contraseña."); return; }
-            if (PassNuevo != PassConfirmar)               { MostrarError("Las contraseñas no coinciden."); return; }
-            if (PassNuevo.Length < 6)                     { MostrarError("La contraseña debe tener al menos 6 caracteres."); return; }
+            if (string.IsNullOrWhiteSpace(PassActual))  { MostrarError("Ingresá tu contraseña actual."); return; }
+            if (string.IsNullOrWhiteSpace(PassNuevo))   { MostrarError("Ingresá la nueva contraseña."); return; }
+            if (PassNuevo != PassConfirmar)             { MostrarError("Las contraseñas no coinciden."); return; }
+            if (PassNuevo.Length < 8)                   { MostrarError("La contraseña debe tener al menos 8 caracteres."); return; }
 
             IsLoading = true;
             LimpiarError();
             try
             {
-                await Task.Delay(300); // TODO: await servicio.CambiarPassword(...)
+                // Verificar contraseña actual
+                var sesion = await _authServicio.LoginAsync(Sesion.Email, PassActual);
+                if (sesion == null) { MostrarError("La contraseña actual es incorrecta."); return; }
+
+                await _recuperacionServicio.CambiarContrasenaAsync(Sesion.Email, PassNuevo);
                 MensajeExito         = "Contraseña actualizada correctamente.";
                 PanelPasswordVisible = false;
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
+        }
+
+        // ── Pregunta secreta ──────────────────────────────────────────────────
+        public void AbrirPreguntaSecreta()
+        {
+            PreguntaSeleccionada  = PreguntasDisponibles[0];
+            RespuestaPregunta     = string.Empty;
+            ConfirmarRespuesta    = string.Empty;
+            MensajeExito          = string.Empty;
+            LimpiarError();
+            CerrarTodosLosPaneles();
+            PanelPreguntaVisible  = true;
+        }
+
+        public void CerrarPanelPregunta() => PanelPreguntaVisible = false;
+
+        public async Task GuardarPreguntaSecreta()
+        {
+            if (string.IsNullOrWhiteSpace(PreguntaSeleccionada)) { MostrarError("Seleccioná una pregunta."); return; }
+            if (string.IsNullOrWhiteSpace(RespuestaPregunta))    { MostrarError("Ingresá tu respuesta."); return; }
+            if (RespuestaPregunta != ConfirmarRespuesta)         { MostrarError("Las respuestas no coinciden."); return; }
+            if (RespuestaPregunta.Length < 3)                    { MostrarError("La respuesta debe tener al menos 3 caracteres."); return; }
+
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                await _recuperacionServicio.ConfigurarPreguntaAsync(
+                    Sesion.Email,
+                    PreguntaSeleccionada,
+                    RespuestaPregunta);
+
+                TienePreguntaConfigurada = true;
+                MensajeExito             = "Pregunta secreta configurada correctamente.";
+                PanelPreguntaVisible     = false;
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
+        }
+
+        // ── Helper ────────────────────────────────────────────────────────────
+        private void CerrarTodosLosPaneles()
+        {
+            PanelDatosVisible     = false;
+            PanelPasswordVisible  = false;
+            PanelPreguntaVisible  = false;
         }
     }
 }

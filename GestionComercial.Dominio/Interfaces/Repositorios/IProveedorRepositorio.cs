@@ -14,6 +14,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     public interface IProveedorRepositorio : IRepositorioBase<Proveedor>
     {
         Task<IEnumerable<Proveedor>> ObtenerPorEmpresaAsync(int idEmpresa);
+        Task<bool> EstaActivoAsync(int idProveedor);
     }
 
    

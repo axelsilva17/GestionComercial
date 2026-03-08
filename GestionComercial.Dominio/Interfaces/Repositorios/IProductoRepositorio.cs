@@ -10,5 +10,8 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa);
         Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa);
         Task<Producto?> ObtenerPorIdConDetallesAsync(int id);
+        Task<bool> ExisteCodigoBarraAsync(string codigo, int idEmpresa);
+        Task<bool> ExisteNombreEnCategoriaAsync(string nombre, int idCategoria, int idEmpresa);
+        Task<int> ObtenerStockAsync(int idProducto);
     }
 }

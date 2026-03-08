@@ -1,5 +1,12 @@
-using Caliburn.Micro;
+﻿using Caliburn.Micro;
+using FluentValidation;
+using GestionComercial.Aplicacion.DTOs.Clientes;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Aplicacion.Validators;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
@@ -26,6 +33,7 @@ namespace GestionComercial.UI
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
 
+            // ── Base de datos ─────────────────────────────────────────────────
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false)
@@ -42,6 +50,7 @@ namespace GestionComercial.UI
             _container.Handler<IUnitOfWork>(
                 c => new UnitOfWork(c.GetInstance<GestionComercialContext>()));
 
+            // ── Servicios ─────────────────────────────────────────────────────
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<ClienteServicio>();
             _container.PerRequest<ProductoServicio>();
@@ -52,7 +61,37 @@ namespace GestionComercial.UI
             _container.PerRequest<StockServicio>();
             _container.PerRequest<ReporteServicio>();
             _container.PerRequest<UsuarioServicio>();
+            _container.PerRequest<RecuperacionContrasenaServicio>();
 
+            // ── Validators (FluentValidation) ─────────────────────────────────
+            // Nota: c.GetInstance<IUnitOfWork>().Clientes asume que IUnitOfWork
+            // expone los repositorios como propiedades. Ajustá los nombres
+            // según tu implementación de UnitOfWork.
+            _container.Handler<IValidator<ClienteCrearDto>>(
+                c => new ClienteValidator(c.GetInstance<IUnitOfWork>().Clientes));
+
+            _container.Handler<IValidator<ProductoCrearDto>>(
+                c => new ProductoValidator(c.GetInstance<IUnitOfWork>().Productos));
+
+            _container.Handler<IValidator<UsuarioCrearDto>>(
+                c => new UsuarioValidator(c.GetInstance<IUnitOfWork>().Usuarios));
+
+            _container.Handler<IValidator<VentaCrearDto>>(
+                c => new VentaValidator(c.GetInstance<IUnitOfWork>().Productos));
+
+            _container.Handler<IValidator<CompraCrearDto>>(
+                c => new CompraValidator(c.GetInstance<IUnitOfWork>().Proveedores));
+
+            _container.Handler<IValidator<ProveedorCrearDto>>(
+                c => new ProveedorValidator());
+
+            _container.Handler<IValidator<ProveedorActualizarDto>>(
+                c => new ProveedorActualizarValidator());
+
+            _container.Handler<IValidator<CajaAbrirDto>>(
+                c => new CajaValidator(c.GetInstance<IUnitOfWork>().Cajas));
+
+            // ── ViewModels ────────────────────────────────────────────────────
             var assembly = Assembly.GetExecutingAssembly();
             var viewModelTypes = assembly.GetTypes()
                 .Where(t => t.IsClass
@@ -93,17 +132,8 @@ namespace GestionComercial.UI
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
         {
-
-
-            // Aplicar tema antes de mostrar la ventana
-            var hash = BCrypt.Net.BCrypt.HashPassword("Admin1234", 12);
-            var verify = BCrypt.Net.BCrypt.Verify("Admin1234", hash);
-            System.Diagnostics.Debug.WriteLine($">>> Hash: {hash}");
-            System.Diagnostics.Debug.WriteLine($">>> Verify directo: {verify}");
             (Application.Current as App)?.ApplyTheme();
             await DisplayRootViewForAsync<LoginViewModel>();
-       
-
         }
     }
 }

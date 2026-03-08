@@ -15,9 +15,15 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderBy(c => c.Nombre)
                 .ToListAsync();
 
-        public async Task<Cliente?> ObtenerPorDocumentoAsync(string documento, int idEmpresa)
+        public async Task<Cliente?> ObtenerPorDocumentoAsync(int documento, int idEmpresa)
             => await _dbSet
                 .FirstOrDefaultAsync(c => c.Documento == documento && c.Id_empresa == idEmpresa);
+
+        public async Task<bool> ExisteDocumentoAsync(int documento, int idEmpresa)
+            => await _dbSet.AnyAsync(c => c.Documento == documento && c.Id_empresa == idEmpresa);
+
+        public async Task<bool> ExisteEmailAsync(string email, int idEmpresa)
+            => await _dbSet.AnyAsync(c => c.Email == email && c.Id_empresa == idEmpresa);
 
         public async Task<IEnumerable<Cliente>> BuscarPorNombreAsync(string nombre, int idEmpresa)
             => await _dbSet

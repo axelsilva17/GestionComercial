@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Drawing.Charts;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
 using GestionComercial.UI.ViewModels.Configuracion;
 using System;
@@ -12,7 +13,6 @@ namespace GestionComercial.UI.Views.Configuracion
     {
         private ConfiguracionViewModel VM => DataContext as ConfiguracionViewModel;
 
-        // Panel actualmente abierto
         private Border _panelActivo;
         private TranslateTransform _transformActivo;
 
@@ -25,31 +25,28 @@ namespace GestionComercial.UI.Views.Configuracion
 
         private void AbrirPanel(Border panel, TranslateTransform transform)
         {
-            // Cerrar el anterior si hay uno abierto
             if (_panelActivo != null && _panelActivo != panel)
                 CerrarPanelInterno(_panelActivo, _transformActivo, onComplete: null);
 
-            _panelActivo    = panel;
+            _panelActivo = panel;
             _transformActivo = transform;
 
             panel.Visibility = Visibility.Visible;
             Overlay.IsHitTestVisible = true;
 
-            // Slide desde la derecha
             var slideAnim = new DoubleAnimation
             {
-                From           = panel.Width,
-                To             = 0,
-                Duration       = new Duration(TimeSpan.FromMilliseconds(280)),
+                From = panel.Width,
+                To = 0,
+                Duration = new Duration(TimeSpan.FromMilliseconds(280)),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
             transform.BeginAnimation(TranslateTransform.XProperty, slideAnim);
 
-            // Fade overlay
             var fadeAnim = new DoubleAnimation
             {
-                From     = 0,
-                To       = 1,
+                From = 0,
+                To = 1,
                 Duration = new Duration(TimeSpan.FromMilliseconds(200))
             };
             Overlay.BeginAnimation(OpacityProperty, fadeAnim);
@@ -59,9 +56,9 @@ namespace GestionComercial.UI.Views.Configuracion
         {
             var slideAnim = new DoubleAnimation
             {
-                From           = 0,
-                To             = panel.Width,
-                Duration       = new Duration(TimeSpan.FromMilliseconds(220)),
+                From = 0,
+                To = panel.Width,
+                Duration = new Duration(TimeSpan.FromMilliseconds(220)),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
             };
             slideAnim.Completed += (s, e) =>
@@ -73,8 +70,8 @@ namespace GestionComercial.UI.Views.Configuracion
 
             var fadeAnim = new DoubleAnimation
             {
-                From     = 1,
-                To       = 0,
+                From = 1,
+                To = 0,
                 Duration = new Duration(TimeSpan.FromMilliseconds(180))
             };
             fadeAnim.Completed += (s, e) => Overlay.IsHitTestVisible = false;
@@ -86,12 +83,12 @@ namespace GestionComercial.UI.Views.Configuracion
             if (_panelActivo == null) return;
             CerrarPanelInterno(_panelActivo, _transformActivo, onComplete: () =>
             {
-                _panelActivo     = null;
+                _panelActivo = null;
                 _transformActivo = null;
             });
         }
 
-        // ══ BOTÓN CERRAR (✕ y Cancelar) ═════════════════════════════════════
+        // ══ CERRAR ═══════════════════════════════════════════════════════════
         private void CerrarPanel_Click(object sender, RoutedEventArgs e) => CerrarPanelActivo();
 
         // ══ EMPRESA ══════════════════════════════════════════════════════════
@@ -212,47 +209,6 @@ namespace GestionComercial.UI.Views.Configuracion
         {
             if ((sender as Button)?.Tag is MetodoPagoDto item)
                 await VM.MetodosPago.Eliminar(item);
-        }
-
-        // ══ PERFIL ═══════════════════════════════════════════════════════════
-        private void AbrirPanelDatos_Click(object sender, RoutedEventArgs e)
-        {
-            VM?.Perfil.AbrirEdicionDatos();
-            AbrirPanel(PanelPerfilDatos, PanelPerfilDatosTransform);
-        }
-
-        private async void GuardarDatosPerfil_Click(object sender, RoutedEventArgs e)
-        {
-            await VM.Perfil.GuardarDatos();
-            if (!VM.Perfil.PanelDatosVisible) CerrarPanelActivo();
-        }
-
-        private void AbrirPanelPassword_Click(object sender, RoutedEventArgs e)
-        {
-            VM?.Perfil.AbrirCambioPassword();
-            PbActual.Clear(); PbNuevo.Clear(); PbConfirmar.Clear();
-            AbrirPanel(PanelPerfilPassword, PanelPerfilPasswordTransform);
-        }
-
-        private async void GuardarPassword_Click(object sender, RoutedEventArgs e)
-        {
-            await VM.Perfil.GuardarPassword();
-            if (!VM.Perfil.PanelPasswordVisible) CerrarPanelActivo();
-        }
-
-        private void PbActual_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (VM?.Perfil != null) VM.Perfil.PassActual = PbActual.Password;
-        }
-
-        private void PbNuevo_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (VM?.Perfil != null) VM.Perfil.PassNuevo = PbNuevo.Password;
-        }
-
-        private void PbConfirmar_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (VM?.Perfil != null) VM.Perfil.PassConfirmar = PbConfirmar.Password;
         }
     }
 }

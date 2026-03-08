@@ -56,16 +56,18 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>  <!-- Saludo -->
                 <RowDefinition Height="20"/>
-                <RowDefinition Height="Auto"/>  <!-- KPIs operativos -->
+                <RowDefinition Height="Auto"/>  <!-- KPIs según rol -->
                 <RowDefinition Height="16"/>
-                <RowDefinition Height="Auto"/>  <!-- Fila finanzas (solo Gerente) -->
+                <RowDefinition Height="Auto"/>  <!-- Fila finanzas Gerente -->
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>  <!-- Fila operaciones Admin -->
                 <RowDefinition Height="16"/>
                 <RowDefinition Height="Auto"/>  <!-- Acciones rápidas -->
                 <RowDefinition Height="16"/>
-                <RowDefinition Height="Auto"/>  <!-- Actividad + stock -->
+                <RowDefinition Height="Auto"/>  <!-- Actividad + stock/caja -->
             </Grid.RowDefinitions>
 
-            <!-- ══ SALUDO ══ -->
+            <!-- ══ SALUDO ════════════════════════════════════════════════════ -->
             <Border Grid.Row="0" Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="14" Padding="24,20">
@@ -98,8 +100,10 @@
                                    Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <!-- Indicador caja -->
-                    <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}"
+                    <!-- Indicador caja — solo Vendedor -->
+                    <Border Grid.Column="1"
+                            Visibility="{Binding MostrarSeccionVendedor, Converter={StaticResource BoolToVisibility}}"
+                            Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="10" Padding="16,12" VerticalAlignment="Center">
                         <StackPanel HorizontalAlignment="Center">
@@ -124,8 +128,9 @@
                 </Grid>
             </Border>
 
-            <!-- ══ KPIs OPERATIVOS (todos los roles) ══ -->
-            <Grid Grid.Row="2">
+            <!-- ══ KPIs — GERENTE ════════════════════════════════════════════ -->
+            <Grid Grid.Row="2"
+                  Visibility="{Binding MostrarSeccionGerente, Converter={StaticResource BoolToVisibility}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="14"/>
@@ -136,151 +141,143 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Ventas hoy -->
                 <Border Grid.Column="0" Style="{StaticResource KpiCard}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="10"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="6"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <Border Width="32" Height="32" CornerRadius="8"
-                                    Background="#1A22C55E">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A22C55E">
                                 <TextBlock Text="$" FontSize="16" FontWeight="Bold"
                                            Foreground="{DynamicResource SuccessBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="VENTAS HOY" FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
-                        </StackPanel>
-
-                        <TextBlock Grid.Row="2"
-                                   Text="{Binding TotalVentasHoy, Converter={StaticResource DecimalToMoneda}}"
-                                   FontSize="30" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
-
-                        <StackPanel Grid.Row="4" Orientation="Horizontal">
-                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" Padding="8,3">
-                                <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run Text="{Binding CantidadVentasHoy, Mode=OneWay}" FontWeight="Bold"
-                                         Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <Run Text=" ventas"/>
-                                </TextBlock>
-                            </Border>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- Ventas mes -->
-                <Border Grid.Column="2" Style="{StaticResource KpiCard}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="10"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="6"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A3B82F6">
-                                <TextBlock Text="📅" FontSize="14"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="VENTAS DEL MES" FontSize="10" FontWeight="Bold"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-
-                        <TextBlock Grid.Row="2"
-                                   Text="{Binding TotalVentasMes, Converter={StaticResource DecimalToMoneda}}"
-                                   FontSize="30" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
-
-                        <!-- Crecimiento — solo Gerente -->
-                        <StackPanel Grid.Row="4" Orientation="Horizontal"
-                                    Visibility="{Binding MostrarFinanzas, Converter={StaticResource BoolToVisibility}}">
-                            <Border CornerRadius="6" Padding="8,3">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#1A22C55E"/>
+                        <TextBlock Text="{Binding TotalVentasMes, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                        <Border CornerRadius="6" Padding="8,3" Margin="0,6,0,0" HorizontalAlignment="Left">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#1A22C55E"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CrecimientoPositivo}" Value="False">
+                                            <Setter Property="Background" Value="#1AEF4444"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock FontSize="11" FontWeight="Bold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding CrecimientoPositivo}" Value="False">
-                                                <Setter Property="Background" Value="#1AEF4444"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Border.Style>
-                                <TextBlock FontSize="11" FontWeight="Bold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CrecimientoPositivo}" Value="False">
-                                                    <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                    <Run Text="{Binding CrecimientoMes, StringFormat='{}{0:+0.0;-0.0}%', Mode=OneWay}"/>
-                                    <Run Text=" vs mes anterior"/>
-                                </TextBlock>
-                            </Border>
-                        </StackPanel>
-
-                        <TextBlock Grid.Row="4" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
-                                   Visibility="{Binding MostrarOperaciones, Converter={StaticResource BoolToVisibility}}">
-                            <Run Text="{Binding CantidadVentasMes, Mode=OneWay}" FontWeight="Bold"
-                                 Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <Run Text=" transacciones"/>
-                        </TextBlock>
-                    </Grid>
+                                </TextBlock.Style>
+                                <Run Text="{Binding CrecimientoMes, StringFormat='{}{0:+0.0;-0.0}%', Mode=OneWay}"/>
+                                <Run Text=" vs mes anterior"/>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
                 </Border>
 
-                <!-- Pendientes -->
-                <Border Grid.Column="4" Style="{StaticResource KpiCard}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="10"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="6"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Orientation="Horizontal">
-                            <Border Width="32" Height="32" CornerRadius="8" Background="#1AF59E0B">
-                                <TextBlock Text="⏳" FontSize="14"
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1AEF4444">
+                                <TextBlock Text="🛒" FontSize="14"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="PENDIENTES" FontSize="10" FontWeight="Bold"
+                            <TextBlock Text="COMPRAS DEL MES" FontSize="10" FontWeight="Bold"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-
-                        <TextBlock Grid.Row="2" Text="{Binding VentasPendientes, Mode=OneWay}"
-                                   FontSize="30" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}"/>
-
-                        <TextBlock Grid.Row="4" Text="ventas por cobrar" FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    </Grid>
+                        <TextBlock Text="{Binding TotalComprasMes, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="28" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}"/>
+                        <TextBlock Text="egreso total" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
                 </Border>
 
-                <!-- Stock crítico -->
-                <Border Grid.Column="6" Style="{StaticResource KpiCard}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="10"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="6"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                <Border Grid.Column="4" Style="{StaticResource KpiCard}"
+                        BorderBrush="{DynamicResource PrimaryBrush}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A3B82F6">
+                                <TextBlock Text="📈" FontSize="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="RESULTADO NETO" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ResultadoNeto, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="ventas menos compras" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Border Grid.Column="6" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A8B5CF6">
+                                <TextBlock Text="%" FontSize="14" FontWeight="Bold"
+                                           Foreground="#8B5CF6"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="MARGEN BRUTO" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding MargenBrutoMes, StringFormat='{}{0:N1}%'}"
+                                   FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0">
+                            <Run Text="Ticket prom. "/>
+                            <Run Text="{Binding TicketPromedio, Converter={StaticResource DecimalToMoneda}, Mode=OneWay}"
+                                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ══ KPIs — ADMINISTRADOR ══════════════════════════════════════ -->
+            <Grid Grid.Row="2"
+                  Visibility="{Binding MostrarSeccionAdministrador, Converter={StaticResource BoolToVisibility}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A3B82F6">
+                                <TextBlock Text="🧾" FontSize="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="VENTAS DEL MES" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CantidadVentasMes}" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="transacciones" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <Border Width="32" Height="32" CornerRadius="8" Background="#1AEF4444">
                                 <TextBlock Text="⚠" FontSize="14"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -289,19 +286,53 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
+                        <TextBlock Text="{Binding ProductosCriticos}" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource ErrorBrush}"/>
+                        <TextBlock Text="productos bajo mínimo" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                        <TextBlock Grid.Row="2" Text="{Binding ProductosCriticos, Mode=OneWay}"
-                                   FontSize="30" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}"/>
+                <Border Grid.Column="4" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1AF59E0B">
+                                <TextBlock Text="📦" FontSize="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="COMPRAS DEL MES" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ComprasDelMes}" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningBrush}"/>
+                        <TextBlock Text="órdenes emitidas" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                        <TextBlock Grid.Row="4" Text="productos bajo mínimo" FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    </Grid>
+                <Border Grid.Column="6" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1AF59E0B">
+                                <TextBlock Text="⏳" FontSize="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="PENDIENTES" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding VentasPendientes}" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningBrush}"/>
+                        <TextBlock Text="ventas por cobrar" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
                 </Border>
             </Grid>
 
-            <!-- ══ FILA FINANZAS (solo Gerente) ══ -->
-            <Grid Grid.Row="4"
-                  Visibility="{Binding MostrarFinanzas, Converter={StaticResource BoolToVisibility}}">
+            <!-- ══ KPIs — VENDEDOR ═══════════════════════════════════════════ -->
+            <Grid Grid.Row="2"
+                  Visibility="{Binding MostrarSeccionVendedor, Converter={StaticResource BoolToVisibility}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="14"/>
@@ -310,90 +341,133 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Compras mes -->
-                <Border Grid.Column="0" Style="{StaticResource SubCard}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="COMPRAS DEL MES" FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalComprasMes, Converter={StaticResource DecimalToMoneda}}"
-                                       FontSize="22" FontWeight="Bold"
-                                       Foreground="{DynamicResource ErrorBrush}" Margin="0,8,0,4"/>
-                            <TextBlock Text="egreso total" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Border Grid.Column="0" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A22C55E">
+                                <TextBlock Text="$" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="MIS VENTAS HOY" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Ver →" VerticalAlignment="Bottom"
-                                Background="Transparent" BorderThickness="0"
-                                Foreground="{DynamicResource PrimaryBrush}" FontSize="12" Cursor="Hand"
-                                Click="IrCompras_Click"/>
-                    </Grid>
+                        <TextBlock Text="{Binding MisVentasHoy, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0">
+                            <Run Text="{Binding MiCantidadVentasHoy, Mode=OneWay}" FontWeight="Bold"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <Run Text=" ventas realizadas"/>
+                        </TextBlock>
+                    </StackPanel>
                 </Border>
 
-                <!-- Resultado neto -->
-                <Border Grid.Column="2" Style="{StaticResource SubCard}"
-                        BorderBrush="{DynamicResource PrimaryBrush}">
-                    <Grid>
-                        <StackPanel>
-                            <TextBlock Text="RESULTADO NETO" FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding ResultadoNeto, Converter={StaticResource DecimalToMoneda}}"
-                                       FontSize="22" FontWeight="Bold"
-                                       Foreground="{DynamicResource SuccessBrush}" Margin="0,8,0,4"/>
-                            <TextBlock Text="ventas menos compras" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1A3B82F6">
+                                <TextBlock Text="💰" FontSize="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="SALDO EN CAJA" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                    </Grid>
+                        <TextBlock Text="{Binding SaldoCaja, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0">
+                            <Run Text="Apertura "/>
+                            <Run Text="{Binding HoraAperturaCaja, Mode=OneWay}"
+                                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </TextBlock>
+                    </StackPanel>
                 </Border>
 
-                <!-- Margen + Ticket -->
-                <Border Grid.Column="4" Style="{StaticResource SubCard}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="1"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="MARGEN BRUTO" FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding MargenBrutoMes, StringFormat='{}{0:N1}%'}"
-                                       FontSize="22" FontWeight="Bold"
-                                       Foreground="{DynamicResource SuccessBrush}" Margin="0,8,0,4"/>
-                            <TextBlock Text="este mes" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Border Grid.Column="4" Style="{StaticResource KpiCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Border Width="32" Height="32" CornerRadius="8" Background="#1AF59E0B">
+                                <TextBlock Text="⏳" FontSize="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="PENDIENTES" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-
-                        <Border Grid.Column="1" Background="{DynamicResource BorderBrush}" Width="1" Margin="0,4"/>
-
-                        <StackPanel Grid.Column="2" Margin="14,0,0,0">
-                            <TextBlock Text="TICKET PROM." FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TicketPromedio, Converter={StaticResource DecimalToMoneda}}"
-                                       FontSize="22" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,8,0,4"/>
-                            <TextBlock Text="por venta" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        </StackPanel>
-                    </Grid>
+                        <TextBlock Text="{Binding VentasPendientes}" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningBrush}"/>
+                        <TextBlock Text="ventas por cobrar" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
+                    </StackPanel>
                 </Border>
             </Grid>
 
-            <!-- ══ ACCIONES RÁPIDAS ══ -->
-            <Grid Grid.Row="6">
+            <!-- ══ ACCIONES RÁPIDAS — GERENTE ════════════════════════════════ -->
+            <Grid Grid.Row="8"
+                  Visibility="{Binding MostrarSeccionGerente, Converter={StaticResource BoolToVisibility}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Text="ACCIONES RÁPIDAS" FontSize="10" FontWeight="Bold"
+                <TextBlock Text="ACCIONES RÁPIDAS" FontSize="10" FontWeight="Bold"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Style="{StaticResource QuickAction}" Click="IrVentasCompleto_Click">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="🛒" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Ver Ventas" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="2" Style="{StaticResource QuickAction}" Click="IrCompras_Click">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="📦" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Ver Compras" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="4" Style="{StaticResource QuickAction}" Click="IrReportes_Click">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="📊" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Reportes" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="6" Style="{StaticResource QuickAction}" Click="IrConfiguracion_Click">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="⚙️" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Configuración" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
 
+            <!-- ══ ACCIONES RÁPIDAS — ADMINISTRADOR ═════════════════════════ -->
+            <Grid Grid.Row="8"
+                  Visibility="{Binding MostrarSeccionAdministrador, Converter={StaticResource BoolToVisibility}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="ACCIONES RÁPIDAS" FontSize="10" FontWeight="Bold"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -406,28 +480,22 @@
                         <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-
-                    <!-- Nueva Venta — todos -->
-                    <Button Grid.Column="0" Style="{StaticResource QuickAction}" Click="NuevaVenta_Click">
+                    <Button Grid.Column="0" Style="{StaticResource QuickAction}" Click="IrProductos_Click">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="🛒" FontSize="24" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Nueva Venta" FontSize="12" FontWeight="SemiBold"
+                            <TextBlock Text="🏷" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Productos" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Button>
-
-                    <!-- Caja — todos -->
-                    <Button Grid.Column="2" Style="{StaticResource QuickAction}" Click="IrCaja_Click">
+                    <Button Grid.Column="2" Style="{StaticResource QuickAction}" Click="IrCompras_Click">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="💰" FontSize="24" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Caja" FontSize="12" FontWeight="SemiBold"
+                            <TextBlock Text="📦" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Compras" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Button>
-
-                    <!-- Clientes — todos -->
                     <Button Grid.Column="4" Style="{StaticResource QuickAction}" Click="IrClientes_Click">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="👥" FontSize="24" HorizontalAlignment="Center"/>
@@ -436,23 +504,15 @@
                                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Button>
-
-                    <!-- Compras — Gerente y Admin -->
-                    <Button Grid.Column="6" Style="{StaticResource QuickAction}"
-                            Visibility="{Binding MostrarOperaciones, Converter={StaticResource BoolToVisibility}}"
-                            Click="IrCompras_Click">
+                    <Button Grid.Column="6" Style="{StaticResource QuickAction}" Click="IrInventario_Click">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="📦" FontSize="24" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Compras" FontSize="12" FontWeight="SemiBold"
+                            <TextBlock Text="📋" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Inventario" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Button>
-
-                    <!-- Reportes — solo Gerente y Admin -->
-                    <Button Grid.Column="8" Style="{StaticResource QuickAction}"
-                            Visibility="{Binding MostrarOperaciones, Converter={StaticResource BoolToVisibility}}"
-                            Click="IrReportes_Click">
+                    <Button Grid.Column="8" Style="{StaticResource QuickAction}" Click="IrReportes_Click">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="📊" FontSize="24" HorizontalAlignment="Center"/>
                             <TextBlock Text="Reportes" FontSize="12" FontWeight="SemiBold"
@@ -460,14 +520,47 @@
                                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Button>
+                </Grid>
+            </Grid>
 
-                    <!-- Vendedor: en lugar de Compras/Reportes muestra Productos -->
-                    <Button Grid.Column="6" Style="{StaticResource QuickAction}"
-                            Visibility="{Binding EsVendedor, Converter={StaticResource BoolToVisibility}}"
-                            Click="IrProductos_Click">
+            <!-- ══ ACCIONES RÁPIDAS — VENDEDOR ═══════════════════════════════ -->
+            <Grid Grid.Row="8"
+                  Visibility="{Binding MostrarSeccionVendedor, Converter={StaticResource BoolToVisibility}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="ACCIONES RÁPIDAS" FontSize="10" FontWeight="Bold"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Style="{StaticResource QuickAction}" Click="NuevaVenta_Click">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="🏷" FontSize="24" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Productos" FontSize="12" FontWeight="SemiBold"
+                            <TextBlock Text="🛒" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Nueva Venta" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="2" Style="{StaticResource QuickAction}" Click="IrCaja_Click">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="💰" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Caja" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="4" Style="{StaticResource QuickAction}" Click="IrClientes_Click">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="👥" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Clientes" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
@@ -475,29 +568,38 @@
                 </Grid>
             </Grid>
 
-            <!-- ══ ACTIVIDAD + STOCK ══ -->
-            <Grid Grid.Row="8">
+            <!-- ══ ACTIVIDAD RECIENTE + PANEL SECUNDARIO ════════════════════ -->
+            <Grid Grid.Row="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="14"/>
                     <ColumnDefinition Width="360"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Actividad reciente -->
+                <!-- Últimas ventas — todos los roles -->
                 <Border Grid.Column="0" Style="{StaticResource KpiCard}" Padding="0">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-
-                        <Grid Grid.Row="0" Margin="20,16,20,12">
+                        <Grid Margin="20,16,20,12">
                             <StackPanel>
                                 <TextBlock Text="ÚLTIMAS VENTAS" FontSize="10" FontWeight="Bold"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Text="Actividad reciente de hoy" FontSize="12"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           FontWeight="SemiBold" Margin="0,4,0,0"/>
+                                <TextBlock FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Actividad reciente"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MostrarSeccionVendedor}" Value="True">
+                                                    <Setter Property="Text" Value="Mis ventas de hoy"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                             <Button Content="Ver todas →" HorizontalAlignment="Right"
                                     Background="Transparent" BorderThickness="0"
@@ -505,9 +607,7 @@
                                     FontSize="12" Cursor="Hand"
                                     Click="IrVentasCompleto_Click"/>
                         </Grid>
-
-                        <ItemsControl Grid.Row="1" ItemsSource="{Binding VentasRecientes}"
-                                      Margin="12,0,12,12">
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding VentasRecientes}" Margin="12,0,12,12">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="8" Padding="12,10" Margin="0,2">
@@ -526,19 +626,16 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-
-                                            <Border Grid.Column="0" Width="38" Height="38" CornerRadius="10"
+                                            <Border Width="38" Height="38" CornerRadius="10"
                                                     Background="{DynamicResource SurfaceBrush}">
                                                 <TextBlock Text="◈" FontSize="16"
                                                            Foreground="{DynamicResource PrimaryBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
-
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
-                                                <TextBlock FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}">
-                                                    <Run Text="{Binding ClienteNombre, Mode=OneWay}"/>
-                                                </TextBlock>
+                                                <TextBlock Text="{Binding ClienteNombre, Mode=OneWay}"
+                                                           FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                 <TextBlock FontSize="11"
                                                            Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
                                                     <Run Text="Venta #"/>
@@ -547,7 +644,6 @@
                                                     <Run Text="{Binding Fecha, StringFormat='HH:mm', Mode=OneWay}"/>
                                                 </TextBlock>
                                             </StackPanel>
-
                                             <TextBlock Grid.Column="2" VerticalAlignment="Center"
                                                        Text="{Binding TotalFinal, Converter={StaticResource DecimalToMoneda}, Mode=OneWay}"
                                                        FontSize="15" FontWeight="Bold"
@@ -560,15 +656,15 @@
                     </Grid>
                 </Border>
 
-                <!-- Stock crítico -->
-                <Border Grid.Column="2" Style="{StaticResource KpiCard}" Padding="0">
+                <!-- Panel secundario derecho: stock critico (Admin/Gerente) o resumen caja (Vendedor) -->
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}" Padding="0"
+                        Visibility="{Binding MostrarSeccionAdministrador, Converter={StaticResource BoolToVisibility}}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-
-                        <Grid Grid.Row="0" Margin="20,16,20,12">
+                        <Grid Margin="20,16,20,12">
                             <StackPanel>
                                 <TextBlock Text="STOCK CRÍTICO" FontSize="10" FontWeight="Bold"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -581,9 +677,7 @@
                                     FontSize="12" Cursor="Hand"
                                     Click="IrProductosStock_Click"/>
                         </Grid>
-
-                        <ItemsControl Grid.Row="1" ItemsSource="{Binding ProductosCriticosList}"
-                                      Margin="12,0,12,12">
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding ProductosCriticosList}" Margin="12,0,12,12">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="8" Padding="12,10" Margin="0,2">
@@ -601,8 +695,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-
-                                            <StackPanel VerticalAlignment="Center">
+                                            <StackPanel>
                                                 <TextBlock Text="{Binding Nombre, Mode=OneWay}"
                                                            FontSize="13" FontWeight="Medium"
                                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -613,8 +706,6 @@
                                                     <Run Text=" unidades"/>
                                                 </TextBlock>
                                             </StackPanel>
-
-                                            <!-- Badge stock -->
                                             <Border Grid.Column="1" CornerRadius="8" Padding="12,5"
                                                     MinWidth="44" VerticalAlignment="Center">
                                                 <Border.Style>
@@ -651,6 +742,60 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </Grid>
+                </Border>
+
+                <!-- Panel derecho Gerente: acceso rápido a reportes -->
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}"
+                        Visibility="{Binding MostrarSeccionGerente, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="ACCESO RÁPIDO" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+                        <Button Style="{StaticResource QuickAction}" Margin="0,0,0,10" Click="IrReportes_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="📊" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <StackPanel>
+                                    <TextBlock Text="Reportes completos" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Rentabilidad y comparativas" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource QuickAction}" Click="IrConfiguracion_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <StackPanel>
+                                    <TextBlock Text="Configuración" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Empresa, usuarios y roles" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Panel derecho Vendedor: resumen de caja -->
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}"
+                        Visibility="{Binding MostrarSeccionVendedor, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="MI CAJA" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+                        <TextBlock Text="{Binding SaldoCaja, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="32" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="saldo actual" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center" Margin="0,4,0,20"/>
+                        <Button Style="{StaticResource QuickAction}" Click="IrCaja_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="💰" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Gestionar caja" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Border>
             </Grid>
         </Grid>

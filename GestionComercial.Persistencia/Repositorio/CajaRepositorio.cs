@@ -13,6 +13,8 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet
                 .Include(c => c.UsuarioApertura)
                 .FirstOrDefaultAsync(c => c.Id_sucursal == idSucursal && c.Estado == 1);
+        public async Task<bool> ExisteCajaAbiertaAsync(int idSucursal)
+    => await _dbSet.AnyAsync(c => c.Id_sucursal == idSucursal && c.Estado == 1);
 
         public async Task<Caja?> ObtenerConMovimientosAsync(int idCaja)
             => await _dbSet

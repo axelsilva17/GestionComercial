@@ -1,4 +1,5 @@
 using GestionComercial.UI.ViewModels.Base;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,31 +11,32 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public string Nombre      { get; set; } = string.Empty;
         public int    StockActual { get; set; }
         public int    StockMinimo { get; set; }
-        public string Estado      => StockActual == 0 ? "Sin stock" : "Critico";
+        public string Estado      => StockActual == 0 ? "Sin stock" : "Crítico";
     }
 
     public class ReporteCompraRecienteDto
     {
-        public string  Proveedor  { get; set; } = string.Empty;
-        public string  Fecha      { get; set; } = string.Empty;
-        public decimal Total      { get; set; }
-        public int     Productos  { get; set; }
+        public string  Proveedor { get; set; } = string.Empty;
+        public string  Fecha     { get; set; } = string.Empty;
+        public decimal Total     { get; set; }
+        public int     Productos { get; set; }
     }
 
     /// <summary>
     /// Reporte operativo para Administrador.
-    /// Incluye: ventas del mes (sin desglose financiero), stock critico,
-    /// compras recientes y clientes nuevos. Sin margenes ni resultado neto.
+    /// Incluye: ventas del mes (sin desglose financiero), stock crítico, compras recientes.
+    /// Sin márgenes ni resultado neto — esos datos son exclusivos del Gerente.
+    /// TODO: Conectar con IVentaServicio, IProductoServicio, ICompraServicio.
     /// </summary>
     public class ReporteAdminViewModel : NavigableViewModel
     {
         public ReporteAdminViewModel()
         {
             Titulo    = "Reportes";
-            Subtitulo = "Administracion — operaciones";
+            Subtitulo = "Administración — operaciones";
         }
 
-        // ── KPIs operativos (sin datos financieros sensibles) ─────────────────
+        // ── KPIs operativos ───────────────────────────────────────────────────
         private int _cantidadVentasMes;
         public int CantidadVentasMes
         {
@@ -71,7 +73,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         }
 
         // ── Listas ────────────────────────────────────────────────────────────
-        public ObservableCollection<ReporteStockCriticoDto>  StockCritico    { get; set; } = new();
+        public ObservableCollection<ReporteStockCriticoDto>   StockCritico     { get; set; } = new();
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
@@ -84,35 +86,23 @@ namespace GestionComercial.UI.ViewModels.Reportes
             LimpiarError();
             try
             {
-                await Task.Delay(300);
+                // TODO: reemplazar con llamadas reales a servicios
+                // Ejemplo:
+                // var resumen = await _reporteServicio.ObtenerResumenAdminAsync();
+                // CantidadVentasMes     = resumen.CantidadVentasMes;
+                // ProductosStockCritico = resumen.ProductosStockCritico;
+                // ComprasDelMes         = resumen.ComprasDelMes;
+                // ClientesNuevos        = resumen.ClientesNuevos;
+                // VentasPendientes      = resumen.VentasPendientes;
+                // StockCritico          = new ObservableCollection<ReporteStockCriticoDto>(resumen.StockCritico);
+                // ComprasRecientes      = new ObservableCollection<ReporteCompraRecienteDto>(resumen.ComprasRecientes);
 
-                CantidadVentasMes    = 187;
-                ProductosStockCritico = 5;
-                ComprasDelMes        = 12;
-                ClientesNuevos       = 14;
-                VentasPendientes     = 3;
-
-                StockCritico = new ObservableCollection<ReporteStockCriticoDto>
-                {
-                    new() { Nombre="Mouse Inalambrico",  StockActual=0, StockMinimo=3  },
-                    new() { Nombre="Webcam HD 1080p",    StockActual=0, StockMinimo=4  },
-                    new() { Nombre="Cable HDMI 2m",      StockActual=1, StockMinimo=5  },
-                    new() { Nombre="Papel A4 Resma",     StockActual=2, StockMinimo=10 },
-                    new() { Nombre="Hub USB 4 puertos",  StockActual=1, StockMinimo=2  },
-                };
-
-                ComprasRecientes = new ObservableCollection<ReporteCompraRecienteDto>
-                {
-                    new() { Proveedor="Tech Supplies Argentina",  Fecha="24/02/2026", Total=245_000, Productos=8  },
-                    new() { Proveedor="Distribuidora Norte S.A.", Fecha="21/02/2026", Total=187_000, Productos=12 },
-                    new() { Proveedor="Papelera del Litoral",     Fecha="18/02/2026", Total=98_000,  Productos=5  },
-                    new() { Proveedor="Electro Import SRL",       Fecha="15/02/2026", Total=312_000, Productos=6  },
-                };
+                await Task.CompletedTask;
 
                 NotifyOfPropertyChange(() => StockCritico);
                 NotifyOfPropertyChange(() => ComprasRecientes);
             }
-            catch (System.Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
         }
 

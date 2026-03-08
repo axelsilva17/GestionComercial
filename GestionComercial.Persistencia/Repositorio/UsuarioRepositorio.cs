@@ -23,5 +23,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(u => u.Rol)
                 .OrderBy(u => u.Apellido)
                 .ToListAsync();
+        public async Task<bool> ExisteEmailAsync(string email)
+    => await _dbSet.AnyAsync(u => u.Email == email);
     }
 }

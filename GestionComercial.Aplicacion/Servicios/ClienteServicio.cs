@@ -27,7 +27,7 @@ namespace GestionComercial.Aplicacion.Servicios
             var cliente = new Cliente
             {
                 Nombre     = dto.Nombre,
-                Documento  = dto.Documento.ToString(),
+                Documento  = dto.Documento,
                 Telefono   = dto.Telefono,
                 Email      = dto.Email,
                 Id_empresa = dto.IdEmpresa,
@@ -42,7 +42,7 @@ namespace GestionComercial.Aplicacion.Servicios
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(dto.Id)
                 ?? throw new KeyNotFoundException($"Cliente {dto.Id} no encontrado");
             cliente.Nombre    = dto.Nombre;
-            cliente.Documento = dto.Documento.ToString();
+            cliente.Documento = dto.Documento;
             cliente.Telefono  = dto.Telefono;
             cliente.Email     = dto.Email;
             _uow.Clientes.Actualizar(cliente);
@@ -62,7 +62,7 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             IdCliente = c.Id,
             Nombre    = c.Nombre,
-            Documento = int.TryParse(c.Documento, out var doc) ? doc : 0,
+            Documento = c.Documento,
             Telefono  = uint.TryParse(c.Telefono, out var tel) ? tel : 0,
             Email     = c.Email ?? string.Empty,
             IdEmpresa = c.Id_empresa,

@@ -12,6 +12,8 @@ namespace GestionComercial.Persistencia.Repositorio
     public class ProveedorRepositorio : RepositorioBase<Proveedor>, IProveedorRepositorio
     {
         public ProveedorRepositorio(GestionComercialContext context) : base(context) { }
+        public async Task<bool> EstaActivoAsync(int idProveedor)
+    => await _dbSet.AnyAsync(p => p.Id == idProveedor && p.Activo);
 
         public async Task<IEnumerable<Proveedor>> ObtenerPorEmpresaAsync(int idEmpresa)
             => await _dbSet
