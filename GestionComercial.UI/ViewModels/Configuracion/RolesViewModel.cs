@@ -49,9 +49,9 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             await Task.Delay(100);
             Items = new ObservableCollection<RolDto>
             {
-                new() { IdRol = 1, Nombre = "Administrador" },
-                new() { IdRol = 2, Nombre = "Vendedor"      },
-                new() { IdRol = 3, Nombre = "Cajero"        },
+                new() { IdRol = 1, Nombre = "Gerente" },
+                new() { IdRol = 2, Nombre = "Administrador"      },
+                new() { IdRol = 3, Nombre = "Vendedor"        },
             };
         }
 

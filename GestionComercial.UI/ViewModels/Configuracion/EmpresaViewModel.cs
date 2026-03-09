@@ -47,14 +47,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public async Task CargarAsync()
         {
             await Task.Delay(100); // TODO: await _empresaServicio.ObtenerAsync()
-            Empresa = new EmpresaDto
-            {
-                IdEmpresa = 1,
-                Nombre    = "Mi Empresa S.R.L.",
-                CUIT      = "30-12345678-9",
-                Direccion = "Av. Principal 1234, Corrientes",
-                Activa    = true
-            };
+      
         }
 
         public void AbrirEdicion()

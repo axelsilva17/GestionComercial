@@ -1,28 +1,43 @@
 using Caliburn.Micro;
-using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
-    // DTO local — solo para la pantalla de venta activa (carrito)
     public class VentaItemDto
     {
         public int     ProductoId     { get; set; }
         public string  ProductoNombre { get; set; }
         public string  CodigoBarra    { get; set; }
-        public int     Cantidad       { get; set; }
+        public decimal Cantidad       { get; set; }
         public decimal PrecioUnitario { get; set; }
+        public decimal CostoUnitario  { get; set; }
         public decimal Subtotal       { get; set; }
     }
 
     public class VentaViewModel : NavigableViewModel
     {
+        private readonly IProductoServicio _productoServicio;
+        private readonly SesionServicio    _sesion;
+
+        public VentaViewModel(IProductoServicio productoServicio, SesionServicio sesion)
+        {
+            _productoServicio     = productoServicio;
+            _sesion               = sesion;
+            Titulo                = "Nueva Venta";
+            SumarCantidadCommand  = new RelayCommand<VentaItemDto>(SumarCantidad);
+            RestarCantidadCommand = new RelayCommand<VentaItemDto>(RestarCantidad);
+            QuitarItemCommand     = new RelayCommand<VentaItemDto>(QuitarItem);
+        }
+
         // ── Cliente ───────────────────────────────────────────────────────────
         private string _clienteNombre;
         public string ClienteNombre
@@ -83,19 +98,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _descuentoManual = value; NotifyOfPropertyChange(() => DescuentoManual); RecalcularTotales(); }
         }
 
-        // ── Comandos ──────────────────────────────────────────────────────────
         public RelayCommand<VentaItemDto> SumarCantidadCommand  { get; }
         public RelayCommand<VentaItemDto> RestarCantidadCommand { get; }
         public RelayCommand<VentaItemDto> QuitarItemCommand     { get; }
 
-        public VentaViewModel()
-        {
-            SumarCantidadCommand  = new RelayCommand<VentaItemDto>(SumarCantidad);
-            RestarCantidadCommand = new RelayCommand<VentaItemDto>(RestarCantidad);
-            QuitarItemCommand     = new RelayCommand<VentaItemDto>(QuitarItem);
-        }
-
-        // ── Acciones Caliburn ─────────────────────────────────────────────────
+        // ── Acciones ──────────────────────────────────────────────────────────
         public async Task SeleccionarCliente()
         {
             var vm = IoC.Get<SeleccionClienteViewModel>();
@@ -106,31 +113,54 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public async Task AgregarProducto()
         {
             if (string.IsNullOrWhiteSpace(BusquedaProducto)) return;
+            IsLoading = true;
+            try
+            {
+                // ObtenerTodosAsync y filtrar por nombre o código de barras
+                var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var busqueda = BusquedaProducto.Trim().ToLower();
+                var producto = todos.FirstOrDefault(p =>
+                    (p.CodigoBarra != null && p.CodigoBarra.ToLower() == busqueda) ||
+                    p.Nombre.ToLower().Contains(busqueda));
 
-            // TODO: buscar en IProductoServicio
-            var existente = BuscarItem(i => i.ProductoNombre == BusquedaProducto);
-            if (existente != null)
-            {
-                existente.Cantidad++;
-                existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
-                RefrescarItem(existente);
-            }
-            else
-            {
-                Items.Add(new VentaItemDto
+                if (producto == null)
                 {
-                    ProductoId     = 1,
-                    ProductoNombre = BusquedaProducto,
-                    CodigoBarra    = "0000000",
-                    Cantidad       = 1,
-                    PrecioUnitario = 0,
-                    Subtotal       = 0
-                });
-            }
+                    ErrorMessage = "Producto no encontrado.";
+                    return;
+                }
 
-            BusquedaProducto = string.Empty;
-            RecalcularTotales();
-            await Task.CompletedTask;
+                var existente = Items.FirstOrDefault(i => i.ProductoId == producto.IdProducto);
+                if (existente != null)
+                {
+                    var idx = Items.IndexOf(existente);
+                    existente.Cantidad++;
+                    existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+                    Items.RemoveAt(idx);
+                    Items.Insert(idx, existente);
+                }
+                else
+                {
+                    Items.Add(new VentaItemDto
+                    {
+                        ProductoId     = producto.IdProducto,
+                        ProductoNombre = producto.Nombre,
+                        CodigoBarra    = producto.CodigoBarra ?? string.Empty,
+                        Cantidad       = 1,
+                        PrecioUnitario = producto.PrecioVentaActual,
+                        CostoUnitario  = producto.PrecioCostoActual,
+                        Subtotal       = producto.PrecioVentaActual,
+                    });
+                }
+
+                BusquedaProducto = string.Empty;
+                ErrorMessage     = string.Empty;
+                RecalcularTotales();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally { IsLoading = false; }
         }
 
         public async Task IrACobrar()
@@ -151,9 +181,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private void SumarCantidad(VentaItemDto item)
         {
             if (item == null) return;
+            var idx = Items.IndexOf(item);
             item.Cantidad++;
             item.Subtotal = item.Cantidad * item.PrecioUnitario;
-            RefrescarItem(item);
+            Items.RemoveAt(idx);
+            Items.Insert(idx, item);
             RecalcularTotales();
         }
 
@@ -161,9 +193,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             if (item == null) return;
             if (item.Cantidad <= 1) { QuitarItem(item); return; }
+            var idx = Items.IndexOf(item);
             item.Cantidad--;
             item.Subtotal = item.Cantidad * item.PrecioUnitario;
-            RefrescarItem(item);
+            Items.RemoveAt(idx);
+            Items.Insert(idx, item);
             RecalcularTotales();
         }
 
@@ -174,31 +208,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
             RecalcularTotales();
         }
 
-        private void RefrescarItem(VentaItemDto item)
-        {
-            var idx = Items.IndexOf(item);
-            if (idx < 0) return;
-            Items.RemoveAt(idx);
-            Items.Insert(idx, item);
-        }
-
         private void RecalcularTotales()
         {
-            TotalBruto = 0;
-            foreach (var i in Items) TotalBruto += i.Subtotal;
-
+            TotalBruto = Items.Sum(i => i.Subtotal);
             decimal pct = 0;
             if (decimal.TryParse(DescuentoManual, out var d))
                 pct = Math.Clamp(d, 0, 100);
-
             TotalDescuento = Math.Round(TotalBruto * pct / 100, 2);
             TotalFinal     = TotalBruto - TotalDescuento;
-        }
-
-        private VentaItemDto BuscarItem(Func<VentaItemDto, bool> pred)
-        {
-            foreach (var i in Items) if (pred(i)) return i;
-            return null;
         }
     }
 }

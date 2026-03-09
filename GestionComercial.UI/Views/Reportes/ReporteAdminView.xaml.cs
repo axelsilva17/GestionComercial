@@ -2,7 +2,7 @@ using GestionComercial.UI.ViewModels.Reportes;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace GestionComercial.UI.Views.Main.Reportes
+namespace GestionComercial.UI.Views.Reportes
 {
     public partial class ReporteAdminView : UserControl
     {

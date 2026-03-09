@@ -29,7 +29,7 @@ namespace GestionComercial.UI
         protected override void Configure()
         {
             _container = new SimpleContainer();
-
+      
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
 
@@ -51,6 +51,7 @@ namespace GestionComercial.UI
                 c => new UnitOfWork(c.GetInstance<GestionComercialContext>()));
 
             // ── Servicios ─────────────────────────────────────────────────────
+            _container.Singleton<SesionServicio>();
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<ClienteServicio>();
             _container.PerRequest<ProductoServicio>();

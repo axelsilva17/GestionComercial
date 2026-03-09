@@ -51,6 +51,15 @@ namespace GestionComercial.Persistencia.Contexto
             SemillaTipoDocumento.Sembrar(modelBuilder);
             SemillaPermisos.Sembrar(modelBuilder);
             SemillaInicial.Sembrar(modelBuilder);
+            SemillaUnidadMedida.Sembrar(modelBuilder);
+            SemillaCategoria.Sembrar(modelBuilder);
+            SemillaMetodoPago.Sembrar(modelBuilder);
+            SemillaProveedor.Sembrar(modelBuilder);
+            SemillaCliente.Sembrar(modelBuilder);
+            SemillaProducto.Sembrar(modelBuilder);
+            SemillaCaja.Sembrar(modelBuilder);
+            SemillaVentas.Sembrar(modelBuilder);
+            SemillaCompras.Sembrar(modelBuilder);
 
         }
     }

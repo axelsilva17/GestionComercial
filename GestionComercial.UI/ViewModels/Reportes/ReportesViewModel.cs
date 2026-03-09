@@ -32,6 +32,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public ReporteRotacionViewModel   Rotacion   { get; }
         public ReporteStockViewModel      Stock      { get; }
         public ReporteVendedoresViewModel Vendedores { get; }
+        public ReporteGerenciaViewModel   Gerente { get; }
+        public ReporteAdminViewModel Administrador { get; }
 
         // ── Tab activo ───────────────────────────────────────────────────────
         private int _tabActivo = 0;

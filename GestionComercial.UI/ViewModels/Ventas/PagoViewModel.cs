@@ -1,14 +1,18 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
-    // DTOs locales de pago — no están en capa Aplicación porque son específicos de esta pantalla
     public class MetodoPagoItemDto
     {
         public int    Id             { get; set; }
@@ -28,16 +32,25 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
     public class PagoViewModel : NavigableViewModel
     {
-        // ── Datos de la venta ─────────────────────────────────────────────────
+        private readonly IVentaServicio _ventaServicio;
+        private readonly SesionServicio _sesion;
+        private VentaViewModel          _ventaOrigen;
+
+        public PagoViewModel(IVentaServicio ventaServicio, SesionServicio sesion)
+        {
+            _ventaServicio           = ventaServicio;
+            _sesion                  = sesion;
+            SeleccionarMetodoCommand = new RelayCommand<MetodoPagoItemDto>(SeleccionarMetodo);
+            QuitarPagoCommand        = new RelayCommand<PagoIngresadoDto>(QuitarPago);
+        }
+
         private string _clienteNombre;
         public string ClienteNombre
         {
             get => _clienteNombre;
-            set { _clienteNombre = value; NotifyOfPropertyChange(() => ClienteNombre); }
+            set { _clienteNombre = value; NotifyOfPropertyChange(() => ClienteNombre); NotifyOfPropertyChange(() => ClienteInicial); }
         }
-
-        public string ClienteInicial => string.IsNullOrEmpty(ClienteNombre)
-            ? "?" : ClienteNombre[0].ToString().ToUpper();
+        public string ClienteInicial => string.IsNullOrEmpty(ClienteNombre) ? "?" : ClienteNombre[0].ToString().ToUpper();
 
         private decimal _totalBruto;
         public decimal TotalBruto
@@ -67,7 +80,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _itemsVenta = value; NotifyOfPropertyChange(() => ItemsVenta); }
         }
 
-        // ── Métodos de pago ───────────────────────────────────────────────────
         private ObservableCollection<MetodoPagoItemDto> _metodosPago = new();
         public ObservableCollection<MetodoPagoItemDto> MetodosPago
         {
@@ -82,7 +94,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _metodoSeleccionado = value; NotifyOfPropertyChange(() => MetodoSeleccionado); }
         }
 
-        // ── Pagos ingresados ──────────────────────────────────────────────────
         private ObservableCollection<PagoIngresadoDto> _pagosIngresados = new();
         public ObservableCollection<PagoIngresadoDto> PagosIngresados
         {
@@ -97,7 +108,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _montoIngresado = value; NotifyOfPropertyChange(() => MontoIngresado); }
         }
 
-        // ── Totales cobro ─────────────────────────────────────────────────────
         private decimal _totalPagado;
         public decimal TotalPagado
         {
@@ -119,40 +129,36 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _pagoCompleto = value; NotifyOfPropertyChange(() => PagoCompleto); }
         }
 
-        // ── Comandos ──────────────────────────────────────────────────────────
         public RelayCommand<MetodoPagoItemDto> SeleccionarMetodoCommand { get; }
         public RelayCommand<PagoIngresadoDto>  QuitarPagoCommand        { get; }
 
-        public PagoViewModel()
-        {
-            SeleccionarMetodoCommand = new RelayCommand<MetodoPagoItemDto>(SeleccionarMetodo);
-            QuitarPagoCommand        = new RelayCommand<PagoIngresadoDto>(QuitarPago);
-        }
-
-        // ── Inicialización ────────────────────────────────────────────────────
         public void InicializarConVenta(VentaViewModel venta)
         {
+            _ventaOrigen   = venta;
             ClienteNombre  = venta.ClienteNombre;
             TotalBruto     = venta.TotalBruto;
             TotalDescuento = venta.TotalDescuento;
             TotalFinal     = venta.TotalFinal;
             ItemsVenta     = new ObservableCollection<VentaItemDto>(venta.Items);
+            PagosIngresados.Clear();
 
             MetodosPago = new ObservableCollection<MetodoPagoItemDto>
             {
-                new() { Id = 1, Nombre = "Efectivo",         Icono = "💵", EsEfectivo = true  },
-                new() { Id = 2, Nombre = "Débito",           Icono = "💳", EsEfectivo = false },
-                new() { Id = 3, Nombre = "Crédito",          Icono = "💳", EsEfectivo = false },
-                new() { Id = 4, Nombre = "Transferencia",    Icono = "🏦", EsEfectivo = false },
-                new() { Id = 5, Nombre = "QR / MercadoPago", Icono = "📱", EsEfectivo = false },
+                new() { Id = 1, Nombre = "Efectivo",      Icono = "💵", EsEfectivo = true  },
+                new() { Id = 2, Nombre = "Débito",        Icono = "💳", EsEfectivo = false },
+                new() { Id = 3, Nombre = "Crédito",       Icono = "💳", EsEfectivo = false },
+                new() { Id = 4, Nombre = "Transferencia", Icono = "🏦", EsEfectivo = false },
+                new() { Id = 5, Nombre = "Mercado Pago",  Icono = "📱", EsEfectivo = false },
             };
         }
 
-        // ── Acciones Caliburn ─────────────────────────────────────────────────
         public void AgregarPago()
         {
             if (MetodoSeleccionado == null) return;
-            if (!decimal.TryParse(MontoIngresado?.Replace(",", "."), out var monto) || monto <= 0) return;
+            if (!decimal.TryParse(MontoIngresado?.Replace(",", "."),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var monto) || monto <= 0) return;
 
             PagosIngresados.Add(new PagoIngresadoDto
             {
@@ -161,38 +167,62 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 Icono        = MetodoSeleccionado.Icono,
                 Monto        = monto
             });
-
             MontoIngresado = string.Empty;
             RecalcularTotalPagado();
         }
 
         public async Task ConfirmarCobro()
         {
-            if (!PagoCompleto) return;
+            if (!PagoCompleto || _ventaOrigen == null) return;
             IsLoading = true;
             try
             {
-                // TODO: await _ventaServicio.ConfirmarAsync(...)
-                await Task.Delay(300);
+                var dto = new VentaCrearDto
+                {
+                    IdSucursal     = _sesion.IdSucursal,
+                    IdCliente      = _ventaOrigen.ClienteId > 0 ? _ventaOrigen.ClienteId : 1,
+                    IdUsuario      = _sesion.IdUsuario,
+                    IdCaja         = _sesion.IdCajaActual ?? 0,
+                    TotalDescuento = _ventaOrigen.TotalDescuento,
+                    Items = _ventaOrigen.Items.Select(i => new VentaDetalleCrearDto  // nombre correcto
+                    {
+                        IdProducto     = i.ProductoId,
+                        Cantidad       = (int)i.Cantidad,
+                        PrecioUnitario = i.PrecioUnitario,
+                        CostoUnitario  = i.CostoUnitario,
+                    }).ToList(),
+                    Pagos = PagosIngresados.Select(p => new PagoCrearDto  // nombre correcto
+                    {
+                        IdMetodoPago = p.MetodoId,
+                        Monto        = p.Monto,
+                    }).ToList(),
+                };
+
+                await _ventaServicio.CrearAsync(dto);
                 await IoC.Get<ShellViewModel>()
                          .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
             }
             finally { IsLoading = false; }
         }
 
         public async Task Volver()
         {
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
+            if (_ventaOrigen != null)
+                await IoC.Get<ShellViewModel>().ActivateItemAsync(_ventaOrigen, CancellationToken.None);
+            else
+                await IoC.Get<ShellViewModel>().ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
 
-        // ── Lógica interna ────────────────────────────────────────────────────
         private void SeleccionarMetodo(MetodoPagoItemDto metodo)
         {
             if (metodo == null) return;
             MetodoSeleccionado = metodo;
-            if (TotalFinal - TotalPagado > 0)
-                MontoIngresado = (TotalFinal - TotalPagado).ToString("F2");
+            var restante = TotalFinal - TotalPagado;
+            if (restante > 0) MontoIngresado = restante.ToString("F2");
         }
 
         private void QuitarPago(PagoIngresadoDto pago)
@@ -203,17 +233,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         private void RecalcularTotalPagado()
-        {
-            decimal t = 0;
-            foreach (var p in PagosIngresados) t += p.Monto;
-            TotalPagado = t;
-        }
+            => TotalPagado = PagosIngresados.Sum(p => p.Monto);
 
         private void RecalcularVuelto()
         {
             var diff     = TotalPagado - TotalFinal;
             PagoCompleto = diff >= 0;
-            VueltoOSaldo = System.Math.Abs(diff);
+            VueltoOSaldo = Math.Abs(diff);
         }
     }
 }

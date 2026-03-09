@@ -96,31 +96,7 @@ namespace GestionComercial.UI.ViewModels.Clientes
         {
             IsLoading = true;
             LimpiarError();
-            try
-            {
-                await Task.Delay(200); // TODO: var result = await _clienteServicio.ListarAsync(...)
 
-                var mock = new System.Collections.Generic.List<ClienteItemDto>
-                {
-                    new() { IdCliente=1, Nombre="Juan Pérez",       Documento=28456789, Telefono="3794-421000",  Email="juan.perez@gmail.com",   Activo=true,  TotalVentas=14 },
-                    new() { IdCliente=2, Nombre="María González",   Documento=32100456, Telefono="3794-455200",  Email="mgonzalez@hotmail.com",  Activo=true,  TotalVentas=6  },
-                    new() { IdCliente=3, Nombre="Carlos Rodríguez", Documento=25789012, Telefono="11-4523-0011", Email="carlos.r@empresa.com",   Activo=true,  TotalVentas=22 },
-                    new() { IdCliente=4, Nombre="Ana Martínez",     Documento=40123789, Telefono="3794-480100",  Email="ana.martinez@yahoo.com", Activo=false, TotalVentas=1  },
-                    new() { IdCliente=5, Nombre="Roberto Sánchez",  Documento=18900345, Telefono="3794-499200",  Email="roberto.s@gmail.com",    Activo=true,  TotalVentas=9  },
-                    new() { IdCliente=6, Nombre="Laura Fernández",  Documento=35678901, Telefono="11-4788-5566", Email="lfernandez@outlook.com", Activo=true,  TotalVentas=0  },
-                    new() { IdCliente=7, Nombre="Diego López",      Documento=29345678, Telefono="3794-412300",  Email="dlopez@gmail.com",       Activo=false, TotalVentas=3  },
-                };
-
-                Clientes = new ObservableCollection<ClienteItemDto>(mock);
-                TotalClientes = mock.Count;
-                ClientesActivos = mock.Count(c => c.Activo);
-                ClientesInactivos = mock.Count(c => !c.Activo);
-                ClientesConVentas = mock.Count(c => c.TotalVentas > 0);
-                ClientesMostrados = mock.Count;
-                TotalPaginas = 1;
-            }
-            catch (System.Exception ex) { MostrarError(ex.Message); }
-            finally { IsLoading = false; }
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────

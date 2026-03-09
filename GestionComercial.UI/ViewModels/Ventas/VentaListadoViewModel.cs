@@ -1,5 +1,7 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -11,11 +13,18 @@ namespace GestionComercial.UI.ViewModels.Ventas
 {
     public class VentaListadoViewModel : NavigableViewModel
     {
-        public VentaListadoViewModel()
+        private readonly IVentaServicio _ventaServicio;
+        private readonly SesionServicio _sesion;
+
+        public VentaListadoViewModel(IVentaServicio ventaServicio, SesionServicio sesion)
         {
-            Titulo    = "Ventas";
-            Subtitulo = "Historial de ventas";
-            Ventas    = new ObservableCollection<VentaResumenDto>();
+            _ventaServicio = ventaServicio;
+            _sesion        = sesion;
+            Titulo         = "Ventas";
+            Subtitulo      = "Historial de ventas";
+            Ventas         = new ObservableCollection<VentaResumenDto>();
+            FechaDesde     = DateTime.Today.AddDays(-30);
+            FechaHasta     = DateTime.Today;
         }
 
         // ── Métricas ──────────────────────────────────────────────────────────
@@ -130,7 +139,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _totalVentas = value; NotifyOfPropertyChange(() => TotalVentas); }
         }
 
-        // ── Venta seleccionada ────────────────────────────────────────────────
         private VentaResumenDto _ventaSeleccionada;
         public VentaResumenDto VentaSeleccionada
         {
@@ -140,6 +148,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public ObservableCollection<VentaResumenDto> Ventas { get; set; }
 
+        // ── Ciclo de vida ─────────────────────────────────────────────────────
+        protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+            => await CargarDatos();
+
         // ── Acciones ──────────────────────────────────────────────────────────
         public async Task NuevaVenta()
         {
@@ -147,28 +159,88 @@ namespace GestionComercial.UI.ViewModels.Ventas
                      .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
 
-        public async Task Buscar()
-        {
-            // TODO: cargar desde BD con filtros
-            await Task.CompletedTask;
-        }
+        public async Task Buscar() => await CargarDatos();
 
         public void CerrarDetalle() => VentaSeleccionada = null;
-        public void VerDetalle()    { /* TODO: navegar a VentaDetalleViewModel */ }
-        public void ImprimirVenta() { /* TODO: servicio de impresión */ }
-        public void CancelarVenta() { /* TODO: confirmar y cancelar */ }
+
+        public async Task CancelarVenta()
+        {
+            if (VentaSeleccionada == null) return;
+            IsLoading = true;
+            try
+            {
+                await _ventaServicio.CancelarAsync(VentaSeleccionada.IdVenta);
+                await CargarDatos();
+            }
+            catch (Exception ex)
+            {
+               ErrorMessage = ex.Message;
+            }
+            finally { IsLoading = false; }
+        }
 
         public bool CanPaginaAnterior  => PaginaActual > 1;
         public bool CanPaginaSiguiente => PaginaActual < TotalPaginas;
 
-        public void PaginaAnterior()
-        {
-            if (PaginaActual > 1) PaginaActual--;
-        }
+        public void PaginaAnterior()  { if (CanPaginaAnterior)  PaginaActual--; _ = CargarDatos(); }
+        public void PaginaSiguiente() { if (CanPaginaSiguiente) PaginaActual++; _ = CargarDatos(); }
 
-        public void PaginaSiguiente()
+        // ── Carga de datos ────────────────────────────────────────────────────
+        private async Task CargarDatos()
         {
-            if (PaginaActual < TotalPaginas) PaginaActual++;
+            IsLoading = true;
+            try
+            {
+                var desde  = FechaDesde ?? DateTime.Today.AddDays(-30);
+                var hasta  = FechaHasta ?? DateTime.Today;
+                var todas  = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
+
+                // Filtro por texto si aplica
+                var filtradas = string.IsNullOrWhiteSpace(TextoBusqueda)
+                    ? todas
+                    : todas.Where(v => v.ClienteNombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)
+                                    || v.IdVenta.ToString().Contains(TextoBusqueda));
+
+                // Filtro por estado
+                if (!string.IsNullOrWhiteSpace(FiltroEstado))
+                    filtradas = filtradas.Where(v => v.Estado == FiltroEstado);
+
+                var lista = filtradas.ToList();
+
+                // Métricas
+                var hoy = DateTime.Today;
+                var mes = new DateTime(hoy.Year, hoy.Month, 1);
+
+                var ventasHoy = lista.Where(v => v.Fecha.Date == hoy).ToList();
+                var ventasMes = lista.Where(v => v.Fecha >= mes).ToList();
+
+                TotalVentasHoy    = ventasHoy.Sum(v => v.TotalFinal);
+                CantidadVentasHoy = ventasHoy.Count;
+                TotalVentasMes    = ventasMes.Sum(v => v.TotalFinal);
+                CantidadVentasMes = ventasMes.Count;
+                VentasPendientes  = lista.Count(v => v.Estado == "Pendiente");
+                VentasCanceladas  = lista.Count(v => v.Estado == "Anulada");
+
+                // Paginación
+                const int porPagina = 20;
+                TotalVentas    = lista.Count;
+                TotalPaginas   = Math.Max(1, (int)Math.Ceiling(lista.Count / (double)porPagina));
+                PaginaActual   = Math.Min(PaginaActual, TotalPaginas);
+
+                var pagina = lista
+                    .Skip((PaginaActual - 1) * porPagina)
+                    .Take(porPagina)
+                    .ToList();
+
+                VentasMostradas = pagina.Count;
+                Ventas.Clear();
+                foreach (var v in pagina) Ventas.Add(v);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+            finally { IsLoading = false; }
         }
     }
 }

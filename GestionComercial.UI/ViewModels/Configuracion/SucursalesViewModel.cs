@@ -61,12 +61,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public async Task CargarAsync()
         {
             await Task.Delay(100);
-            Items = new ObservableCollection<SucursalDto>
-            {
-                new() { IdSucursal = 1, Nombre = "Casa Central",   Direccion = "Av. Principal 1234", Activa = true  },
-                new() { IdSucursal = 2, Nombre = "Sucursal Norte", Direccion = "Calle Norte 567",    Activa = true  },
-                new() { IdSucursal = 3, Nombre = "Sucursal Sur",   Direccion = "Av. Sur 890",        Activa = false },
-            };
+           
         }
 
         public void NuevaSucursal()
