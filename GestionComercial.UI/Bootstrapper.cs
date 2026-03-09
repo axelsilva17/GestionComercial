@@ -5,9 +5,11 @@ using GestionComercial.Aplicacion.DTOs.Compras;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.DTOs.Proveedores;
 using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Aplicacion.Validators;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
@@ -54,10 +56,10 @@ namespace GestionComercial.UI
             _container.Singleton<SesionServicio>();
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<ClienteServicio>();
-            _container.PerRequest<ProductoServicio>();
-            _container.PerRequest<VentaServicio>();
-            _container.PerRequest<CompraServicio>();
-            _container.PerRequest<CajaServicio>();
+            _container.PerRequest<IVentaServicio, VentaServicio>();
+            _container.PerRequest<ICompraServicio, CompraServicio>();
+            _container.PerRequest<IProductoServicio, ProductoServicio>();
+            _container.PerRequest<ICajaServicio, CajaServicio>();
             _container.PerRequest<ProveedorServicio>();
             _container.PerRequest<StockServicio>();
             _container.PerRequest<ReporteServicio>();
@@ -113,7 +115,8 @@ namespace GestionComercial.UI
             {
                 var vmName = modelType.FullName ?? string.Empty;
                 var viewName = vmName
-                    .Replace(".ViewModel.", ".Views.")
+                    .Replace(".ViewModels.", ".Views.")   // plural → singular no, Views directo
+                    .Replace(".ViewModel.", ".Views.")   // por si alguno usa singular
                     .Replace("ViewModel", "View");
                 var viewType = modelType.Assembly.GetType(viewName);
                 System.Diagnostics.Debug.WriteLine(

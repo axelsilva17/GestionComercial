@@ -8,38 +8,71 @@ namespace GestionComercial.Persistencia.Semillas
         public static void Sembrar(ModelBuilder builder)
         {
             builder.Entity<Compra>().HasData(
-                new Compra { Id = 1, Fecha = new DateTime(2025, 1, 2),  Total = 145000, Estado = 2, Id_proveedor = 1, Id_sucursal = 1, Id_usuario = 1 },
-                new Compra { Id = 2, Fecha = new DateTime(2025, 1, 15), Total = 84000,  Estado = 2, Id_proveedor = 2, Id_sucursal = 1, Id_usuario = 1 },
-                new Compra { Id = 3, Fecha = new DateTime(2025, 2, 1),  Total = 108000, Estado = 2, Id_proveedor = 3, Id_sucursal = 1, Id_usuario = 1 },
-                new Compra { Id = 4, Fecha = new DateTime(2025, 2, 20), Total = 62000,  Estado = 2, Id_proveedor = 4, Id_sucursal = 1, Id_usuario = 1 },
-                new Compra { Id = 5, Fecha = new DateTime(2025, 3, 5),  Total = 174000, Estado = 2, Id_proveedor = 1, Id_sucursal = 1, Id_usuario = 1 },
-                new Compra { Id = 6, Fecha = new DateTime(2025, 3, 18), Total = 96000,  Estado = 2, Id_proveedor = 2, Id_sucursal = 1, Id_usuario = 1 }
+                // Octubre 2025
+                new Compra { Id = 1, Fecha = new DateTime(2025, 10, 2),  Total = 145000, Estado = 2, Id_proveedor = 1, Id_sucursal = 1, Id_usuario = 1 },
+                new Compra { Id = 2, Fecha = new DateTime(2025, 10, 15), Total = 84000,  Estado = 2, Id_proveedor = 2, Id_sucursal = 1, Id_usuario = 1 },
+                // Noviembre 2025
+                new Compra { Id = 3, Fecha = new DateTime(2025, 11, 1),  Total = 108000, Estado = 2, Id_proveedor = 3, Id_sucursal = 1, Id_usuario = 1 },
+                new Compra { Id = 4, Fecha = new DateTime(2025, 11, 20), Total = 62000,  Estado = 2, Id_proveedor = 4, Id_sucursal = 1, Id_usuario = 1 },
+                // Diciembre 2025
+                new Compra { Id = 5, Fecha = new DateTime(2025, 12, 5),  Total = 174000, Estado = 2, Id_proveedor = 1, Id_sucursal = 1, Id_usuario = 1 },
+                new Compra { Id = 6, Fecha = new DateTime(2025, 12, 18), Total = 96000,  Estado = 2, Id_proveedor = 2, Id_sucursal = 1, Id_usuario = 1 },
+                // Enero 2026
+                new Compra { Id = 7, Fecha = new DateTime(2026, 1, 7),   Total = 132000, Estado = 2, Id_proveedor = 3, Id_sucursal = 1, Id_usuario = 1 },
+                new Compra { Id = 8, Fecha = new DateTime(2026, 1, 22),  Total = 78000,  Estado = 2, Id_proveedor = 4, Id_sucursal = 1, Id_usuario = 1 },
+                // Febrero 2026
+                new Compra { Id = 9,  Fecha = new DateTime(2026, 2, 4),  Total = 158000, Estado = 2, Id_proveedor = 1, Id_sucursal = 1, Id_usuario = 1 },
+                new Compra { Id = 10, Fecha = new DateTime(2026, 2, 19), Total = 91000,  Estado = 2, Id_proveedor = 2, Id_sucursal = 1, Id_usuario = 1 },
+                // Marzo 2026
+                new Compra { Id = 11, Fecha = new DateTime(2026, 3, 3),  Total = 165000, Estado = 2, Id_proveedor = 1, Id_sucursal = 1, Id_usuario = 1 },
+                new Compra { Id = 12, Fecha = new DateTime(2026, 3, 7),  Total = 88000,  Estado = 2, Id_proveedor = 3, Id_sucursal = 1, Id_usuario = 1 }
             );
 
             builder.Entity<CompraDetalle>().HasData(
-                // Compra 1 - Distribuidora Norte - Herramientas
-                new CompraDetalle { Id = 1,  Id_compra = 1, Id_producto = 1,  Cantidad = 10, PrecioCosto = 5500,  Subtotal = 55000  },
-                new CompraDetalle { Id = 2,  Id_compra = 1, Id_producto = 2,  Cantidad = 15, PrecioCosto = 2600,  Subtotal = 39000  },
-                new CompraDetalle { Id = 3,  Id_compra = 1, Id_producto = 3,  Cantidad = 8,  PrecioCosto = 4200,  Subtotal = 33600  },
-                new CompraDetalle { Id = 4,  Id_compra = 1, Id_producto = 4,  Cantidad = 4,  PrecioCosto = 8000,  Subtotal = 32000  },
-                // Compra 2 - Pinturerías del Sur
-                new CompraDetalle { Id = 5,  Id_compra = 2, Id_producto = 7,  Cantidad = 10, PrecioCosto = 12000, Subtotal = 120000 },
-                new CompraDetalle { Id = 6,  Id_compra = 2, Id_producto = 9,  Cantidad = 8,  PrecioCosto = 6400,  Subtotal = 51200  },
-                // Compra 3 - Electro Mayorista
-                new CompraDetalle { Id = 7,  Id_compra = 3, Id_producto = 5,  Cantidad = 1,  PrecioCosto = 58000, Subtotal = 58000  },
-                new CompraDetalle { Id = 8,  Id_compra = 3, Id_producto = 11, Cantidad = 10, PrecioCosto = 3500,  Subtotal = 35000  },
-                new CompraDetalle { Id = 9,  Id_compra = 3, Id_producto = 12, Cantidad = 10, PrecioCosto = 2000,  Subtotal = 20000  },
-                // Compra 4 - El Constructor - Plomería
-                new CompraDetalle { Id = 10, Id_compra = 4, Id_producto = 14, Cantidad = 10, PrecioCosto = 3100,  Subtotal = 31000  },
-                new CompraDetalle { Id = 11, Id_compra = 4, Id_producto = 15, Cantidad = 20, PrecioCosto = 520,   Subtotal = 10400  },
-                new CompraDetalle { Id = 12, Id_compra = 4, Id_producto = 13, Cantidad = 8,  PrecioCosto = 5100,  Subtotal = 40800  },
-                // Compra 5 - Distribuidora Norte
-                new CompraDetalle { Id = 13, Id_compra = 5, Id_producto = 5,  Cantidad = 1,  PrecioCosto = 58000, Subtotal = 58000  },
-                new CompraDetalle { Id = 14, Id_compra = 5, Id_producto = 6,  Cantidad = 1,  PrecioCosto = 50000, Subtotal = 50000  },
-                new CompraDetalle { Id = 15, Id_compra = 5, Id_producto = 1,  Cantidad = 12, PrecioCosto = 5500,  Subtotal = 66000  },
-                // Compra 6 - Pinturerías del Sur
-                new CompraDetalle { Id = 16, Id_compra = 6, Id_producto = 8,  Cantidad = 2,  PrecioCosto = 28000, Subtotal = 56000  },
-                new CompraDetalle { Id = 17, Id_compra = 6, Id_producto = 10, Cantidad = 2,  PrecioCosto = 21000, Subtotal = 42000  }
+                // Compra 1
+                new CompraDetalle { Id = 1,  Id_compra = 1,  Id_producto = 1,  Cantidad = 10, PrecioCosto = 5500,  Subtotal = 55000  },
+                new CompraDetalle { Id = 2,  Id_compra = 1,  Id_producto = 2,  Cantidad = 15, PrecioCosto = 2600,  Subtotal = 39000  },
+                new CompraDetalle { Id = 3,  Id_compra = 1,  Id_producto = 3,  Cantidad = 8,  PrecioCosto = 4200,  Subtotal = 33600  },
+                new CompraDetalle { Id = 4,  Id_compra = 1,  Id_producto = 4,  Cantidad = 4,  PrecioCosto = 8000,  Subtotal = 32000  },
+                // Compra 2
+                new CompraDetalle { Id = 5,  Id_compra = 2,  Id_producto = 7,  Cantidad = 10, PrecioCosto = 12000, Subtotal = 120000 },
+                new CompraDetalle { Id = 6,  Id_compra = 2,  Id_producto = 9,  Cantidad = 8,  PrecioCosto = 6400,  Subtotal = 51200  },
+                // Compra 3
+                new CompraDetalle { Id = 7,  Id_compra = 3,  Id_producto = 5,  Cantidad = 1,  PrecioCosto = 58000, Subtotal = 58000  },
+                new CompraDetalle { Id = 8,  Id_compra = 3,  Id_producto = 11, Cantidad = 10, PrecioCosto = 3500,  Subtotal = 35000  },
+                new CompraDetalle { Id = 9,  Id_compra = 3,  Id_producto = 12, Cantidad = 10, PrecioCosto = 2000,  Subtotal = 20000  },
+                // Compra 4
+                new CompraDetalle { Id = 10, Id_compra = 4,  Id_producto = 14, Cantidad = 10, PrecioCosto = 3100,  Subtotal = 31000  },
+                new CompraDetalle { Id = 11, Id_compra = 4,  Id_producto = 15, Cantidad = 20, PrecioCosto = 520,   Subtotal = 10400  },
+                new CompraDetalle { Id = 12, Id_compra = 4,  Id_producto = 13, Cantidad = 8,  PrecioCosto = 5100,  Subtotal = 40800  },
+                // Compra 5
+                new CompraDetalle { Id = 13, Id_compra = 5,  Id_producto = 5,  Cantidad = 1,  PrecioCosto = 58000, Subtotal = 58000  },
+                new CompraDetalle { Id = 14, Id_compra = 5,  Id_producto = 6,  Cantidad = 1,  PrecioCosto = 50000, Subtotal = 50000  },
+                new CompraDetalle { Id = 15, Id_compra = 5,  Id_producto = 1,  Cantidad = 12, PrecioCosto = 5500,  Subtotal = 66000  },
+                // Compra 6
+                new CompraDetalle { Id = 16, Id_compra = 6,  Id_producto = 8,  Cantidad = 2,  PrecioCosto = 28000, Subtotal = 56000  },
+                new CompraDetalle { Id = 17, Id_compra = 6,  Id_producto = 10, Cantidad = 2,  PrecioCosto = 21000, Subtotal = 42000  },
+                // Compra 7
+                new CompraDetalle { Id = 18, Id_compra = 7,  Id_producto = 1,  Cantidad = 8,  PrecioCosto = 5500,  Subtotal = 44000  },
+                new CompraDetalle { Id = 19, Id_compra = 7,  Id_producto = 3,  Cantidad = 10, PrecioCosto = 4200,  Subtotal = 42000  },
+                new CompraDetalle { Id = 20, Id_compra = 7,  Id_producto = 4,  Cantidad = 6,  PrecioCosto = 8000,  Subtotal = 48000  },
+                // Compra 8
+                new CompraDetalle { Id = 21, Id_compra = 8,  Id_producto = 11, Cantidad = 12, PrecioCosto = 3500,  Subtotal = 42000  },
+                new CompraDetalle { Id = 22, Id_compra = 8,  Id_producto = 12, Cantidad = 12, PrecioCosto = 2000,  Subtotal = 24000  },
+                // Compra 9
+                new CompraDetalle { Id = 23, Id_compra = 9,  Id_producto = 5,  Cantidad = 1,  PrecioCosto = 58000, Subtotal = 58000  },
+                new CompraDetalle { Id = 24, Id_compra = 9,  Id_producto = 6,  Cantidad = 1,  PrecioCosto = 50000, Subtotal = 50000  },
+                new CompraDetalle { Id = 25, Id_compra = 9,  Id_producto = 7,  Cantidad = 4,  PrecioCosto = 12000, Subtotal = 48000  },
+                // Compra 10
+                new CompraDetalle { Id = 26, Id_compra = 10, Id_producto = 8,  Cantidad = 2,  PrecioCosto = 28000, Subtotal = 56000  },
+                new CompraDetalle { Id = 27, Id_compra = 10, Id_producto = 9,  Cantidad = 5,  PrecioCosto = 6400,  Subtotal = 32000  },
+                // Compra 11
+                new CompraDetalle { Id = 28, Id_compra = 11, Id_producto = 1,  Cantidad = 15, PrecioCosto = 5500,  Subtotal = 82500  },
+                new CompraDetalle { Id = 29, Id_compra = 11, Id_producto = 2,  Cantidad = 20, PrecioCosto = 2600,  Subtotal = 52000  },
+                new CompraDetalle { Id = 30, Id_compra = 11, Id_producto = 3,  Cantidad = 8,  PrecioCosto = 4200,  Subtotal = 33600  },
+                // Compra 12
+                new CompraDetalle { Id = 31, Id_compra = 12, Id_producto = 5,  Cantidad = 1,  PrecioCosto = 58000, Subtotal = 58000  },
+                new CompraDetalle { Id = 32, Id_compra = 12, Id_producto = 10, Cantidad = 1,  PrecioCosto = 21000, Subtotal = 21000  }
             );
         }
     }

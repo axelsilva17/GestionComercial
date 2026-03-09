@@ -18,6 +18,7 @@ namespace GestionComercial.UI
                 config.AddSkiaSharp()
                       .AddDefaultMappers()
                       .AddDarkTheme());
+            LiveCharts.Configure(config => config.AddSkiaSharp().AddDefaultMappers().AddDarkTheme());
         }
 
         internal void ApplyTheme()

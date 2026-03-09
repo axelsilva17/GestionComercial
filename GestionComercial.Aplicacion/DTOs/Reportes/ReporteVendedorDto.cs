@@ -1,14 +1,14 @@
-namespace GestionComercial.Aplicacion.DTOs.Reportes
+public class ReporteVendedorDto
 {
-    public class ReporteVendedorDto
-    {
-        public int     IdUsuario      { get; set; }
-        public string  UsuarioNombre  { get; set; }
-        public string  Sucursal       { get; set; }
-        public int     CantidadVentas { get; set; }
-        public decimal TotalVendido   { get; set; }
-        public decimal PromedioVenta  { get; set; }
-        public decimal TotalDescuentos { get; set; }
-        public string  Inicial => string.IsNullOrEmpty(UsuarioNombre) ? "?" : UsuarioNombre[0].ToString().ToUpper();
-    }
+    public string Nombre { get; set; } = string.Empty;
+    public int Ventas { get; set; }
+    public decimal Total { get; set; }
+    public decimal TicketProm { get; set; }
+    public int IdUsuario { get; set; }
+    public string UsuarioNombre { get; set; } = string.Empty;
+    public string Sucursal { get; set; } = string.Empty;
+    public int CantidadVentas { get; set; }
+    public decimal TotalVendido { get; set; }
+    public decimal PromedioVenta { get; set; }
+    public decimal TotalDescuentos { get; set; }
 }

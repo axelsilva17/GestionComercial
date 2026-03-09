@@ -73,17 +73,17 @@ namespace GestionComercial.UI.ViewModels.Main
         // GERENTE:        Dashboard, Ventas(lectura), Compras(lectura), Reportes, Configuración
         // ADMINISTRADOR:  Dashboard, Caja, Compras, Catálogo(Productos+Inventario), Clientes, Proveedores, Reportes(operativo)
         // VENDEDOR:       Dashboard, Ventas, Caja, Clientes
-        //
-        public bool MostrarVentas        =>  Rol == RolUsuario.Vendedor;
-        public bool MostrarCaja          => Rol == RolUsuario.Vendedor;
-        public bool MostrarCompras       => Rol == RolUsuario.Administrador;
-        public bool MostrarCatalogo      => Rol == RolUsuario.Administrador;
-        public bool MostrarProductos     => Rol == RolUsuario.Administrador;
-        public bool MostrarInventario    => Rol == RolUsuario.Administrador;
-        public bool MostrarClientes      =>  Rol == RolUsuario.Vendedor;
-        public bool MostrarProveedores   => Rol == RolUsuario.Administrador;
-        public bool MostrarReportes      => Rol == RolUsuario.Gerente   || Rol == RolUsuario.Administrador;
+        public bool MostrarVentas => Rol == RolUsuario.Vendedor;
+        public bool MostrarCaja => Rol == RolUsuario.Vendedor;
+        public bool MostrarCompras => Rol == RolUsuario.Administrador;
+        public bool MostrarCatalogo => Rol == RolUsuario.Administrador;
+        public bool MostrarProductos => Rol == RolUsuario.Administrador;
+        public bool MostrarInventario => Rol == RolUsuario.Administrador;
+        public bool MostrarClientes => Rol == RolUsuario.Vendedor;
+        public bool MostrarProveedores => Rol == RolUsuario.Administrador;
+        public bool MostrarReportes => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
         public bool MostrarConfiguracion => Rol == RolUsuario.Gerente;
+
 
         public int              IdEmpresaActual  { get; internal set; }
         public int              IdSucursalActual { get; internal set; }

@@ -16,9 +16,6 @@
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
 
-        <!-- Sidebar colapsado cuando el ancho de ventana es menor a 1100px
-             Se controla desde code-behind toggling SidebarCollapsed -->
-
         <Style x:Key="NavButton" TargetType="Button">
             <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
@@ -199,7 +196,6 @@
             BorderThickness="1" CornerRadius="12">
         <Grid>
             <Grid.ColumnDefinitions>
-                <!-- Sidebar: ancho dinámico controlado desde code-behind -->
                 <ColumnDefinition x:Name="SidebarColumn" Width="220" MinWidth="56"/>
                 <ColumnDefinition Width="1"/>
                 <ColumnDefinition Width="*"/>
@@ -223,7 +219,6 @@
                 <Border Grid.Row="0" Padding="16,20,16,0">
                     <StackPanel>
                         <TextBlock Text="⬡" FontSize="22" Foreground="{DynamicResource PrimaryBrush}"/>
-                        <!-- Solo visible cuando sidebar expandido -->
                         <TextBlock x:Name="TxtSistema" Text="GestiónComercial" FontSize="15" FontWeight="Bold"
                                    Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,0"/>
                         <TextBlock x:Name="TxtSucursal" Text="{Binding UsuarioSucursal}" FontSize="11"
@@ -253,7 +248,9 @@
                         </StackPanel>
                     </Button>
 
-                    <Button x:Name="IrCaja" Style="{StaticResource NavButton}">
+                    <!-- CORREGIDO: Visibility bindeada a MostrarCaja -->
+                    <Button x:Name="IrCaja" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarCaja, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="▣" FontSize="15" VerticalAlignment="Center" Width="22"/>
                             <TextBlock x:Name="TxtCaja" Text="Caja" FontSize="13"
@@ -301,7 +298,9 @@
                     <TextBlock x:Name="LblGestion" Text="GESTIÓN" FontSize="9" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,8"/>
 
-                    <Button x:Name="IrClientes" Style="{StaticResource NavButton}">
+                    <!-- CORREGIDO: Visibility bindeada a MostrarClientes -->
+                    <Button x:Name="IrClientes" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarClientes, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="○" FontSize="15" VerticalAlignment="Center" Width="22"/>
                             <TextBlock x:Name="TxtClientes" Text="Clientes" FontSize="13"
@@ -327,7 +326,6 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Configuración: solo Gerente -->
                     <Button x:Name="IrConfiguracion" Style="{StaticResource NavButton}"
                             Visibility="{Binding MostrarConfiguracion, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
@@ -348,7 +346,6 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Avatar — clic abre panel perfil -->
                         <Button Grid.Column="0" Background="Transparent" BorderThickness="0"
                                 Cursor="Hand" Click="AbrirPerfil_Click" ToolTip="Mi perfil">
                             <Border Width="34" Height="34" CornerRadius="8"
@@ -359,7 +356,6 @@
                             </Border>
                         </Button>
 
-                        <!-- Nombre + rol — solo visible expandido -->
                         <StackPanel x:Name="FooterNombre" Grid.Column="1"
                                     VerticalAlignment="Center" Margin="10,0,0,0">
                             <TextBlock Text="{Binding UsuarioNombre}" FontSize="13" FontWeight="Medium"
@@ -370,7 +366,6 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Cerrar sesión -->
                         <Button Grid.Column="2" x:Name="CerrarSesion" Content="⏻" FontSize="16"
                                 Width="30" Height="30" Background="Transparent" BorderThickness="0"
                                 Foreground="{DynamicResource TextSecondaryBrush}"
@@ -412,7 +407,6 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Botón colapsar sidebar -->
                     <Button Grid.Column="0" x:Name="BtnToggleSidebar" Content="☰"
                             Style="{StaticResource WindowButton}" FontSize="16"
                             Click="ToggleSidebar_Click" Margin="0,0,12,0" ToolTip="Expandir / colapsar menú"/>
@@ -474,7 +468,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header del panel -->
                     <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="0,0,0,1" Padding="24,20">
                         <Grid>
@@ -498,7 +491,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Contenido scroll -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="24">
 
@@ -517,8 +509,6 @@
                                                 Style="{StaticResource AccionBtn}"
                                                 Click="AbrirEditarDatos_Click"/>
                                     </Grid>
-
-                                    <!-- Formulario edición (oculto por defecto) -->
                                     <StackPanel x:Name="FormDatos" Visibility="Collapsed">
                                         <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
                                         <TextBox x:Name="TxtNombre" Style="{StaticResource FormInput}" Margin="0,0,0,12"/>
@@ -554,7 +544,6 @@
                                                 Style="{StaticResource AccionBtn}"
                                                 Click="AbrirCambiarPassword_Click"/>
                                     </Grid>
-
                                     <StackPanel x:Name="FormPassword" Visibility="Collapsed">
                                         <TextBlock Text="CONTRASEÑA ACTUAL" Style="{StaticResource FormLabel}"/>
                                         <PasswordBox x:Name="PbActual" Style="{StaticResource FormPassword}"
@@ -597,7 +586,6 @@
                                                 Content="🔐 Configurar" Style="{StaticResource AccionBtn}"
                                                 Click="AbrirPreguntaSecreta_Click"/>
                                     </Grid>
-
                                     <StackPanel x:Name="FormPregunta" Visibility="Collapsed">
                                         <TextBlock Text="PREGUNTA SECRETA" Style="{StaticResource FormLabel}"/>
                                         <ComboBox x:Name="CbPreguntas" Height="40" Margin="0,0,0,12"
@@ -627,7 +615,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Mensaje éxito global -->
                             <Border x:Name="MensajeExito" Background="#1A22C55E" CornerRadius="8"
                                     Padding="14,10" Visibility="Collapsed">
                                 <StackPanel Orientation="Horizontal">

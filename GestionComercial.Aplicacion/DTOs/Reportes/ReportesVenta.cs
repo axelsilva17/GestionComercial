@@ -14,7 +14,22 @@ namespace GestionComercial.Aplicacion.DTOs.Reportes
         public int Cantidad { get; set; }
         public string Icono { get; set; } = string.Empty;
     }
+    public class ReporteProductoTopDto
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public decimal Ingresos { get; set; }
+        public double Margen { get; set; }
+    }
 
+    public class ReporteVentaMensualDto
+    {
+        public string Mes { get; set; } = string.Empty;
+        public decimal Ventas { get; set; }
+        public decimal Compras { get; set; }
+        public decimal Resultado { get; set; }
+        public double Margen { get; set; }
+    }
     public class VentaPorSucursalDto
     {
         public string SucursalNombre { get; set; } = string.Empty;

@@ -23,7 +23,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Titulo         = "Ventas";
             Subtitulo      = "Historial de ventas";
             Ventas         = new ObservableCollection<VentaResumenDto>();
-            FechaDesde     = DateTime.Today.AddDays(-30);
+            FechaDesde = DateTime.Today.AddYears(-2);
             FechaHasta     = DateTime.Today;
         }
 

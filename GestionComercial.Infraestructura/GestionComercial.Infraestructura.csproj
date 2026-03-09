@@ -5,11 +5,15 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Remove="Impresion\**" />
+	  <EmbeddedResource Remove="Impresion\**" />
+	  <None Remove="Impresion\**" />
+	</ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
 		<ProjectReference Include="..\GestionComercial.Dominio\GestionComercial.Dominio.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<Folder Include="Impresion\" />
 		<Folder Include="Logs\" />
 		<Folder Include="Backups\" />
 	</ItemGroup>

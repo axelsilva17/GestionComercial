@@ -1,32 +1,31 @@
 using Caliburn.Micro;
-using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Main
 {
-    /// <summary>
-    /// Dashboard unificado con métricas diferenciadas por rol.
-    ///
-    /// GERENTE:        ventas del mes, resultado neto, margen, crecimiento vs mes anterior
-    /// ADMINISTRADOR:  stock crítico, compras del mes, cantidad ventas, productos a reponer
-    /// VENDEDOR:       sus propias ventas del día, saldo de caja, últimas ventas realizadas
-    ///
-    /// TODO: Inyectar IVentaServicio, IProductoServicio, ICajaServicio y conectar CargarGerente/Admin/Vendedor.
-    /// </summary>
     public class DashboardViewModel : NavigableViewModel
     {
+        private readonly IVentaServicio    _ventaServicio;
+        private readonly IProductoServicio _productoServicio;
+        private readonly ICompraServicio   _compraServicio;
+        private readonly ICajaServicio     _cajaServicio;
+        private readonly SesionServicio    _sesion;
+
         private ShellViewModel Shell => IoC.Get<ShellViewModel>();
 
         public string UsuarioNombre => Shell?.UsuarioNombre ?? "";
         public string UsuarioRol    => Shell?.UsuarioRol    ?? "";
         public string FechaHoy      => DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy");
 
-        // ── Visibilidad secciones por rol ─────────────────────────────────────
         public bool MostrarSeccionGerente       => Shell?.EsGerente       ?? false;
         public bool MostrarSeccionAdministrador => Shell?.EsAdministrador ?? false;
         public bool MostrarSeccionVendedor      => Shell?.EsVendedor      ?? false;
@@ -144,12 +143,33 @@ namespace GestionComercial.UI.ViewModels.Main
             set { _horaAperturaCaja = value; NotifyOfPropertyChange(() => HoraAperturaCaja); }
         }
 
-        // ── Listas compartidas ────────────────────────────────────────────────
+        private bool _cajaAbierta;
+        public bool CajaAbierta
+        {
+            get => _cajaAbierta;
+            set { _cajaAbierta = value; NotifyOfPropertyChange(() => CajaAbierta); NotifyOfPropertyChange(() => CajaCerrada); }
+        }
+        public bool CajaCerrada => !CajaAbierta;
+
+        // ── Listas ────────────────────────────────────────────────────────────
         public ObservableCollection<VentaResumenDto>     VentasRecientes       { get; set; } = new();
         public ObservableCollection<ProductoCriticoDash> ProductosCriticosList { get; set; } = new();
 
-        // ── Lifecycle ─────────────────────────────────────────────────────────
-        public DashboardViewModel() { Titulo = "Dashboard"; }
+        // ── Constructor ───────────────────────────────────────────────────────
+        public DashboardViewModel(
+            IVentaServicio    ventaServicio,
+            IProductoServicio productoServicio,
+            ICompraServicio   compraServicio,
+            ICajaServicio     cajaServicio,
+            SesionServicio    sesion)
+        {
+            _ventaServicio    = ventaServicio;
+            _productoServicio = productoServicio;
+            _compraServicio   = compraServicio;
+            _cajaServicio     = cajaServicio;
+            _sesion           = sesion;
+            Titulo            = "Dashboard";
+        }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
@@ -180,15 +200,31 @@ namespace GestionComercial.UI.ViewModels.Main
 
         private async Task CargarGerente()
         {
-            // TODO: var kpis = await _ventaServicio.ObtenerKpisGerenciaAsync(Shell.IdEmpresaActual);
-            // TotalVentasMes         = kpis.TotalVentasMes;
-            // TotalComprasMes        = kpis.TotalComprasMes;
-            // MargenBrutoMes         = kpis.MargenBrutoMes;
-            // TotalVentasMesAnterior = kpis.TotalVentasMesAnterior;
-            // TicketPromedio         = kpis.TicketPromedio;
-            // VentasRecientes        = new ObservableCollection<VentaResumenDto>(kpis.UltimasVentas);
+            var hoy               = DateTime.Today;
+            var inicioMes         = new DateTime(hoy.Year, hoy.Month, 1);
+            var inicioMesAnterior = inicioMes.AddMonths(-1);
+            var finMesAnterior    = inicioMes.AddDays(-1);
 
-            await Task.CompletedTask;
+            var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
+                _sesion.IdSucursal, inicioMes, hoy)).ToList();
+
+            TotalVentasMes = ventasMes.Sum(v => v.TotalFinal);
+            TicketPromedio = ventasMes.Any() ? TotalVentasMes / ventasMes.Count : 0;
+
+            var ventasMesAnterior = await _ventaServicio.ObtenerPorSucursalAsync(
+                _sesion.IdSucursal, inicioMesAnterior, finMesAnterior);
+            TotalVentasMesAnterior = ventasMesAnterior.Sum(v => v.TotalFinal);
+
+            var comprasMes = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                .Where(c => c.Fecha >= inicioMes && c.Fecha <= hoy).ToList();
+            TotalComprasMes = comprasMes.Sum(c => c.Total);
+
+            MargenBrutoMes = TotalVentasMes > 0
+                ? (double)(ResultadoNeto / TotalVentasMes * 100) : 0;
+
+            VentasRecientes = new ObservableCollection<VentaResumenDto>(
+                ventasMes.OrderByDescending(v => v.Fecha).Take(5));
+
             NotifyOfPropertyChange(() => VentasRecientes);
             NotifyOfPropertyChange(() => ResultadoNeto);
             NotifyOfPropertyChange(() => CrecimientoMes);
@@ -197,27 +233,70 @@ namespace GestionComercial.UI.ViewModels.Main
 
         private async Task CargarAdministrador()
         {
-            // TODO: var kpis = await _productoServicio.ObtenerKpisAdminAsync(Shell.IdSucursalActual);
-            // CantidadVentasMes     = kpis.CantidadVentasMes;
-            // ProductosCriticos     = kpis.ProductosCriticos;
-            // ComprasDelMes         = kpis.ComprasDelMes;
-            // VentasPendientes      = kpis.VentasPendientes;
-            // ProductosCriticosList = new ObservableCollection<ProductoCriticoDash>(kpis.ProductosCriticosList);
+            var hoy       = DateTime.Today;
+            var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
 
-            await Task.CompletedTask;
+            var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
+                _sesion.IdSucursal, inicioMes, hoy)).ToList();
+            CantidadVentasMes = ventasMes.Count;
+            VentasPendientes  = ventasMes.Count(v => v.Estado == "Pendiente");
+
+            var stockCritico = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
+            ProductosCriticos = stockCritico.Count;
+            ProductosCriticosList = new ObservableCollection<ProductoCriticoDash>(
+                stockCritico.Take(8).Select(p => new ProductoCriticoDash
+                {
+                    Nombre      = p.Nombre,
+                    StockActual = p.StockActual,
+                    StockMinimo = p.StockMinimo,
+                }));
+
+            var comprasMes = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                .Where(c => c.Fecha >= inicioMes && c.Fecha <= hoy).ToList();
+            ComprasDelMes = comprasMes.Count;
+
+            VentasRecientes = new ObservableCollection<VentaResumenDto>(
+                ventasMes.OrderByDescending(v => v.Fecha).Take(5));
+
             NotifyOfPropertyChange(() => ProductosCriticosList);
+            NotifyOfPropertyChange(() => VentasRecientes);
         }
 
         private async Task CargarVendedor()
         {
-            // TODO: var kpis = await _ventaServicio.ObtenerKpisVendedorAsync(Shell.SesionActual.IdUsuario, Shell.IdSucursalActual);
-            // MisVentasHoy        = kpis.MisVentasHoy;
-            // MiCantidadVentasHoy = kpis.MiCantidadVentasHoy;
-            // SaldoCaja           = kpis.SaldoCaja;
-            // HoraAperturaCaja    = kpis.HoraAperturaCaja;
-            // VentasRecientes     = new ObservableCollection<VentaResumenDto>(kpis.MisUltimasVentas);
+            var hoy = DateTime.Today;
 
-            await Task.CompletedTask;
+            // Caja abierta
+            var caja = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
+            if (caja != null)
+            {
+                CajaAbierta      = true;
+                SaldoCaja        = (decimal)caja.MontoFinal;
+                HoraAperturaCaja = caja.FechaApertura.ToString("HH:mm");
+            }
+            else
+            {
+                CajaAbierta      = false;
+                SaldoCaja        = 0;
+                HoraAperturaCaja = "--:--";
+            }
+
+            // Ventas de hoy del vendedor
+            var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, hoy, hoy))
+                .Where(v => v.UsuarioNombre.Contains(
+                    _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            MisVentasHoy        = ventasHoy.Sum(v => v.TotalFinal);
+            MiCantidadVentasHoy = ventasHoy.Count;
+
+            // Últimas ventas propias (7 días)
+            var ventasSemana = await _ventaServicio.ObtenerPorSucursalAsync(
+                _sesion.IdSucursal, hoy.AddDays(-7), hoy);
+            VentasRecientes = new ObservableCollection<VentaResumenDto>(
+                ventasSemana.OrderByDescending(v => v.Fecha).Take(5));
+
             NotifyOfPropertyChange(() => VentasRecientes);
         }
 
