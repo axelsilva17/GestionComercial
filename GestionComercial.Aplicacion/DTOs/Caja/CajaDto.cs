@@ -24,16 +24,5 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
             _ => "·"
         };
     }
-
-    /// <summary>
-    /// Desglose de ventas por método de pago para el cierre de caja.
-    /// </summary>
-    public class DesglosePagoDto
-    {
-        public int IdMetodoPago { get; set; }
-        public string MetodoPago { get; set; }
-        public bool EsEfectivo { get; set; }
-        public int CantidadVentas { get; set; }
-        public decimal Total { get; set; }
-    }
+ 
 }

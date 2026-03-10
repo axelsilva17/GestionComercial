@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using LiveChartsCore;
@@ -9,7 +10,6 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -21,17 +21,37 @@ namespace GestionComercial.UI.ViewModels.Reportes
     {
         private readonly IVentaServicio  _ventaServicio;
         private readonly ICompraServicio _compraServicio;
+        private readonly IUnitOfWork     _uow;
         private readonly SesionServicio  _sesion;
 
         private ShellViewModel Shell => IoC.Get<ShellViewModel>();
 
+        // Paleta alineada al sistema
+        private static readonly SKColor Col_Primary  = SKColor.Parse("#38BDF8");
+        private static readonly SKColor Col_Success  = SKColor.Parse("#10B981");
+        private static readonly SKColor Col_Warning  = SKColor.Parse("#F59E0B");
+        private static readonly SKColor Col_Error    = SKColor.Parse("#EF4444");
+        private static readonly SKColor Col_Info     = SKColor.Parse("#3B82F6");
+        private static readonly SKColor Col_Positive = SKColor.Parse("#4ADE80");
+        private static readonly SKColor Col_Neutral  = SKColor.Parse("#94A3B8");
+        private static readonly SKColor Col_Text     = SKColor.Parse("#E0F2FE");
+        private static readonly SKColor Col_TextSec  = SKColor.Parse("#64748B");
+        private static readonly SKColor Col_Sep      = SKColor.Parse("#2A3D52");
+
+        private static readonly SKColor[] _coloresTorta =
+        {
+            Col_Primary, Col_Success, Col_Warning, Col_Info, Col_Positive, Col_Neutral, Col_Error,
+        };
+
         public ReporteGerenciaViewModel(
             IVentaServicio  ventaServicio,
             ICompraServicio compraServicio,
+            IUnitOfWork     uow,
             SesionServicio  sesion)
         {
             _ventaServicio  = ventaServicio;
             _compraServicio = compraServicio;
+            _uow            = uow;
             _sesion         = sesion;
             Titulo          = "Reportes";
             Subtitulo       = "Gerencia — visión ejecutiva";
@@ -68,19 +88,27 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
         public decimal ResultadoAcumulado => VentasAcumuladas - ComprasAcumuladas;
 
-        private int _anioSeleccionado = DateTime.Now.Year;
-        public int AnioSeleccionado
+        // ── Filtros de fecha ──────────────────────────────────────────────────
+        private DateTime _fechaDesde = new DateTime(DateTime.Today.Year, 1, 1);
+        public DateTime FechaDesde
         {
-            get => _anioSeleccionado;
-            set { _anioSeleccionado = value; NotifyOfPropertyChange(() => AnioSeleccionado); }
+            get => _fechaDesde;
+            set { _fechaDesde = value; NotifyOfPropertyChange(() => FechaDesde); }
         }
 
-        // ── Tabla mensual ─────────────────────────────────────────────────────
+        private DateTime _fechaHasta = DateTime.Today;
+        public DateTime FechaHasta
+        {
+            get => _fechaHasta;
+            set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
+        }
+
+        // ── Listas ────────────────────────────────────────────────────────────
         public ObservableCollection<ReporteVentaMensualDto> VentasMensuales { get; set; } = new();
         public ObservableCollection<ReporteProductoTopDto>  TopProductos    { get; set; } = new();
         public ObservableCollection<ReporteVendedorDto>     Vendedores      { get; set; } = new();
 
-        // ── Gráfico 1: Barras Ventas vs Compras ───────────────────────────────
+        // ── Gráfico 1: Barras ─────────────────────────────────────────────────
         private ISeries[] _seriesBarras = Array.Empty<ISeries>();
         public ISeries[] SeriesBarras
         {
@@ -95,7 +123,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _ejeXBarras = value; NotifyOfPropertyChange(() => EjeXBarras); }
         }
 
-        // ── Gráfico 2: Línea evolución ventas ─────────────────────────────────
+        // ── Gráfico 2: Línea ──────────────────────────────────────────────────
         private ISeries[] _seriesLinea = Array.Empty<ISeries>();
         public ISeries[] SeriesLinea
         {
@@ -110,7 +138,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _ejeXLinea = value; NotifyOfPropertyChange(() => EjeXLinea); }
         }
 
-        // ── Gráfico 3: Torta métodos de pago ─────────────────────────────────
+        // ── Gráfico 3: Torta ──────────────────────────────────────────────────
         private ISeries[] _seriesTorta = Array.Empty<ISeries>();
         public ISeries[] SeriesTorta
         {
@@ -118,16 +146,23 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _seriesTorta = value; NotifyOfPropertyChange(() => SeriesTorta); }
         }
 
-        // Eje Y compartido (tema oscuro)
+        // Ejes compartidos con paleta del sistema
         public Axis[] EjeY { get; } = new[]
         {
             new Axis
             {
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#374151")),
-                Labeler = value => $"${value / 1000:N0}K",
+                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#64748B")),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#2A3D52")),
+                Labeler         = v => $"${v / 1000:N0}K",
             }
         };
+
+        // Leyenda de la torta con color del sistema
+        public LiveChartsCore.Measure.LegendPosition PosicionLeyenda =>
+            LiveChartsCore.Measure.LegendPosition.Right;
+
+        public SolidColorPaint LeyendaTextoPaint { get; } =
+            new SolidColorPaint(SKColor.Parse("#E0F2FE")) { SKTypeface = SKTypeface.FromFamilyName("Segoe UI") };
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -139,119 +174,110 @@ namespace GestionComercial.UI.ViewModels.Reportes
             LimpiarError();
             try
             {
-                var desde = new DateTime(AnioSeleccionado, 1, 1);
-                var hasta = AnioSeleccionado == DateTime.Now.Year
-                    ? DateTime.Today
-                    : new DateTime(AnioSeleccionado, 12, 31);
+                var desde = FechaDesde;
+                var hasta = FechaHasta;
 
+                // Ventas del período
                 var todasVentas = (await _ventaServicio.ObtenerPorSucursalAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
-
                 VentasAcumuladas = todasVentas.Sum(v => v.TotalFinal);
 
+                // Compras del período
                 var todasCompras = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
                     .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
                 ComprasAcumuladas = todasCompras.Sum(c => c.Total);
 
                 MargenPromedio = VentasAcumuladas > 0
-                    ? (double)(ResultadoAcumulado / VentasAcumuladas * 100)
-                    : 0;
+                    ? (double)(ResultadoAcumulado / VentasAcumuladas * 100) : 0;
 
-                // Últimos 6 meses
-                var meses = Enumerable.Range(0, 6)
-                    .Select(i =>
-                    {
-                        var mes    = DateTime.Today.AddMonths(-5 + i);
-                        var inicio = new DateTime(mes.Year, mes.Month, 1);
-                        var fin    = inicio.AddMonths(1).AddDays(-1);
-                        var vMes   = todasVentas.Where(v => v.Fecha >= inicio && v.Fecha <= fin).ToList();
-                        var cMes   = todasCompras.Where(c => c.Fecha >= inicio && c.Fecha <= fin).ToList();
-                        var ventas  = vMes.Sum(v => v.TotalFinal);
-                        var compras = cMes.Sum(c => c.Total);
-                        return new ReporteVentaMensualDto
-                        {
-                            Mes       = mes.ToString("MMM yyyy"),
-                            Ventas    = ventas,
-                            Compras   = compras,
-                            Resultado = ventas - compras,
-                            Margen    = ventas > 0 ? (double)((ventas - compras) / ventas * 100) : 0,
-                        };
-                    }).ToList();
-
+                // Calcular meses dentro del rango (máx 12)
+                var meses = GenerarMeses(desde, hasta, todasVentas, todasCompras);
                 VentasMensuales = new ObservableCollection<ReporteVentaMensualDto>(meses);
 
-                // ── Gráfico barras: Ventas vs Compras ─────────────────────────
                 var labels   = meses.Select(m => m.Mes).ToArray();
                 var venArray = meses.Select(m => (double)m.Ventas).ToArray();
                 var comArray = meses.Select(m => (double)m.Compras).ToArray();
 
+                // ── Barras ────────────────────────────────────────────────────
                 SeriesBarras = new ISeries[]
                 {
                     new ColumnSeries<double>
                     {
-                        Name   = "Ventas",
-                        Values = venArray,
-                        Fill   = new SolidColorPaint(SKColor.Parse("#10B981")),
-                        MaxBarWidth = 28,
+                        Name        = "Ventas",
+                        Values      = venArray,
+                        Fill        = new SolidColorPaint(Col_Success),
+                        MaxBarWidth = 26,
                     },
                     new ColumnSeries<double>
                     {
-                        Name   = "Compras",
-                        Values = comArray,
-                        Fill   = new SolidColorPaint(SKColor.Parse("#EF4444")),
-                        MaxBarWidth = 28,
+                        Name        = "Compras",
+                        Values      = comArray,
+                        Fill        = new SolidColorPaint(Col_Error),
+                        MaxBarWidth = 26,
                     },
                 };
-
                 EjeXBarras = new[]
                 {
                     new Axis
                     {
-                        Labels      = labels,
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
+                        Labels          = labels,
+                        LabelsPaint     = new SolidColorPaint(Col_TextSec),
                         SeparatorsPaint = new SolidColorPaint(SKColors.Transparent),
                     }
                 };
 
-                // ── Gráfico línea: evolución ventas ───────────────────────────
+                // ── Línea ─────────────────────────────────────────────────────
                 SeriesLinea = new ISeries[]
                 {
                     new LineSeries<double>
                     {
-                        Name   = "Ventas",
-                        Values = venArray,
-                        Stroke = new SolidColorPaint(SKColor.Parse("#6366F1")) { StrokeThickness = 3 },
-                        Fill   = new LinearGradientPaint(
-                            new[] { SKColor.Parse("#6366F180"), SKColor.Parse("#6366F100") },
+                        Name           = "Ventas",
+                        Values         = venArray,
+                        Stroke         = new SolidColorPaint(Col_Primary) { StrokeThickness = 3 },
+                        Fill           = new LinearGradientPaint(
+                            new[] { new SKColor(56, 189, 248, 100), new SKColor(56, 189, 248, 0) },
                             new SKPoint(0.5f, 0f), new SKPoint(0.5f, 1f)),
-                        GeometryFill   = new SolidColorPaint(SKColor.Parse("#6366F1")),
-                        GeometryStroke = new SolidColorPaint(SKColor.Parse("#FFFFFF")) { StrokeThickness = 2 },
+                        GeometryFill   = new SolidColorPaint(Col_Primary),
+                        GeometryStroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
                         GeometrySize   = 10,
                     },
                 };
-
                 EjeXLinea = new[]
                 {
                     new Axis
                     {
-                        Labels      = labels,
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
-                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#374151")),
+                        Labels          = labels,
+                        LabelsPaint     = new SolidColorPaint(Col_TextSec),
+                        SeparatorsPaint = new SolidColorPaint(Col_Sep),
                     }
                 };
 
-                // ── Gráfico torta: métodos de pago (agrupado por nombre) ──────
-                // Aproximado desde ventas — distribuir proporcionalmente por terceras partes
-                // En producción esto vendría de un join con Pagos
-                var totalV = (double)VentasAcumuladas;
-                SeriesTorta = new ISeries[]
-                {
-                    new PieSeries<double> { Name = "Efectivo",      Values = new[] { totalV * 0.35 }, Fill = new SolidColorPaint(SKColor.Parse("#10B981")) },
-                    new PieSeries<double> { Name = "Débito",        Values = new[] { totalV * 0.25 }, Fill = new SolidColorPaint(SKColor.Parse("#6366F1")) },
-                    new PieSeries<double> { Name = "Crédito",       Values = new[] { totalV * 0.20 }, Fill = new SolidColorPaint(SKColor.Parse("#F59E0B")) },
-                    new PieSeries<double> { Name = "Transferencia", Values = new[] { totalV * 0.12 }, Fill = new SolidColorPaint(SKColor.Parse("#3B82F6")) },
-                    new PieSeries<double> { Name = "Cuenta cte.",   Values = new[] { totalV * 0.08 }, Fill = new SolidColorPaint(SKColor.Parse("#EC4899")) },
-                };
+                // ── Torta: métodos de pago reales ─────────────────────────────
+                var pagosAgrupados = (await _uow.Pagos.ObtenerTotalesPorMetodoAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+
+                SeriesTorta = pagosAgrupados.Any()
+                    ? pagosAgrupados.Select((item, i) =>
+                        (ISeries)new PieSeries<double>
+                        {
+                            Name            = item.Metodo,
+                            Values          = new[] { (double)item.Total },
+                            Fill            = new SolidColorPaint(_coloresTorta[i % _coloresTorta.Length]),
+                            // Etiqueta dentro de la porción
+                            DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                            DataLabelsSize  = 11,
+                            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                            DataLabelsFormatter = p => $"{p.StackedValue!.Share:P0}",
+                        }).ToArray()
+                    : new ISeries[]
+                    {
+                        new PieSeries<double>
+                        {
+                            Name   = "Sin datos",
+                            Values = new[] { 1.0 },
+                            Fill   = new SolidColorPaint(Col_Sep),
+                        }
+                    };
 
                 NotifyOfPropertyChange(() => VentasMensuales);
                 NotifyOfPropertyChange(() => TopProductos);
@@ -262,6 +288,39 @@ namespace GestionComercial.UI.ViewModels.Reportes
             finally { IsLoading = false; }
         }
 
-        public async Task Actualizar() => await CargarAsync();
+        private static List<ReporteVentaMensualDto> GenerarMeses(
+            DateTime desde, DateTime hasta,
+            List<GestionComercial.Aplicacion.DTOs.Ventas.VentaResumenDto> ventas,
+            List<GestionComercial.Aplicacion.DTOs.Compras.CompraDto> compras)
+        {
+            var result = new List<ReporteVentaMensualDto>();
+            var cursor = new DateTime(desde.Year, desde.Month, 1);
+            var fin    = new DateTime(hasta.Year, hasta.Month, 1);
+
+            while (cursor <= fin)
+            {
+                var inicio = cursor;
+                var finMes = cursor.AddMonths(1).AddDays(-1);
+                var v = ventas.Where(x => x.Fecha >= inicio && x.Fecha <= finMes).Sum(x => x.TotalFinal);
+                var c = compras.Where(x => x.Fecha >= inicio && x.Fecha <= finMes).Sum(x => x.Total);
+                result.Add(new ReporteVentaMensualDto
+                {
+                    Mes       = cursor.ToString("MMM yy"),
+                    Ventas    = v,
+                    Compras   = c,
+                    Resultado = v - c,
+                    Margen    = v > 0 ? (double)((v - c) / v * 100) : 0,
+                });
+                cursor = cursor.AddMonths(1);
+            }
+            return result;
+        }
+
+        // ── Acciones filtro ───────────────────────────────────────────────────
+        public async Task Actualizar()       => await CargarAsync();
+        public async Task FiltrarEsteAnio()  { FechaDesde = new DateTime(DateTime.Today.Year, 1, 1);  FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarUltimos6()  { FechaDesde = DateTime.Today.AddMonths(-6);             FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarUltimos3()  { FechaDesde = DateTime.Today.AddMonths(-3);             FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarEsteMes()   { FechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
     }
 }

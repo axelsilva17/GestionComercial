@@ -26,19 +26,104 @@
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="Margin"     Value="0,0,0,6"/>
         </Style>
-        <Style x:Key="BtnLink" TargetType="Button">
-            <Setter Property="Background"   Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground"   Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="FontSize"     Value="12"/>
-            <Setter Property="Cursor"       Value="Hand"/>
+        <Style x:Key="FiltroBtn" TargetType="Button">
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="14,6"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,0,28">
 
-            <!-- ── Row 1: KPIs ─────────────────────────────────────────────── -->
+            <!-- ── Barra de filtros ─────────────────────────────────────────── -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="PERÍODO" Style="{StaticResource ColHeader}"
+                               VerticalAlignment="Center" Margin="0"/>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
+                                    FontSize="12" Width="130"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
+                                    FontSize="12" Width="130"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Accesos rápidos -->
+                    <Button Grid.Column="6"  Style="{StaticResource FiltroBtn}" Content="Este mes"    x:Name="FiltrarEsteMes"/>
+                    <Button Grid.Column="8"  Style="{StaticResource FiltroBtn}" Content="3 meses"     x:Name="FiltrarUltimos3"/>
+                    <Button Grid.Column="10" Style="{StaticResource FiltroBtn}" Content="6 meses"     x:Name="FiltrarUltimos6"/>
+                    <Button Grid.Column="12" Style="{StaticResource FiltroBtn}" Content="Este año"    x:Name="FiltrarEsteAnio"/>
+
+                    <Button Grid.Column="14" x:Name="Actualizar"
+                            Content="▶  Aplicar"
+                            Background="{DynamicResource PrimaryBrush}"
+                            Foreground="#0F172A" FontWeight="Bold" FontSize="12"
+                            Padding="18,6" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="8"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ── KPIs ─────────────────────────────────────────────────────── -->
             <Grid Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -55,7 +140,7 @@
                         <TextBlock Text="VENTAS ACUMULADAS" Style="{StaticResource ColHeader}"/>
                         <TextBlock Text="{Binding VentasAcumuladas, Converter={StaticResource DecimalToMoneda}}"
                                    FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
-                        <TextBlock Text="últimos 6 meses" FontSize="11"
+                        <TextBlock Text="en el período" FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
@@ -65,7 +150,7 @@
                         <TextBlock Text="COMPRAS ACUMULADAS" Style="{StaticResource ColHeader}"/>
                         <TextBlock Text="{Binding ComprasAcumuladas, Converter={StaticResource DecimalToMoneda}}"
                                    FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}"/>
-                        <TextBlock Text="últimos 6 meses" FontSize="11"
+                        <TextBlock Text="en el período" FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
@@ -94,7 +179,7 @@
                 </Border>
             </Grid>
 
-            <!-- ── Row 2: Gráfico barras + tabla mensual ───────────────────── -->
+            <!-- ── Barras + Tabla ───────────────────────────────────────────── -->
             <Grid Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="3*"/>
@@ -102,22 +187,17 @@
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Barras Ventas vs Compras -->
                 <Border Grid.Column="0" Style="{StaticResource CardNoPad}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="220"/>
+                            <RowDefinition Height="230"/>
                         </Grid.RowDefinitions>
-                        <Grid Margin="20,16,20,10">
-                            <StackPanel>
-                                <TextBlock Text="VENTAS VS COMPRAS POR MES" Style="{StaticResource ColHeader}"/>
-                                <TextBlock Text="Comparativa mensual" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            </StackPanel>
-                            <Button Style="{StaticResource BtnLink}" Content="Actualizar"
-                                    HorizontalAlignment="Right" x:Name="Actualizar"/>
-                        </Grid>
+                        <StackPanel Margin="20,16,20,10">
+                            <TextBlock Text="VENTAS VS COMPRAS POR MES" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Comparativa mensual" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
                         <lvc:CartesianChart Grid.Row="1" Margin="12,0,12,12"
                                             Series="{Binding SeriesBarras}"
                                             XAxes="{Binding EjeXBarras}"
@@ -127,7 +207,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Tabla mensual compacta -->
                 <Border Grid.Column="2" Style="{StaticResource CardNoPad}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -143,10 +222,10 @@
                                   AutoGenerateColumns="False" CanUserAddRows="False"
                                   GridLinesVisibility="None" HeadersVisibility="Column"
                                   Background="Transparent" BorderThickness="0"
-                                  RowHeight="38" ColumnHeaderHeight="30" Margin="8,0,8,8"
+                                  RowHeight="36" ColumnHeaderHeight="28" Margin="8,0,8,8"
                                   FontSize="12">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="MES" Binding="{Binding Mes}" Width="80"/>
+                                <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70"/>
                                 <DataGridTemplateColumn Header="VENTAS" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -156,14 +235,14 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="MARGEN" Width="70">
+                                <DataGridTemplateColumn Header="MARGEN" Width="68">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="5"
                                                     Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Margen, StringFormat='{}{0:N1}%'}"
                                                            FontSize="11" FontWeight="Bold"
-                                                           Foreground="{DynamicResource SuccessBrush}"/>
+                                                           Foreground="{DynamicResource PrimaryBrush}"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -174,24 +253,23 @@
                 </Border>
             </Grid>
 
-            <!-- ── Row 3: Línea evolución + Torta métodos de pago ─────────── -->
-            <Grid Margin="0,0,0,14">
+            <!-- ── Línea + Torta ────────────────────────────────────────────── -->
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Línea evolución ventas -->
                 <Border Grid.Column="0" Style="{StaticResource CardNoPad}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="200"/>
+                            <RowDefinition Height="220"/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="20,16,20,10">
                             <TextBlock Text="EVOLUCIÓN DE VENTAS" Style="{StaticResource ColHeader}"/>
-                            <TextBlock Text="Tendencia últimos 6 meses" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="Tendencia del período" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                         <lvc:CartesianChart Grid.Row="1" Margin="12,0,12,12"
@@ -203,24 +281,24 @@
                     </Grid>
                 </Border>
 
-                <!-- Torta métodos de pago -->
+                <!-- Torta con leyenda correcta -->
                 <Border Grid.Column="2" Style="{StaticResource CardNoPad}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="200"/>
+                            <RowDefinition Height="220"/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="20,16,20,10">
-                            <TextBlock Text="DISTRIBUCIÓN MÉTODOS DE PAGO" Style="{StaticResource ColHeader}"/>
-                            <TextBlock Text="Proporción por tipo" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="MÉTODOS DE PAGO" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Distribución del período" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
-                        <lvc:PieChart Grid.Row="1" Margin="12,0,12,12"
+                        <lvc:PieChart Grid.Row="1" Margin="8,0,8,12"
                                       Series="{Binding SeriesTorta}"
                                       Background="Transparent"
                                       TooltipPosition="Top"
-                                      LegendPosition="Right"
-                                      LegendTextPaint="{x:Null}"/>
+                                      LegendPosition="{Binding PosicionLeyenda}"
+                                      LegendTextPaint="{Binding LeyendaTextoPaint}"/>
                     </Grid>
                 </Border>
             </Grid>

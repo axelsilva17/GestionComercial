@@ -37,6 +37,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private readonly ICompraServicio   _compraServicio;
         private readonly SesionServicio    _sesion;
 
+        // Paleta del sistema
+        private static readonly SKColor Col_Primary = SKColor.Parse("#38BDF8");
+        private static readonly SKColor Col_Success = SKColor.Parse("#10B981");
+        private static readonly SKColor Col_Warning = SKColor.Parse("#F59E0B");
+        private static readonly SKColor Col_Error   = SKColor.Parse("#EF4444");
+        private static readonly SKColor Col_TextSec = SKColor.Parse("#64748B");
+        private static readonly SKColor Col_Sep     = SKColor.Parse("#2A3D52");
+
         public ReporteAdminViewModel(
             IVentaServicio    ventaServicio,
             IProductoServicio productoServicio,
@@ -87,6 +95,21 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _ventasPendientes = value; NotifyOfPropertyChange(() => VentasPendientes); }
         }
 
+        // ── Filtros ───────────────────────────────────────────────────────────
+        private DateTime _fechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        public DateTime FechaDesde
+        {
+            get => _fechaDesde;
+            set { _fechaDesde = value; NotifyOfPropertyChange(() => FechaDesde); }
+        }
+
+        private DateTime _fechaHasta = DateTime.Today;
+        public DateTime FechaHasta
+        {
+            get => _fechaHasta;
+            set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
+        }
+
         // ── Listas ────────────────────────────────────────────────────────────
         public ObservableCollection<ReporteStockCriticoDto>   StockCritico     { get; set; } = new();
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
@@ -125,9 +148,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
         {
             new Axis
             {
-                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#374151")),
-                MinStep = 1,
+                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#64748B")),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#2A3D52")),
+                MinStep         = 1,
             }
         };
 
@@ -135,9 +158,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
         {
             new Axis
             {
-                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#374151")),
-                Labeler = v => $"${v / 1000:N0}K",
+                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#64748B")),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#2A3D52")),
+                Labeler         = v => $"${v / 1000:N0}K",
             }
         };
 
@@ -151,16 +174,16 @@ namespace GestionComercial.UI.ViewModels.Reportes
             LimpiarError();
             try
             {
-                var hoy       = DateTime.Today;
-                var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
+                var desde = FechaDesde;
+                var hasta = FechaHasta;
 
-                // Ventas del mes
-                var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, inicioMes, hoy)).ToList();
-                CantidadVentasMes = ventasMes.Count;
-                VentasPendientes  = ventasMes.Count(v => v.Estado == "Pendiente");
+                // Ventas del período
+                var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                CantidadVentasMes = ventasPeriodo.Count;
+                VentasPendientes  = ventasPeriodo.Count(v => v.Estado == "Pendiente");
 
-                // Stock crítico
+                // Stock crítico (siempre actual, no depende de fechas)
                 var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
                 ProductosStockCritico = criticos.Count;
                 StockCritico = new ObservableCollection<ReporteStockCriticoDto>(
@@ -171,12 +194,12 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         StockMinimo = p.StockMinimo,
                     }));
 
-                // Compras del mes
-                var todasCompras = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                    .Where(c => c.Fecha >= inicioMes && c.Fecha <= hoy).ToList();
-                ComprasDelMes = todasCompras.Count;
+                // Compras del período
+                var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                    .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
+                ComprasDelMes = comprasPeriodo.Count;
                 ComprasRecientes = new ObservableCollection<ReporteCompraRecienteDto>(
-                    todasCompras.OrderByDescending(c => c.Fecha).Take(8).Select(c => new ReporteCompraRecienteDto
+                    comprasPeriodo.OrderByDescending(c => c.Fecha).Take(8).Select(c => new ReporteCompraRecienteDto
                     {
                         Proveedor = c.ProveedorNombre,
                         Fecha     = c.Fecha.ToString("dd/MM/yyyy"),
@@ -184,56 +207,49 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         Productos = c.Items?.Count ?? 0,
                     }));
 
-                // ── Gráfico 1: ventas por día del mes ─────────────────────────
-                int diasMes  = DateTime.DaysInMonth(hoy.Year, hoy.Month);
-                int diasHasta = hoy.Day;
-                var labels   = Enumerable.Range(1, diasHasta).Select(d => d.ToString()).ToArray();
-                var valores  = Enumerable.Range(1, diasHasta).Select(d =>
+                // ── Gráfico línea: agrupar por día si rango ≤ 31 días, por mes si más ──
+                int diasRango = (hasta - desde).Days + 1;
+                if (diasRango <= 62)
                 {
-                    var dia = new DateTime(hoy.Year, hoy.Month, d);
-                    return (double)ventasMes
-                        .Where(v => v.Fecha.Date == dia)
-                        .Sum(v => v.TotalFinal);
-                }).ToArray();
-
-                SeriesVentasDia = new ISeries[]
-                {
-                    new LineSeries<double>
+                    // Ventas por día
+                    var labels = Enumerable.Range(0, diasRango)
+                        .Select(d => desde.AddDays(d).ToString("dd/MM"))
+                        .ToArray();
+                    var valores = Enumerable.Range(0, diasRango).Select(d =>
                     {
-                        Name   = "Ventas",
-                        Values = valores,
-                        Stroke = new SolidColorPaint(SKColor.Parse("#6366F1")) { StrokeThickness = 2 },
-                        Fill   = new LinearGradientPaint(
-                            new[] { SKColor.Parse("#6366F150"), SKColor.Parse("#6366F100") },
-                            new SKPoint(0.5f, 0f), new SKPoint(0.5f, 1f)),
-                        GeometryFill   = new SolidColorPaint(SKColor.Parse("#6366F1")),
-                        GeometryStroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
-                        GeometrySize   = 8,
-                        LineSmoothness = 0.5,
-                    },
-                };
+                        var dia = desde.AddDays(d).Date;
+                        return (double)ventasPeriodo
+                            .Where(v => v.Fecha.Date == dia)
+                            .Sum(v => v.TotalFinal);
+                    }).ToArray();
 
-                EjeXVentasDia = new[]
+                    BuildLineaVentas(labels, valores);
+                }
+                else
                 {
-                    new Axis
+                    // Ventas por mes
+                    var cursor = new DateTime(desde.Year, desde.Month, 1);
+                    var finMes = new DateTime(hasta.Year, hasta.Month, 1);
+                    var labelsList  = new System.Collections.Generic.List<string>();
+                    var valoresList = new System.Collections.Generic.List<double>();
+                    while (cursor <= finMes)
                     {
-                        Labels      = labels,
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
-                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#374151")),
-                        // Mostrar solo cada 5 días para no saturar
-                        LabelsRotation = 0,
-                        ForceStepToMin = true,
-                        MinStep = 1,
+                        var ini = cursor;
+                        var fin = cursor.AddMonths(1).AddDays(-1);
+                        labelsList.Add(cursor.ToString("MMM yy"));
+                        valoresList.Add((double)ventasPeriodo
+                            .Where(v => v.Fecha >= ini && v.Fecha <= fin)
+                            .Sum(v => v.TotalFinal));
+                        cursor = cursor.AddMonths(1);
                     }
-                };
+                    BuildLineaVentas(labelsList.ToArray(), valoresList.ToArray());
+                }
 
-                // ── Gráfico 2: stock crítico — actual vs mínimo ───────────────
+                // ── Gráfico barras: stock actual vs mínimo ────────────────────
                 if (criticos.Any())
                 {
                     var top8     = criticos.Take(8).ToList();
-                    var nombres  = top8.Select(p => p.Nombre.Length > 12
-                        ? p.Nombre[..12] + "…"
-                        : p.Nombre).ToArray();
+                    var nombres  = top8.Select(p => p.Nombre.Length > 12 ? p.Nombre[..12] + "…" : p.Nombre).ToArray();
                     var actuales = top8.Select(p => (double)p.StockActual).ToArray();
                     var minimos  = top8.Select(p => (double)p.StockMinimo).ToArray();
 
@@ -243,14 +259,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         {
                             Name        = "Stock actual",
                             Values      = actuales,
-                            Fill        = new SolidColorPaint(SKColor.Parse("#F59E0B")),
+                            Fill        = new SolidColorPaint(Col_Primary),
                             MaxBarWidth = 22,
                         },
                         new ColumnSeries<double>
                         {
                             Name        = "Stock mínimo",
                             Values      = minimos,
-                            Fill        = new SolidColorPaint(SKColor.Parse("#EF444480")),
+                            Fill        = new SolidColorPaint(new SKColor(239, 68, 68, 100)),
                             MaxBarWidth = 22,
                         },
                     };
@@ -260,7 +276,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         new Axis
                         {
                             Labels          = nombres,
-                            LabelsPaint     = new SolidColorPaint(SKColor.Parse("#9CA3AF")),
+                            LabelsPaint     = new SolidColorPaint(Col_TextSec),
                             SeparatorsPaint = new SolidColorPaint(SKColors.Transparent),
                             LabelsRotation  = -30,
                         }
@@ -274,6 +290,40 @@ namespace GestionComercial.UI.ViewModels.Reportes
             finally { IsLoading = false; }
         }
 
-        public async Task Actualizar() => await CargarAsync();
+        private void BuildLineaVentas(string[] labels, double[] valores)
+        {
+            SeriesVentasDia = new ISeries[]
+            {
+                new LineSeries<double>
+                {
+                    Name           = "Ventas",
+                    Values         = valores,
+                    Stroke         = new SolidColorPaint(Col_Primary) { StrokeThickness = 2 },
+                    Fill           = new LinearGradientPaint(
+                        new[] { new SKColor(56, 189, 248, 80), new SKColor(56, 189, 248, 0) },
+                        new SKPoint(0.5f, 0f), new SKPoint(0.5f, 1f)),
+                    GeometryFill   = new SolidColorPaint(Col_Primary),
+                    GeometryStroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
+                    GeometrySize   = 7,
+                    LineSmoothness = 0.4,
+                },
+            };
+            EjeXVentasDia = new[]
+            {
+                new Axis
+                {
+                    Labels          = labels,
+                    LabelsPaint     = new SolidColorPaint(Col_TextSec),
+                    SeparatorsPaint = new SolidColorPaint(Col_Sep),
+                }
+            };
+        }
+
+        // ── Acciones filtro ───────────────────────────────────────────────────
+        public async Task Actualizar()      => await CargarAsync();
+        public async Task FiltrarEsteMes()  { FechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarUltimos3() { FechaDesde = DateTime.Today.AddMonths(-3); FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarUltimos6() { FechaDesde = DateTime.Today.AddMonths(-6); FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarEsteAnio() { FechaDesde = new DateTime(DateTime.Today.Year, 1, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
     }
 }

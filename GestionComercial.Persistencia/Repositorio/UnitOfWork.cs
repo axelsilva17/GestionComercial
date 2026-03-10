@@ -1,3 +1,4 @@
+using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
@@ -9,18 +10,20 @@ namespace GestionComercial.Dominio.Repositorio
     {
         private readonly GestionComercialContext _context;
 
-        public IProductoRepositorio          Productos        { get; }
-        public IClienteRepositorio           Clientes         { get; }
-        public IProveedorRepositorio         Proveedores      { get; }
-        public IVentaRepostorio              Ventas           { get; }
-        public ICompraRepositorio            Compras          { get; }
-        public ICajaRepositorio              Cajas            { get; }
-        public IMovimientoStockRepositorio   MovimientosStock { get; }
-        public IMovimientoCajaRepositorio    MovimientosCaja  { get; }
-        public IUsuarioRepositorio           Usuarios         { get; }
-        public ICateogoriaRepositorio        Categorias       { get; }
-        public IEmpresaRepositorio           Empresas         { get; }
-        public ISucursalRepositorio          Sucursales       { get; }
+        public IProductoRepositorio        Productos        { get; }
+        public IClienteRepositorio         Clientes         { get; }
+        public IProveedorRepositorio       Proveedores      { get; }
+        public IVentaRepostorio            Ventas           { get; }
+        public ICompraRepositorio          Compras          { get; }
+        public ICajaRepositorio            Cajas            { get; }
+        public IMovimientoStockRepositorio MovimientosStock { get; }
+        public IMovimientoCajaRepositorio  MovimientosCaja  { get; }
+        public IUsuarioRepositorio         Usuarios         { get; }
+        public ICateogoriaRepositorio      Categorias       { get; }
+        public IEmpresaRepositorio         Empresas         { get; }
+        public ISucursalRepositorio        Sucursales       { get; }
+        public IPagoRepositorio            Pagos            { get; }
+        public IMetodoPagoRepositorio      MetodosPago      { get; }  // ← nuevo
 
         public UnitOfWork(GestionComercialContext context)
         {
@@ -37,6 +40,8 @@ namespace GestionComercial.Dominio.Repositorio
             Categorias       = new CategoriaRepositorio(context);
             Empresas         = new EmpresaRepositorio(context);
             Sucursales       = new SucursalRepositorio(context);
+            Pagos            = new PagoRepositorio(context);
+            MetodosPago      = new MetodoPagoRepositorio(context);    // ← nuevo
         }
 
         public async Task<int> GuardarCambiosAsync()

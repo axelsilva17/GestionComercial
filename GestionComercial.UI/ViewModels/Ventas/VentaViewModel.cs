@@ -9,19 +9,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GestionComercial.Aplicacion.DTOs.Ventas;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
-    public class VentaItemDto
-    {
-        public int     ProductoId     { get; set; }
-        public string  ProductoNombre { get; set; }
-        public string  CodigoBarra    { get; set; }
-        public decimal Cantidad       { get; set; }
-        public decimal PrecioUnitario { get; set; }
-        public decimal CostoUnitario  { get; set; }
-        public decimal Subtotal       { get; set; }
-    }
 
     public class VentaViewModel : NavigableViewModel
     {

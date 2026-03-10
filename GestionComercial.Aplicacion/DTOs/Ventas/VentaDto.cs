@@ -20,4 +20,15 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public List<VentaDetalleDto> Items { get; set; } = new();
         public List<PagoDto>         Pagos { get; set; } = new();
     }
+    public class VentaItemDto
+    {
+        public int ProductoId { get; set; }
+        public string ProductoNombre { get; set; }
+        public string CodigoBarra { get; set; }
+        public decimal Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal CostoUnitario { get; set; }
+        public decimal Subtotal { get; set; }
+    }
+
 }

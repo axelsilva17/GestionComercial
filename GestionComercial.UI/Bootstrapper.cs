@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using FluentValidation;
 using GestionComercial.Aplicacion.DTOs.Clientes;
 using GestionComercial.Aplicacion.DTOs.Compras;

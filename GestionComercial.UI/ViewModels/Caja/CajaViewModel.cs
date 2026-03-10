@@ -1,48 +1,51 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Caja;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
-using GestionComercial.Aplicacion.DTOs.Compras;
-using GestionComercial.Aplicacion.DTOs.Productos;
-using GestionComercial.Aplicacion.DTOs.Ventas;
-using GestionComercial.Aplicacion.DTOs.Caja;
-
 
 namespace GestionComercial.UI.ViewModels.Caja
 {
-    // ══════════════════════════════════════════════════════════════════════════════
-    // CAJA VIEW MODEL — pantalla principal
-    // ══════════════════════════════════════════════════════════════════════════════
     public class CajaViewModel : NavigableViewModel
     {
-        private string _sucursalNombre = "Casa Central";
+        private readonly ICajaServicio  _cajaServicio;
+        private readonly SesionServicio _sesion;
+
+        public CajaViewModel(ICajaServicio cajaServicio, SesionServicio sesion)
+        {
+            _cajaServicio = cajaServicio;
+            _sesion       = sesion;
+        }
+
+        // ── Id interno ────────────────────────────────────────────────────────
+        private int? _idCajaActual;
+
+        // ── Props ─────────────────────────────────────────────────────────────
+        private bool _cajaAbierta;
+        public bool CajaAbierta
+        {
+            get => _cajaAbierta;
+            set { _cajaAbierta = value; NotifyOfPropertyChange(() => CajaAbierta); NotifyOfPropertyChange(() => CajaCerrada); }
+        }
+        public bool CajaCerrada => !CajaAbierta;
+
+        private string _sucursalNombre = string.Empty;
         public string SucursalNombre
         {
             get => _sucursalNombre;
             set { _sucursalNombre = value; NotifyOfPropertyChange(() => SucursalNombre); }
         }
 
-        private bool _cajaAbierta;
-        public bool CajaAbierta
-        {
-            get => _cajaAbierta;
-            set
-            {
-                _cajaAbierta = value;
-                NotifyOfPropertyChange(() => CajaAbierta);
-                NotifyOfPropertyChange(() => CajaCerrada);
-            }
-        }
-        public bool CajaCerrada => !CajaAbierta;
-
         private decimal _montoInicial;
         public decimal MontoInicial
         {
             get => _montoInicial;
-            set { _montoInicial = value; NotifyOfPropertyChange(() => MontoInicial); }
+            set { _montoInicial = value; NotifyOfPropertyChange(() => MontoInicial); RecalcularSaldo(); }
         }
 
         private decimal _totalIngresos;
@@ -122,58 +125,69 @@ namespace GestionComercial.UI.ViewModels.Caja
             set { _desglosePorMetodo = value; NotifyOfPropertyChange(() => DesglosePorMetodo); }
         }
 
+        // ── Lifecycle ─────────────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
-     
-
-    
-        
             => await CargarAsync();
 
         private async Task CargarAsync()
         {
             IsLoading = true;
+            LimpiarError();
             try
             {
-                // TODO: await _cajaServicio.ObtenerCajaActualAsync(sucursalId)
-                await Task.Delay(200);
+                var caja = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
+
+                if (caja == null)
+                {
+                    CajaAbierta          = false;
+                    _idCajaActual        = null;
+                    _sesion.IdCajaActual = null;
+                    MontoInicial         = 0;
+                    TotalIngresos        = 0;
+                    TotalEgresos         = 0;
+                    TotalVentasDia       = 0;
+                    SaldoActual          = 0;
+                    Movimientos          = new();
+                    return;
+                }
+
+                CajaAbierta          = true;
+                _idCajaActual        = caja.Id;
+                _sesion.IdCajaActual = caja.Id;
+                MontoInicial         = caja.MontoInicial;
+                FechaApertura        = caja.FechaApertura;
+            }
+            catch (Exception ex)
+            {
+                MostrarError($"Error al cargar caja: {ex.Message}");
                 CajaAbierta = false;
             }
             finally { IsLoading = false; }
         }
+
+        // ── Acciones ──────────────────────────────────────────────────────────
         public async Task AbrirCaja()
         {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine("[AbrirCaja] Iniciando...");
-                var vm = IoC.Get<AperturaCajaViewModel>();
-                System.Diagnostics.Debug.WriteLine($"[AbrirCaja] VM obtenido: {vm?.GetType().Name ?? "NULL"}");
-                var shell = IoC.Get<ShellViewModel>();
-                System.Diagnostics.Debug.WriteLine("[AbrirCaja] Shell obtenido");
-                await shell.ActivateItemAsync(vm, CancellationToken.None);
-                System.Diagnostics.Debug.WriteLine("[AbrirCaja] ActivateItem completado");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[AbrirCaja] Error: {ex}");
-            }
+            var vm = IoC.Get<AperturaCajaViewModel>();
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
         }
+
         public async Task CerrarCaja()
         {
+            if (_idCajaActual == null)
+            {
+                MostrarError("No hay caja abierta para cerrar.");
+                return;
+            }
             var vm = IoC.Get<CierreCajaViewModel>();
-            vm.InicializarConCaja(MontoInicial, TotalIngresos, TotalEgresos, TotalVentasDia);
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(vm, CancellationToken.None);
+            vm.InicializarConCaja(_idCajaActual.Value, FechaApertura);
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
         }
 
-        public async Task RegistrarIngreso()
-        {
-            // TODO: abrir diálogo de ingreso manual
-        }
+        public async Task RegistrarIngreso() { /* TODO */ }
 
-
+        public async Task Actualizar() => await CargarAsync();
 
         private void RecalcularSaldo() => SaldoActual = MontoInicial + TotalIngresos - TotalEgresos;
     }
 }
-
-
