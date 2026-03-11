@@ -6,8 +6,10 @@ using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
@@ -20,227 +22,154 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             _ventaServicio = ventaServicio;
             _sesion        = sesion;
-            Titulo         = "Ventas";
-            Subtitulo      = "Historial de ventas";
-            Ventas         = new ObservableCollection<VentaResumenDto>();
-            FechaDesde = DateTime.Today.AddYears(-2);
-            FechaHasta     = DateTime.Today;
-        }
-
-        // ── Métricas ──────────────────────────────────────────────────────────
-        private decimal _totalVentasHoy;
-        public decimal TotalVentasHoy
-        {
-            get => _totalVentasHoy;
-            set { _totalVentasHoy = value; NotifyOfPropertyChange(() => TotalVentasHoy); }
-        }
-
-        private int _cantidadVentasHoy;
-        public int CantidadVentasHoy
-        {
-            get => _cantidadVentasHoy;
-            set { _cantidadVentasHoy = value; NotifyOfPropertyChange(() => CantidadVentasHoy); }
-        }
-
-        private decimal _totalVentasMes;
-        public decimal TotalVentasMes
-        {
-            get => _totalVentasMes;
-            set { _totalVentasMes = value; NotifyOfPropertyChange(() => TotalVentasMes); }
-        }
-
-        private int _cantidadVentasMes;
-        public int CantidadVentasMes
-        {
-            get => _cantidadVentasMes;
-            set { _cantidadVentasMes = value; NotifyOfPropertyChange(() => CantidadVentasMes); }
-        }
-
-        private int _ventasPendientes;
-        public int VentasPendientes
-        {
-            get => _ventasPendientes;
-            set { _ventasPendientes = value; NotifyOfPropertyChange(() => VentasPendientes); }
-        }
-
-        private int _ventasCanceladas;
-        public int VentasCanceladas
-        {
-            get => _ventasCanceladas;
-            set { _ventasCanceladas = value; NotifyOfPropertyChange(() => VentasCanceladas); }
+            Titulo         = "Historial de Ventas";
+            // Defecto: hoy
+            FechaDesde = DateTime.Today;
+            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1);
         }
 
         // ── Filtros ───────────────────────────────────────────────────────────
-        private string _textoBusqueda = string.Empty;
-        public string TextoBusqueda
-        {
-            get => _textoBusqueda;
-            set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
-        }
-
-        private DateTime? _fechaDesde;
-        public DateTime? FechaDesde
+        private DateTime _fechaDesde;
+        public DateTime FechaDesde
         {
             get => _fechaDesde;
             set { _fechaDesde = value; NotifyOfPropertyChange(() => FechaDesde); }
         }
 
-        private DateTime? _fechaHasta;
-        public DateTime? FechaHasta
+        private DateTime _fechaHasta;
+        public DateTime FechaHasta
         {
             get => _fechaHasta;
             set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
         }
 
-        private string _filtroEstado = string.Empty;
+        private string _filtroEstado = "Todos";
         public string FiltroEstado
         {
             get => _filtroEstado;
-            set { _filtroEstado = value; NotifyOfPropertyChange(() => FiltroEstado); }
+            set { _filtroEstado = value; NotifyOfPropertyChange(() => FiltroEstado); AplicarFiltros(); }
         }
 
-        // ── Paginación ────────────────────────────────────────────────────────
-        private int _paginaActual = 1;
-        public int PaginaActual
+        public ObservableCollection<string> EstadosFiltro { get; } =
+            new() { "Todos", "Pendiente", "Pagada", "Anulada" };
+
+        // ── Ventas ────────────────────────────────────────────────────────────
+        private ObservableCollection<VentaResumenDto> _todasLasVentas = new();
+        private ObservableCollection<VentaResumenDto> _ventas = new();
+        public ObservableCollection<VentaResumenDto> Ventas
         {
-            get => _paginaActual;
-            set
-            {
-                _paginaActual = value;
-                NotifyOfPropertyChange(() => PaginaActual);
-                NotifyOfPropertyChange(() => CanPaginaAnterior);
-                NotifyOfPropertyChange(() => CanPaginaSiguiente);
-            }
+            get => _ventas;
+            set { _ventas = value; NotifyOfPropertyChange(() => Ventas); NotifyOfPropertyChange(() => TotalFiltrado); }
         }
 
-        private int _totalPaginas = 1;
-        public int TotalPaginas
-        {
-            get => _totalPaginas;
-            set
-            {
-                _totalPaginas = value;
-                NotifyOfPropertyChange(() => TotalPaginas);
-                NotifyOfPropertyChange(() => CanPaginaSiguiente);
-            }
-        }
+        public decimal TotalFiltrado => Ventas
+            .Where(v => v.Estado == "Pagada")
+            .Sum(v => v.TotalFinal);
 
-        private int _ventasMostradas;
-        public int VentasMostradas
-        {
-            get => _ventasMostradas;
-            set { _ventasMostradas = value; NotifyOfPropertyChange(() => VentasMostradas); }
-        }
-
-        private int _totalVentas;
-        public int TotalVentas
-        {
-            get => _totalVentas;
-            set { _totalVentas = value; NotifyOfPropertyChange(() => TotalVentas); }
-        }
-
-        private VentaResumenDto _ventaSeleccionada;
-        public VentaResumenDto VentaSeleccionada
+        private VentaResumenDto? _ventaSeleccionada;
+        public VentaResumenDto? VentaSeleccionada
         {
             get => _ventaSeleccionada;
-            set { _ventaSeleccionada = value; NotifyOfPropertyChange(() => VentaSeleccionada); }
+            set
+            {
+                _ventaSeleccionada = value;
+                NotifyOfPropertyChange(() => VentaSeleccionada);
+                NotifyOfPropertyChange(() => PuedeAnular);
+                NotifyOfPropertyChange(() => PuedeVerDetalle);
+            }
         }
 
-        public ObservableCollection<VentaResumenDto> Ventas { get; set; }
+        public bool PuedeAnular     => VentaSeleccionada?.Estado is "Pendiente" or "Pagada";
+        public bool PuedeVerDetalle => VentaSeleccionada != null;
 
-        // ── Ciclo de vida ─────────────────────────────────────────────────────
+        // ── Lifecycle ─────────────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
-            => await CargarDatos();
+            => await Buscar();
 
         // ── Acciones ──────────────────────────────────────────────────────────
-        public async Task NuevaVenta()
+        public async Task Buscar()
         {
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                var ventas = await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, FechaDesde, FechaHasta);
+                _todasLasVentas = new ObservableCollection<VentaResumenDto>(
+                    ventas.OrderByDescending(v => v.Fecha));
+                AplicarFiltros();
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
 
-        public async Task Buscar() => await CargarDatos();
+        public void FiltrarHoy()
+        {
+            FechaDesde = DateTime.Today;
+            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1);
+            _ = Buscar();
+        }
 
-        public void CerrarDetalle() => VentaSeleccionada = null;
+        public void FiltrarEstaSemana()
+        {
+            var hoy = DateTime.Today;
+            FechaDesde = hoy.AddDays(-(int)hoy.DayOfWeek + 1);
+            FechaHasta = DateTime.Now;
+            _ = Buscar();
+        }
 
-        public async Task CancelarVenta()
+        public void FiltrarEsteMes()
+        {
+            FechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            FechaHasta = DateTime.Now;
+            _ = Buscar();
+        }
+
+        public async Task NuevaVenta()
+        {
+            var vm = IoC.Get<VentaViewModel>();
+            vm.NuevaVenta();
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public async Task VerDetalle()
         {
             if (VentaSeleccionada == null) return;
+            var vm = IoC.Get<ComprobanteViewModel>();
+            await vm.CargarAsync(VentaSeleccionada.IdVenta, 0);
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public async Task AnularVenta()
+        {
+            if (VentaSeleccionada == null || !PuedeAnular) return;
+
+            var confirmacion = MessageBox.Show(
+                $"¿Anular la venta #{VentaSeleccionada.IdVenta}?\n\n" +
+                $"Se devolverá el stock y los ingresos de caja no se verán afectados.",
+                "Confirmar anulación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmacion != MessageBoxResult.Yes) return;
+
             IsLoading = true;
+            LimpiarError();
             try
             {
                 await _ventaServicio.CancelarAsync(VentaSeleccionada.IdVenta);
-                await CargarDatos();
+                await Buscar(); // Recargar lista
             }
-            catch (Exception ex)
-            {
-               ErrorMessage = ex.Message;
-            }
+            catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
         }
 
-        public bool CanPaginaAnterior  => PaginaActual > 1;
-        public bool CanPaginaSiguiente => PaginaActual < TotalPaginas;
-
-        public void PaginaAnterior()  { if (CanPaginaAnterior)  PaginaActual--; _ = CargarDatos(); }
-        public void PaginaSiguiente() { if (CanPaginaSiguiente) PaginaActual++; _ = CargarDatos(); }
-
-        // ── Carga de datos ────────────────────────────────────────────────────
-        private async Task CargarDatos()
+        private void AplicarFiltros()
         {
-            IsLoading = true;
-            try
-            {
-                var desde  = FechaDesde ?? DateTime.Today.AddDays(-30);
-                var hasta  = FechaHasta ?? DateTime.Today;
-                var todas  = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
-
-                // Filtro por texto si aplica
-                var filtradas = string.IsNullOrWhiteSpace(TextoBusqueda)
-                    ? todas
-                    : todas.Where(v => v.ClienteNombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)
-                                    || v.IdVenta.ToString().Contains(TextoBusqueda));
-
-                // Filtro por estado
-                if (!string.IsNullOrWhiteSpace(FiltroEstado))
-                    filtradas = filtradas.Where(v => v.Estado == FiltroEstado);
-
-                var lista = filtradas.ToList();
-
-                // Métricas
-                var hoy = DateTime.Today;
-                var mes = new DateTime(hoy.Year, hoy.Month, 1);
-
-                var ventasHoy = lista.Where(v => v.Fecha.Date == hoy).ToList();
-                var ventasMes = lista.Where(v => v.Fecha >= mes).ToList();
-
-                TotalVentasHoy    = ventasHoy.Sum(v => v.TotalFinal);
-                CantidadVentasHoy = ventasHoy.Count;
-                TotalVentasMes    = ventasMes.Sum(v => v.TotalFinal);
-                CantidadVentasMes = ventasMes.Count;
-                VentasPendientes  = lista.Count(v => v.Estado == "Pendiente");
-                VentasCanceladas  = lista.Count(v => v.Estado == "Anulada");
-
-                // Paginación
-                const int porPagina = 20;
-                TotalVentas    = lista.Count;
-                TotalPaginas   = Math.Max(1, (int)Math.Ceiling(lista.Count / (double)porPagina));
-                PaginaActual   = Math.Min(PaginaActual, TotalPaginas);
-
-                var pagina = lista
-                    .Skip((PaginaActual - 1) * porPagina)
-                    .Take(porPagina)
-                    .ToList();
-
-                VentasMostradas = pagina.Count;
-                Ventas.Clear();
-                foreach (var v in pagina) Ventas.Add(v);
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = ex.Message;
-            }
-            finally { IsLoading = false; }
+            var filtradas = _todasLasVentas.AsEnumerable();
+            if (FiltroEstado != "Todos")
+                filtradas = filtradas.Where(v => v.Estado == FiltroEstado);
+            Ventas = new ObservableCollection<VentaResumenDto>(filtradas);
         }
     }
 }

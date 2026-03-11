@@ -37,6 +37,7 @@ namespace GestionComercial.UI.Views.Comandos
     /// Versión genérica: acepta un parámetro tipado.
     /// Uso: new RelayCommand&lt;Producto&gt;(p => Editar(p))
     /// </summary>
+    
     public class RelayCommand<T> : ICommand
     {
         private readonly Action<T?> _execute;

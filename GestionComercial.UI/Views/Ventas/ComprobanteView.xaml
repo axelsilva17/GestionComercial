@@ -1,0 +1,213 @@
+<UserControl x:Class="GestionComercial.UI.Views.Ventas.ComprobanteView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
+             Background="{DynamicResource BackgroundBrush}">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
+    </UserControl.Resources>
+
+    <Grid MaxWidth="560" Margin="0,40" VerticalAlignment="Top"
+          HorizontalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Confirmación visual -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+            <TextBlock Text="✅" FontSize="56" HorizontalAlignment="Center"/>
+            <TextBlock Text="¡Venta confirmada!"
+                       FontSize="28" FontWeight="Bold"
+                       Foreground="{DynamicResource SuccessBrush}"
+                       HorizontalAlignment="Center" Margin="0,10,0,4"/>
+            <TextBlock Text="{Binding NumeroComprobante}"
+                       FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Detalle del comprobante en pantalla -->
+        <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="16" Padding="28,24">
+            <StackPanel>
+
+                <!-- Datos de la venta -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="CLIENTE" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding ClienteNombre}" FontSize="14"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <TextBlock Text="FECHA" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}"
+                                   FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,3,0,0" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </Grid>
+
+                <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,14"/>
+
+                <!-- Items -->
+                <ItemsControl ItemsSource="{Binding Items}" Margin="0,0,0,14">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Descripcion}" FontSize="13"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="0,2,0,0">
+                                        <Run Text="{Binding Cantidad}"/>
+                                        <Run Text=" × "/>
+                                        <Run Text="{Binding PrecioUnitario, StringFormat='${0:N2}'}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Subtotal, Converter={StaticResource DecimalToMoneda}}"
+                                           FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,14"/>
+
+                <!-- Descuento (si aplica) -->
+                <Grid Margin="0,0,0,8"
+                      Visibility="{Binding HayDescuento, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="Descuento" FontSize="13"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding TotalDescuento, Converter={StaticResource DecimalToMoneda}}"
+                               FontSize="13" Foreground="{DynamicResource ErrorBrush}"
+                               HorizontalAlignment="Right"/>
+                </Grid>
+
+                <!-- Total -->
+                <Grid Margin="0,0,0,0">
+                    <TextBlock Text="TOTAL" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="{Binding TotalFinal, Converter={StaticResource DecimalToMoneda}}"
+                               FontSize="26" FontWeight="Bold"
+                               Foreground="{DynamicResource SuccessBrush}"
+                               HorizontalAlignment="Right"/>
+                </Grid>
+
+                <!-- Vuelto si aplica -->
+                <Border Margin="0,14,0,0" Padding="14,10" CornerRadius="10"
+                        Background="#1A4ADE80" BorderBrush="{DynamicResource PositiveBrush}"
+                        BorderThickness="1"
+                        Visibility="{Binding HayVuelto, Converter={StaticResource BoolToVisibility}}">
+                    <Grid>
+                        <TextBlock Text="🔄 Vuelto" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PositiveBrush}"/>
+                        <TextBlock Text="{Binding Vuelto, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource PositiveBrush}"
+                                   HorizontalAlignment="Right"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Botón generar comprobante PDF/HTML -->
+        <Button Grid.Row="4" x:Name="GenerarComprobante"
+                Height="46" FontSize="13">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+                    <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+                    <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Cursor"          Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="10">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Button.Style>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🖨️" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock VerticalAlignment="Center">
+                    Generar comprobante / Imprimir
+                    <LineBreak/>
+                    <Run FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">Abre en el navegador · Compatible con impresora térmica</Run>
+                </TextBlock>
+            </StackPanel>
+        </Button>
+
+        <!-- Botones de navegación -->
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" x:Name="VerHistorial"
+                    Height="46" FontSize="13" Content="📋 Ver historial">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+                        <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Cursor"          Value="Hand"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="10">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Grid.Column="2" x:Name="NuevaVenta"
+                    Height="46" FontSize="13" FontWeight="SemiBold"
+                    Style="{StaticResource PrimaryButton}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="＋" FontSize="16" FontWeight="Bold"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Nueva Venta" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

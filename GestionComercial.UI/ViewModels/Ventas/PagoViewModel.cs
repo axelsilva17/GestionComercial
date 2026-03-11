@@ -2,7 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
-using GestionComercial.UI.Views.Comandos;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -13,233 +13,244 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
-    public class MetodoPagoItemDto
-    {
-        public int    Id             { get; set; }
-        public string Nombre         { get; set; }
-        public string Icono          { get; set; }
-        public bool   EsEfectivo     { get; set; }
-        public bool   IsSeleccionado { get; set; }
-    }
-
-    public class PagoIngresadoDto
-    {
-        public int     MetodoId     { get; set; }
-        public string  MetodoNombre { get; set; }
-        public string  Icono        { get; set; }
-        public decimal Monto        { get; set; }
-    }
-
     public class PagoViewModel : NavigableViewModel
     {
         private readonly IVentaServicio _ventaServicio;
+        private readonly IUnitOfWork    _uow;
         private readonly SesionServicio _sesion;
-        private VentaViewModel          _ventaOrigen;
 
-        public PagoViewModel(IVentaServicio ventaServicio, SesionServicio sesion)
+        private int _idVenta;
+
+        public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion)
         {
-            _ventaServicio           = ventaServicio;
-            _sesion                  = sesion;
-            SeleccionarMetodoCommand = new RelayCommand<MetodoPagoItemDto>(SeleccionarMetodo);
-            QuitarPagoCommand        = new RelayCommand<PagoIngresadoDto>(QuitarPago);
+            _ventaServicio = ventaServicio;
+            _uow           = uow;
+            _sesion        = sesion;
+            Titulo         = "Cobrar Venta";
         }
 
-        private string _clienteNombre;
+        // ── Datos de la venta ─────────────────────────────────────────────────
+        private string _clienteNombre = "Consumidor Final";
         public string ClienteNombre
         {
             get => _clienteNombre;
-            set { _clienteNombre = value; NotifyOfPropertyChange(() => ClienteNombre); NotifyOfPropertyChange(() => ClienteInicial); }
-        }
-        public string ClienteInicial => string.IsNullOrEmpty(ClienteNombre) ? "?" : ClienteNombre[0].ToString().ToUpper();
-
-        private decimal _totalBruto;
-        public decimal TotalBruto
-        {
-            get => _totalBruto;
-            set { _totalBruto = value; NotifyOfPropertyChange(() => TotalBruto); }
+            set { _clienteNombre = value; NotifyOfPropertyChange(() => ClienteNombre); }
         }
 
-        private decimal _totalDescuento;
-        public decimal TotalDescuento
+        private decimal _totalVenta;
+        public decimal TotalVenta
         {
-            get => _totalDescuento;
-            set { _totalDescuento = value; NotifyOfPropertyChange(() => TotalDescuento); }
-        }
-
-        private decimal _totalFinal;
-        public decimal TotalFinal
-        {
-            get => _totalFinal;
-            set { _totalFinal = value; NotifyOfPropertyChange(() => TotalFinal); RecalcularVuelto(); }
-        }
-
-        private ObservableCollection<VentaItemDto> _itemsVenta = new();
-        public ObservableCollection<VentaItemDto> ItemsVenta
-        {
-            get => _itemsVenta;
-            set { _itemsVenta = value; NotifyOfPropertyChange(() => ItemsVenta); }
-        }
-
-        private ObservableCollection<MetodoPagoItemDto> _metodosPago = new();
-        public ObservableCollection<MetodoPagoItemDto> MetodosPago
-        {
-            get => _metodosPago;
-            set { _metodosPago = value; NotifyOfPropertyChange(() => MetodosPago); }
-        }
-
-        private MetodoPagoItemDto _metodoSeleccionado;
-        public MetodoPagoItemDto MetodoSeleccionado
-        {
-            get => _metodoSeleccionado;
-            set { _metodoSeleccionado = value; NotifyOfPropertyChange(() => MetodoSeleccionado); }
-        }
-
-        private ObservableCollection<PagoIngresadoDto> _pagosIngresados = new();
-        public ObservableCollection<PagoIngresadoDto> PagosIngresados
-        {
-            get => _pagosIngresados;
-            set { _pagosIngresados = value; NotifyOfPropertyChange(() => PagosIngresados); }
-        }
-
-        private string _montoIngresado;
-        public string MontoIngresado
-        {
-            get => _montoIngresado;
-            set { _montoIngresado = value; NotifyOfPropertyChange(() => MontoIngresado); }
+            get => _totalVenta;
+            set { _totalVenta = value; NotifyOfPropertyChange(() => TotalVenta); RecalcularVuelto(); }
         }
 
         private decimal _totalPagado;
         public decimal TotalPagado
         {
             get => _totalPagado;
-            set { _totalPagado = value; NotifyOfPropertyChange(() => TotalPagado); RecalcularVuelto(); }
-        }
-
-        private decimal _vueltoOSaldo;
-        public decimal VueltoOSaldo
-        {
-            get => _vueltoOSaldo;
-            set { _vueltoOSaldo = value; NotifyOfPropertyChange(() => VueltoOSaldo); }
-        }
-
-        private bool _pagoCompleto;
-        public bool PagoCompleto
-        {
-            get => _pagoCompleto;
-            set { _pagoCompleto = value; NotifyOfPropertyChange(() => PagoCompleto); }
-        }
-
-        public RelayCommand<MetodoPagoItemDto> SeleccionarMetodoCommand { get; }
-        public RelayCommand<PagoIngresadoDto>  QuitarPagoCommand        { get; }
-
-        public void InicializarConVenta(VentaViewModel venta)
-        {
-            _ventaOrigen   = venta;
-            ClienteNombre  = venta.ClienteNombre;
-            TotalBruto     = venta.TotalBruto;
-            TotalDescuento = venta.TotalDescuento;
-            TotalFinal     = venta.TotalFinal;
-            ItemsVenta     = new ObservableCollection<VentaItemDto>(venta.Items);
-            PagosIngresados.Clear();
-
-            MetodosPago = new ObservableCollection<MetodoPagoItemDto>
+            set
             {
-                new() { Id = 1, Nombre = "Efectivo",      Icono = "💵", EsEfectivo = true  },
-                new() { Id = 2, Nombre = "Débito",        Icono = "💳", EsEfectivo = false },
-                new() { Id = 3, Nombre = "Crédito",       Icono = "💳", EsEfectivo = false },
-                new() { Id = 4, Nombre = "Transferencia", Icono = "🏦", EsEfectivo = false },
-                new() { Id = 5, Nombre = "Mercado Pago",  Icono = "📱", EsEfectivo = false },
-            };
+                _totalPagado = value;
+                NotifyOfPropertyChange(() => TotalPagado);
+                NotifyOfPropertyChange(() => Faltante);
+                NotifyOfPropertyChange(() => PuedeCobrar);
+                RecalcularVuelto();
+            }
         }
 
+        public decimal Faltante => Math.Max(TotalVenta - TotalPagado, 0);
+
+        private decimal _vuelto;
+        public decimal Vuelto
+        {
+            get => _vuelto;
+            set { _vuelto = value; NotifyOfPropertyChange(() => Vuelto); NotifyOfPropertyChange(() => HayVuelto); }
+        }
+        public bool HayVuelto => Vuelto > 0;
+
+        public bool PuedeCobrar => TotalPagado >= TotalVenta && Pagos.Any();
+
+        // ── Métodos de pago disponibles (combo) ───────────────────────────────
+        private ObservableCollection<PagoItemDto> _metodosPago = new();
+        public ObservableCollection<PagoItemDto> MetodosPago
+        {
+            get => _metodosPago;
+            set { _metodosPago = value; NotifyOfPropertyChange(() => MetodosPago); }
+        }
+
+        private PagoItemDto? _metodoSeleccionado;
+        public PagoItemDto? MetodoSeleccionado
+        {
+            get => _metodoSeleccionado;
+            set { _metodoSeleccionado = value; NotifyOfPropertyChange(() => MetodoSeleccionado); }
+        }
+
+        private string _montoIngresado = string.Empty;
+        public string MontoIngresado
+        {
+            get => _montoIngresado;
+            set { _montoIngresado = value; NotifyOfPropertyChange(() => MontoIngresado); }
+        }
+
+        // ── Líneas de pago seleccionadas ──────────────────────────────────────
+        private ObservableCollection<PagoLineaVm> _pagos = new();
+        public ObservableCollection<PagoLineaVm> Pagos
+        {
+            get => _pagos;
+            set { _pagos = value; NotifyOfPropertyChange(() => Pagos); }
+        }
+
+        // ── Lifecycle ─────────────────────────────────────────────────────────
+        protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+            => await CargarMetodosAsync();
+
+        private async Task CargarMetodosAsync()
+        {
+            try
+            {
+                var sucursal  = await _uow.Sucursales.ObtenerPorIdAsync(_sesion.IdSucursal);
+                var idEmpresa = sucursal?.Id_empresa ?? 0;
+                var metodos   = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(idEmpresa);
+
+                MetodosPago = new ObservableCollection<PagoItemDto>(
+                    metodos.Select(m => new PagoItemDto
+                    {
+                        IdMetodoPago = m.Id,
+                        NombreMetodo = m.Nombre,
+                        EsEfectivo   = m.EsEfectivo == true,
+                        Monto        = 0,
+                    }));
+
+                MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.EsEfectivo)
+                                  ?? MetodosPago.FirstOrDefault();
+
+                // Precompletar con el total en el campo de monto
+                MontoIngresado = TotalVenta.ToString("F2");
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+        }
+
+        /// <summary>Llamado desde VentaViewModel antes de navegar.</summary>
+        public void InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
+        {
+            _idVenta       = idVenta;
+            ClienteNombre  = clienteNombre;
+            TotalVenta     = totalFinal;
+            Pagos          = new();
+            MontoIngresado = totalFinal.ToString("F2");
+            RecalcularVuelto();
+        }
+
+        // ── Acciones ──────────────────────────────────────────────────────────
         public void AgregarPago()
         {
-            if (MetodoSeleccionado == null) return;
-            if (!decimal.TryParse(MontoIngresado?.Replace(",", "."),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out var monto) || monto <= 0) return;
+            if (MetodoSeleccionado == null) { MostrarError("Seleccioná un método de pago."); return; }
 
-            PagosIngresados.Add(new PagoIngresadoDto
+            var texto = MontoIngresado.Replace(",", ".");
+            if (!decimal.TryParse(texto,
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var monto) || monto <= 0)
             {
-                MetodoId     = MetodoSeleccionado.Id,
-                MetodoNombre = MetodoSeleccionado.Nombre,
-                Icono        = MetodoSeleccionado.Icono,
-                Monto        = monto
-            });
+                MostrarError("Ingresá un monto válido mayor a 0.");
+                return;
+            }
+
+            LimpiarError();
+
+            // Si el método ya existe, sumar el monto
+            var existente = Pagos.FirstOrDefault(p => p.IdMetodoPago == MetodoSeleccionado.IdMetodoPago);
+            if (existente != null)
+            {
+                var idx = Pagos.IndexOf(existente);
+                Pagos[idx] = new PagoLineaVm
+                {
+                    IdMetodoPago = existente.IdMetodoPago,
+                    NombreMetodo = existente.NombreMetodo,
+                    EsEfectivo   = existente.EsEfectivo,
+                    Monto        = existente.Monto + monto,
+                };
+            }
+            else
+            {
+                Pagos.Add(new PagoLineaVm
+                {
+                    IdMetodoPago = MetodoSeleccionado.IdMetodoPago,
+                    NombreMetodo = MetodoSeleccionado.NombreMetodo,
+                    EsEfectivo   = MetodoSeleccionado.EsEfectivo,
+                    Monto        = monto,
+                });
+            }
+
             MontoIngresado = string.Empty;
             RecalcularTotalPagado();
         }
 
-        public async Task ConfirmarCobro()
+        public void QuitarPago(PagoLineaVm linea)
         {
-            if (!PagoCompleto || _ventaOrigen == null) return;
-            IsLoading = true;
-            try
-            {
-                var dto = new VentaCrearDto
-                {
-                    IdSucursal     = _sesion.IdSucursal,
-                    IdCliente      = _ventaOrigen.ClienteId > 0 ? _ventaOrigen.ClienteId : 1,
-                    IdUsuario      = _sesion.IdUsuario,
-                    IdCaja         = _sesion.IdCajaActual ?? 0,
-                    TotalDescuento = _ventaOrigen.TotalDescuento,
-                    Items = _ventaOrigen.Items.Select(i => new VentaDetalleCrearDto  // nombre correcto
-                    {
-                        IdProducto     = i.ProductoId,
-                        Cantidad       = (int)i.Cantidad,
-                        PrecioUnitario = i.PrecioUnitario,
-                        CostoUnitario  = i.CostoUnitario,
-                    }).ToList(),
-                    Pagos = PagosIngresados.Select(p => new PagoCrearDto  // nombre correcto
-                    {
-                        IdMetodoPago = p.MetodoId,
-                        Monto        = p.Monto,
-                    }).ToList(),
-                };
-
-                await _ventaServicio.CrearAsync(dto);
-                await IoC.Get<ShellViewModel>()
-                         .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = ex.Message;
-            }
-            finally { IsLoading = false; }
-        }
-
-        public async Task Volver()
-        {
-            if (_ventaOrigen != null)
-                await IoC.Get<ShellViewModel>().ActivateItemAsync(_ventaOrigen, CancellationToken.None);
-            else
-                await IoC.Get<ShellViewModel>().ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
-        }
-
-        private void SeleccionarMetodo(MetodoPagoItemDto metodo)
-        {
-            if (metodo == null) return;
-            MetodoSeleccionado = metodo;
-            var restante = TotalFinal - TotalPagado;
-            if (restante > 0) MontoIngresado = restante.ToString("F2");
-        }
-
-        private void QuitarPago(PagoIngresadoDto pago)
-        {
-            if (pago == null) return;
-            PagosIngresados.Remove(pago);
+            if (linea == null) return;
+            Pagos.Remove(linea);
             RecalcularTotalPagado();
         }
 
+        /// <summary>Agrega la diferencia faltante en efectivo con un clic.</summary>
+        public void CompletarConEfectivo()
+        {
+            if (Faltante <= 0) return;
+            var efectivo = MetodosPago.FirstOrDefault(m => m.EsEfectivo);
+            if (efectivo == null) return;
+            MetodoSeleccionado = efectivo;
+            MontoIngresado     = Faltante.ToString("F2");
+            AgregarPago();
+        }
+
+        public async Task Confirmar()
+        {
+            if (!PuedeCobrar) { MostrarError("El monto no cubre el total."); return; }
+
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                var pagosDto = Pagos.Select(p => new PagoItemDto
+                {
+                    IdMetodoPago = p.IdMetodoPago,
+                    Monto        = p.Monto,
+                }).ToList();
+
+                await _ventaServicio.RegistrarPagoAsync(_idVenta, pagosDto);
+
+                // Ir al comprobante
+                var vm = IoC.Get<ComprobanteViewModel>();
+                await vm.CargarAsync(_idVenta, Vuelto);
+                await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
+        }
+
+        public async Task Cancelar()
+        {
+            // La venta queda en Pendiente — el operador puede anularla desde el historial
+            await IoC.Get<ShellViewModel>()
+                     .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
+        }
+
         private void RecalcularTotalPagado()
-            => TotalPagado = PagosIngresados.Sum(p => p.Monto);
+        {
+            TotalPagado = Pagos.Sum(p => p.Monto);
+            NotifyOfPropertyChange(() => PuedeCobrar);
+        }
 
         private void RecalcularVuelto()
-        {
-            var diff     = TotalPagado - TotalFinal;
-            PagoCompleto = diff >= 0;
-            VueltoOSaldo = Math.Abs(diff);
-        }
+            => Vuelto = TotalPagado > TotalVenta ? TotalPagado - TotalVenta : 0;
+    }
+
+    public class PagoLineaVm
+    {
+        public int     IdMetodoPago { get; set; }
+        public string  NombreMetodo { get; set; } = string.Empty;
+        public bool    EsEfectivo   { get; set; }
+        public decimal Monto        { get; set; }
     }
 }
