@@ -471,8 +471,20 @@
                                 <DataGridTemplateColumn Header="DIF." Width="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,0,8,0"
-                                                       Foreground="{Binding Diferencia, Converter={StaticResource DiferenciaToColor}}">
+                                            <TextBlock FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,0,8,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Diferencia, Converter={StaticResource DiferenciaToColor}}" Value="Positivo">
+                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Diferencia, Converter={StaticResource DiferenciaToColor}}" Value="Negativo">
+                                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
                                                 <Run Text="{Binding Diferencia, StringFormat='{}{0:+0.00;-0.00;0}', Mode=OneWay}"/>
                                             </TextBlock>
                                         </DataTemplate>

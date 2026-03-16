@@ -1,35 +1,28 @@
 using System;
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
-using System.Windows.Media;
 
 namespace GestionComercial.UI.Views.Converters
 {
     /// <summary>
-    /// Returns a SolidColorBrush based on the sign of a decimal value.
-    /// Positive = Green, Negative = Red, Zero/Null = Gray
+    /// Returns "Positivo", "Negativo", or "Cero" based on the sign of the decimal value.
+    /// Used for DataTrigger in XAML.
     /// </summary>
     public class DiferenciaToColorConverter : IValueConverter
     {
-        // Static brushes to avoid creating new instances
-        private static readonly SolidColorBrush Verde = new SolidColorBrush(Color.FromRgb(16, 185, 129));
-        private static readonly SolidColorBrush Rojo = new SolidColorBrush(Color.FromRgb(239, 68, 68));
-        private static readonly SolidColorBrush Gris = new SolidColorBrush(Color.FromRgb(100, 116, 139));
-
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null)
-                return Gris;
+                return "Cero";
 
             if (value is decimal diff)
             {
                 if (diff > 0)
-                    return Verde;
+                    return "Positivo";
                 if (diff < 0)
-                    return Rojo;
+                    return "Negativo";
             }
-            return Gris;
+            return "Cero";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
