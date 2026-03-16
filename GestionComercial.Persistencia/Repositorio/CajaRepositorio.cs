@@ -25,6 +25,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
             => await _dbSet
+                .Include(c => c.Ventas)
                 .Include(c => c.Movimientos)
                     .ThenInclude(m => m.Usuario)
                 .Include(c => c.UsuarioApertura)
