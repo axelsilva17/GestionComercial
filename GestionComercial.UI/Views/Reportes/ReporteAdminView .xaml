@@ -8,7 +8,6 @@
     <UserControl.Resources>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
-        <converters:DiferenciaToColorConverter x:Key="DiferenciaToColor"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
@@ -476,10 +475,10 @@
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Diferencia, Converter={StaticResource DiferenciaToColor}}" Value="Positivo">
+                                                            <DataTrigger Binding="{Binding TipoDiferencia}" Value="Positivo">
                                                                 <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
                                                             </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Diferencia, Converter={StaticResource DiferenciaToColor}}" Value="Negativo">
+                                                            <DataTrigger Binding="{Binding TipoDiferencia}" Value="Negativo">
                                                                 <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>

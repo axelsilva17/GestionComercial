@@ -49,6 +49,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public decimal MontoInicial  { get; set; }
         public decimal? MontoFinal   { get; set; }
         public decimal? Diferencia    { get; set; }
+        public string  TipoDiferencia { get; set; } = "Cero"; // Positivo, Negativo, Cero
         public string  UsuarioApertura { get; set; } = string.Empty;
         public string? UsuarioCierre  { get; set; }
         public string  Estado         { get; set; } = string.Empty;
@@ -376,6 +377,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         MontoInicial    = caja.MontoInicial,
                         MontoFinal      = caja.MontoFinal,
                         Diferencia      = diff,
+                        TipoDiferencia  = diff.HasValue ? (diff.Value > 0 ? "Positivo" : diff.Value < 0 ? "Negativo" : "Cero") : "Cero",
                         UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
                         UsuarioCierre   = caja.UsuarioCierre?.Nombre,
                         Estado          = caja.Estado == 1 ? "Abierta" : "Cerrada",
