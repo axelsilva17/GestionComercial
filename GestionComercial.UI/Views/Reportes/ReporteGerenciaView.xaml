@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:cal="http://www.caliburnproject.org"
              Background="{DynamicResource BackgroundBrush}">
     <UserControl.Resources>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
@@ -101,12 +102,12 @@
                     </StackPanel>
 
                     <!-- Accesos rápidos -->
-                    <Button Grid.Column="6"  Style="{StaticResource FiltroBtn}" Content="Este mes"    x:Name="FiltrarEsteMes"/>
-                    <Button Grid.Column="8"  Style="{StaticResource FiltroBtn}" Content="3 meses"     x:Name="FiltrarUltimos3"/>
-                    <Button Grid.Column="10" Style="{StaticResource FiltroBtn}" Content="6 meses"     x:Name="FiltrarUltimos6"/>
-                    <Button Grid.Column="12" Style="{StaticResource FiltroBtn}" Content="Este año"    x:Name="FiltrarEsteAnio"/>
+                    <Button Grid.Column="6"  Style="{StaticResource FiltroBtn}" Content="Este mes"    cal:Message.Attach="FiltrarEsteMes"/>
+                    <Button Grid.Column="8"  Style="{StaticResource FiltroBtn}" Content="3 meses"     cal:Message.Attach="FiltrarUltimos3"/>
+                    <Button Grid.Column="10" Style="{StaticResource FiltroBtn}" Content="6 meses"     cal:Message.Attach="FiltrarUltimos6"/>
+                    <Button Grid.Column="12" Style="{StaticResource FiltroBtn}" Content="Este año"    cal:Message.Attach="FiltrarEsteAnio"/>
 
-                    <Button Grid.Column="14" x:Name="Actualizar"
+                    <Button Grid.Column="14" cal:Message.Attach="Actualizar"
                             Content="▶  Aplicar"
                             Background="{DynamicResource PrimaryBrush}"
                             Foreground="#0F172A" FontWeight="Bold" FontSize="12"
