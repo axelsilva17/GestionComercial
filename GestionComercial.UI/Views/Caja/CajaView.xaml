@@ -335,7 +335,8 @@
                                  Background="Transparent" BorderThickness="0"
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  FontSize="13" TextWrapping="Wrap" AcceptsReturn="True"
-                                 Height="80" Padding="12,10" VerticalContentAlignment="Top"/>
+                                 Height="80" Padding="12,10" VerticalContentAlignment="Top"
+                                 Text="{Binding Observacion, UpdateSourceTrigger=PropertyChanged}"/>
                     </Border>
                 </StackPanel>
             </Grid>
