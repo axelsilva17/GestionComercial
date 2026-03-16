@@ -1,0 +1,308 @@
+<UserControl x:Class="GestionComercial.UI.Views.Reportes.ReporteGerenciaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             Background="{DynamicResource BackgroundBrush}">
+    <UserControl.Resources>
+        <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="12"/>
+            <Setter Property="Padding"         Value="20,16"/>
+        </Style>
+        <Style x:Key="CardNoPad" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="12"/>
+        </Style>
+        <Style x:Key="ColHeader" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Margin"     Value="0,0,0,6"/>
+        </Style>
+        <Style x:Key="FiltroBtn" TargetType="Button">
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="14,6"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,0,28">
+
+            <!-- ── Barra de filtros ─────────────────────────────────────────── -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="PERÍODO" Style="{StaticResource ColHeader}"
+                               VerticalAlignment="Center" Margin="0"/>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
+                                    FontSize="12" Width="130"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
+                                    FontSize="12" Width="130"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Accesos rápidos -->
+                    <Button Grid.Column="6"  Style="{StaticResource FiltroBtn}" Content="Este mes"    x:Name="FiltrarEsteMes"/>
+                    <Button Grid.Column="8"  Style="{StaticResource FiltroBtn}" Content="3 meses"     x:Name="FiltrarUltimos3"/>
+                    <Button Grid.Column="10" Style="{StaticResource FiltroBtn}" Content="6 meses"     x:Name="FiltrarUltimos6"/>
+                    <Button Grid.Column="12" Style="{StaticResource FiltroBtn}" Content="Este año"    x:Name="FiltrarEsteAnio"/>
+
+                    <Button Grid.Column="14" x:Name="Actualizar"
+                            Content="▶  Aplicar"
+                            Background="{DynamicResource PrimaryBrush}"
+                            Foreground="#0F172A" FontWeight="Bold" FontSize="12"
+                            Padding="18,6" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="8"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ── KPIs ─────────────────────────────────────────────────────── -->
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource Card}" BorderBrush="{DynamicResource SuccessBrush}">
+                    <StackPanel>
+                        <TextBlock Text="VENTAS ACUMULADAS" Style="{StaticResource ColHeader}"/>
+                        <TextBlock Text="{Binding VentasAcumuladas, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                        <TextBlock Text="en el período" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="COMPRAS ACUMULADAS" Style="{StaticResource ColHeader}"/>
+                        <TextBlock Text="{Binding ComprasAcumuladas, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ErrorBrush}"/>
+                        <TextBlock Text="en el período" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="4" Style="{StaticResource Card}" BorderBrush="{DynamicResource PrimaryBrush}">
+                    <StackPanel>
+                        <TextBlock Text="RESULTADO NETO" Style="{StaticResource ColHeader}"/>
+                        <TextBlock Text="{Binding ResultadoAcumulado, Converter={StaticResource DecimalToMoneda}}"
+                                   FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="ventas menos compras" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="6" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="MARGEN PROMEDIO" Style="{StaticResource ColHeader}"/>
+                        <TextBlock Text="{Binding MargenPromedio, StringFormat='{}{0:N1}%'}"
+                                   FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0">
+                            <Run Text="{Binding ClientesNuevos, Mode=OneWay}" FontWeight="Bold"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <Run Text=" clientes nuevos"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ── Barras + Tabla ───────────────────────────────────────────── -->
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardNoPad}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="230"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="20,16,20,10">
+                            <TextBlock Text="VENTAS VS COMPRAS POR MES" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Comparativa mensual" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <lvc:CartesianChart Grid.Row="1" Margin="12,0,12,12"
+                                            Series="{Binding SeriesBarras}"
+                                            XAxes="{Binding EjeXBarras}"
+                                            YAxes="{Binding EjeY}"
+                                            Background="Transparent"
+                                            TooltipPosition="Top"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardNoPad}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="20,16,20,10">
+                            <TextBlock Text="DETALLE MENSUAL" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Resultado y margen" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding VentasMensuales}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False"
+                                  GridLinesVisibility="None" HeadersVisibility="Column"
+                                  Background="Transparent" BorderThickness="0"
+                                  RowHeight="36" ColumnHeaderHeight="28" Margin="8,0,8,8"
+                                  FontSize="12">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70"/>
+                                <DataGridTemplateColumn Header="VENTAS" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Ventas, Converter={StaticResource DecimalToMoneda}}"
+                                                       Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" Margin="8,0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="MARGEN" Width="68">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="5"
+                                                    Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Margen, StringFormat='{}{0:N1}%'}"
+                                                           FontSize="11" FontWeight="Bold"
+                                                           Foreground="{DynamicResource PrimaryBrush}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ── Línea + Torta ────────────────────────────────────────────── -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardNoPad}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="220"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="20,16,20,10">
+                            <TextBlock Text="EVOLUCIÓN DE VENTAS" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Tendencia del período" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <lvc:CartesianChart Grid.Row="1" Margin="12,0,12,12"
+                                            Series="{Binding SeriesLinea}"
+                                            XAxes="{Binding EjeXLinea}"
+                                            YAxes="{Binding EjeY}"
+                                            Background="Transparent"
+                                            TooltipPosition="Top"/>
+                    </Grid>
+                </Border>
+
+                <!-- Torta con leyenda correcta -->
+                <Border Grid.Column="2" Style="{StaticResource CardNoPad}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="220"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="20,16,20,10">
+                            <TextBlock Text="MÉTODOS DE PAGO" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Distribución del período" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <lvc:PieChart Grid.Row="1" Margin="8,0,8,12"
+                                      Series="{Binding SeriesTorta}"
+                                      Background="Transparent"
+                                      TooltipPosition="Top"
+                                      LegendPosition="{Binding PosicionLeyenda}"
+                                      LegendTextPaint="{Binding LeyendaTextoPaint}"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

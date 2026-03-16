@@ -1,0 +1,329 @@
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces.Servicios;
+using GestionComercial.UI.ViewModels.Base;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace GestionComercial.UI.ViewModels.Reportes
+{
+    public class ReporteStockCriticoDto
+    {
+        public string Nombre      { get; set; } = string.Empty;
+        public int    StockActual { get; set; }
+        public int    StockMinimo { get; set; }
+        public string Estado      => StockActual == 0 ? "Sin stock" : "Crítico";
+    }
+
+    public class ReporteCompraRecienteDto
+    {
+        public string  Proveedor { get; set; } = string.Empty;
+        public string  Fecha     { get; set; } = string.Empty;
+        public decimal Total     { get; set; }
+        public int     Productos { get; set; }
+    }
+
+    public class ReporteAdminViewModel : NavigableViewModel
+    {
+        private readonly IVentaServicio    _ventaServicio;
+        private readonly IProductoServicio _productoServicio;
+        private readonly ICompraServicio   _compraServicio;
+        private readonly SesionServicio    _sesion;
+
+        // Paleta del sistema
+        private static readonly SKColor Col_Primary = SKColor.Parse("#38BDF8");
+        private static readonly SKColor Col_Success = SKColor.Parse("#10B981");
+        private static readonly SKColor Col_Warning = SKColor.Parse("#F59E0B");
+        private static readonly SKColor Col_Error   = SKColor.Parse("#EF4444");
+        private static readonly SKColor Col_TextSec = SKColor.Parse("#64748B");
+        private static readonly SKColor Col_Sep     = SKColor.Parse("#2A3D52");
+
+        public ReporteAdminViewModel(
+            IVentaServicio    ventaServicio,
+            IProductoServicio productoServicio,
+            ICompraServicio   compraServicio,
+            SesionServicio    sesion)
+        {
+            _ventaServicio    = ventaServicio;
+            _productoServicio = productoServicio;
+            _compraServicio   = compraServicio;
+            _sesion           = sesion;
+            Titulo            = "Reportes";
+            Subtitulo         = "Administración — operaciones";
+        }
+
+        // ── KPIs ──────────────────────────────────────────────────────────────
+        private int _cantidadVentasMes;
+        public int CantidadVentasMes
+        {
+            get => _cantidadVentasMes;
+            set { _cantidadVentasMes = value; NotifyOfPropertyChange(() => CantidadVentasMes); }
+        }
+
+        private int _productosStockCritico;
+        public int ProductosStockCritico
+        {
+            get => _productosStockCritico;
+            set { _productosStockCritico = value; NotifyOfPropertyChange(() => ProductosStockCritico); }
+        }
+
+        private int _comprasDelMes;
+        public int ComprasDelMes
+        {
+            get => _comprasDelMes;
+            set { _comprasDelMes = value; NotifyOfPropertyChange(() => ComprasDelMes); }
+        }
+
+        private int _clientesNuevos;
+        public int ClientesNuevos
+        {
+            get => _clientesNuevos;
+            set { _clientesNuevos = value; NotifyOfPropertyChange(() => ClientesNuevos); }
+        }
+
+        private int _ventasPendientes;
+        public int VentasPendientes
+        {
+            get => _ventasPendientes;
+            set { _ventasPendientes = value; NotifyOfPropertyChange(() => VentasPendientes); }
+        }
+
+        // ── Filtros ───────────────────────────────────────────────────────────
+        private DateTime _fechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        public DateTime FechaDesde
+        {
+            get => _fechaDesde;
+            set { _fechaDesde = value; NotifyOfPropertyChange(() => FechaDesde); }
+        }
+
+        private DateTime _fechaHasta = DateTime.Today;
+        public DateTime FechaHasta
+        {
+            get => _fechaHasta;
+            set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
+        }
+
+        // ── Listas ────────────────────────────────────────────────────────────
+        public ObservableCollection<ReporteStockCriticoDto>   StockCritico     { get; set; } = new();
+        public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
+
+        // ── Gráfico 1: Línea ventas por día ───────────────────────────────────
+        private ISeries[] _seriesVentasDia = Array.Empty<ISeries>();
+        public ISeries[] SeriesVentasDia
+        {
+            get => _seriesVentasDia;
+            set { _seriesVentasDia = value; NotifyOfPropertyChange(() => SeriesVentasDia); }
+        }
+
+        private Axis[] _ejeXVentasDia = Array.Empty<Axis>();
+        public Axis[] EjeXVentasDia
+        {
+            get => _ejeXVentasDia;
+            set { _ejeXVentasDia = value; NotifyOfPropertyChange(() => EjeXVentasDia); }
+        }
+
+        // ── Gráfico 2: Barras stock actual vs mínimo ──────────────────────────
+        private ISeries[] _seriesStock = Array.Empty<ISeries>();
+        public ISeries[] SeriesStock
+        {
+            get => _seriesStock;
+            set { _seriesStock = value; NotifyOfPropertyChange(() => SeriesStock); }
+        }
+
+        private Axis[] _ejeXStock = Array.Empty<Axis>();
+        public Axis[] EjeXStock
+        {
+            get => _ejeXStock;
+            set { _ejeXStock = value; NotifyOfPropertyChange(() => EjeXStock); }
+        }
+
+        public Axis[] EjeYEntero { get; } = new[]
+        {
+            new Axis
+            {
+                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#64748B")),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#2A3D52")),
+                MinStep         = 1,
+            }
+        };
+
+        public Axis[] EjeYMoneda { get; } = new[]
+        {
+            new Axis
+            {
+                LabelsPaint     = new SolidColorPaint(SKColor.Parse("#64748B")),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#2A3D52")),
+                Labeler         = v => $"${v / 1000:N0}K",
+            }
+        };
+
+        // ── Lifecycle ─────────────────────────────────────────────────────────
+        protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+            => await CargarAsync();
+
+        private async Task CargarAsync()
+        {
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                var desde = FechaDesde;
+                var hasta = FechaHasta;
+
+                // Ventas del período
+                var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                CantidadVentasMes = ventasPeriodo.Count;
+                VentasPendientes  = ventasPeriodo.Count(v => v.Estado == "Pendiente");
+
+                // Stock crítico (siempre actual, no depende de fechas)
+                var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
+                ProductosStockCritico = criticos.Count;
+                StockCritico = new ObservableCollection<ReporteStockCriticoDto>(
+                    criticos.Take(10).Select(p => new ReporteStockCriticoDto
+                    {
+                        Nombre      = p.Nombre,
+                        StockActual = p.StockActual,
+                        StockMinimo = p.StockMinimo,
+                    }));
+
+                // Compras del período
+                var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                    .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
+                ComprasDelMes = comprasPeriodo.Count;
+                ComprasRecientes = new ObservableCollection<ReporteCompraRecienteDto>(
+                    comprasPeriodo.OrderByDescending(c => c.Fecha).Take(8).Select(c => new ReporteCompraRecienteDto
+                    {
+                        Proveedor = c.ProveedorNombre,
+                        Fecha     = c.Fecha.ToString("dd/MM/yyyy"),
+                        Total     = c.Total,
+                        Productos = c.Items?.Count ?? 0,
+                    }));
+
+                // ── Gráfico línea: agrupar por día si rango ≤ 31 días, por mes si más ──
+                int diasRango = (hasta - desde).Days + 1;
+                if (diasRango <= 62)
+                {
+                    // Ventas por día
+                    var labels = Enumerable.Range(0, diasRango)
+                        .Select(d => desde.AddDays(d).ToString("dd/MM"))
+                        .ToArray();
+                    var valores = Enumerable.Range(0, diasRango).Select(d =>
+                    {
+                        var dia = desde.AddDays(d).Date;
+                        return (double)ventasPeriodo
+                            .Where(v => v.Fecha.Date == dia)
+                            .Sum(v => v.TotalFinal);
+                    }).ToArray();
+
+                    BuildLineaVentas(labels, valores);
+                }
+                else
+                {
+                    // Ventas por mes
+                    var cursor = new DateTime(desde.Year, desde.Month, 1);
+                    var finMes = new DateTime(hasta.Year, hasta.Month, 1);
+                    var labelsList  = new System.Collections.Generic.List<string>();
+                    var valoresList = new System.Collections.Generic.List<double>();
+                    while (cursor <= finMes)
+                    {
+                        var ini = cursor;
+                        var fin = cursor.AddMonths(1).AddDays(-1);
+                        labelsList.Add(cursor.ToString("MMM yy"));
+                        valoresList.Add((double)ventasPeriodo
+                            .Where(v => v.Fecha >= ini && v.Fecha <= fin)
+                            .Sum(v => v.TotalFinal));
+                        cursor = cursor.AddMonths(1);
+                    }
+                    BuildLineaVentas(labelsList.ToArray(), valoresList.ToArray());
+                }
+
+                // ── Gráfico barras: stock actual vs mínimo ────────────────────
+                if (criticos.Any())
+                {
+                    var top8     = criticos.Take(8).ToList();
+                    var nombres  = top8.Select(p => p.Nombre.Length > 12 ? p.Nombre[..12] + "…" : p.Nombre).ToArray();
+                    var actuales = top8.Select(p => (double)p.StockActual).ToArray();
+                    var minimos  = top8.Select(p => (double)p.StockMinimo).ToArray();
+
+                    SeriesStock = new ISeries[]
+                    {
+                        new ColumnSeries<double>
+                        {
+                            Name        = "Stock actual",
+                            Values      = actuales,
+                            Fill        = new SolidColorPaint(Col_Primary),
+                            MaxBarWidth = 22,
+                        },
+                        new ColumnSeries<double>
+                        {
+                            Name        = "Stock mínimo",
+                            Values      = minimos,
+                            Fill        = new SolidColorPaint(new SKColor(239, 68, 68, 100)),
+                            MaxBarWidth = 22,
+                        },
+                    };
+
+                    EjeXStock = new[]
+                    {
+                        new Axis
+                        {
+                            Labels          = nombres,
+                            LabelsPaint     = new SolidColorPaint(Col_TextSec),
+                            SeparatorsPaint = new SolidColorPaint(SKColors.Transparent),
+                            LabelsRotation  = -30,
+                        }
+                    };
+                }
+
+                NotifyOfPropertyChange(() => StockCritico);
+                NotifyOfPropertyChange(() => ComprasRecientes);
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
+        }
+
+        private void BuildLineaVentas(string[] labels, double[] valores)
+        {
+            SeriesVentasDia = new ISeries[]
+            {
+                new LineSeries<double>
+                {
+                    Name           = "Ventas",
+                    Values         = valores,
+                    Stroke         = new SolidColorPaint(Col_Primary) { StrokeThickness = 2 },
+                    Fill           = new LinearGradientPaint(
+                        new[] { new SKColor(56, 189, 248, 80), new SKColor(56, 189, 248, 0) },
+                        new SKPoint(0.5f, 0f), new SKPoint(0.5f, 1f)),
+                    GeometryFill   = new SolidColorPaint(Col_Primary),
+                    GeometryStroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
+                    GeometrySize   = 7,
+                    LineSmoothness = 0.4,
+                },
+            };
+            EjeXVentasDia = new[]
+            {
+                new Axis
+                {
+                    Labels          = labels,
+                    LabelsPaint     = new SolidColorPaint(Col_TextSec),
+                    SeparatorsPaint = new SolidColorPaint(Col_Sep),
+                }
+            };
+        }
+
+        // ── Acciones filtro ───────────────────────────────────────────────────
+        public async Task Actualizar()      => await CargarAsync();
+        public async Task FiltrarEsteMes()  { FechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarUltimos3() { FechaDesde = DateTime.Today.AddMonths(-3); FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarUltimos6() { FechaDesde = DateTime.Today.AddMonths(-6); FechaHasta = DateTime.Today; await CargarAsync(); }
+        public async Task FiltrarEsteAnio() { FechaDesde = new DateTime(DateTime.Today.Year, 1, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
+    }
+}

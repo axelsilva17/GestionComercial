@@ -1,0 +1,10 @@
+namespace GestionComercial.Dominio.Entidades.Seguridad
+{
+    public class Rol : EntidadBase
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
+        public ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+        public ICollection<RolPermiso> RolPermisos { get; set; } = new List<RolPermiso>();
+    }
+}

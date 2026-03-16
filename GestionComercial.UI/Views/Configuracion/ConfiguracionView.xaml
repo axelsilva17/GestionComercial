@@ -1,0 +1,833 @@
+<UserControl x:Class="GestionComercial.UI.Views.Configuracion.ConfiguracionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
+             Background="{DynamicResource BackgroundBrush}">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="12"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Background="{DynamicResource CardBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="10" Padding="6">
+                                <TabPanel IsItemsHost="True" Background="Transparent"/>
+                            </Border>
+                            <ContentPresenter Grid.Row="2" ContentSource="SelectedContent"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding"         Value="18,8"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                CornerRadius="8" Margin="2,0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsSelected"  Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AccionBtn" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Padding"         Value="8,4"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CancelBtn" TargetType="Button">
+            <Setter Property="Height"          Value="38"/>
+            <Setter Property="Padding"         Value="16,0"/>
+            <Setter Property="Margin"          Value="0,0,8,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FormLabel" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Margin"     Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="FormInput" TargetType="TextBox">
+            <Setter Property="Height"          Value="40"/>
+            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="CaretBrush"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FormPassword" TargetType="PasswordBox">
+            <Setter Property="Height"          Value="40"/>
+            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="CaretBrush"      Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BadgeActivo" TargetType="Border">
+            <Setter Property="CornerRadius"        Value="6"/>
+            <Setter Property="Padding"             Value="10,3"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment"   Value="Center"/>
+        </Style>
+
+        <Style x:Key="BadgeSucursalActivo" TargetType="Border" BasedOn="{StaticResource BadgeActivo}">
+            <Setter Property="Background" Value="#1A22C55E"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Activa}" Value="False">
+                    <Setter Property="Background" Value="#1AEF4444"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BadgeUsuarioActivo" TargetType="Border" BasedOn="{StaticResource BadgeActivo}">
+            <Setter Property="Background" Value="#1A22C55E"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Activo}" Value="False">
+                    <Setter Property="Background" Value="#1AEF4444"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+
+        <!-- ══ CONTENIDO PRINCIPAL ══════════════════════════════════════════ -->
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="Configuración" FontSize="26" FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="Ajustes generales del sistema"
+                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+            </StackPanel>
+
+            <TabControl Grid.Row="2">
+
+                <!-- ── EMPRESA ────────────────────────────────────────────── -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🏢" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Empresa" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="12" Padding="28">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="24"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Datos de la empresa" FontSize="16" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Información general del negocio" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" x:Name="AbrirPanel_Empresa"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Height="38" Padding="16,0" FontSize="13" Click="AbrirPanel_Empresa_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="✏️" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Editar" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Nombre}" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.CUIT}" FontSize="15"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Direccion}" FontSize="15"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ── SUCURSALES ─────────────────────────────────────────── -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📍" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Sucursales" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="12" ClipToBounds="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Margin="20,16,20,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Sucursales del negocio" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevaSucursal_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Nueva Sucursal" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Sucursales.Items}" Margin="12,0,12,12">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    CornerRadius="10" Margin="0,0,0,8" Padding="16,12">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Width="40" Height="40" CornerRadius="10"
+                                                            Background="{DynamicResource PrimaryBrush}" Margin="0,0,14,0">
+                                                        <TextBlock Text="🏪" FontSize="18"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding Direccion}" FontSize="12"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2" Style="{StaticResource BadgeSucursalActivo}" Margin="0,0,12,0">
+                                                        <TextBlock Text="{Binding EstadoTexto}" FontSize="11" FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Border>
+                                                    <Button Grid.Column="3" Content="✏️ Editar"
+                                                            Style="{StaticResource AccionBtn}"
+                                                            Tag="{Binding}" Click="EditarSucursal_Click"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ── USUARIOS ───────────────────────────────────────────── -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="👥" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Usuarios" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="12" ClipToBounds="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Margin="20,16,20,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Usuarios del sistema" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevoUsuario_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Nuevo Usuario" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Usuarios.Items}" Margin="12,0,12,12">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    CornerRadius="10" Margin="0,0,0,8" Padding="16,12">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Width="40" Height="40" CornerRadius="20"
+                                                            Background="{DynamicResource PrimaryBrush}" Margin="0,0,14,0">
+                                                        <TextBlock Text="{Binding Inicial}" FontSize="16" FontWeight="Bold"
+                                                                   Foreground="White"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding NombreCompleto}" FontSize="14" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                            <TextBlock Text="{Binding RolNombre}" FontSize="11"
+                                                                       Foreground="{DynamicResource PrimaryBrush}"/>
+                                                            <TextBlock Text=" · " FontSize="11"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding SucursalNombre}" FontSize="11"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2" Style="{StaticResource BadgeUsuarioActivo}" Margin="0,0,12,0">
+                                                        <TextBlock FontSize="11" FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text"       Value="Activo"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Activo}" Value="False">
+                                                                            <Setter Property="Text"       Value="Inactivo"/>
+                                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Border>
+                                                    <Button Grid.Column="3" Content="✏️ Editar"
+                                                            Style="{StaticResource AccionBtn}"
+                                                            Tag="{Binding}" Click="EditarUsuario_Click"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ── ROLES ──────────────────────────────────────────────── -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔑" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Roles" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="12" ClipToBounds="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Margin="20,16,20,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Roles de usuario" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevoRol_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Nuevo Rol" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Roles.Items}" Margin="12,0,12,12">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    CornerRadius="10" Margin="0,0,0,8" Padding="16,14">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Width="36" Height="36" CornerRadius="8"
+                                                            Background="#1A3B82F6" Margin="0,0,14,0">
+                                                        <TextBlock Text="🔑" FontSize="16"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="2" Content="✏️ Editar"
+                                                            Style="{StaticResource AccionBtn}" Margin="0,0,6,0"
+                                                            Tag="{Binding}" Click="EditarRol_Click"/>
+                                                    <Button Grid.Column="3" Content="🗑️"
+                                                            Style="{StaticResource AccionBtn}"
+                                                            Tag="{Binding}" Click="EliminarRol_Click"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ── MÉTODOS DE PAGO ────────────────────────────────────── -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💳" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Métodos de Pago" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="12" ClipToBounds="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Margin="20,16,20,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Métodos de pago aceptados" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                        Height="36" Padding="14,0" FontSize="12" Click="NuevoMetodo_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Nuevo Método" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding MetodosPago.Items}" Margin="12,0,12,12">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                    CornerRadius="10" Margin="0,0,0,8" Padding="16,14">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Width="36" Height="36" CornerRadius="8"
+                                                            Background="#1A3B82F6" Margin="0,0,14,0">
+                                                        <TextBlock Text="{Binding Icono}" FontSize="18"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding TipoTexto}" FontSize="11"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="2" Content="✏️ Editar"
+                                                            Style="{StaticResource AccionBtn}" Margin="0,0,6,0"
+                                                            Tag="{Binding}" Click="EditarMetodo_Click"/>
+                                                    <Button Grid.Column="3" Content="🗑️"
+                                                            Style="{StaticResource AccionBtn}"
+                                                            Tag="{Binding}" Click="EliminarMetodo_Click"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+            </TabControl>
+        </Grid>
+
+        <!-- ══ OVERLAY ══════════════════════════════════════════════════════ -->
+        <Rectangle x:Name="Overlay" Fill="#88000000" Opacity="0" IsHitTestVisible="False"/>
+
+        <!-- Panel Empresa -->
+        <Border x:Name="PanelEmpresa" Width="360" HorizontalAlignment="Right"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
+            <Border.RenderTransform><TranslateTransform x:Name="PanelEmpresaTransform"/></Border.RenderTransform>
+            <Grid Margin="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock Text="Editar Empresa" FontSize="17" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
+                            FontSize="14" Click="CerrarPanel_Click"/>
+                </Grid>
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding Empresa.EditNombre, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding Empresa.EditCuit, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+                    <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding Empresa.EditDireccion, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}"/>
+                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
+                            Visibility="{Binding Empresa.TieneError, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding Empresa.MensajeError}" FontSize="12"
+                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
+                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="16,0" Click="GuardarEmpresa_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Panel Sucursales -->
+        <Border x:Name="PanelSucursal" Width="360" HorizontalAlignment="Right"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
+            <Border.RenderTransform><TranslateTransform x:Name="PanelSucursalTransform"/></Border.RenderTransform>
+            <Grid Margin="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock Text="{Binding Sucursales.TituloPanel}" FontSize="17" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
+                            FontSize="14" Click="CerrarPanel_Click"/>
+                </Grid>
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding Sucursales.EditNombre, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+                    <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding Sucursales.EditDireccion, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+                    <CheckBox Content="Sucursal activa" IsChecked="{Binding Sucursales.EditActiva}"
+                              Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
+                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
+                            Visibility="{Binding Sucursales.TieneError, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding Sucursales.MensajeError}" FontSize="12"
+                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
+                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="16,0" Click="GuardarSucursal_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Panel Usuarios -->
+        <Border x:Name="PanelUsuario" Width="380" HorizontalAlignment="Right"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
+            <Border.RenderTransform><TranslateTransform x:Name="PanelUsuarioTransform"/></Border.RenderTransform>
+            <Grid Margin="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock Text="{Binding Usuarios.TituloPanel}" FontSize="17" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
+                            FontSize="14" Click="CerrarPanel_Click"/>
+                </Grid>
+                <StackPanel Grid.Row="2">
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                            <TextBox Text="{Binding Usuarios.EditNombre, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FormInput}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="APELLIDO" Style="{StaticResource FormLabel}"/>
+                            <TextBox Text="{Binding Usuarios.EditApellido, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FormInput}"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="CONTRASEÑA" Style="{StaticResource FormLabel}"/>
+                    <PasswordBox x:Name="PbUsuario" Style="{StaticResource FormPassword}"
+                                 PasswordChanged="PbUsuario_PasswordChanged" Margin="0,0,0,16"/>
+                    <TextBlock Text="SUCURSAL" Style="{StaticResource FormLabel}"/>
+                    <ComboBox ItemsSource="{Binding Usuarios.Sucursales}"
+                              SelectedItem="{Binding Usuarios.EditSucursal}"
+                              DisplayMemberPath="Nombre" Height="40" Margin="0,0,0,16"
+                              Background="{DynamicResource SurfaceBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}"/>
+                    <TextBlock Text="ROL" Style="{StaticResource FormLabel}"/>
+                    <ComboBox ItemsSource="{Binding Usuarios.Roles}"
+                              SelectedItem="{Binding Usuarios.EditRol}"
+                              DisplayMemberPath="Nombre" Height="40" Margin="0,0,0,16"
+                              Background="{DynamicResource SurfaceBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}"/>
+                    <CheckBox Content="Usuario activo" IsChecked="{Binding Usuarios.EditActivo}"
+                              Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
+                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
+                            Visibility="{Binding Usuarios.TieneError, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding Usuarios.MensajeError}" FontSize="12"
+                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
+                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="16,0" Click="GuardarUsuario_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Panel Roles -->
+        <Border x:Name="PanelRol" Width="340" HorizontalAlignment="Right"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
+            <Border.RenderTransform><TranslateTransform x:Name="PanelRolTransform"/></Border.RenderTransform>
+            <Grid Margin="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock Text="{Binding Roles.TituloPanel}" FontSize="17" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
+                            FontSize="14" Click="CerrarPanel_Click"/>
+                </Grid>
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="NOMBRE DEL ROL" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding Roles.EditNombre, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}"/>
+                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
+                            Visibility="{Binding Roles.TieneError, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding Roles.MensajeError}" FontSize="12"
+                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
+                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="16,0" Click="GuardarRol_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Panel Métodos de Pago -->
+        <Border x:Name="PanelMetodo" Width="340" HorizontalAlignment="Right"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
+            <Border.RenderTransform><TranslateTransform x:Name="PanelMetodoTransform"/></Border.RenderTransform>
+            <Grid Margin="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock Text="{Binding MetodosPago.TituloPanel}" FontSize="17" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
+                            FontSize="14" Click="CerrarPanel_Click"/>
+                </Grid>
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                    <TextBox Text="{Binding MetodosPago.EditNombre, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+                    <CheckBox Content="Es efectivo" IsChecked="{Binding MetodosPago.EditEfectivo}"
+                              Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
+                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
+                            Visibility="{Binding MetodosPago.TieneError, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding MetodosPago.MensajeError}" FontSize="12"
+                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
+                    <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
+                            Height="38" Padding="16,0" Click="GuardarMetodo_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

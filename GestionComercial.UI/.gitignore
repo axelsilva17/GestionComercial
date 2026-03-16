@@ -3,3 +3,4 @@ bin/
 obj/
 *.user
 *.suo
+agent-teams-lite/
