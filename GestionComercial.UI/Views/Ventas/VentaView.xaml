@@ -7,9 +7,9 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
-        <converters:NullToVisibilityConverter   x:Key="NullToVisibility"/>
+        <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
         <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
-        <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
+    
 
         <Style x:Key="ItemRow" TargetType="DataGridRow">
             <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
