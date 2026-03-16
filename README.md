@@ -45,29 +45,15 @@ Ver [CHANGELOG.md](CHANGELOG.md) para el historial de versiones.
 
 ---
 
-## Arquitectura
+## Requisitos
 
-El proyecto sigue una arquitectura limpia (Clean Architecture):
-
-```
-GestionComercial.UI          → Aplicación WPF (presentación)
-GestionComercial.Aplicacion  → Casos de uso y servicios
-GestionComercial.Dominio     → Entidades y reglas de negocio
-GestionComercial.Persistencia→ Acceso a datos (EF Core)
-GestionComercial.Infraestructura → Servicios externos
-```
+- .NET 8 SDK
+- SQL Server
+- Visual Studio 2022 o VS Code
 
 ---
 
-## Primeros Pasos
-
-### Requisitos
-
-- .NET 8.0 SDK
-- SQL Server (local o remoto)
-- Windows 10/11
-
-### Configuración
+## Configuración
 
 1. Clonar el repositorio
 2. Configurar la cadena de conexión en `appsettings.json`
@@ -77,6 +63,29 @@ GestionComercial.Infraestructura → Servicios externos
 dotnet build
 dotnet run --project GestionComercial.UI
 ```
+
+### Credenciales iniciales
+
+- Email: `admin@sistema.com`
+- Contraseña: `Admin1234`
+
+---
+
+## Arquitectura
+
+El proyecto sigue una arquitectura limpia (Clean Architecture) con 4 capas:
+
+```
+GestionComercial.UI          → Aplicación WPF (presentación)
+GestionComercial.Aplicacion  → Casos de uso y servicios
+GestionComercial.Dominio     → Entidades y reglas de negocio
+GestionComercial.Persistencia→ Acceso a datos (EF Core)
+GestionComercial.Infraestructura → Servicios externos
+```
+
+Patrones: Repository, Unit of Work, MVVM, Inyección de dependencias.
+
+Principios SOLID aplicados en toda la solución.
 
 ---
 
