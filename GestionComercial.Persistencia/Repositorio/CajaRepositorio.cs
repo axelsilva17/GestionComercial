@@ -22,5 +22,15 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(c => c.UsuarioApertura)
                 .Include(c => c.UsuarioCierre)
                 .FirstOrDefaultAsync(c => c.Id == idCaja);
+
+        public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
+            => await _dbSet
+                .Include(c => c.Movimientos)
+                    .ThenInclude(m => m.Usuario)
+                .Include(c => c.UsuarioApertura)
+                .Include(c => c.UsuarioCierre)
+                .Where(c => c.Id_sucursal == idSucursal && c.FechaApertura >= desde && c.FechaApertura <= hasta)
+                .OrderByDescending(c => c.FechaApertura)
+                .ToListAsync();
     }
 }

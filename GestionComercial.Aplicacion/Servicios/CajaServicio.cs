@@ -144,11 +144,14 @@ namespace GestionComercial.Aplicacion.Servicios
             return resumen;
         }
 
-        // Helper: obtener IdEmpresa desde IdSucursal
+            // Helper: obtener IdEmpresa desde IdSucursal
         private async Task<int> ObtenerIdEmpresaDeSucursalAsync(int idSucursal)
         {
             var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal);
             return sucursal?.Id_empresa ?? 0;
         }
+
+        public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
+            => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta);
     }
 }

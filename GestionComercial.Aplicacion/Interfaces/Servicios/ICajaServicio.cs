@@ -9,6 +9,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<Caja>            AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial);
         Task<Caja>            CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal);
         Task                  RegistrarMovimientoAsync(int idCaja, TipoMovimientoCajaEnum tipo, decimal monto, string descripcion);
+        Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta);
 
         /// <summary>
         /// Calcula automáticamente el resumen del turno separando efectivo

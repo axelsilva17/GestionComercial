@@ -16,6 +16,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal);
         Task<Caja?> ObtenerConMovimientosAsync(int idCaja);
         Task<bool> ExisteCajaAbiertaAsync(int idSucursal);
+        Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta);
     }
 
 }

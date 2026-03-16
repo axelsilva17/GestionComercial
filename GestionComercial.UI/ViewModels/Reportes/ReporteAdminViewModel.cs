@@ -30,11 +30,37 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public int     Productos { get; set; }
     }
 
+    public class MovimientoCajaHistorialDto
+    {
+        public string  TipoOperacion { get; set; } = string.Empty;
+        public string  Descripcion   { get; set; } = string.Empty;
+        public decimal Monto          { get; set; }
+        public string  Fecha          { get; set; } = string.Empty;
+        public string  Usuario        { get; set; } = string.Empty;
+        public string  Icono          { get; set; } = string.Empty;
+        public bool    EsIngreso     { get; set; }
+    }
+
+    public class CajaHistorialDto
+    {
+        public int     Id            { get; set; }
+        public string  FechaApertura { get; set; } = string.Empty;
+        public string? FechaCierre   { get; set; }
+        public decimal MontoInicial  { get; set; }
+        public decimal? MontoFinal   { get; set; }
+        public decimal? Diferencia    { get; set; }
+        public string  UsuarioApertura { get; set; } = string.Empty;
+        public string? UsuarioCierre  { get; set; }
+        public string  Estado         { get; set; } = string.Empty;
+        public bool    TieneDiferencia { get; set; }
+    }
+
     public class ReporteAdminViewModel : NavigableViewModel
     {
         private readonly IVentaServicio    _ventaServicio;
         private readonly IProductoServicio _productoServicio;
         private readonly ICompraServicio   _compraServicio;
+        private readonly ICajaServicio     _cajaServicio;
         private readonly SesionServicio    _sesion;
 
         // Paleta del sistema
@@ -49,11 +75,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
             IVentaServicio    ventaServicio,
             IProductoServicio productoServicio,
             ICompraServicio   compraServicio,
+            ICajaServicio     cajaServicio,
             SesionServicio    sesion)
         {
             _ventaServicio    = ventaServicio;
             _productoServicio = productoServicio;
             _compraServicio   = compraServicio;
+            _cajaServicio     = cajaServicio;
             _sesion           = sesion;
             Titulo            = "Reportes";
             Subtitulo         = "Administración — operaciones";
@@ -113,6 +141,44 @@ namespace GestionComercial.UI.ViewModels.Reportes
         // ── Listas ────────────────────────────────────────────────────────────
         public ObservableCollection<ReporteStockCriticoDto>   StockCritico     { get; set; } = new();
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
+        public ObservableCollection<CajaHistorialDto>        HistorialCajas   { get; set; } = new();
+        public ObservableCollection<MovimientoCajaHistorialDto> MovimientosCaja { get; set; } = new();
+
+        // ── KPIs de caja ───────────────────────────────────────────────────────
+        private int _totalCajas;
+        public int TotalCajas
+        {
+            get => _totalCajas;
+            set { _totalCajas = value; NotifyOfPropertyChange(() => TotalCajas); }
+        }
+
+        private int _cajasCerradas;
+        public int CajasCerradas
+        {
+            get => _cajasCerradas;
+            set { _cajasCerradas = value; NotifyOfPropertyChange(() => CajasCerradas); }
+        }
+
+        private int _cajasConDiferencia;
+        public int CajasConDiferencia
+        {
+            get => _cajasConDiferencia;
+            set { _cajasConDiferencia = value; NotifyOfPropertyChange(() => CajasConDiferencia); }
+        }
+
+        private decimal _totalIngresos;
+        public decimal TotalIngresos
+        {
+            get => _totalIngresos;
+            set { _totalIngresos = value; NotifyOfPropertyChange(() => TotalIngresos); }
+        }
+
+        private decimal _totalEgresos;
+        public decimal TotalEgresos
+        {
+            get => _totalEgresos;
+            set { _totalEgresos = value; NotifyOfPropertyChange(() => TotalEgresos); }
+        }
 
         // ── Gráfico 1: Línea ventas por día ───────────────────────────────────
         private ISeries[] _seriesVentasDia = Array.Empty<ISeries>();
@@ -283,8 +349,68 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     };
                 }
 
+                // ── Historial de cajas ────────────────────────────────────────────
+                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                TotalCajas = cajas.Count;
+                CajasCerradas = cajas.Count(c => c.Estado == 2);
+                
+                decimal totalIng = 0, totalEgr = 0;
+                var cajasConDif = 0;
+                var historialList = new List<CajaHistorialDto>();
+                var movimientosList = new List<MovimientoCajaHistorialDto>();
+
+                foreach (var caja in cajas.Take(15))
+                {
+                    var diff = caja.MontoFinal.HasValue 
+                        ? caja.MontoFinal.Value - (caja.MontoInicial + caja.Ventas.Sum(v => v.TotalFinal)) 
+                        : (decimal?)null;
+                    
+                    if (diff.HasValue && Math.Abs(diff.Value) > 0.01m)
+                        cajasConDif++;
+
+                    historialList.Add(new CajaHistorialDto
+                    {
+                        Id               = caja.Id,
+                        FechaApertura   = caja.FechaApertura.ToString("dd/MM HH:mm"),
+                        FechaCierre     = caja.FechaCierre?.ToString("dd/MM HH:mm"),
+                        MontoInicial    = caja.MontoInicial,
+                        MontoFinal      = caja.MontoFinal,
+                        Diferencia      = diff,
+                        UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
+                        UsuarioCierre   = caja.UsuarioCierre?.Nombre,
+                        Estado          = caja.Estado == 1 ? "Abierta" : "Cerrada",
+                        TieneDiferencia = diff.HasValue && Math.Abs(diff.Value) > 0.01m,
+                    });
+
+                    foreach (var mov in caja.Movimientos)
+                    {
+                        var esIngreso = mov.Tipo == 1;
+                        if (esIngreso) totalIng += mov.Monto; else totalEgr += mov.Monto;
+
+                        movimientosList.Add(new MovimientoCajaHistorialDto
+                        {
+                            TipoOperacion = esIngreso ? "Ingreso" : "Egreso",
+                            Descripcion   = mov.Concepto ?? "—",
+                            Monto         = mov.Monto,
+                            Fecha         = mov.Fecha.ToString("dd/MM HH:mm"),
+                            Usuario       = mov.Usuario?.Nombre ?? "—",
+                            Icono         = esIngreso ? "↑" : "↓",
+                            EsIngreso     = esIngreso,
+                        });
+                    }
+                }
+
+                CajasConDiferencia = cajasConDif;
+                TotalIngresos = totalIng;
+                TotalEgresos = totalEgr;
+                HistorialCajas = new ObservableCollection<CajaHistorialDto>(historialList);
+                MovimientosCaja = new ObservableCollection<MovimientoCajaHistorialDto>(
+                    movimientosList.OrderByDescending(m => m.Fecha).Take(20));
+
                 NotifyOfPropertyChange(() => StockCritico);
                 NotifyOfPropertyChange(() => ComprasRecientes);
+                NotifyOfPropertyChange(() => HistorialCajas);
+                NotifyOfPropertyChange(() => MovimientosCaja);
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
