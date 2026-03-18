@@ -31,6 +31,19 @@ namespace GestionComercial.Aplicacion.Servicios
                 UsuarioApertura_id = idUsuario,
             };
             await _uow.Cajas.AgregarAsync(caja);
+
+            // Registrar movimiento de apertura
+            var movimientoApertura = new TipoMovimientoCaja
+            {
+                Id_caja    = caja.Id,
+                Tipo       = (int)TipoMovimientoCajaEnum.Apertura,
+                Monto      = montoInicial,
+                Fecha      = DateTime.Now,
+                Concepto   = "Apertura de caja",
+                Id_usuario = idUsuario,
+            };
+            await _uow.MovimientosCaja.AgregarAsync(movimientoApertura);
+
             await _uow.GuardarCambiosAsync();
             return caja;
         }
@@ -47,6 +60,19 @@ namespace GestionComercial.Aplicacion.Servicios
             caja.Estado           = 2; // 2 = Cerrada
             caja.UsuarioCierre_id = idUsuario;
             _uow.Cajas.Actualizar(caja);
+
+            // Registrar movimiento de cierre
+            var movimientoCierre = new TipoMovimientoCaja
+            {
+                Id_caja    = caja.Id,
+                Tipo       = (int)TipoMovimientoCajaEnum.Cierre,
+                Monto      = montoFinal,
+                Fecha      = DateTime.Now,
+                Concepto   = "Cierre de caja",
+                Id_usuario = idUsuario,
+            };
+            await _uow.MovimientosCaja.AgregarAsync(movimientoCierre);
+
             await _uow.GuardarCambiosAsync();
             return caja;
         }
@@ -135,9 +161,10 @@ namespace GestionComercial.Aplicacion.Servicios
             var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
             foreach (var mov in movimientos)
             {
+                // Solo incluir Ingreso y Egreso en el resumen (Apertura/Cierre son operativos)
                 if (mov.Tipo == (int)TipoMovimientoCajaEnum.Ingreso)
                     resumen.IngresosEfectivo += mov.Monto;
-                else
+                else if (mov.Tipo == (int)TipoMovimientoCajaEnum.Egreso)
                     resumen.EgresosEfectivo += mov.Monto;
             }
 
