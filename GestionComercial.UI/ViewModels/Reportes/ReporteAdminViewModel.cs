@@ -1,5 +1,6 @@
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using LiveChartsCore;
@@ -35,6 +36,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private readonly IVentaServicio    _ventaServicio;
         private readonly IProductoServicio _productoServicio;
         private readonly ICompraServicio   _compraServicio;
+        private readonly IUnitOfWork      _uow;
         private readonly SesionServicio    _sesion;
 
         // Paleta del sistema
@@ -49,11 +51,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
             IVentaServicio    ventaServicio,
             IProductoServicio productoServicio,
             ICompraServicio   compraServicio,
+            IUnitOfWork      uow,
             SesionServicio    sesion)
         {
             _ventaServicio    = ventaServicio;
             _productoServicio = productoServicio;
             _compraServicio   = compraServicio;
+            _uow            = uow;
             _sesion           = sesion;
             Titulo            = "Reportes";
             Subtitulo         = "Administración — operaciones";
@@ -206,6 +210,11 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         Total     = c.Total,
                         Productos = c.Items?.Count ?? 0,
                     }));
+
+                // Clientes nuevos del período
+                var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
+                    _sesion.IdEmpresa, desde, hasta.AddDays(1));
+                ClientesNuevos = clientesNuevos.Count();
 
                 // ── Gráfico línea: agrupar por día si rango ≤ 31 días, por mes si más ──
                 int diasRango = (hasta - desde).Days + 1;

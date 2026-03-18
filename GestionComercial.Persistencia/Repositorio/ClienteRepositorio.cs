@@ -30,5 +30,11 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Where(c => c.Nombre.Contains(nombre) && c.Id_empresa == idEmpresa)
                 .OrderBy(c => c.Nombre)
                 .ToListAsync();
+
+        public async Task<IEnumerable<Cliente>> ObtenerPorEmpresaYFechaAsync(int idEmpresa, DateTime desde, DateTime hasta)
+            => await _dbSet
+                .Where(c => c.Id_empresa == idEmpresa && c.FechaAlta >= desde && c.FechaAlta <= hasta)
+                .OrderByDescending(c => c.FechaAlta)
+                .ToListAsync();
     }
 }
