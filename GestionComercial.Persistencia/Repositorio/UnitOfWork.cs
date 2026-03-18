@@ -23,7 +23,8 @@ namespace GestionComercial.Dominio.Repositorio
         public IEmpresaRepositorio         Empresas         { get; }
         public ISucursalRepositorio        Sucursales       { get; }
         public IPagoRepositorio            Pagos            { get; }
-        public IMetodoPagoRepositorio      MetodosPago      { get; }  // ← nuevo
+        public IMetodoPagoRepositorio      MetodosPago      { get; }
+        public IAuditoriaRepositorio       Auditoria        { get; }
 
         public UnitOfWork(GestionComercialContext context)
         {
@@ -41,7 +42,8 @@ namespace GestionComercial.Dominio.Repositorio
             Empresas         = new EmpresaRepositorio(context);
             Sucursales       = new SucursalRepositorio(context);
             Pagos            = new PagoRepositorio(context);
-            MetodosPago      = new MetodoPagoRepositorio(context);    // ← nuevo
+            MetodosPago      = new MetodoPagoRepositorio(context);
+            Auditoria        = new AuditoriaRepositorio(context);
         }
 
         public async Task<int> GuardarCambiosAsync()
