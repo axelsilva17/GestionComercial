@@ -1,3 +1,4 @@
+using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Entidades.Compras;
@@ -40,6 +41,8 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<TipoMovimientoStock> TiposMovimientoStock { get; set; }
         public DbSet<Caja> Cajas { get; set; }
         public DbSet<TipoMovimientoCaja> MovimientosCaja { get; set; }
+        public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
+        public DbSet<TablaAuditada> TablasAuditadas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
