@@ -94,12 +94,14 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <TextBlock Text="Ctrl+N" FontSize="10" FontWeight="Bold"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           VerticalAlignment="Center" Margin="0,0,8,0"
-                           Padding="4,2" Background="{DynamicResource SurfaceBrush}"
-                           BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                           CornerRadius="4"/>
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="4" Padding="4,2" Margin="0,0,8,0"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="Ctrl+N" FontSize="10" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                </Border>
                 <Button x:Name="NuevaVenta"
                         Height="44" Padding="20,0" FontSize="13"
                         Style="{StaticResource PrimaryButton}">

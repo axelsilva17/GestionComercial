@@ -1,5 +1,8 @@
 using Caliburn.Micro;
 
+using System.Collections.Generic;
+using System.ComponentModel;
+
 namespace GestionComercial.UI.ViewModels.Base
 {
     public class ViewModelBase : Screen
@@ -36,6 +39,17 @@ namespace GestionComercial.UI.ViewModels.Base
         {
             ErrorMessage = string.Empty;
             ErrorVisible = false;
+        }
+
+        // SetProperty helper para simplificación
+        protected bool SetProperty<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string propertyName = null!)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+                return false;
+
+            field = value;
+            NotifyOfPropertyChange(propertyName);
+            return true;
         }
     }
 }
