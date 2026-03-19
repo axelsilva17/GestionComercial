@@ -1,7 +1,9 @@
+using Caliburn.Micro;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Reportes;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -451,5 +453,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public async Task FiltrarUltimos3() { FechaDesde = DateTime.Today.AddMonths(-3); FechaHasta = DateTime.Today; await CargarAsync(); }
         public async Task FiltrarUltimos6() { FechaDesde = DateTime.Today.AddMonths(-6); FechaHasta = DateTime.Today; await CargarAsync(); }
         public async Task FiltrarEsteAnio() { FechaDesde = new DateTime(DateTime.Today.Year, 1, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
+
+        // ── Abrir popup de auditoría ──────────────────────────────────────────
+        public async Task AbrirAuditoria()
+        {
+            var vm = IoC.Get<AuditoriaPopupViewModel>();
+            var wm = IoC.Get<IWindowManager>();
+            await wm.ShowDialogAsync(vm);
+        }
     }
 }
