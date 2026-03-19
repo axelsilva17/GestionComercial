@@ -1,0 +1,25 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Semantic Colors: Alpha variants for icons/badges backgrounds -->
+    <!-- Format: #AARRGGBB where AA is alpha (1A = ~10% opacity) -->
+
+    <!-- Success with alpha (10% opacity) - green for badges -->
+    <SolidColorBrush x:Key="SuccessAlphaBrush" Color="#1A22C55E"/>
+
+    <!-- Error with alpha (10% opacity) - red for error badges -->
+    <SolidColorBrush x:Key="ErrorAlphaBrush" Color="#1AEF4444"/>
+
+    <!-- Warning with alpha (10% opacity) - amber for warning badges -->
+    <SolidColorBrush x:Key="WarningAlphaBrush" Color="#1AF59E0B"/>
+
+    <!-- Primary with alpha (10% opacity) - blue for primary badges -->
+    <SolidColorBrush x:Key="PrimaryAlphaBrush" Color="#1A38BDF8"/>
+
+    <!-- Info with alpha (10% opacity) - blue for info badges -->
+    <SolidColorBrush x:Key="InfoAlphaBrush" Color="#1A3B82F6"/>
+
+    <!-- Surface with alpha for subtle highlights -->
+    <SolidColorBrush x:Key="SurfaceAlphaBrush" Color="#1A3B82F6"/>
+
+</ResourceDictionary>

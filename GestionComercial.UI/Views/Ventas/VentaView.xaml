@@ -26,7 +26,7 @@
                                 <Setter TargetName="rowBorder" Property="Background" Value="{DynamicResource HoverBrush}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="rowBorder" Property="Background" Value="#1A3A5C"/>
+                                <Setter TargetName="rowBorder" Property="Background" Value="{DynamicResource PrimaryAlphaBrush}"/>
                                 <Setter TargetName="rowBorder" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
                                 <Setter TargetName="rowBorder" Property="BorderThickness" Value="1"/>
                             </Trigger>

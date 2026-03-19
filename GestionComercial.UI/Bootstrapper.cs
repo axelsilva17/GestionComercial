@@ -7,6 +7,7 @@ using GestionComercial.Aplicacion.DTOs.Proveedores;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Aplicacion.DTOs.Auditoria;
 using GestionComercial.Aplicacion.Validators;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
@@ -67,6 +68,7 @@ namespace GestionComercial.UI
             _container.PerRequest<ReporteServicio>();
             _container.PerRequest<UsuarioServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
+            _container.PerRequest<IAuditoriaAppService, AuditoriaAppService>();
 
             // ── Validators (FluentValidation) ─────────────────────────────────
             // Nota: c.GetInstance<IUnitOfWork>().Clientes asume que IUnitOfWork

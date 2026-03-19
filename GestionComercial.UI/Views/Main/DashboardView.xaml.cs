@@ -40,5 +40,32 @@ namespace GestionComercial.UI.Views.Main
 
         private void IrConfiguracion_Click(object sender, RoutedEventArgs e)
             => Shell?.IrConfiguracion();
+
+        // ── Vendedor ────────────────────────────────────────────────────────────
+        private void CobrarPendiente_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrVentas(); // Navega a ventas (pendientes se filtran en el listado)
+
+        private void NuevoCliente_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrClientes(); // Navega a clientes para crear nuevo
+
+        // ── Administrador ────────────────────────────────────────────────────────
+        private void NuevoProducto_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrProductos(); // Navega a productos para crear nuevo
+
+        private void RegistrarCompra_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrCompras(); // Navega a compras para registrar nueva
+
+        private void ResumenDiario_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrReportes(); // Navega a reportes operativos del día
+
+        // ── Gerente ───────────────────────────────────────────────────────────────
+        private void IrReporteGerencial_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrReportes(); // Ya diferencia a ReporteGerenciaViewModel
+
+        private void IrCompararPeriodos_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrReportes(); // Navega a reportes (comparativa de períodos)
+
+        private void IrVerEquipo_Click(object sender, RoutedEventArgs e)
+            => Shell?.IrConfiguracion(); // Navega a configuración (gestión de usuarios/equipo)
     }
 }

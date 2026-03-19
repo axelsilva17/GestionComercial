@@ -10,9 +10,12 @@
         <ResourceDictionary Source="Diccionarios/Elevaciones.xaml"/>
 
         <!-- Estilos -->
-        <ResourceDictionary Source="Estilos/Botones.xaml"/>
-        <ResourceDictionary Source="Estilos/DataGrid.xaml"/>
-        <ResourceDictionary Source="Estilos/Tarjetas.xaml"/>
+        <ResourceDictionary Source="Estilos/ButtonStyles.xaml"/>
+        <ResourceDictionary Source="Estilos/DataGridStyles.xaml"/>
+        <ResourceDictionary Source="Estilos/CardStyles.xaml"/>
+
+        <!-- Semantic Colors -->
+        <ResourceDictionary Source="Diccionarios/SemanticColors.xaml"/>
 
     </ResourceDictionary.MergedDictionaries>
 
