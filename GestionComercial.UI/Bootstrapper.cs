@@ -104,7 +104,7 @@ namespace GestionComercial.UI
                 .Where(t => t.IsClass
                          && !t.IsAbstract
                          && t.Namespace != null
-                         && t.Namespace.StartsWith("GestionComercial.UI.ViewModel")
+                          && t.Namespace.StartsWith("GestionComercial.UI.ViewModels")
                          && typeof(Screen).IsAssignableFrom(t));
 
             foreach (var vmType in viewModelTypes)
