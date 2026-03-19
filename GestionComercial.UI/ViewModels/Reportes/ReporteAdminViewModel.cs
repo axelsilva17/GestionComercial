@@ -483,6 +483,11 @@ namespace GestionComercial.UI.ViewModels.Reportes
             _ = CargarAuditoriaAsync();
         }
 
+        public void CargarAuditoria()
+        {
+            _ = CargarAuditoriaAsync();
+        }
+
         public void OcultarAuditoria()
         {
             MostrarPanelAuditoria = false;
