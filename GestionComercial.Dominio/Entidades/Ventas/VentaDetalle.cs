@@ -22,5 +22,9 @@ namespace GestionComercial.Dominio.Entidades.Ventas
 
         public Venta Venta { get; set; } = null!;
         public Producto.Producto Producto { get; set; } = null!;
+
+        // ── Descuentos e Impuestos por ítem ─────────────────────────────────────
+        public ICollection<VentaDetalleDescuento> Descuentos { get; set; } = new List<VentaDetalleDescuento>();
+        public ICollection<VentaDetalleImpuesto> Impuestos  { get; set; } = new List<VentaDetalleImpuesto>();
     }
 }

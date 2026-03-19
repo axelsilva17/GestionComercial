@@ -7,8 +7,8 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(int idSucursal, DateTime desde, DateTime hasta);
         Task<VentaDto?>   ObtenerPorIdAsync(int id);
         Task<VentaDto>    CrearAsync(VentaCrearDto dto);
-        Task              RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos); // ← nuevo
-        Task              CancelarAsync(int id);
+        Task              RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos);
+        Task              CancelarAsync(int id, string motivo);
         Task<decimal>     ObtenerTotalDelDiaAsync(int idSucursal);
     }
 }

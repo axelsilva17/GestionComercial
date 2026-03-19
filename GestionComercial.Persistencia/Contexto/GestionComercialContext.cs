@@ -34,6 +34,8 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<MetodoPago> MetodosPago { get; set; }
         public DbSet<Venta> Ventas { get; set; }
         public DbSet<VentaDetalle> VentaDetalles { get; set; }
+        public DbSet<VentaDetalleDescuento> VentaDetalleDescuentos { get; set; }
+        public DbSet<VentaDetalleImpuesto> VentaDetalleImpuestos { get; set; }
         public DbSet<Pago> Pagos { get; set; }
         public DbSet<Compra> Compras { get; set; }
         public DbSet<CompraDetalle> CompraDetalles { get; set; }
