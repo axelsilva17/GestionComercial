@@ -609,13 +609,13 @@
                             </Grid.ColumnDefinitions>
 
                             <Button Grid.Column="0"
-                                    x:Name="CerrarPopupAnulacion"
+                                    Command="{Binding CerrarPopupAnulacionCommand}"
                                     Height="44" FontSize="13"
                                     Content="Cancelar"
                                     Style="{StaticResource BotonPagoSecundario}"/>
 
                             <Button Grid.Column="2"
-                                    x:Name="AnularVenta"
+                                    Command="{Binding AnularVentaCommand}"
                                     Height="44" FontSize="13" FontWeight="SemiBold"
                                     Content="Confirmar Anulación"
                                     Background="{DynamicResource ErrorBrush}">
