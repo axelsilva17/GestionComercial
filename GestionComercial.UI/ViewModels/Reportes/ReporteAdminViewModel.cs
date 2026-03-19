@@ -132,6 +132,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _ventasPendientes = value; NotifyOfPropertyChange(() => VentasPendientes); }
         }
 
+        // ── Panel de Auditoría ────────────────────────────────────────────────
+        private bool _mostrarPanelAuditoria;
+        public bool MostrarPanelAuditoria
+        {
+            get => _mostrarPanelAuditoria;
+            set { _mostrarPanelAuditoria = value; NotifyOfPropertyChange(() => MostrarPanelAuditoria); }
+        }
+
         // ── Filtros ───────────────────────────────────────────────────────────
         private DateTime _fechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         public DateTime FechaDesde
@@ -152,7 +160,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
         public ObservableCollection<CajaHistorialDto>        HistorialCajas   { get; set; } = new();
         public ObservableCollection<MovimientoCajaHistorialDto> MovimientosCaja { get; set; } = new();
-        public ObservableCollection<AuditoriaLogDto>        AuditoriaCajas   { get; set; } = new();
+        public ObservableCollection<AuditoriaLogDto>        AuditoriaCajas       { get; set; } = new();
+        public ObservableCollection<AuditoriaLogDto>        AuditoriaMovimientos { get; set; } = new();
 
         // ── KPIs de caja ───────────────────────────────────────────────────────
         private int _totalCajas;
@@ -425,10 +434,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 MovimientosCaja = new ObservableCollection<MovimientoCajaHistorialDto>(
                     movimientosList.OrderByDescending(m => m.Fecha).Take(20));
 
-                // ── Auditoría de cajas ────────────────────────────────────────────
-                var auditoria = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
-                LogHelper.Log($"[ReporteAdmin] AuditoriaCajas: {auditoria.Count} registros encontrados");
-                AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(auditoria);
+                // Auditoría de cajas se carga单独的 via CargarAuditoriaAsync()
+                // al abrir el panel de auditoría
 
                 NotifyOfPropertyChange(() => StockCritico);
                 NotifyOfPropertyChange(() => ComprasRecientes);
@@ -467,6 +474,43 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     SeparatorsPaint = new SolidColorPaint(Col_Sep),
                 }
             };
+        }
+
+        // ── Acciones de Auditoría ─────────────────────────────────────────────
+        public void MostrarAuditoria()
+        {
+            MostrarPanelAuditoria = true;
+            _ = CargarAuditoriaAsync();
+        }
+
+        public void OcultarAuditoria()
+        {
+            MostrarPanelAuditoria = false;
+        }
+
+        public async Task CargarAuditoriaAsync()
+        {
+            if (!MostrarPanelAuditoria) return;
+
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                var desde = FechaDesde.Date;
+                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
+
+                var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
+                var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
+
+                LogHelper.Log($"[ReporteAdmin] AuditoriaCajas: {auditoriaCajas.Count}, AuditoriaMovimientos: {auditoriaMovimientos.Count}");
+                AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(auditoriaCajas);
+                AuditoriaMovimientos = new ObservableCollection<AuditoriaLogDto>(auditoriaMovimientos);
+
+                NotifyOfPropertyChange(() => AuditoriaCajas);
+                NotifyOfPropertyChange(() => AuditoriaMovimientos);
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
 
         // ── Acciones filtro ───────────────────────────────────────────────────
