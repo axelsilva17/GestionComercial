@@ -14,7 +14,7 @@ using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
-using GestionComercial.UI.ViewModel.Main;
+using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Main;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -4,7 +4,7 @@ using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
 
-namespace GestionComercial.UI.ViewModel.Main
+namespace GestionComercial.UI.ViewModels.Main
 {
     public class LoginViewModel : ViewModelBase
     {
