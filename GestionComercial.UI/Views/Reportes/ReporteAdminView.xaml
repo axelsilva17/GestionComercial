@@ -8,6 +8,7 @@
     <UserControl.Resources>
         <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <local:WidthToPercentConverter x:Key="WidthToPercentConverter" xmlns:local="clr-namespace:GestionComercial.UI.Views.Converters"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -609,8 +610,8 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- ── SIDEPANEL OVERLAY (Grid.Column 1) ───────────────────────────── -->
-        <Grid Grid.Column="0">
+        <!-- ── FULL-WIDTH OVERLAY PANEL (90% screen width) ─────────────────── -->
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -641,7 +642,7 @@
                                             <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                                               From="1" To="0" Duration="0:0:0.2"/>
                                             <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility"
-                                                                            BeginTime="0:0:0.2">
+                                                                             BeginTime="0:0:0.2">
                                                 <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
                                             </ObjectAnimationUsingKeyFrames>
                                         </Storyboard>
@@ -653,14 +654,15 @@
                 </Border.Style>
             </Border>
 
-            <!-- Side Panel (slides from right) -->
-            <Border x:Name="AuditoriaSidePanel" Grid.Column="1"
-                    Width="0" MaxWidth="480"
+            <!-- Full-Width Panel (slides from left, 90% width) -->
+            <Border x:Name="AuditoriaSidePanel" Grid.Column="0"
+                    Width="0"
                     Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1,0,0,1"
+                    BorderThickness="0,0,1,0"
                     Visibility="Collapsed"
-                    ClipToBounds="True">
+                    ClipToBounds="True"
+                    HorizontalAlignment="Right">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Style.Triggers>
@@ -672,7 +674,8 @@
                                                 <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
                                             </ObjectAnimationUsingKeyFrames>
                                             <DoubleAnimation Storyboard.TargetProperty="Width"
-                                                             To="480" Duration="0:0:0.25">
+                                                             To="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource WidthToPercentConverter}, ConverterParameter=0.90}"
+                                                             Duration="0:0:0.3">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseOut"/>
                                                 </DoubleAnimation.EasingFunction>
@@ -684,13 +687,13 @@
                                     <BeginStoryboard>
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetProperty="Width"
-                                                             To="0" Duration="0:0:0.2">
+                                                             To="0" Duration="0:0:0.25">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseIn"/>
                                                 </DoubleAnimation.EasingFunction>
                                             </DoubleAnimation>
                                             <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility"
-                                                                            BeginTime="0:0:0.2">
+                                                                            BeginTime="0:0:0.25">
                                                 <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
                                             </ObjectAnimationUsingKeyFrames>
                                         </Storyboard>
@@ -715,9 +718,9 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Margin="20,16,20,12">
+                        <StackPanel Margin="30,20,30,16">
                             <TextBlock Text="AUDITORÍA DETALLADA" Style="{StaticResource ColHeader}"/>
-                            <TextBlock Text="Seguimiento completo de cajas y movimientos" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="Seguimiento completo de cajas y movimientos" FontSize="14" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                         </StackPanel>
                         <Button Grid.Column="1" cal:Message.Attach="OcultarAuditoria"
@@ -745,30 +748,30 @@
                     </Grid>
 
                     <!-- Date Filters -->
-                    <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="20,0,20,14">
+                    <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="30,0,30,18">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="16"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Desde" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
-                                            FontSize="12" Width="130"
+                                            FontSize="12" Width="140"
                                             Background="{DynamicResource BackgroundBrush}"
                                             Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Hasta" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
-                                            FontSize="12" Width="130"
+                                            FontSize="12" Width="140"
                                             Background="{DynamicResource BackgroundBrush}"
                                             Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </StackPanel>
@@ -796,13 +799,13 @@
                     </Border>
 
                     <!-- Tabs Content -->
-                    <TabControl Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="12,12,12,12">
+                    <TabControl Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="24,16,24,24">
                         <TabControl.Resources>
                             <Style TargetType="TabItem">
                                 <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                <Setter Property="Padding" Value="14,8"/>
-                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Padding" Value="18,10"/>
+                                <Setter Property="FontSize" Value="13"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="TabItem">
@@ -835,14 +838,14 @@
                                           GridLinesVisibility="None" HeadersVisibility="Column"
                                           Background="Transparent" BorderThickness="0"
                                           RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF"
-                                          MaxHeight="500" Margin="4,12,4,4"
-                                          FontSize="11">
+                                          MaxHeight="600" Margin="8,16,8,8"
+                                          FontSize="12" RowHeight="44" ColumnHeaderHeight="40">
                                     <DataGrid.CellStyle>
                                         <Style TargetType="DataGridCell">
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                             <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="8,0"/>
+                                            <Setter Property="Padding" Value="12,0"/>
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="DataGridCell">
@@ -877,19 +880,19 @@
                                         <Style TargetType="DataGridColumnHeader">
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Setter Property="FontSize" Value="10"/>
+                                            <Setter Property="FontSize" Value="11"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Padding" Value="8,8"/>
+                                            <Setter Property="Padding" Value="12,10"/>
                                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                                         </Style>
                                     </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="120"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="100"/>
-                                        <DataGridTextColumn Header="TABLA" Binding="{Binding NombreTabla}" Width="100"/>
-                                        <DataGridTextColumn Header="REGISTRO" Binding="{Binding RegistroId}" Width="80"/>
+                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="150"/>
+                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="140"/>
+                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="120"/>
+                                        <DataGridTextColumn Header="TABLA" Binding="{Binding NombreTabla}" Width="120"/>
+                                        <DataGridTextColumn Header="REGISTRO" Binding="{Binding RegistroId}" Width="100"/>
                                         <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
@@ -904,14 +907,14 @@
                                           GridLinesVisibility="None" HeadersVisibility="Column"
                                           Background="Transparent" BorderThickness="0"
                                           RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF"
-                                          MaxHeight="500" Margin="4,12,4,4"
-                                          FontSize="11">
+                                          MaxHeight="600" Margin="8,16,8,8"
+                                          FontSize="12" RowHeight="44" ColumnHeaderHeight="40">
                                     <DataGrid.CellStyle>
                                         <Style TargetType="DataGridCell">
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                             <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="8,0"/>
+                                            <Setter Property="Padding" Value="12,0"/>
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="DataGridCell">
@@ -946,19 +949,19 @@
                                         <Style TargetType="DataGridColumnHeader">
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Setter Property="FontSize" Value="10"/>
+                                            <Setter Property="FontSize" Value="11"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Padding" Value="8,8"/>
+                                            <Setter Property="Padding" Value="12,10"/>
                                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                                         </Style>
                                     </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="120"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="100"/>
-                                        <DataGridTextColumn Header="TABLA" Binding="{Binding NombreTabla}" Width="100"/>
-                                        <DataGridTextColumn Header="REGISTRO" Binding="{Binding RegistroId}" Width="80"/>
+                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="150"/>
+                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="140"/>
+                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="120"/>
+                                        <DataGridTextColumn Header="TABLA" Binding="{Binding NombreTabla}" Width="120"/>
+                                        <DataGridTextColumn Header="REGISTRO" Binding="{Binding RegistroId}" Width="100"/>
                                         <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
