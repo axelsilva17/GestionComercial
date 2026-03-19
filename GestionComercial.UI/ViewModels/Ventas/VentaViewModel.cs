@@ -5,12 +5,14 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GestionComercial.Dominio.Interfaces.Servicios;
 
 namespace GestionComercial.UI.ViewModels.Ventas
@@ -20,6 +22,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private readonly IProductoServicio _productoServicio;
         private readonly IVentaServicio    _ventaServicio;
         private readonly SesionServicio    _sesion;
+
+        // ── Timer para debounce de búsqueda ──────────────────────────────────────
+        private readonly DispatcherTimer _debounceTimer;
+        private CancellationTokenSource?  _debounceCts;
 
         public VentaViewModel(
             IProductoServicio productoServicio,
@@ -31,6 +37,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             _sesion               = sesion;
             Titulo                = "Nueva Venta";
             Items                 = new ObservableCollection<VentaItemDto>();
+            ResultadosBusqueda    = new ObservableCollection<ProductoListadoDto>();
             SumarCantidadCommand  = new RelayCommand<VentaItemDto>(SumarCantidad);
             RestarCantidadCommand = new RelayCommand<VentaItemDto>(RestarCantidad);
             QuitarItemCommand     = new RelayCommand<VentaItemDto>(QuitarItem);
@@ -42,13 +49,30 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 MotivoAnulacion = string.Empty;
                 MostrarPopupAnulacion = false;
             });
+            SeleccionarProductoCommand = new RelayCommand<ProductoListadoDto>(SeleccionarProductoDelPopup);
+            CerrarPopupBusquedaCommand  = new RelayCommand(CerrarPopupBusqueda);
             LimiteDescuento = _sesion.Rol?.ToLowerInvariant() switch
             {
                 "gerente"       => 30m,
                 "administrador" => 15m,
                 _               => 5m,
             };
+
+            // Configurar debounce de 300ms
+            _debounceTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(300)
+            };
+            _debounceTimer.Tick += async (s, e) =>
+            {
+                _debounceTimer.Stop();
+                _debounceCts?.Cancel();
+                _debounceCts = new CancellationTokenSource();
+                await BuscarProductosAsync(_textoDebounce, _debounceCts.Token);
+            };
         }
+
+        private string _textoDebounce = string.Empty;
 
         // ── Límite de descuento según rol ──────────────────────────────────────
         public decimal LimiteDescuento { get; }
@@ -227,7 +251,153 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public string BusquedaProducto
         {
             get => _busquedaProducto;
-            set { _busquedaProducto = value; NotifyOfPropertyChange(() => BusquedaProducto); }
+            set
+            {
+                if (SetProperty(ref _busquedaProducto, value))
+                {
+                    // Iniciar debounce solo si hay texto suficiente
+                    if (!string.IsNullOrWhiteSpace(value) && value.Length >= 3)
+                    {
+                        _textoDebounce = value;
+                        _debounceTimer.Stop();
+                        _debounceTimer.Start();
+                    }
+                    else
+                    {
+                        // Ocultar popup si el texto es muy corto
+                        MostrarPopupBusqueda = false;
+                    }
+                }
+            }
+        }
+
+        // ── Autocompletado de productos ─────────────────────────────────────────
+        private ObservableCollection<ProductoListadoDto> _resultadosBusqueda;
+        public ObservableCollection<ProductoListadoDto> ResultadosBusqueda
+        {
+            get => _resultadosBusqueda;
+            set => SetProperty(ref _resultadosBusqueda, value);
+        }
+
+        private bool _mostrarPopupBusqueda;
+        public bool MostrarPopupBusqueda
+        {
+            get => _mostrarPopupBusqueda;
+            set => SetProperty(ref _mostrarPopupBusqueda, value);
+        }
+
+        private bool _haySinResultados;
+        public bool HaySinResultados
+        {
+            get => _haySinResultados;
+            set => SetProperty(ref _haySinResultados, value);
+        }
+
+        private bool _buscandoProductos;
+        public bool BuscandoProductos
+        {
+            get => _buscandoProductos;
+            set => SetProperty(ref _buscandoProductos, value);
+        }
+
+        public RelayCommand<ProductoListadoDto> SeleccionarProductoCommand { get; }
+        public RelayCommand CerrarPopupBusquedaCommand { get; }
+
+        /// <summary>
+        /// Busca productos con debounce de 300ms para autocompletado.
+        /// </summary>
+        private async Task BuscarProductosAsync(string texto, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(texto) || texto.Length < 3)
+            {
+                MostrarPopupBusqueda = false;
+                return;
+            }
+
+            BuscandoProductos = true;
+            try
+            {
+                var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var busqueda = texto.Trim().ToLowerInvariant();
+
+                // Buscar por nombre que contenga el texto
+                var resultados = todos
+                    .Where(p => p.Nombre.ToLowerInvariant().Contains(busqueda) ||
+                               (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
+                    .Take(8) // Limitar a 8 resultados para el popup
+                    .ToList();
+
+                ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(resultados);
+                HaySinResultados = resultados.Count == 0;
+                MostrarPopupBusqueda = true;
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignorar si se canceló por nuevo debounce
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Error en búsqueda: {ex.Message}");
+            }
+            finally
+            {
+                BuscandoProductos = false;
+            }
+        }
+
+        /// <summary>
+        /// Selecciona un producto del popup de autocompletado y lo agrega al carrito.
+        /// </summary>
+        public void SeleccionarProductoDelPopup(ProductoListadoDto? producto)
+        {
+            if (producto == null) return;
+
+            if (producto.StockActual <= 0)
+            {
+                MostrarError($"'{producto.Nombre}' no tiene stock disponible.");
+                return;
+            }
+
+            var existente = Items.FirstOrDefault(i => i.ProductoId == producto.IdProducto);
+            if (existente != null)
+            {
+                if (existente.Cantidad >= producto.StockActual)
+                {
+                    MostrarError($"Stock máximo: {producto.StockActual}");
+                    return;
+                }
+                var idx = Items.IndexOf(existente);
+                existente.Cantidad++;
+                existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+                Items.RemoveAt(idx);
+                Items.Insert(idx, existente);
+            }
+            else
+            {
+                Items.Add(new VentaItemDto
+                {
+                    ProductoId     = producto.IdProducto,
+                    ProductoNombre = producto.Nombre,
+                    CodigoBarra    = producto.CodigoBarra ?? string.Empty,
+                    Cantidad       = 1,
+                    PrecioUnitario = producto.PrecioVentaActual,
+                    CostoUnitario  = producto.PrecioCostoActual,
+                    Subtotal       = producto.PrecioVentaActual,
+                });
+            }
+
+            BusquedaProducto = string.Empty;
+            MostrarPopupBusqueda = false;
+            RecalcularTotales();
+        }
+
+        /// <summary>
+        /// Cierra el popup de búsqueda y limpia el campo.
+        /// </summary>
+        public void CerrarPopupBusqueda()
+        {
+            MostrarPopupBusqueda = false;
+            ResultadosBusqueda?.Clear();
         }
 
         // ── Items del carrito ─────────────────────────────────────────────────
@@ -417,6 +587,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             ClienteNombre    = string.Empty;
             DescuentoManual  = string.Empty;
             BusquedaProducto = string.Empty;
+            ResultadosBusqueda?.Clear();
+            MostrarPopupBusqueda = false;
             RecalcularTotales();
             LimpiarError();
         }

@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using GestionComercial.UI.ViewModels.Ventas;
 
@@ -25,6 +26,35 @@ namespace GestionComercial.UI.Views.Ventas
 
             vm.HandleKeyDown(e.Key, Keyboard.Modifiers);
             e.Handled = true;
+        }
+
+        /// <summary>
+        /// Maneja el doble click en un producto del popup de autocompletado.
+        /// </summary>
+        private void ResultadosBusquedaList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is not VentaViewModel vm) return;
+
+            if (sender is ListBox list && list.SelectedItem is GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto producto)
+            {
+                vm.SeleccionarProductoDelPopup(producto);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Maneja la selección con Enter en el popup de autocompletado.
+        /// </summary>
+        private void ResultadosBusquedaList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter) return;
+            if (DataContext is not VentaViewModel vm) return;
+
+            if (sender is ListBox list && list.SelectedItem is GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto producto)
+            {
+                vm.SeleccionarProductoDelPopup(producto);
+                e.Handled = true;
+            }
         }
     }
 }
