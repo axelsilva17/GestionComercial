@@ -204,6 +204,61 @@ namespace GestionComercial.UI.ViewModels.Ventas
             AgregarPago();
         }
 
+        /// <summary>
+        /// Agrega pago en efectivo (botón rápido).
+        /// Usa el total de la venta si no hay pagos, sino usa el faltante.
+        /// </summary>
+        public void AgregarEfectivo()
+        {
+            var efectivo = MetodosPago.FirstOrDefault(m => m.EsEfectivo);
+            if (efectivo == null) { MostrarError("No hay método de pago en efectivo configurado."); return; }
+            MetodoSeleccionado = efectivo;
+            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            AgregarPago();
+        }
+
+        /// <summary>
+        /// Agrega pago con tarjeta de débito (botón rápido).
+        /// </summary>
+        public void AgregarDebito()
+        {
+            var debito = MetodosPago.FirstOrDefault(m =>
+                m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
+                m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
+            if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
+            MetodoSeleccionado = debito;
+            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            AgregarPago();
+        }
+
+        /// <summary>
+        /// Agrega pago con tarjeta de crédito (botón rápido).
+        /// </summary>
+        public void AgregarCredito()
+        {
+            var credito = MetodosPago.FirstOrDefault(m =>
+                m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
+                m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
+            if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
+            MetodoSeleccionado = credito;
+            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            AgregarPago();
+        }
+
+        /// <summary>
+        /// Agrega pago con QR (botón rápido).
+        /// </summary>
+        public void AgregarQR()
+        {
+            var qr = MetodosPago.FirstOrDefault(m =>
+                m.NombreMetodo.Contains("QR", StringComparison.OrdinalIgnoreCase) ||
+                m.NombreMetodo.Contains("Transferencia", StringComparison.OrdinalIgnoreCase));
+            if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
+            MetodoSeleccionado = qr;
+            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            AgregarPago();
+        }
+
         public async Task Confirmar()
         {
             if (!PuedeCobrar) { MostrarError("El monto no cubre el total."); return; }

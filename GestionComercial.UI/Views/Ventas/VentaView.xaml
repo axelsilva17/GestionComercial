@@ -77,9 +77,54 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Estilos para botones de formas de pago (spec modulo-ventas-full) -->
+        <Style x:Key="BotonPago" TargetType="Button">
+            <Setter Property="Padding"      Value="12,14"/>
+            <Setter Property="Margin"      Value="4"/>
+            <Setter Property="FontSize"    Value="13"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{DynamicResource PrimaryBrush}"
+                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BotonPagoSecundario" TargetType="Button" BasedOn="{StaticResource BotonPago}">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Popup de anulación (spec modulo-ventas-full) -->
+        <Style x:Key="PopupAnulacionBorder" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush"    Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="12"/>
+            <Setter Property="Padding"        Value="24"/>
+            <Setter Property="Width"          Value="400"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid Height="849" Width="1204">
+    <Grid x:Name="RootGrid" Height="849" Width="1204">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="16"/>
@@ -502,8 +547,100 @@
                             <TextBlock Text="Cobrar" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Botón anular venta (solo visible cuando hay venta activa) -->
+                    <Button x:Name="MostrarAnulacion"
+                            Height="44" FontSize="13"
+                            Margin="0,8,0,0"
+                            Style="{StaticResource BotonPagoSecundario}"
+                            Visibility="{Binding HayVentaActiva, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🗑" FontSize="14"
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Anular Venta" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- ══════════════════════════════════════════════════════
+             POPUP DE ANULACIÓN (spec modulo-ventas-full)
+        ═══════════════════════════════════════════════════════ -->
+        <Popup x:Name="AnulacionPopup"
+               IsOpen="{Binding MostrarPopupAnulacion}"
+               Placement="Center"
+               PlacementTarget="{Binding ElementName=RootGrid}"
+               StaysOpen="False">
+            <Grid Background="#80000000" Width="1204" Height="849">
+                <Border Style="{StaticResource PopupAnulacionBorder}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="⚠ Anulación de Venta"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource ErrorBrush}"
+                                   Margin="0,0,0,16"/>
+
+                        <TextBlock Text="Motivo de anulación:"
+                                   FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBox Text="{Binding MotivoAnulacion, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="100"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 Padding="12"/>
+
+                        <TextBlock Text="Este acción no se puede deshacer."
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Margin="0,8,0,16"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0"
+                                    x:Name="CerrarPopupAnulacion"
+                                    Height="44" FontSize="13"
+                                    Content="Cancelar"
+                                    Style="{StaticResource BotonPagoSecundario}"/>
+
+                            <Button Grid.Column="2"
+                                    x:Name="AnularVenta"
+                                    Height="44" FontSize="13" FontWeight="SemiBold"
+                                    Content="Confirmar Anulación"
+                                    Background="{DynamicResource ErrorBrush}">
+                                <Button.Foreground>
+                                    <SolidColorBrush Color="White"/>
+                                </Button.Foreground>
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="10" Padding="12,14">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Popup>
     </Grid>
 </UserControl>

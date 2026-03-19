@@ -23,8 +23,9 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public int     Cantidad       { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal CostoUnitario  { get; set; }
-        
-        // ── Descuentos por ítem ────────────────────────────────────────────────
+        /// <summary>
+        /// Descuentos aplicados directamente a este ítem (spec modulo-ventas-full).
+        /// </summary>
         public List<DescuentoItemDto> Descuentos { get; set; } = new();
     }
 
