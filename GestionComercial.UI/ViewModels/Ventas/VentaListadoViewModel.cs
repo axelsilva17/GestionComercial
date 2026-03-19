@@ -157,7 +157,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             LimpiarError();
             try
             {
-                await _ventaServicio.CancelarAsync(VentaSeleccionada.IdVenta);
+                await _ventaServicio.CancelarAsync(VentaSeleccionada.IdVenta, "Anulación desde listado de ventas");
                 await Buscar(); // Recargar lista
             }
             catch (Exception ex) { MostrarError(ex.Message); }

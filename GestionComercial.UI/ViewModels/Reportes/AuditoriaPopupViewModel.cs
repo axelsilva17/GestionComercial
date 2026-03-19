@@ -60,7 +60,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             try
             {
                 var resultado = await _auditoriaService.ObtenerAuditoriaCompletaCajaAsync(
-                    FechaDesde, FechaHasta, CancellationToken.None);
+                    FechaDesde, FechaHasta);
 
                 AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(resultado.AuditoriaCajas);
                 MovimientosCaja = new ObservableCollection<AuditoriaLogDto>(resultado.MovimientosCaja);

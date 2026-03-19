@@ -34,14 +34,4 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public int     IdMetodoPago { get; set; }
         public decimal Monto        { get; set; }
     }
-
-    /// <summary>
-    /// Representa un descuento aplicado a un ítem de venta específico.
-    /// </summary>
-    public class DescuentoItemDto
-    {
-        public decimal  Porcentaje   { get; set; }
-        public decimal  Monto       { get; set; }
-        public string?  Descripcion { get; set; }
-    }
 }
