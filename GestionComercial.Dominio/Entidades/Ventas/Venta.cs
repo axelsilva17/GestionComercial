@@ -24,6 +24,11 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         public Caja.Caja Caja { get; set; } = null!;
         public ICollection<VentaDetalle> Detalles { get; set; } = new List<VentaDetalle>();
         public ICollection<Pago>         Pagos    { get; set; } = new List<Pago>();
+        
+        // ── Campos de anulación ──────────────────────────────────────────────────
+        public string? MotivoAnulacion   { get; set; }
+        public DateTime? FechaAnulacion { get; set; }
+        public int?     UsuarioAnulacionId { get; set; }
     }
 
 

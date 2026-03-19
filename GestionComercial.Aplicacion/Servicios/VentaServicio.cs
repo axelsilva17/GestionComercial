@@ -1,7 +1,9 @@
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 
 namespace GestionComercial.Aplicacion.Servicios
@@ -9,7 +11,13 @@ namespace GestionComercial.Aplicacion.Servicios
     public class VentaServicio : IVentaServicio
     {
         private readonly IUnitOfWork _uow;
-        public VentaServicio(IUnitOfWork uow) => _uow = uow;
+        private readonly IServicioImpresion _servicioImpresion;
+
+        public VentaServicio(IUnitOfWork uow, IServicioImpresion servicioImpresion)
+        {
+            _uow = uow;
+            _servicioImpresion = servicioImpresion;
+        }
 
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
             int idSucursal, DateTime desde, DateTime hasta)
@@ -36,28 +44,29 @@ namespace GestionComercial.Aplicacion.Servicios
             }
 
             // ── Crear venta PENDIENTE (Estado=1) ──────────────────────────────
-            // ¡NO se pone Estado=2 aquí! Solo se marca Pagada en RegistrarPagoAsync.
             var venta = new Venta
             {
                 Fecha          = DateTime.Now,
-                Estado         = 1,               // 1=Pendiente, 2=Pagada, 3=Anulada
+                Estado         = (int)EstadoVentaEnum.Pendiente,
                 Id_sucursal    = dto.IdSucursal,
                 Id_cliente     = dto.IdCliente,
                 Id_usuario     = dto.IdUsuario,
                 Id_caja        = dto.IdCaja,
                 TotalBruto     = 0,
-                TotalDescuento = dto.TotalDescuento,
+                TotalDescuento = 0, // Se calcula acumulando descuentos por ítem
                 TotalFinal     = 0,
             };
 
             decimal totalBruto = 0;
+            decimal totalDescuentos = 0;
+
             foreach (var item in dto.Items)
             {
                 var producto  = (await _uow.Productos.ObtenerPorIdAsync(item.IdProducto))!;
                 var subtotal  = producto.PrecioVentaActual * item.Cantidad;
                 totalBruto   += subtotal;
 
-                venta.Detalles.Add(new VentaDetalle
+                var detalle = new VentaDetalle
                 {
                     Id_producto    = item.IdProducto,
                     Cantidad       = item.Cantidad,
@@ -65,15 +74,30 @@ namespace GestionComercial.Aplicacion.Servicios
                     CostoUnitario  = producto.PrecioCostoActual,
                     Subtotal       = subtotal,
                     MargenUnitario = producto.PrecioVentaActual - producto.PrecioCostoActual,
-                });
+                };
+
+                // ── Aplicar descuentos por ítem ────────────────────────────────
+                foreach (var dtoDesc in item.Descuentos)
+                {
+                    var descuento = new VentaDetalleDescuento
+                    {
+                        Porcentaje  = dtoDesc.Porcentaje,
+                        Monto       = dtoDesc.Monto,
+                        Descripcion = dtoDesc.Descripcion,
+                    };
+                    detalle.Descuentos.Add(descuento);
+                    totalDescuentos += dtoDesc.Monto;
+                }
+
+                venta.Detalles.Add(detalle);
 
                 producto.StockActual -= item.Cantidad;
                 _uow.Productos.Actualizar(producto);
             }
 
             venta.TotalBruto = totalBruto;
-            venta.TotalFinal = totalBruto - dto.TotalDescuento;
-            // ← SIN venta.Estado = 2 — ese era el bug
+            venta.TotalDescuento = totalDescuentos;
+            venta.TotalFinal = totalBruto - totalDescuentos;
 
             await _uow.Ventas.AgregarAsync(venta);
             await _uow.GuardarCambiosAsync();
@@ -85,6 +109,7 @@ namespace GestionComercial.Aplicacion.Servicios
         /// <summary>
         /// Registra los pagos y recién aquí marca la venta como Pagada.
         /// Soporta pagos mixtos (efectivo + tarjeta + QR, etc.).
+        /// Para pagos en efectivo, crea automáticamente un movimiento de caja.
         /// El vuelto NO se guarda — es solo informativo para el vendedor.
         /// </summary>
         public async Task RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos)
@@ -92,9 +117,9 @@ namespace GestionComercial.Aplicacion.Servicios
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
                 ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
 
-            if (venta.Estado == 2)
+            if (venta.Estado == (int)EstadoVentaEnum.Pagada)
                 throw new VentaInvalidaException("La venta ya está pagada.");
-            if (venta.Estado == 3)
+            if (venta.Estado == (int)EstadoVentaEnum.Anulada)
                 throw new VentaInvalidaException("La venta está anulada y no puede pagarse.");
 
             var totalPagado = pagos.Sum(p => p.Monto);
@@ -104,31 +129,93 @@ namespace GestionComercial.Aplicacion.Servicios
 
             foreach (var pago in pagos.Where(p => p.Monto > 0))
             {
-                await _uow.Pagos.AgregarAsync(new GestionComercial.Dominio.Entidades.Pagos.Pago
+                var pagoEntity = new GestionComercial.Dominio.Entidades.Pagos.Pago
                 {
                     Id_venta      = idVenta,
                     Id_metodoPago = pago.IdMetodoPago,
                     Monto         = pago.Monto,
-                });
+                };
+
+                // ── Crear movimiento de caja SOLO para pagos en efectivo ─────────
+                if (pago.EsEfectivo && venta.Id_caja.HasValue)
+                {
+                    var movimiento = new TipoMovimientoCaja
+                    {
+                        Tipo         = (int)TipoMovimientoCajaEnum.Ingreso,
+                        Monto        = pago.Monto,
+                        Concepto     = $"Venta #{venta.Id}",
+                        ReferenciaId = venta.Id,
+                        Id_venta     = venta.Id,
+                        Id_caja      = venta.Id_caja.Value,
+                        Id_usuario   = venta.Id_usuario,
+                        Fecha        = DateTime.Now,
+                    };
+                    await _uow.MovimientosCaja.AgregarAsync(movimiento);
+                    await _uow.GuardarCambiosAsync();
+                    
+                    // Vincular el pago con el movimiento de caja
+                    pagoEntity.Id_movimientoCaja = movimiento.Id;
+                }
+
+                await _uow.Pagos.AgregarAsync(pagoEntity);
             }
 
-            venta.Estado = 2; // Pagada — recién acá
+            venta.Estado = (int)EstadoVentaEnum.Pagada;
             _uow.Ventas.Actualizar(venta);
             await _uow.GuardarCambiosAsync();
+
+            // ── Imprimir ticket post-pago (fire-and-forget) ──────────────────────
+            _ = ImprimirTicketAsync(venta.Id);
         }
 
         /// <summary>
-        /// Anula la venta y devuelve el stock.
+        /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
+        /// Los errores de impresión NO deben revertir el pago.
+        /// </summary>
+        private async Task ImprimirTicketAsync(int idVenta)
+        {
+            try
+            {
+                var ventaCompleta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta);
+                if (ventaCompleta == null) return;
+
+                var ventaDto = MapearDto(ventaCompleta);
+                var pagosDto = ventaCompleta.Pagos.Select(p => new PagoDto
+                {
+                    IdPago       = p.Id,
+                    Monto        = p.Monto,
+                    IdMetodoPago = p.Id_metodoPago,
+                    MetodoNombre = p.MetodoPago?.Nombre ?? "Desconocido",
+                    EsEfectivo   = p.MetodoPago?.EsEfectivo ?? false,
+                }).ToList();
+
+                _servicioImpresion.ImprimirTicket(ventaDto, pagosDto);
+            }
+            catch
+            {
+                // Fire-and-forget: los errores de impresión no deben afectar la transacción
+            }
+        }
+
+        /// <summary>
+        /// Anula la venta con motivo obligatorio y devuelve el stock.
         /// Los pagos ya registrados quedan en BD como historial.
-        /// ObtenerTotalDelDiaAsync filtra solo Estado=2 así que
+        /// ObtenerTotalDelDiaAsync filtra solo Estado=Pagada así que
         /// las ventas anuladas no afectan reportes de ingresos.
         /// </summary>
-        public async Task CancelarAsync(int id)
+        /// <param name="id">ID de la venta a anular</param>
+        /// <param name="motivo">Motivo obligatorio de la anulación</param>
+        /// <exception cref="VentaInvalidaException">Si la venta no existe o ya está anulada</exception>
+        /// <exception cref="ArgumentException">Si el motivo está vacío</exception>
+        public async Task CancelarAsync(int id, string motivo)
         {
+            if (string.IsNullOrWhiteSpace(motivo))
+                throw new ArgumentException("El motivo de anulación es obligatorio.", nameof(motivo));
+
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(id)
                 ?? throw new VentaInvalidaException($"Venta #{id} no encontrada.");
 
-            if (venta.Estado == 3)
+            if (venta.Estado == (int)EstadoVentaEnum.Anulada)
                 throw new VentaInvalidaException("La venta ya está anulada.");
 
             // Devolver stock siempre (estaba pendiente o pagada)
@@ -142,7 +229,12 @@ namespace GestionComercial.Aplicacion.Servicios
                 }
             }
 
-            venta.Estado = 3;
+            // ── Registrar datos de anulación ──────────────────────────────────
+            venta.Estado           = (int)EstadoVentaEnum.Anulada;
+            venta.MotivoAnulacion  = motivo;
+            venta.FechaAnulacion   = DateTime.Now;
+            venta.UsuarioAnulacionId = venta.Id_usuario; // Usuario que realiza la anulación
+
             _uow.Ventas.Actualizar(venta);
             await _uow.GuardarCambiosAsync();
         }
@@ -173,6 +265,7 @@ namespace GestionComercial.Aplicacion.Servicios
             ClienteNombre  = v.Cliente?.Nombre ?? "Consumidor Final",
             UsuarioNombre  = v.Usuario != null
                 ? $"{v.Usuario.Nombre} {v.Usuario.Apellido}" : string.Empty,
+            IdCaja         = v.Id_caja ?? 0,
             Items = v.Detalles.Select(d => new VentaDetalleDto
             {
                 IdProducto     = d.Id_producto,

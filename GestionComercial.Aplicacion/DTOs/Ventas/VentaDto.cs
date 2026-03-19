@@ -17,6 +17,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public string   ClienteNombre  { get; set; }
         public int      IdUsuario      { get; set; }
         public string   UsuarioNombre  { get; set; }
+        public int      IdCaja         { get; set; } // Para impresión de tickets
         public List<VentaDetalleDto> Items { get; set; } = new();
         public List<PagoDto>         Pagos { get; set; } = new();
     }

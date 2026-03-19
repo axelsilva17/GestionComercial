@@ -15,8 +15,12 @@ namespace GestionComercial.Dominio.Entidades.Caja
         public int?     ReferenciaId { get; set; }
         public int      Id_caja      { get; set; }
         public int      Id_usuario   { get; set; }
+        
+        // ── Link a Venta (para trazabilidad de movimientos de caja) ─────────────
+        public int?     Id_venta    { get; set; }
 
         public Caja    Caja    { get; set; } = null!;
         public Usuario Usuario { get; set; } = null!;
+        public Venta?  Venta   { get; set; }
     }
 }

@@ -224,6 +224,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                  .HasForeignKey(p => p.Id_venta).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(p => p.MetodoPago).WithMany(m => m.Pagos)
                  .HasForeignKey(p => p.Id_metodoPago).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(p => p.MovimientoCaja).WithMany()
+                 .HasForeignKey(p => p.Id_movimientoCaja).OnDelete(DeleteBehavior.Restrict);
             }
         }
 
@@ -237,6 +239,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.Property(v => v.TotalDescuento).HasColumnType("decimal(18,2)");
                 b.Property(v => v.TotalFinal).HasColumnType("decimal(18,2)");
                 b.Property(v => v.Observacion).HasMaxLength(500);
+                // ── Campos de anulación ─────────────────────────────────────────
+                b.Property(v => v.MotivoAnulacion).HasMaxLength(500);
                 b.HasIndex(v => v.Fecha);
                 b.HasIndex(v => new { v.Id_sucursal, v.Fecha });
                 b.HasOne(v => v.Sucursal).WithMany(s => s.Ventas)
@@ -259,13 +263,41 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.Property(v => v.Cantidad).HasColumnType("decimal(18,3)");
                 b.Property(v => v.PrecioUnitario).HasColumnType("decimal(18,2)");
                 b.Property(v => v.CostoUnitario).HasColumnType("decimal(18,2)");
-                b.Property(v => v.Descuento).HasColumnType("decimal(18,2)");
+                b.Property(v => v.Descuento).HasColumnType("decimal(18,2)"); // Legacy
                 b.Property(v => v.Subtotal).HasColumnType("decimal(18,2)");
                 b.Property(v => v.MargenUnitario).HasColumnType("decimal(18,2)");
                 b.HasOne(v => v.Venta).WithMany(v => v.Detalles)
                  .HasForeignKey(v => v.Id_venta).OnDelete(DeleteBehavior.Cascade);
                 b.HasOne(v => v.Producto).WithMany(p => p.VentaDetalles)
                  .HasForeignKey(v => v.Id_producto).OnDelete(DeleteBehavior.Restrict);
+                // ── Descuentos e Impuestos por ítem ─────────────────────────────
+                b.HasMany(v => v.Descuentos).WithOne(d => d.Detalle)
+                 .HasForeignKey(d => d.Id_detalle).OnDelete(DeleteBehavior.Cascade);
+                b.HasMany(v => v.Impuestos).WithOne(i => i.Detalle)
+                 .HasForeignKey(i => i.Id_detalle).OnDelete(DeleteBehavior.Cascade);
+            }
+        }
+
+        public class VentaDetalleDescuentoConfiguracion : IEntityTypeConfiguration<VentaDetalleDescuento>
+        {
+            public void Configure(EntityTypeBuilder<VentaDetalleDescuento> b)
+            {
+                b.ToTable("VentaDetalleDescuento");
+                b.HasKey(d => d.Id);
+                b.Property(d => d.Porcentaje).HasColumnType("decimal(18,2)");
+                b.Property(d => d.Monto).HasColumnType("decimal(18,2)");
+                b.Property(d => d.Descripcion).HasMaxLength(200);
+            }
+        }
+
+        public class VentaDetalleImpuestoConfiguracion : IEntityTypeConfiguration<VentaDetalleImpuesto>
+        {
+            public void Configure(EntityTypeBuilder<VentaDetalleImpuesto> b)
+            {
+                b.ToTable("VentaDetalleImpuesto");
+                b.HasKey(i => i.Id);
+                b.Property(i => i.Porcentaje).HasColumnType("decimal(18,2)");
+                b.Property(i => i.Monto).HasColumnType("decimal(18,2)");
             }
         }
 
@@ -354,6 +386,9 @@ namespace GestionComercial.Persistencia.Configuraciones
                  .HasForeignKey(m => m.Id_caja).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(m => m.Usuario).WithMany()
                  .HasForeignKey(m => m.Id_usuario).OnDelete(DeleteBehavior.Restrict);
+                // ── Link a Venta (para trazabilidad) ────────────────────────────
+                b.HasOne(m => m.Venta).WithMany()
+                 .HasForeignKey(m => m.Id_venta).OnDelete(DeleteBehavior.Restrict);
             }
         }
     }
