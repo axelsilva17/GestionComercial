@@ -1,6 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
-using GestionComercial.UI.ViewModel.Main;
+using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Clientes;
 using GestionComercial.UI.ViewModels.Compras;

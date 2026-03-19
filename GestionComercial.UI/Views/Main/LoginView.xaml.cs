@@ -1,6 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.Servicios;
-using GestionComercial.UI.ViewModel.Main;
+using GestionComercial.UI.ViewModels.Main;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
