@@ -8,7 +8,6 @@
     <UserControl.Resources>
         <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
-        <local:WidthToPercentConverter x:Key="WidthToPercentConverter" xmlns:local="clr-namespace:GestionComercial.UI.Views.Converters"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -619,91 +618,29 @@
 
             <!-- Semi-transparent backdrop (click to close) -->
             <Border x:Name="OverlayBackdrop" Grid.Column="0"
-                    Background="#80000000" Visibility="Collapsed"
+                    Background="#80000000"
                     MouseLeftButtonDown="OverlayBackdrop_MouseLeftButtonDown">
                 <Border.Style>
                     <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding MostrarPanelAuditoria}" Value="True">
-                                <DataTrigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
-                                                <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                              From="0" To="1" Duration="0:0:0.2"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.EnterActions>
-                                <DataTrigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                              From="1" To="0" Duration="0:0:0.2"/>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility"
-                                                                             BeginTime="0:0:0.2">
-                                                <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.ExitActions>
+                                <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
             </Border>
 
-            <!-- Full-Width Panel (slides from left, 90% width) -->
+            <!-- Full-Width Panel (90% width) -->
             <Border x:Name="AuditoriaSidePanel" Grid.Column="0"
-                    Width="0"
                     Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0,0,1,0"
-                    Visibility="Collapsed"
                     ClipToBounds="True"
-                    HorizontalAlignment="Right">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding MostrarPanelAuditoria}" Value="True">
-                                <DataTrigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
-                                                <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                            <DoubleAnimation Storyboard.TargetProperty="Width"
-                                                             To="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource WidthToPercentConverter}, ConverterParameter=0.90}"
-                                                             Duration="0:0:0.3">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.EnterActions>
-                                <DataTrigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="Width"
-                                                             To="0" Duration="0:0:0.25">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseIn"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility"
-                                                                            BeginTime="0:0:0.25">
-                                                <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
-                                            </ObjectAnimationUsingKeyFrames>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.ExitActions>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-
+                    HorizontalAlignment="Stretch"
+                    Visibility="{Binding MostrarPanelAuditoria, Converter={StaticResource BoolToVisibility}}">
+                
                 <!-- Panel Content -->
                 <Grid>
                     <Grid.RowDefinitions>
