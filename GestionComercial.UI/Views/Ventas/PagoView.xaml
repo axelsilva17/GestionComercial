@@ -7,6 +7,42 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
+
+        <!-- Estilos para botones de formas de pago (spec modulo-ventas-full) -->
+        <Style x:Key="BotonPago" TargetType="Button">
+            <Setter Property="Padding"      Value="12,14"/>
+            <Setter Property="Margin"      Value="4"/>
+            <Setter Property="FontSize"    Value="13"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Foreground"  Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BotonPagoSecundario" TargetType="Button" BasedOn="{StaticResource BotonPago}">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid MaxWidth="700" Margin="0,40" VerticalAlignment="Top"
@@ -108,18 +144,54 @@
                 <TextBlock Text="AGREGAR PAGO" FontSize="11" FontWeight="Bold"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,0,0,14"/>
-                <Grid>
+
+                <!-- Botones grandes de formas de pago (spec modulo-ventas-full) -->
+                <UniformGrid Rows="1" Margin="0,0,0,16">
+                    <Button x:Name="AgregarEfectivo"
+                            Style="{StaticResource BotonPago}"
+                            Background="#22C55E">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💵" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Efectivo" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="AgregarDebito"
+                            Style="{StaticResource BotonPago}"
+                            Background="#3B82F6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Débito" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="AgregarCredito"
+                            Style="{StaticResource BotonPago}"
+                            Background="#8B5CF6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Crédito" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="AgregarQR"
+                            Style="{StaticResource BotonPago}"
+                            Background="#EC4899">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📱" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="QR" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </UniformGrid>
+
+                <!-- Monto a ingresar -->
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="160"/>
                         <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="8"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Método de pago -->
+                    <!-- Método de pago (selector adicional) -->
                     <ComboBox Grid.Column="0"
                               ItemsSource="{Binding MetodosPago}"
                               SelectedItem="{Binding MetodoSeleccionado}"
@@ -170,37 +242,18 @@
                             <TextBlock Text="Agregar" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
-                    <!-- Botón completar con efectivo -->
-                    <Button Grid.Column="6" x:Name="CompletarConEfectivo"
-                            Height="44" Padding="14,0" FontSize="12"
-                            Visibility="{Binding HayFaltante, Converter={StaticResource BoolToVisibility}}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
-                                <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
-                                <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
-                                <Setter Property="BorderThickness" Value="1"/>
-                                <Setter Property="Cursor"          Value="Hand"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}"
-                                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                                    CornerRadius="8">
-                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"
-                                                                  Margin="14,0"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                        <TextBlock Text="💵 Completar en efectivo" VerticalAlignment="Center"/>
-                    </Button>
                 </Grid>
+
+                <!-- Botón completar con efectivo rápido -->
+                <Button x:Name="CompletarConEfectivo"
+                        Height="44" Margin="0,12,0,0"
+                        Visibility="{Binding HayFaltante, Converter={StaticResource BoolToVisibility}}"
+                        Style="{StaticResource BotonPagoSecundario}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💵" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Completar faltante en efectivo" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
 

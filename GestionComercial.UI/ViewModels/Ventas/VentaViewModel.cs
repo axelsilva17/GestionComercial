@@ -30,9 +30,139 @@ namespace GestionComercial.UI.ViewModels.Ventas
             _ventaServicio        = ventaServicio;
             _sesion               = sesion;
             Titulo                = "Nueva Venta";
+            Items                 = new ObservableCollection<VentaItemDto>();
             SumarCantidadCommand  = new RelayCommand<VentaItemDto>(SumarCantidad);
             RestarCantidadCommand = new RelayCommand<VentaItemDto>(RestarCantidad);
             QuitarItemCommand     = new RelayCommand<VentaItemDto>(QuitarItem);
+            AgregarItemDescuentoCommand = new RelayCommand<DescuentoItemParam>(AgregarItemConDescuento);
+            AnularVentaCommand    = new RelayCommand(async () => await AnularVentaAsync(), () => _ventaActualId > 0);
+            MostrarPopupAnulacionCommand = new RelayCommand(() => MostrarPopupAnulacion = true);
+            CerrarPopupAnulacionCommand = new RelayCommand(() =>
+            {
+                MotivoAnulacion = string.Empty;
+                MostrarPopupAnulacion = false;
+            });
+        }
+
+        // ── Venta actual (para anulación) ───────────────────────────────────────
+        private int _ventaActualId;
+        public int VentaActualId
+        {
+            get => _ventaActualId;
+            set { _ventaActualId = value; NotifyOfPropertyChange(() => VentaActualId); NotifyOfPropertyChange(() => HayVentaActiva); }
+        }
+        public bool HayVentaActiva => _ventaActualId > 0;
+
+        // ── Popup de anulación ───────────────────────────────────────────────────
+        private bool _mostrarPopupAnulacion;
+        public bool MostrarPopupAnulacion
+        {
+            get => _mostrarPopupAnulacion;
+            set { _mostrarPopupAnulacion = value; NotifyOfPropertyChange(() => MostrarPopupAnulacion); }
+        }
+
+        private string _motivoAnulacion = string.Empty;
+        public string MotivoAnulacion
+        {
+            get => _motivoAnulacion;
+            set { _motivoAnulacion = value; NotifyOfPropertyChange(() => MotivoAnulacion); }
+        }
+
+        public RelayCommand MostrarPopupAnulacionCommand { get; }
+        public RelayCommand CerrarPopupAnulacionCommand { get; }
+        public RelayCommand AnularVentaCommand { get; }
+
+        /// <summary>
+        /// Agrega un ítem con descuento por porcentaje.
+        /// El descuento se calcula sobre el subtotal del ítem.
+        /// </summary>
+        public RelayCommand<DescuentoItemParam> AgregarItemDescuentoCommand { get; }
+
+        /// <summary>
+        /// Registra un pago y abre el popup de anulación si corresponde.
+        /// </summary>
+        public async Task AnularVentaAsync()
+        {
+            if (string.IsNullOrWhiteSpace(MotivoAnulacion))
+            {
+                MostrarError("Debe ingresar el motivo de anulación.");
+                return;
+            }
+
+            if (VentaActualId <= 0)
+            {
+                MostrarError("No hay venta activa para anular.");
+                return;
+            }
+
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                await _ventaServicio.CancelarAsync(VentaActualId, MotivoAnulacion);
+                MotivoAnulacion = string.Empty;
+                MostrarPopupAnulacion = false;
+                MostrarMensaje("Venta anulada correctamente.");
+                NuevaVenta();
+            }
+            catch (Exception ex)
+            {
+                MostrarError($"Error al anular: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void AgregarItemConDescuento(DescuentoItemParam? param)
+        {
+            if (param?.Producto == null || param.Cantidad <= 0) return;
+
+            var existente = Items.FirstOrDefault(i => i.ProductoId == param.Producto.IdProducto);
+            if (existente != null)
+            {
+                // Actualizar cantidad y recalcular con descuento
+                var idx = Items.IndexOf(existente);
+                existente.Cantidad += param.Cantidad;
+                existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+
+                // Aplicar descuento por ítem
+                if (param.PorcentajeDescuento > 0)
+                {
+                    existente.DescuentoPorItem = Math.Round(existente.Subtotal * param.PorcentajeDescuento / 100, 2);
+                }
+
+                Items.RemoveAt(idx);
+                Items.Insert(idx, existente);
+            }
+            else
+            {
+                var subtotal = param.Cantidad * param.Producto.PrecioVentaActual;
+                var descuento = param.PorcentajeDescuento > 0
+                    ? Math.Round(subtotal * param.PorcentajeDescuento / 100, 2)
+                    : 0m;
+
+                Items.Add(new VentaItemDto
+                {
+                    ProductoId          = param.Producto.IdProducto,
+                    ProductoNombre      = param.Producto.Nombre,
+                    CodigoBarra         = param.Producto.CodigoBarra ?? string.Empty,
+                    Cantidad            = param.Cantidad,
+                    PrecioUnitario      = param.Producto.PrecioVentaActual,
+                    CostoUnitario       = param.Producto.PrecioCostoActual,
+                    Subtotal            = subtotal,
+                    DescuentoPorItem    = descuento,
+                });
+            }
+
+            RecalcularTotales();
+        }
+
+        private void MostrarMensaje(string mensaje)
+        {
+            // TODO: Integrar con sistema de notificaciones/snackbar cuando esté disponible
+            System.Diagnostics.Debug.WriteLine($"[VentaVM] {mensaje}");
         }
 
         // ── Cliente ───────────────────────────────────────────────────────────
@@ -205,10 +335,25 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         Cantidad       = (int)i.Cantidad,
                         PrecioUnitario = i.PrecioUnitario,
                         CostoUnitario  = i.CostoUnitario,
+                        // Descuentos por ítem: enviar si hay alguno
+                        Descuentos = i.DescuentoPorItem > 0
+                            ? new List<DescuentoItemDto>
+                            {
+                                new DescuentoItemDto
+                                {
+                                    Porcentaje = 0, // Ya calculado el monto
+                                    Monto      = i.DescuentoPorItem,
+                                    Descripcion = "Descuento por ítem"
+                                }
+                            }
+                            : new List<DescuentoItemDto>(),
                     }).ToList(),
                 };
 
                 var venta = await _ventaServicio.CrearAsync(dto);
+
+                // Guardar ID para posible anulación
+                VentaActualId = venta.IdVenta;
 
                 var vm = IoC.Get<PagoViewModel>();
                 vm.InicializarConVenta(
@@ -274,11 +419,24 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private void RecalcularTotales()
         {
             TotalBruto = Items.Sum(i => i.Subtotal);
+            // Incluir descuentos por ítem + descuento general
+            var descuentoPorItem = Items.Sum(i => i.DescuentoPorItem);
             decimal pct = 0;
             if (decimal.TryParse(DescuentoManual, out var d))
                 pct = Math.Clamp(d, 0, 100);
-            TotalDescuento = Math.Round(TotalBruto * pct / 100, 2);
+            var descuentoGeneral = Math.Round(TotalBruto * pct / 100, 2);
+            TotalDescuento = descuentoPorItem + descuentoGeneral;
             TotalFinal     = TotalBruto - TotalDescuento;
         }
+    }
+
+    /// <summary>
+    /// Parámetros para agregar un ítem con descuento.
+    /// </summary>
+    public class DescuentoItemParam
+    {
+        public ProductoDto Producto { get; set; } = null!;
+        public int Cantidad { get; set; }
+        public decimal PorcentajeDescuento { get; set; }
     }
 }
