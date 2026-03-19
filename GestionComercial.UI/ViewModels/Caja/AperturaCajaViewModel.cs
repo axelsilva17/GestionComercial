@@ -102,7 +102,14 @@ namespace GestionComercial.UI.ViewModels.Caja
                 _sesion.IdCajaActual = caja.Id;
                 await Cancelar();
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex) 
+            { 
+                // Mostrar error en MessageBox para debug
+                var msg = $"ERROR:\n\n{ex.GetType().Name}\n\n{ex.Message}\n\n{ex.InnerException?.Message}";
+                System.Windows.MessageBox.Show(msg, "ERROR AL ABRIR CAJA", 
+                    System.Windows.MessageBoxButton.OK, 
+                    System.Windows.MessageBoxImage.Error);
+            }
             finally { IsLoading = false; }
         }
 

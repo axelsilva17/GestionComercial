@@ -1,3 +1,4 @@
+using GestionComercial.Aplicacion.DTOs.Auditoria;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
@@ -65,6 +66,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private readonly ICajaServicio     _cajaServicio;
         private readonly IUnitOfWork      _uow;
         private readonly SesionServicio    _sesion;
+        private readonly IAuditoriaServicio _auditoriaServicio;
 
         // Paleta del sistema
         private static readonly SKColor Col_Primary = SKColor.Parse("#38BDF8");
@@ -80,7 +82,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
             ICompraServicio   compraServicio,
             ICajaServicio     cajaServicio,
             IUnitOfWork      uow,
-            SesionServicio    sesion)
+            SesionServicio    sesion,
+            IAuditoriaServicio auditoriaServicio)
         {
             _ventaServicio    = ventaServicio;
             _productoServicio = productoServicio;
@@ -88,6 +91,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             _cajaServicio     = cajaServicio;
             _uow            = uow;
             _sesion           = sesion;
+            _auditoriaServicio = auditoriaServicio;
             Titulo            = "Reportes";
             Subtitulo         = "Administración — operaciones";
         }
@@ -148,6 +152,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
         public ObservableCollection<CajaHistorialDto>        HistorialCajas   { get; set; } = new();
         public ObservableCollection<MovimientoCajaHistorialDto> MovimientosCaja { get; set; } = new();
+        public ObservableCollection<AuditoriaLogDto>        AuditoriaCajas   { get; set; } = new();
 
         // ── KPIs de caja ───────────────────────────────────────────────────────
         private int _totalCajas;
@@ -245,8 +250,10 @@ namespace GestionComercial.UI.ViewModels.Reportes
             LimpiarError();
             try
             {
-                var desde = FechaDesde;
-                var hasta = FechaHasta;
+                var desde = FechaDesde.Date;
+                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1); // Fin del día seleccionado
+
+                LogHelper.Log($"[ReporteAdmin] Filtro: desde={desde:yyyy-MM-dd HH:mm} hasta={hasta:yyyy-MM-dd HH:mm}");
 
                 // Ventas del período
                 var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
@@ -418,10 +425,16 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 MovimientosCaja = new ObservableCollection<MovimientoCajaHistorialDto>(
                     movimientosList.OrderByDescending(m => m.Fecha).Take(20));
 
+                // ── Auditoría de cajas ────────────────────────────────────────────
+                var auditoria = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteAdmin] AuditoriaCajas: {auditoria.Count} registros encontrados");
+                AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(auditoria);
+
                 NotifyOfPropertyChange(() => StockCritico);
                 NotifyOfPropertyChange(() => ComprasRecientes);
                 NotifyOfPropertyChange(() => HistorialCajas);
                 NotifyOfPropertyChange(() => MovimientosCaja);
+                NotifyOfPropertyChange(() => AuditoriaCajas);
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
