@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
@@ -26,6 +27,44 @@ namespace GestionComercial.UI.ViewModels.Ventas
             // Defecto: hoy
             FechaDesde = DateTime.Today;
             FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1);
+        }
+
+        /// <summary>
+        /// Maneja atajos de teclado globales en el listado de ventas.
+        /// </summary>
+        public void HandleKeyDown(Key key, ModifierKeys modifiers)
+        {
+            switch (modifiers)
+            {
+                case ModifierKeys.Control:
+                    switch (key)
+                    {
+                        case Key.N:
+                            _ = NuevaVenta();
+                            break;
+                        case Key.H:
+                            FiltrarHoy();
+                            break;
+                        case Key.S:
+                            FiltrarEstaSemana();
+                            break;
+                        case Key.M:
+                            FiltrarEsteMes();
+                            break;
+                    }
+                    break;
+                case ModifierKeys.None:
+                    switch (key)
+                    {
+                        case Key.Enter:
+                            if (VentaSeleccionada != null) _ = VerDetalle();
+                            break;
+                        case Key.Delete:
+                            if (PuedeAnular) _ = AnularVenta();
+                            break;
+                    }
+                    break;
+            }
         }
 
         // ── Filtros ───────────────────────────────────────────────────────────

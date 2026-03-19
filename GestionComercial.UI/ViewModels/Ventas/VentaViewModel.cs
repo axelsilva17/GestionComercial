@@ -5,7 +5,6 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
-using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -43,6 +42,48 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 MotivoAnulacion = string.Empty;
                 MostrarPopupAnulacion = false;
             });
+            LimiteDescuento = _sesion.Rol?.ToLowerInvariant() switch
+            {
+                "gerente"       => 30m,
+                "administrador" => 15m,
+                _               => 5m,
+            };
+        }
+
+        // ── Límite de descuento según rol ──────────────────────────────────────
+        public decimal LimiteDescuento { get; }
+
+        /// <summary>
+        /// Maneja atajos de teclado globales en la vista de venta.
+        /// </summary>
+        public void HandleKeyDown(Key key, ModifierKeys modifiers)
+        {
+            // Ignorar si hay ctrl/alt/shift presionados (excepto Ctrl+N para nueva venta)
+            if (modifiers == ModifierKeys.Control && key == Key.N)
+            {
+                NuevaVenta();
+                return;
+            }
+            if (modifiers != ModifierKeys.None) return;
+
+            switch (key)
+            {
+                case Key.F2:
+                    if (Items.Count > 0) _ = IrACobrar();
+                    break;
+                case Key.F4:
+                    _ = SeleccionarCliente();
+                    break;
+                case Key.F6:
+                    _ = AgregarProducto();
+                    break;
+                case Key.Escape:
+                    if (MostrarPopupAnulacion)
+                        MostrarPopupAnulacion = false;
+                    else
+                        _ = Volver();
+                    break;
+            }
         }
 
         // ── Venta actual (para anulación) ───────────────────────────────────────
@@ -423,11 +464,28 @@ namespace GestionComercial.UI.ViewModels.Ventas
             // Incluir descuentos por ítem + descuento general
             var descuentoPorItem = Items.Sum(i => i.DescuentoPorItem);
             decimal pct = 0;
+            string? errorDescuento = null;
+
             if (decimal.TryParse(DescuentoManual, out var d))
+            {
+                // Validar límite según rol
+                if (d > LimiteDescuento)
+                {
+                    errorDescuento = $"El descuento no puede exceder el {LimiteDescuento}% para tu rol.";
+                    d = LimiteDescuento;
+                }
                 pct = Math.Clamp(d, 0, 100);
+            }
+
             var descuentoGeneral = Math.Round(TotalBruto * pct / 100, 2);
             TotalDescuento = descuentoPorItem + descuentoGeneral;
             TotalFinal     = TotalBruto - TotalDescuento;
+
+            // Mostrar error de descuento si corresponde
+            if (errorDescuento != null)
+                MostrarError(errorDescuento);
+            else
+                LimpiarError();
         }
     }
 

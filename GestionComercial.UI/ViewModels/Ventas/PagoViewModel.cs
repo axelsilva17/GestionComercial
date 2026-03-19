@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
@@ -27,6 +28,39 @@ namespace GestionComercial.UI.ViewModels.Ventas
             _uow           = uow;
             _sesion        = sesion;
             Titulo         = "Cobrar Venta";
+        }
+
+        /// <summary>
+        /// Maneja atajos de teclado globales en la vista de pago.
+        /// </summary>
+        public void HandleKeyDown(Key key, ModifierKeys modifiers)
+        {
+            if (modifiers != ModifierKeys.None) return;
+
+            switch (key)
+            {
+                case Key.F1:
+                    AgregarEfectivo();
+                    break;
+                case Key.F2:
+                    AgregarDebito();
+                    break;
+                case Key.F3:
+                    AgregarCredito();
+                    break;
+                case Key.F4:
+                    AgregarQR();
+                    break;
+                case Key.F5:
+                    CompletarConEfectivo();
+                    break;
+                case Key.F6:
+                    if (PuedeCobrar) _ = Confirmar();
+                    break;
+                case Key.Escape:
+                    _ = Cancelar();
+                    break;
+            }
         }
 
         // ── Datos de la venta ─────────────────────────────────────────────────

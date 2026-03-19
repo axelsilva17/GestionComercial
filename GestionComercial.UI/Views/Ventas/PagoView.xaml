@@ -1,8 +1,10 @@
 <UserControl x:Class="GestionComercial.UI.Views.Ventas.PagoView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cal="http://www.caliburnproject.org"
              xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
-             Background="{DynamicResource BackgroundBrush}">
+             Background="{DynamicResource BackgroundBrush}"
+             PreviewKeyDown="PagoView_PreviewKeyDown">
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
@@ -149,7 +151,8 @@
                 <UniformGrid Rows="1" Margin="0,0,0,16">
                     <Button x:Name="AgregarEfectivo"
                             Style="{StaticResource BotonPago}"
-                            Background="#22C55E">
+                            Background="#22C55E"
+                            ToolTip="F1 - Efectivo">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💵" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Efectivo" VerticalAlignment="Center"/>
@@ -157,7 +160,8 @@
                     </Button>
                     <Button x:Name="AgregarDebito"
                             Style="{StaticResource BotonPago}"
-                            Background="#3B82F6">
+                            Background="#3B82F6"
+                            ToolTip="F2 - Débito">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Débito" VerticalAlignment="Center"/>
@@ -165,7 +169,8 @@
                     </Button>
                     <Button x:Name="AgregarCredito"
                             Style="{StaticResource BotonPago}"
-                            Background="#8B5CF6">
+                            Background="#8B5CF6"
+                            ToolTip="F3 - Crédito">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Crédito" VerticalAlignment="Center"/>
@@ -173,7 +178,8 @@
                     </Button>
                     <Button x:Name="AgregarQR"
                             Style="{StaticResource BotonPago}"
-                            Background="#EC4899">
+                            Background="#EC4899"
+                            ToolTip="F4 - QR">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="📱" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="QR" VerticalAlignment="Center"/>
@@ -248,7 +254,8 @@
                 <Button x:Name="CompletarConEfectivo"
                         Height="44" Margin="0,12,0,0"
                         Visibility="{Binding HayFaltante, Converter={StaticResource BoolToVisibility}}"
-                        Style="{StaticResource BotonPagoSecundario}">
+                        Style="{StaticResource BotonPagoSecundario}"
+                        ToolTip="F5 - Completar con efectivo">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="💵" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Completar faltante en efectivo" VerticalAlignment="Center"/>
@@ -320,7 +327,8 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" x:Name="Cancelar"
-                        Height="48" FontSize="14" Content="← Volver a la venta">
+                        Height="48" FontSize="14" Content="← Volver a la venta"
+                        ToolTip="Escape - Volver">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
@@ -348,7 +356,8 @@
                 <Button Grid.Column="2" x:Name="Confirmar"
                         Height="48" FontSize="14" FontWeight="SemiBold"
                         IsEnabled="{Binding PuedeCobrar}"
-                        Style="{StaticResource PrimaryButton}">
+                        Style="{StaticResource PrimaryButton}"
+                        ToolTip="F6 - Confirmar cobro">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="✅" FontSize="16"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
