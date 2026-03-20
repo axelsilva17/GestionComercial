@@ -2,7 +2,7 @@
 // Install-Package ClosedXML
 // Una vez instalado, eliminá el #if y el #endif al final.
 
-#if CLOSEDXML_INSTALADO  // ← Reemplazá por "true" cuando instales ClosedXML
+#if true  // ← Habilitado para exportación
 
 using ClosedXML.Excel;
 using GestionComercial.Aplicacion.DTOs.Reportes;
@@ -102,8 +102,8 @@ namespace GestionComercial.UI.Helpers
                     ws.Cell(fila, 4).Value = d.CantidadVendida;
                     ws.Cell(fila, 5).Value = d.CantidadComprada;
                     ws.Cell(fila, 6).Value = (double)d.IndiceRotacion;
-                    ws.Cell(fila, 7).Value = d.UltimaVenta.HasValue ? d.UltimaVenta.Value.ToString("dd/MM/yyyy") : "-";
-                    ws.Cell(fila, 8).Value = d.UltimaCompra.HasValue ? d.UltimaCompra.Value.ToString("dd/MM/yyyy") : "-";
+                    ws.Cell(fila, 7).Value = d.UltimaVenta != DateTime.MinValue ? d.UltimaVenta.ToString("dd/MM/yyyy") : "-";
+                    ws.Cell(fila, 8).Value = d.UltimaCompra != DateTime.MinValue ? d.UltimaCompra.ToString("dd/MM/yyyy") : "-";
                     ws.Cell(fila, 6).Style.NumberFormat.Format = "0.0";
                     fila++;
                 }
@@ -258,8 +258,12 @@ namespace GestionComercial.UI.Helpers
                 ws.Column(c).AdjustToContents();
 
             // Borde general
-            ws.RangeUsed()?.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            ws.RangeUsed()?.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+            var range = ws.RangeUsed();
+            if (range != null)
+            {
+                range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                range.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+            }
         }
 
         private static void AgregarMetadatos(IXLWorksheet ws, string titulo, DateTime desde, DateTime hasta)
