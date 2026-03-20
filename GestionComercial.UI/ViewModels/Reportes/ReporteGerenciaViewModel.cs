@@ -322,5 +322,16 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public async Task FiltrarUltimos6()  { FechaDesde = DateTime.Today.AddMonths(-6);             FechaHasta = DateTime.Today; await CargarAsync(); }
         public async Task FiltrarUltimos3()  { FechaDesde = DateTime.Today.AddMonths(-3);             FechaHasta = DateTime.Today; await CargarAsync(); }
         public async Task FiltrarEsteMes()   { FechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
+
+        // ── Exportar Excel ───────────────────────────────────────────────────
+        public void ExportarExcel()
+        {
+            // TODO: Implementar exportación con ClosedXML cuando esté configurado en backend
+            System.Windows.MessageBox.Show(
+                "La exportación a Excel estará disponible cuando se configure el servicio de exportación.",
+                "Exportar a Excel",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
     }
 }
