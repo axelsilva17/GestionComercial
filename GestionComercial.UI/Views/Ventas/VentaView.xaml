@@ -323,7 +323,6 @@
                         <!-- Lista de resultados -->
                         <ListBox x:Name="ResultadosBusquedaList"
                                  ItemsSource="{Binding ResultadosBusqueda}"
-                                 SelectedItem="{Binding SelectedProducto}"
                                  Background="Transparent"
                                  BorderThickness="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"

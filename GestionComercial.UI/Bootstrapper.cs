@@ -123,6 +123,13 @@ namespace GestionComercial.UI
                     .Replace(".ViewModel.", ".Views.")   // por si alguno usa singular
                     .Replace("ViewModel", "View");
                 var viewType = modelType.Assembly.GetType(viewName);
+                
+                if (viewType == null)
+                {
+                    // Intentar con namespace completo
+                    viewType = Assembly.GetExecutingAssembly().GetType(viewName);
+                }
+                
                 System.Diagnostics.Debug.WriteLine(
                     $"[ViewLocator] {modelType.Name} -> {viewType?.Name ?? "NO ENCONTRADO"}");
                 return viewType;
