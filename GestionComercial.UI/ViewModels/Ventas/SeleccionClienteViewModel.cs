@@ -66,7 +66,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     ? todos
                     : todos.Where(c => 
                         (c.Nombre?.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                        (c.Documento?.ToString().Contains(TextoBusqueda) ?? false));
+                        c.Documento.ToString().Contains(TextoBusqueda));
 
                 Clientes.Clear();
                 foreach (var c in filtrados) Clientes.Add(c);
