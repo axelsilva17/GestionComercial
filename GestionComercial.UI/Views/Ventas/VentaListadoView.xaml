@@ -9,6 +9,7 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
+        <converters:BoolToOpacityConverter x:Key="BoolToOpacity"/>
 
         <Style x:Key="FiltroButton" TargetType="Button">
             <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
@@ -303,7 +304,7 @@
                                     <Border Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8" Opacity="{TemplateBinding IsEnabled, Converter={StaticResource BoolToVisibility}}">
+                                            CornerRadius="8" Opacity="{TemplateBinding IsEnabled, Converter={StaticResource BoolToOpacity}}">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18,0"/>
                                     </Border>
                                 </ControlTemplate>

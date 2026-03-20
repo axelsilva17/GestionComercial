@@ -196,6 +196,7 @@
                                  Background="Transparent" BorderThickness="0"
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  FontSize="13" VerticalContentAlignment="Center"
+                                 Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
                                  Padding="0,0,10,0"/>
                     </Grid>
                 </Border>
@@ -221,10 +222,13 @@
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="12" ClipToBounds="True">
             <Grid>
-                <DataGrid x:Name="ClienteSeleccionado"
+                <DataGrid x:Name="ClientesDataGrid"
                           Style="{StaticResource ClientesGrid}"
                           ItemsSource="{Binding Clientes}"
-                          Margin="4,4">
+                          SelectedItem="{Binding ClienteSeleccionado}"
+                          Margin="4,4"
+                          MouseDoubleClick="ClientesDataGrid_MouseDoubleClick"
+                          PreviewKeyDown="ClientesDataGrid_PreviewKeyDown">
                     <DataGrid.Columns>
 
                         <DataGridTemplateColumn Header="CLIENTE" Width="*">
