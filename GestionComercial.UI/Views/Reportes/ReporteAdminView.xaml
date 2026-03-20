@@ -700,12 +700,61 @@
                                         </Style>
                                     </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
+                                        <!-- Columnas básicas -->
                                         <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="*"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="110"/>
-                                        <DataGridTextColumn Header="TABLA" Binding="{Binding NombreTabla}" Width="110"/>
-                                        <DataGridTextColumn Header="REGISTRO" Binding="{Binding RegistroId}" Width="80"/>
-                                        <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="2*"/>
+                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="100"/>
+                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="90"/>
+                                        
+                                        <!-- Columnas financieras para prevención de fraude -->
+                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="60"/>
+                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="100"/>
+                                        <DataGridTextColumn Header="VAL. ANTERIOR" Binding="{Binding ValorAnteriorMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
+                                        <DataGridTextColumn Header="VAL. NUEVO" Binding="{Binding ValorNuevoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
+                                        
+                                        <!-- Columna de diferencia con formato condicional -->
+                                        <DataGridTemplateColumn Header="DIFERENCIA" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding DiferenciaMonetaria, Converter={StaticResource DecimalToMoneda}}"
+                                                               VerticalAlignment="Center" Padding="12,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DiferenciaMonetaria}" Value="{x:Null}">
+                                                                        <Setter Property="Text" Value="—"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        
+                                        <!-- Alerta visual para diferencias sospechosas -->
+                                        <DataGridTemplateColumn Header="⚠" Width="40">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="⚠" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                               ToolTip="Diferencia sospechosa (&gt;10%)">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="Transparent"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding EsDiferenciaSospechosa}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        
+                                        <!-- Resumen de cambios -->
+                                        <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
@@ -791,12 +840,61 @@
                                         </Style>
                                     </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
+                                        <!-- Columnas básicas -->
                                         <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="*"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacion}" Width="110"/>
-                                        <DataGridTextColumn Header="TABLA" Binding="{Binding NombreTabla}" Width="110"/>
-                                        <DataGridTextColumn Header="REGISTRO" Binding="{Binding RegistroId}" Width="80"/>
-                                        <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="2*"/>
+                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="100"/>
+                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="90"/>
+                                        
+                                        <!-- Columnas financieras para prevención de fraude -->
+                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="60"/>
+                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="100"/>
+                                        <DataGridTextColumn Header="VAL. ANTERIOR" Binding="{Binding ValorAnteriorMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
+                                        <DataGridTextColumn Header="VAL. NUEVO" Binding="{Binding ValorNuevoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
+                                        
+                                        <!-- Columna de diferencia con formato condicional -->
+                                        <DataGridTemplateColumn Header="DIFERENCIA" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding DiferenciaMonetaria, Converter={StaticResource DecimalToMoneda}}"
+                                                               VerticalAlignment="Center" Padding="12,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DiferenciaMonetaria}" Value="{x:Null}">
+                                                                        <Setter Property="Text" Value="—"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        
+                                        <!-- Alerta visual para diferencias sospechosas -->
+                                        <DataGridTemplateColumn Header="⚠" Width="40">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="⚠" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                               ToolTip="Diferencia sospechosa (&gt;10%)">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="Transparent"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding EsDiferenciaSospechosa}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        
+                                        <!-- Resumen de cambios -->
+                                        <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>

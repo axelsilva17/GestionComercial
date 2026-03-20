@@ -94,13 +94,7 @@
                                FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
                                Margin="0,0,0,24"/>
 
-                    <!-- ── Error ──────────────────────────────────────────── -->
-                    <Border Background="#1AEF4444" BorderBrush="{DynamicResource ErrorBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16"
-                            Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding ErrorMessage}" FontSize="12"
-                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
-                    </Border>
+
 
                     <!-- ── Botones ────────────────────────────────────────── -->
                     <Grid>
