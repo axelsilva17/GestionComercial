@@ -157,5 +157,34 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderByDescending(a => a.FechaOperacion)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaFiltradaAsync(
+            int? idUsuario = null,
+            int? tipoOperacion = null,
+            string? nombreTabla = null,
+            DateTime? fechaDesde = null,
+            DateTime? fechaHasta = null)
+        {
+            var query = _context.AuditoriaLogs.AsQueryable();
+
+            if (idUsuario.HasValue)
+                query = query.Where(a => a.IdUsuario == idUsuario.Value);
+
+            if (tipoOperacion.HasValue)
+                query = query.Where(a => a.TipoOperacion == tipoOperacion.Value);
+
+            if (!string.IsNullOrWhiteSpace(nombreTabla))
+                query = query.Where(a => a.NombreTabla == nombreTabla);
+
+            if (fechaDesde.HasValue)
+                query = query.Where(a => a.FechaOperacion >= fechaDesde.Value);
+
+            if (fechaHasta.HasValue)
+                query = query.Where(a => a.FechaOperacion <= fechaHasta.Value);
+
+            return await query
+                .OrderByDescending(a => a.FechaOperacion)
+                .ToListAsync();
+        }
     }
 }

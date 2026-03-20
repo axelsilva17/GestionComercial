@@ -11,5 +11,10 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         /// </summary>
         Task<IEnumerable<(string Metodo, decimal Total)>> ObtenerTotalesPorMetodoAsync(
             int idSucursal, DateTime desde, DateTime hasta);
+        
+        /// <summary>
+        /// Obtiene todos los pagos en un período para análisis de auditoría.
+        /// </summary>
+        Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta);
     }
 }

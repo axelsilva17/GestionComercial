@@ -68,5 +68,15 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             int? idMovimiento = null,
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null);
+
+        /// <summary>
+        /// Obtiene auditoría filtrada por múltiples criterios.
+        /// </summary>
+        Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaFiltradaAsync(
+            int? idUsuario = null,
+            int? tipoOperacion = null,
+            string? nombreTabla = null,
+            DateTime? fechaDesde = null,
+            DateTime? fechaHasta = null);
     }
 }

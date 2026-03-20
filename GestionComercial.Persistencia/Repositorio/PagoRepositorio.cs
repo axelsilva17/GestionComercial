@@ -29,5 +29,12 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return resultado.Select(x => (x.Metodo, x.Total));
         }
+
+        public async Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta)
+            => await _dbSet
+                .Where(p => p.Venta.Fecha >= desde && p.Venta.Fecha <= hasta)
+                .Include(p => p.MetodoPago)
+                .Include(p => p.Venta)
+                .ToListAsync();
     }
 }

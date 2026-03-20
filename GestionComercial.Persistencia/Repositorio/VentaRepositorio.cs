@@ -49,5 +49,20 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Where(v => v.Id_sucursal == idSucursal && v.Fecha >= hoy && v.Estado == 2)
                 .SumAsync(v => v.TotalFinal);
         }
+
+        public async Task<IEnumerable<Venta>> ObtenerVentasAnuladasAsync(DateTime desde, DateTime hasta)
+            => await _dbSet
+                .Where(v => v.Fecha >= desde && v.Fecha <= hasta && v.Estado == 3) // 3 = Anulada
+                .Include(v => v.Usuario)
+                .OrderByDescending(v => v.Fecha)
+                .ToListAsync();
+
+        public async Task<IEnumerable<Venta>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta)
+            => await _dbSet
+                .Where(v => v.Fecha >= desde && v.Fecha <= hasta)
+                .Include(v => v.Usuario)
+                .Include(v => v.Pagos).ThenInclude(p => p.MetodoPago)
+                .OrderByDescending(v => v.Fecha)
+                .ToListAsync();
     }
 }
