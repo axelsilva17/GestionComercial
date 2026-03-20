@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using LiveChartsCore;
@@ -327,14 +328,40 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public async Task FiltrarEsteMes()   { FechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
 
         // ── Exportar Excel ───────────────────────────────────────────────────
-        public void ExportarExcel()
+        public async Task ExportarExcel()
         {
-            // TODO: Implementar exportación con ClosedXML cuando esté configurado en backend
-            System.Windows.MessageBox.Show(
-                "La exportación a Excel estará disponible cuando se configure el servicio de exportación.",
-                "Exportar a Excel",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            try
+            {
+                IsLoading = true;
+                var desde = FechaDesde;
+                var hasta = FechaHasta;
+
+                // VentaPorDia: agrupar las ventas ya cargadas en memoria
+                var ventas = (await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                var ventaPorDia = ventas
+                    .GroupBy(v => v.Fecha.Date)
+                    .Select(g => new VentaPorDiaDto
+                    {
+                        Dia      = g.Key.ToString("dd/MM/yyyy"),
+                        Total    = g.Sum(v => v.TotalFinal),
+                        Cantidad = g.Count(),
+                    })
+                    .OrderBy(d => DateTime.ParseExact(d.Dia, "dd/MM/yyyy", null))
+                    .ToList();
+
+                // Margen: usar IReporteServicio.MargenPorProductoAsync
+                var margen = (await _reporteServicio.MargenPorProductoAsync(
+                    _sesion.IdEmpresa, desde, hasta)).ToList();
+
+                ExportHelper.ExportarVentasPorDia(ventaPorDia, desde, hasta);
+                ExportHelper.ExportarMargen(margen, desde, hasta);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
+                    "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsLoading = false; }
         }
     }
 }
