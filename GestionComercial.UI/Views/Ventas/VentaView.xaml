@@ -284,7 +284,8 @@
                     <Button x:Name="AgregarProducto" Grid.Column="2"
                             Height="44" Padding="20,0" FontSize="13"
                             Style="{StaticResource PrimaryButton}" Grid.ColumnSpan="2" Margin="10,0,0,0"
-                            ToolTip="F6 - Agregar producto">
+                            ToolTip="F6 - Agregar producto"
+                            cal:Message.Attach="[Event Click] = [Action AgregarProducto]">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="＋" FontSize="15" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -684,7 +685,8 @@
                     </StackPanel>
                     <Button x:Name="IrACobrar"
                             Height="52" FontSize="15" FontWeight="SemiBold"
-                            Style="{StaticResource PrimaryButton}">
+                            Style="{StaticResource PrimaryButton}"
+                            cal:Message.Attach="[Event Click] = [Action IrACobrar]">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💳" FontSize="18"
                                        VerticalAlignment="Center" Margin="0,0,10,0"/>
