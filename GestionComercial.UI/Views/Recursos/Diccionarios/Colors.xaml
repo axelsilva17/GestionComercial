@@ -47,6 +47,8 @@
     <!-- Acciones / colores principales -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="#38BDF8"/>
     <!-- Color primario botones activos -->
+    <SolidColorBrush x:Key="PrimaryAlphaBrush" Color="#3338BDF8"/>
+    <!-- Primary con alfa 20% para seleccion en grids -->
     <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
     <!-- Color error / cerrar -->
 
