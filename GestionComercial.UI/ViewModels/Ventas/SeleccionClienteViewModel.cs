@@ -56,10 +56,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 var todos = await _clienteServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
 
+                if (todos == null || !todos.Any())
+                {
+                    Clientes.Clear();
+                    return;
+                }
+
                 var filtrados = string.IsNullOrWhiteSpace(TextoBusqueda)
                     ? todos
-                    : todos.Where(c => c.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)
-                                    || c.Documento.ToString().Contains(TextoBusqueda));
+                    : todos.Where(c => 
+                        (c.Nombre?.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        c.Documento.ToString().Contains(TextoBusqueda));
 
                 Clientes.Clear();
                 foreach (var c in filtrados) Clientes.Add(c);

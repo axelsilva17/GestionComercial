@@ -229,13 +229,8 @@
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="15" FontWeight="SemiBold"
                                      VerticalContentAlignment="Center"
-                                     Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}">
-                                <TextBox.InputBindings>
-                                    <KeyBinding Key="Return"
-                                                Command="{Binding DataContext.AgregarPagoCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                                </TextBox.InputBindings>
-                            </TextBox>
+                                     Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
+                                     cal:Message.Attach="[KeyReturn] = [ActionAgregarPago]"/>
                         </Grid>
                     </Border>
 
@@ -254,9 +249,11 @@
                 <!-- Botón completar con efectivo rápido -->
                 <Button x:Name="CompletarConEfectivo"
                         Height="44" Margin="0,12,0,0"
-                        Visibility="{Binding HayFaltante, Converter={StaticResource BoolToVisibility}}"
                         Style="{StaticResource BotonPagoSecundario}"
                         ToolTip="F5 - Completar con efectivo">
+                    <Button.Visibility>
+                        <Binding Path="HayFaltante" Converter="{StaticResource BoolToVisibility}"/>
+                    </Button.Visibility>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="💵" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Completar faltante en efectivo" VerticalAlignment="Center"/>
@@ -306,14 +303,12 @@
                                            FontSize="15" FontWeight="Bold"
                                            Foreground="{DynamicResource SuccessBrush}"
                                            VerticalAlignment="Center"/>
-                                <Button Grid.Column="4" Content="✕"
+                                <Button Grid.Column="4" x:Name="QuitarPago"
                                         Width="28" Height="28" FontSize="11"
                                         Background="Transparent" BorderThickness="0"
                                         Foreground="{DynamicResource ErrorBrush}"
                                         Cursor="Hand"
-                                        Command="{Binding DataContext.QuitarPagoCommand,
-                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"/>
+                                        cal:Message.Attach="[Event Click] = [Action QuitarPago($dataContext)]"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

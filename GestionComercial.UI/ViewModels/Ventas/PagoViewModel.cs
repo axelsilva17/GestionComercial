@@ -87,6 +87,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 _totalPagado = value;
                 NotifyOfPropertyChange(() => TotalPagado);
                 NotifyOfPropertyChange(() => Faltante);
+                NotifyOfPropertyChange(() => HayFaltante);
                 NotifyOfPropertyChange(() => PuedeCobrar);
                 RecalcularVuelto();
             }
@@ -101,6 +102,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _vuelto = value; NotifyOfPropertyChange(() => Vuelto); NotifyOfPropertyChange(() => HayVuelto); }
         }
         public bool HayVuelto => Vuelto > 0;
+
+        public bool HayFaltante => Faltante > 0;
 
         public bool PuedeCobrar => TotalPagado >= TotalVenta && Pagos.Any();
 
