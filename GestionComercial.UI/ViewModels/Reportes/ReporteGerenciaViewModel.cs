@@ -19,10 +19,11 @@ namespace GestionComercial.UI.ViewModels.Reportes
 {
     public class ReporteGerenciaViewModel : NavigableViewModel
     {
-        private readonly IVentaServicio  _ventaServicio;
-        private readonly ICompraServicio _compraServicio;
-        private readonly IUnitOfWork     _uow;
-        private readonly SesionServicio  _sesion;
+        private readonly IVentaServicio   _ventaServicio;
+        private readonly ICompraServicio  _compraServicio;
+        private readonly IReporteServicio  _reporteServicio;
+        private readonly IUnitOfWork      _uow;
+        private readonly SesionServicio   _sesion;
 
         private ShellViewModel Shell => IoC.Get<ShellViewModel>();
 
@@ -44,15 +45,17 @@ namespace GestionComercial.UI.ViewModels.Reportes
         };
 
         public ReporteGerenciaViewModel(
-            IVentaServicio  ventaServicio,
-            ICompraServicio compraServicio,
-            IUnitOfWork     uow,
-            SesionServicio  sesion)
+            IVentaServicio   ventaServicio,
+            ICompraServicio  compraServicio,
+            IReporteServicio reporteServicio,
+            IUnitOfWork      uow,
+            SesionServicio   sesion)
         {
-            _ventaServicio  = ventaServicio;
-            _compraServicio = compraServicio;
-            _uow            = uow;
-            _sesion         = sesion;
+            _ventaServicio   = ventaServicio;
+            _compraServicio  = compraServicio;
+            _reporteServicio = reporteServicio;
+            _uow             = uow;
+            _sesion          = sesion;
             Titulo          = "Reportes";
             Subtitulo       = "Gerencia — visión ejecutiva";
         }
