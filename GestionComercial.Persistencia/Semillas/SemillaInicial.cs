@@ -1,15 +1,15 @@
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Seguridad;
 using Microsoft.EntityFrameworkCore;
-using BC = BCrypt.Net.BCrypt;
 
 namespace GestionComercial.Persistencia.Semillas
 {
     public static class SemillaInicial
     {
-        // Hash generado con BCrypt.Net-Next workFactor 12 para "Admin1234"
-        // Regenerar si cambia la librería: BC.HashPassword("Admin1234", 12)
-        private const string AdminPasswordHash = "$2a$12$xTXms.c66F43LdABY4LZjeXhAJmZSwEeYircoRBHDnBy4cqkklYFu";
+        // Hashes generados con BCrypt.Net-Next workFactor 12
+        private const string AdminHash    = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy"; // admin12345
+        private const string GerenteHash  = "$2a$12$NKA/6TaLtSB80UsdZUsZN.uO0IhAMH03WPDNeRQMOHrN/XRTECI9a"; // Gerente2024!
+        private const string VendedorHash = "$2a$12$v4qlp9oXiSIn8kCyfNdmU.fQJMAETzMpXvXVF9h5U.TnxOvq1yolu"; // Vendedor2024!
 
         public static void Sembrar(ModelBuilder builder)
         {
@@ -42,13 +42,35 @@ namespace GestionComercial.Persistencia.Semillas
                 new Usuario
                 {
                     Id           = 1,
-                    Nombre       = "Admin",
+                    Nombre       = "Administrador",
                     Apellido     = "Sistema",
                     Email        = "admin@sistema.com",
-                    PasswordHash = AdminPasswordHash,
+                    PasswordHash = AdminHash,
                     Activo       = true,
                     Id_sucursal  = 1,
-                    Id_rol       = 1,
+                    Id_rol       = 2, // Administrador
+                },
+                new Usuario
+                {
+                    Id           = 2,
+                    Nombre       = "Gerente",
+                    Apellido     = "General",
+                    Email        = "gerente@sistema.com",
+                    PasswordHash = GerenteHash,
+                    Activo       = true,
+                    Id_sucursal  = 1,
+                    Id_rol       = 1, // Gerente
+                },
+                new Usuario
+                {
+                    Id           = 3,
+                    Nombre       = "Vendedor",
+                    Apellido     = "Sistema",
+                    Email        = "vendedor@sistema.com",
+                    PasswordHash = VendedorHash,
+                    Activo       = true,
+                    Id_sucursal  = 1,
+                    Id_rol       = 3, // Vendedor
                 }
             );
         }
