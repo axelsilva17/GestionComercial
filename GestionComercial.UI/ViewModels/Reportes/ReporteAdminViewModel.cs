@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -532,20 +533,23 @@ namespace GestionComercial.UI.ViewModels.Reportes
             try
             {
                 IsLoading = true;
-                await CargarAsync();
-                
-                // Exportar usando el helper existente
-                // Los métodos del helper ya manejan el SaveFileDialog internamente
-                System.Windows.MessageBox.Show(
-                    "La exportación de auditoría está siendo configurada.",
-                    "Exportar a Excel",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
+
+                // Asegurar datos de auditoría actualizados
+                var desde = FechaDesde.Date;
+                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
+
+                var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
+                var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
+
+                foreach (var a in auditoriaCajas) a.DeserializarJson();
+                foreach (var a in auditoriaMovimientos) a.DeserializarJson();
+
+                ExportHelper.ExportarAuditoria(auditoriaCajas, auditoriaMovimientos, desde, hasta);
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}", 
-                    "Error", System.Windows.MessageBoxButton.OK, 
+                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
+                    "Error", System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
             }
             finally

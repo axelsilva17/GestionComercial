@@ -5,6 +5,7 @@
 #if true  // ← Habilitado para exportación
 
 using ClosedXML.Excel;
+using GestionComercial.Aplicacion.DTOs.Auditoria;
 using GestionComercial.Aplicacion.DTOs.Reportes;
 using System;
 using System.Collections.Generic;
@@ -172,6 +173,93 @@ namespace GestionComercial.UI.Helpers
 
                 FormatearHoja(ws, headers.Length);
                 AgregarMetadatos(ws, "Rendimiento de Vendedores", desde, hasta);
+            });
+        }
+
+        public static void ExportarAuditoria(
+            IEnumerable<AuditoriaLogDto> auditoriaCajas,
+            IEnumerable<AuditoriaLogDto> auditoriaMovimientos,
+            DateTime desde,
+            DateTime hasta)
+        {
+            Exportar("Auditoría", $"Auditoria_{Fecha()}", wb =>
+            {
+                // ── Hoja 1: Auditoría de Cajas ──────────────────────────────
+                var wsCajas = wb.Worksheets.Add("Auditoría Cajas");
+                var headersCajas = new[]
+                {
+                    "Fecha", "Usuario", "Operación", "Caja",
+                    "Monto", "Valor Anterior", "Valor Nuevo", "Diferencia", "Cambios"
+                };
+                AgregarHeaders(wsCajas, headersCajas);
+
+                int filaC = 2;
+                foreach (var d in auditoriaCajas)
+                {
+                    wsCajas.Cell(filaC, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
+                    wsCajas.Cell(filaC, 2).Value = d.Usuario;
+                    wsCajas.Cell(filaC, 3).Value = d.TipoOperacionCaja;
+                    wsCajas.Cell(filaC, 4).Value = d.NumeroCaja ?? "—";
+
+                    if (d.MontoMostrar.HasValue) wsCajas.Cell(filaC, 5).Value = (double)d.MontoMostrar.Value; else wsCajas.Cell(filaC, 5).Value = "—";
+                    if (d.ValorAnteriorMostrar.HasValue) wsCajas.Cell(filaC, 6).Value = (double)d.ValorAnteriorMostrar.Value; else wsCajas.Cell(filaC, 6).Value = "—";
+                    if (d.ValorNuevoMostrar.HasValue) wsCajas.Cell(filaC, 7).Value = (double)d.ValorNuevoMostrar.Value; else wsCajas.Cell(filaC, 7).Value = "—";
+                    if (d.DiferenciaMonetaria.HasValue) wsCajas.Cell(filaC, 8).Value = (double)d.DiferenciaMonetaria.Value; else wsCajas.Cell(filaC, 8).Value = "—";
+
+                    wsCajas.Cell(filaC, 9).Value = d.DetalleCambios;
+
+                    wsCajas.Cell(filaC, 5).Style.NumberFormat.Format = "$ #,##0";
+                    wsCajas.Cell(filaC, 6).Style.NumberFormat.Format = "$ #,##0";
+                    wsCajas.Cell(filaC, 7).Style.NumberFormat.Format = "$ #,##0";
+                    wsCajas.Cell(filaC, 8).Style.NumberFormat.Format = "$ #,##0";
+
+                    // Color rojo para diferencias sospechosas
+                    if (d.EsDiferenciaSospechosa)
+                        wsCajas.Cell(filaC, 8).Style.Font.FontColor = XLColor.Red;
+
+                    filaC++;
+                }
+
+                FormatearHoja(wsCajas, headersCajas.Length);
+                AgregarMetadatos(wsCajas, "Auditoría de Cajas", desde, hasta);
+
+                // ── Hoja 2: Auditoría de Movimientos ─────────────────────────
+                var wsMovs = wb.Worksheets.Add("Auditoría Movimientos");
+                var headersMovs = new[]
+                {
+                    "Fecha", "Usuario", "Operación", "Caja",
+                    "Monto", "Valor Anterior", "Valor Nuevo", "Diferencia", "Cambios"
+                };
+                AgregarHeaders(wsMovs, headersMovs);
+
+                int filaM = 2;
+                foreach (var d in auditoriaMovimientos)
+                {
+                    wsMovs.Cell(filaM, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
+                    wsMovs.Cell(filaM, 2).Value = d.Usuario;
+                    wsMovs.Cell(filaM, 3).Value = d.TipoOperacionCaja;
+                    wsMovs.Cell(filaM, 4).Value = d.NumeroCaja ?? "—";
+
+                    if (d.MontoMostrar.HasValue) wsMovs.Cell(filaM, 5).Value = (double)d.MontoMostrar.Value; else wsMovs.Cell(filaM, 5).Value = "—";
+                    if (d.ValorAnteriorMostrar.HasValue) wsMovs.Cell(filaM, 6).Value = (double)d.ValorAnteriorMostrar.Value; else wsMovs.Cell(filaM, 6).Value = "—";
+                    if (d.ValorNuevoMostrar.HasValue) wsMovs.Cell(filaM, 7).Value = (double)d.ValorNuevoMostrar.Value; else wsMovs.Cell(filaM, 7).Value = "—";
+                    if (d.DiferenciaMonetaria.HasValue) wsMovs.Cell(filaM, 8).Value = (double)d.DiferenciaMonetaria.Value; else wsMovs.Cell(filaM, 8).Value = "—";
+
+                    wsMovs.Cell(filaM, 9).Value = d.DetalleCambios;
+
+                    wsMovs.Cell(filaM, 5).Style.NumberFormat.Format = "$ #,##0";
+                    wsMovs.Cell(filaM, 6).Style.NumberFormat.Format = "$ #,##0";
+                    wsMovs.Cell(filaM, 7).Style.NumberFormat.Format = "$ #,##0";
+                    wsMovs.Cell(filaM, 8).Style.NumberFormat.Format = "$ #,##0";
+
+                    if (d.EsDiferenciaSospechosa)
+                        wsMovs.Cell(filaM, 8).Style.Font.FontColor = XLColor.Red;
+
+                    filaM++;
+                }
+
+                FormatearHoja(wsMovs, headersMovs.Length);
+                AgregarMetadatos(wsMovs, "Auditoría de Movimientos", desde, hasta);
             });
         }
 
