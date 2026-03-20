@@ -56,17 +56,17 @@ namespace GestionComercial.UI
             // ── Servicios ─────────────────────────────────────────────────────
             _container.Singleton<SesionServicio>();
             _container.PerRequest<AutenticacionServicio>();
-            _container.PerRequest<ClienteServicio>();
+            _container.PerRequest<IClienteServicio, ClienteServicio>();
             _container.PerRequest<IVentaServicio, VentaServicio>();
             _container.PerRequest<ICompraServicio, CompraServicio>();
             _container.PerRequest<IProductoServicio, ProductoServicio>();
             _container.PerRequest<ICajaServicio, CajaServicio>();
             _container.PerRequest<IAuditoriaServicio, AuditoriaServicio>();
             _container.PerRequest<IAuditoriaAppService, AuditoriaAppService>();
-            _container.PerRequest<ProveedorServicio>();
-            _container.PerRequest<StockServicio>();
-            _container.PerRequest<ReporteServicio>();
-            _container.PerRequest<UsuarioServicio>();
+            _container.PerRequest<IProveedorServicio, ProveedorServicio>();
+            _container.PerRequest<IStockServicio, StockServicio>();
+            _container.PerRequest<IReporteServicio, ReporteServicio>();
+            _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
             _container.PerRequest<IAuditoriaAppService, AuditoriaAppService>();
 

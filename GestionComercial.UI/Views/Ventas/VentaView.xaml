@@ -159,7 +159,8 @@
                         Foreground="{DynamicResource PrimaryBrush}"
                         FontSize="14" Cursor="Hand" VerticalAlignment="Center"
                         Margin="0,0,20,0"
-                        ToolTip="Escape - Volver">
+                        ToolTip="Escape - Volver"
+                        cal:Message.Attach="[Event Click] = [Action Volver]">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -214,7 +215,8 @@
                     </Border>
                     <Button x:Name="SeleccionarCliente"
                             Height="40" Padding="16,0" FontSize="13"
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            cal:Message.Attach="[Event Click] = [Action SeleccionarCliente]">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
@@ -699,7 +701,8 @@
                             Height="44" FontSize="13"
                             Margin="0,8,0,0"
                             Style="{StaticResource BotonPagoSecundario}"
-                            Visibility="{Binding HayVentaActiva, Converter={StaticResource BoolToVisibility}}">
+                            Visibility="{Binding HayVentaActiva, Converter={StaticResource BoolToVisibility}}"
+                            cal:Message.Attach="[Event Click] = [Action MostrarAnulacion]">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🗑" FontSize="14"
                                        VerticalAlignment="Center" Margin="0,0,6,0"/>

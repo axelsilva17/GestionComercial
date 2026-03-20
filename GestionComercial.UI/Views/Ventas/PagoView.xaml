@@ -229,15 +229,16 @@
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="15" FontWeight="SemiBold"
                                      VerticalContentAlignment="Center"
-                                     Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
-                                     cal:Message.Attach="[KeyReturn] = [ActionAgregarPago]"/>
+                                      Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
+                                      cal:Message.Attach="[Event KeyDown] = [Action AgregarPago]"/>
                         </Grid>
                     </Border>
 
                     <!-- Botón agregar pago -->
                     <Button Grid.Column="4" x:Name="AgregarPago"
                             Height="44" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}">
+                            Style="{StaticResource PrimaryButton}"
+                            cal:Message.Attach="[Event Click] = [Action AgregarPago]">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="＋" FontSize="14" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -250,7 +251,8 @@
                 <Button x:Name="CompletarConEfectivo"
                         Height="44" Margin="0,12,0,0"
                         Style="{StaticResource BotonPagoSecundario}"
-                        ToolTip="F5 - Completar con efectivo">
+                        ToolTip="F5 - Completar con efectivo"
+                        cal:Message.Attach="[Event Click] = [Action CompletarConEfectivo]">
                     <Button.Visibility>
                         <Binding Path="HayFaltante" Converter="{StaticResource BoolToVisibility}"/>
                     </Button.Visibility>
@@ -334,7 +336,8 @@
 
                 <Button Grid.Column="0" x:Name="Cancelar"
                         Height="48" FontSize="14" Content="← Volver a la venta"
-                        ToolTip="Escape - Volver">
+                        ToolTip="Escape - Volver"
+                        cal:Message.Attach="[Event Click] = [Action Cancelar]">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
@@ -363,7 +366,8 @@
                         Height="48" FontSize="14" FontWeight="SemiBold"
                         IsEnabled="{Binding PuedeCobrar}"
                         Style="{StaticResource PrimaryButton}"
-                        ToolTip="F6 - Confirmar cobro">
+                        ToolTip="F6 - Confirmar cobro"
+                        cal:Message.Attach="[Event Click] = [Action Confirmar]">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="✅" FontSize="16"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>

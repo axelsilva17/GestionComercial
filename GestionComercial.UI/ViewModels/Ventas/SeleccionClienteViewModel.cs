@@ -39,8 +39,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _clientes = value; NotifyOfPropertyChange(() => Clientes); }
         }
 
-        private ClienteDto _clienteSeleccionado;
-        public ClienteDto ClienteSeleccionado
+        private ClienteDto? _clienteSeleccionado;
+        public ClienteDto? ClienteSeleccionado
         {
             get => _clienteSeleccionado;
             set { _clienteSeleccionado = value; NotifyOfPropertyChange(() => ClienteSeleccionado); }
@@ -66,7 +66,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     ? todos
                     : todos.Where(c => 
                         (c.Nombre?.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                        c.Documento.ToString().Contains(TextoBusqueda));
+                        (c.Documento?.ToString().Contains(TextoBusqueda) ?? false));
 
                 Clientes.Clear();
                 foreach (var c in filtrados) Clientes.Add(c);
@@ -82,7 +82,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             if (ClienteSeleccionado == null || VentaOrigen == null) return;
             VentaOrigen.ClienteId     = ClienteSeleccionado.IdCliente;
-            VentaOrigen.ClienteNombre = ClienteSeleccionado.Nombre;
+            VentaOrigen.ClienteNombre = ClienteSeleccionado.Nombre ?? "Cliente";
             await IoC.Get<ShellViewModel>().ActivateItemAsync(VentaOrigen, CancellationToken.None);
         }
 
