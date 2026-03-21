@@ -82,7 +82,8 @@
                             <TextBlock Text="$" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource SuccessBrush}"
                                        VerticalAlignment="Center" Margin="16,0,8,0"/>
-                            <TextBox x:Name="MontoInicial" Grid.Column="1"
+                             <TextBox x:Name="MontoInicial" Grid.Column="1"
+                                     Text="{Binding MontoInicial, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="24" FontWeight="Bold"

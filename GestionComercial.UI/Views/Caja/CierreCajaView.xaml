@@ -190,7 +190,8 @@
                             <TextBlock Text="$" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource PrimaryBrush}"
                                        VerticalAlignment="Center" Margin="16,0,8,0"/>
-                            <TextBox x:Name="MontoFinal" Grid.Column="1"
+                             <TextBox x:Name="MontoFinal" Grid.Column="1"
+                                     Text="{Binding MontoFinal, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="24" FontWeight="Bold"
@@ -251,11 +252,12 @@
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="12,10" Margin="0,0,0,20">
-                        <TextBox x:Name="Observacion" Background="Transparent" BorderThickness="0"
-                                 Foreground="{DynamicResource TextPrimaryBrush}"
-                                 FontSize="13" TextWrapping="Wrap" AcceptsReturn="True"
-                                 Height="64" VerticalContentAlignment="Top"
-                                 CaretBrush="{DynamicResource PrimaryBrush}"/>
+                         <TextBox x:Name="Observacion" Background="Transparent" BorderThickness="0"
+                                  Text="{Binding Observacion, UpdateSourceTrigger=PropertyChanged}"
+                                  Foreground="{DynamicResource TextPrimaryBrush}"
+                                  FontSize="13" TextWrapping="Wrap" AcceptsReturn="True"
+                                  Height="64" VerticalContentAlignment="Top"
+                                  CaretBrush="{DynamicResource PrimaryBrush}"/>
                     </Border>
 
                     <!-- ── Error ──────────────────────────────────────────── -->
