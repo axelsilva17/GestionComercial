@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:cal="http://www.caliburnproject.org"
              xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
+             xmlns:ventas="clr-namespace:GestionComercial.UI.ViewModels.Ventas"
              Background="{DynamicResource BackgroundBrush}"
              PreviewKeyDown="VentaView_PreviewKeyDown">
 
