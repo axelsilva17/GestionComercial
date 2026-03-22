@@ -10,5 +10,9 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
         Task<ProductoDto>                     CrearAsync(ProductoCrearDto dto);
         Task                                  ActualizarAsync(ProductoActualizarDto dto);
         Task                                  DesactivarAsync(int id);
+
+        // Reference data
+        Task<IEnumerable<CategoriaItemDto>>   ObtenerCategoriasAsync(int idEmpresa);
+        Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync();
     }
 }

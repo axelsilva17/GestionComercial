@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -71,6 +72,35 @@ namespace GestionComercial.Aplicacion.Servicios
             producto.Activo = false;
             _uow.Productos.Actualizar(producto);
             await _uow.GuardarCambiosAsync();
+        }
+
+        public async Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa)
+        {
+            var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+            return categorias.Select(c => new CategoriaItemDto
+            {
+                IdCategoria = c.Id,
+                Nombre = c.Nombre,
+                CategoriaPadre = c.CategoriaPadre_id
+            });
+        }
+
+        public async Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync()
+        {
+            var unidades = await Task.FromResult(
+                _uow.Productos.Consultar()
+                    .Include(p => p.UnidadMedida)
+                    .Select(p => p.UnidadMedida)
+                    .Where(u => u != null)
+                    .Distinct()
+                    .Select(u => new UnidadMedidaItemDto
+                    {
+                        IdUnidadMedida = u!.Id,
+                        Nombre = u.Nombre,
+                        Abreviatura = u.Abreviatura
+                    }).ToList()
+            );
+            return unidades;
         }
 
         private static ProductoListadoDto MapearListado(Producto p) => new()
