@@ -1,18 +1,32 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Clientes;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GestionComercial.UI.ViewModels.Clientes
 {
     public class ClienteListadoViewModel : NavigableViewModel
     {
-        // Sin parámetro en constructor — ShellViewModel se resuelve en el momento
-        // de navegar usando IoC.Get<>() para evitar problemas con SimpleContainer
+        private readonly IClienteServicio _clienteServicio;
+        private readonly ShellViewModel _shell;
+        private readonly ILogger<ClienteListadoViewModel> _logger;
+
+        public ClienteListadoViewModel(IClienteServicio clienteServicio, ShellViewModel shell, ILogger<ClienteListadoViewModel> logger)
+        {
+            _clienteServicio = clienteServicio;
+            _shell = shell;
+            _logger = logger;
+            Titulo = "Clientes";
+            Subtitulo = "Gestión de clientes";
+        }
 
         // ── Métricas ──────────────────────────────────────────────────────────
         private int _totalClientes;
@@ -44,15 +58,15 @@ namespace GestionComercial.UI.ViewModels.Clientes
         }
 
         // ── Lista ─────────────────────────────────────────────────────────────
-        private ObservableCollection<ClienteItemDto> _clientes = new();
-        public ObservableCollection<ClienteItemDto> Clientes
+        private ObservableCollection<ClienteDto> _clientes = new();
+        public ObservableCollection<ClienteDto> Clientes
         {
             get => _clientes;
             set { _clientes = value; NotifyOfPropertyChange(() => Clientes); }
         }
 
-        private ClienteItemDto _clienteSeleccionado;
-        public ClienteItemDto ClienteSeleccionado
+        private ClienteDto _clienteSeleccionado;
+        public ClienteDto ClienteSeleccionado
         {
             get => _clienteSeleccionado;
             set { _clienteSeleccionado = value; NotifyOfPropertyChange(() => ClienteSeleccionado); }
@@ -94,9 +108,24 @@ namespace GestionComercial.UI.ViewModels.Clientes
 
         private async Task CargarAsync()
         {
-            IsLoading = true;
-            LimpiarError();
-
+            try
+            {
+                IsLoading = true;
+                var clientes = await _clienteServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
+                Clientes = new ObservableCollection<ClienteDto>(clientes);
+                TotalClientes = Clientes.Count;
+                ClientesActivos = Clientes.Count(c => c.Activo);
+                ClientesInactivos = Clientes.Count(c => !c.Activo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando clientes");
+                MessageBox.Show("Error al cargar clientes: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
@@ -124,8 +153,19 @@ namespace GestionComercial.UI.ViewModels.Clientes
         public async Task DesactivarCliente()
         {
             if (ClienteSeleccionado == null) return;
-            // TODO: await _clienteServicio.DesactivarAsync(ClienteSeleccionado.IdCliente);
-            await CargarAsync();
+            var result = MessageBox.Show($"¿Desactivar cliente {ClienteSeleccionado.Nombre}?",
+                "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes) return;
+            try
+            {
+                await _clienteServicio.DesactivarAsync(ClienteSeleccionado.IdCliente);
+                await CargarAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error desactivando cliente");
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // ── Paginación ────────────────────────────────────────────────────────

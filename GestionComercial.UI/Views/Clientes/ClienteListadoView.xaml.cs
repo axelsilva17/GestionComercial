@@ -40,7 +40,7 @@ namespace GestionComercial.UI.Views.Clientes
         private void Clientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (VM == null) return;
-            VM.ClienteSeleccionado = (sender as DataGrid)?.SelectedItem as ClienteItemDto;
+            VM.ClienteSeleccionado = (sender as DataGrid)?.SelectedItem as ClienteDto;
         }
     }
 }
