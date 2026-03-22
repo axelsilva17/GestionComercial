@@ -16,8 +16,17 @@ namespace GestionComercial.UI.Views.Productos
         private async void Volver_Click(object sender, RoutedEventArgs e)
             => await ViewModel?.Volver();
 
-        private void Guardar_Click(object sender, RoutedEventArgs e)
-            => ViewModel?.Guardar();
+        private async void Guardar_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel != null)
+            {
+                var resultado = await ViewModel.Guardar();
+                if (resultado)
+                {
+                    await ViewModel.Volver();
+                }
+            }
+        }
 
         private async void Cancelar_Click(object sender, RoutedEventArgs e)
             => await ViewModel?.Volver();

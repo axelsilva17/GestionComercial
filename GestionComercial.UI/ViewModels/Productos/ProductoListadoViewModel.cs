@@ -2,16 +2,27 @@ using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.Aplicacion.DTOs.Productos;  // ProductoItemDto + CategoriaItemDto
+using GestionComercial.Dominio.Interfaces.Servicios;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GestionComercial.UI.ViewModels.Productos
 {
     public class ProductoListadoViewModel : NavigableViewModel
     {
-        public ProductoListadoViewModel()
+        private readonly IProductoServicio _productoServicio;
+        private readonly ShellViewModel _shell;
+        private readonly ILogger<ProductoListadoViewModel> _logger;
+
+        public ProductoListadoViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoListadoViewModel> logger)
         {
+            _productoServicio = productoServicio;
+            _shell = shell;
+            _logger = logger;
             Titulo    = "Productos";
             Subtitulo = "Catálogo de productos";
         }
@@ -47,8 +58,8 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
 
         // ── Listas ────────────────────────────────────────────────────
-        private ObservableCollection<ProductoItemDto> _productos = new();
-        public ObservableCollection<ProductoItemDto> Productos
+        private ObservableCollection<ProductoListadoDto> _productos = new();
+        public ObservableCollection<ProductoListadoDto> Productos
         {
             get => _productos;
             set { _productos = value; NotifyOfPropertyChange(() => Productos); }
@@ -62,8 +73,8 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
 
         // ── Selección (sidebar) ───────────────────────────────────────
-        private ProductoItemDto _productoSeleccionado;
-        public ProductoItemDto ProductoSeleccionado
+        private ProductoListadoDto _productoSeleccionado;
+        public ProductoListadoDto ProductoSeleccionado
         {
             get => _productoSeleccionado;
             set { _productoSeleccionado = value; NotifyOfPropertyChange(() => ProductoSeleccionado); }
@@ -112,19 +123,25 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         private async Task CargarAsync()
         {
-            IsLoading = true;
-            LimpiarError();
             try
             {
-                // TODO: cargar desde servicios reales
-                await Task.Delay(200);
-                Productos          = new ObservableCollection<ProductoItemDto>();
-                Categorias         = new ObservableCollection<CategoriaItemDto>();
-                TotalProductos     = 0;
-                ProductosMostrados = 0;
+                IsLoading = true;
+                var productos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
+                productos = productos.ToList(); // Materialize for counting
+                Productos = new ObservableCollection<ProductoListadoDto>(productos);
+                TotalProductos = Productos.Count;
+                var conStock = productos.Count(p => p.StockActual > 0);
+                var sinStock = productos.Count(p => p.StockActual <= 0);
             }
-            catch (System.Exception ex) { MostrarError(ex.Message); }
-            finally { IsLoading = false; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando productos");
+                MessageBox.Show("Error al cargar productos: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         // ── Acciones ──────────────────────────────────────────────────
@@ -158,11 +175,22 @@ namespace GestionComercial.UI.ViewModels.Productos
             await Task.CompletedTask;
         }
 
-        public async Task DesactivarProducto()
+        public async void DesactivarProducto()
         {
             if (ProductoSeleccionado == null) return;
-            // TODO: await _productoServicio.DesactivarAsync(ProductoSeleccionado.IdProducto);
-            await CargarAsync();
+            var result = MessageBox.Show($"¿Desactivar producto {ProductoSeleccionado.Nombre}?",
+                "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes) return;
+            try
+            {
+                await _productoServicio.DesactivarAsync(ProductoSeleccionado.IdProducto);
+                await CargarAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error desactivando producto");
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // ── Paginación ────────────────────────────────────────────────

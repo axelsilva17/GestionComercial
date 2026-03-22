@@ -2,31 +2,39 @@ using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Dominio.Interfaces.Servicios;
+using Microsoft.Extensions.Logging;
 
 namespace GestionComercial.UI.ViewModels.Productos
 {
     public class ProductoFormularioViewModel : NavigableViewModel
     {
+        private readonly IProductoServicio _productoServicio;
         private readonly ShellViewModel _shell;
+        private readonly ILogger<ProductoFormularioViewModel> _logger;
 
-        public ProductoFormularioViewModel(ShellViewModel shell)
+        public ProductoFormularioViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoFormularioViewModel> logger)
         {
+            _productoServicio = productoServicio;
             _shell = shell;
+            _logger = logger;
         }
 
         // ── Modo ──────────────────────────────────────────────────────────────
-        private bool _esModoEdicion;
-        public bool EsModoEdicion
+        private bool _isEditMode;
+        public bool IsEditMode
         {
-            get => _esModoEdicion;
+            get => _isEditMode;
             set
             {
-                _esModoEdicion = value;
-                NotifyOfPropertyChange(() => EsModoEdicion);
+                _isEditMode = value;
+                NotifyOfPropertyChange(() => IsEditMode);
                 NotifyOfPropertyChange(() => TituloFormulario);
                 NotifyOfPropertyChange(() => SubtituloFormulario);
                 // El botón Importar solo aparece al crear (no tiene sentido en edición)
@@ -35,15 +43,35 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
 
         /// <summary>El botón "Importar desde Excel" solo se muestra en modo Crear.</summary>
-        public bool MostrarBotonImportar => !EsModoEdicion;
+        public bool MostrarBotonImportar => !IsEditMode;
 
-        public string TituloFormulario    => EsModoEdicion ? "Editar Producto"  : "Nuevo Producto";
-        public string SubtituloFormulario => EsModoEdicion
+        public string TituloFormulario    => IsEditMode ? "Editar Producto"  : "Nuevo Producto";
+        public string SubtituloFormulario => IsEditMode
             ? "Modificá los datos del producto"
             : "Completá los datos para crear un nuevo producto";
 
         // ── ID (edición) ──────────────────────────────────────────────────────
         private int _idProducto;
+        public int IdProducto
+        {
+            get => _idProducto;
+            set { _idProducto = value; NotifyOfPropertyChange(() => IdProducto); }
+        }
+
+        // ── Selección de referencias ─────────────────────────────────────
+        private CategoriaItemDto _categoriaSeleccionada;
+        public CategoriaItemDto CategoriaSeleccionada
+        {
+            get => _categoriaSeleccionada;
+            set { _categoriaSeleccionada = value; NotifyOfPropertyChange(() => CategoriaSeleccionada); }
+        }
+
+        private UnidadMedidaItemDto _unidadMedidaSeleccionada;
+        public UnidadMedidaItemDto UnidadMedidaSeleccionada
+        {
+            get => _unidadMedidaSeleccionada;
+            set { _unidadMedidaSeleccionada = value; NotifyOfPropertyChange(() => UnidadMedidaSeleccionada); }
+        }
 
         // ── Campos ───────────────────────────────────────────────────────────
         private string _nombre = string.Empty;
@@ -142,7 +170,7 @@ namespace GestionComercial.UI.ViewModels.Productos
         /// <summary>Configura el formulario en modo Crear (campos vacíos).</summary>
         public void InicializarParaCrear()
         {
-            EsModoEdicion    = false;
+            IsEditMode = false;
             _idProducto      = 0;
             Nombre           = string.Empty;
             SKU              = string.Empty;
@@ -160,36 +188,58 @@ namespace GestionComercial.UI.ViewModels.Productos
         /// <summary>Configura el formulario en modo Editar cargando el producto indicado.</summary>
         public void InicializarParaEditar(int idProducto)
         {
-            EsModoEdicion = true;
+            IsEditMode = true;
             _idProducto   = idProducto;
             LimpiarError();
             _ = CargarProductoAsync(idProducto);
         }
 
         // ── Carga de datos ────────────────────────────────────────────────────
-        private async Task CargarReferenciasAsync()
+        public async Task CargarReferenciasAsync()
         {
-            IsLoading = true;
             try
             {
-                await Task.Delay(100); // TODO: Categorias = await _categoriaServicio.ListarAsync();
-                Categorias    = new ObservableCollection<CategoriaItemDto>();
-                UnidadesMedida = new ObservableCollection<UnidadMedidaItemDto>();
+                var categorias = await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual);
+                Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
+
+                var unidades = await _productoServicio.ObtenerUnidadesMedidaAsync();
+                UnidadesMedida = new ObservableCollection<UnidadMedidaItemDto>(unidades);
             }
-            finally { IsLoading = false; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando referencias");
+            }
         }
 
-        private async Task CargarProductoAsync(int idProducto)
+        public async Task CargarProductoAsync(int idProducto)
         {
-            IsLoading = true;
             try
             {
-                await CargarReferenciasAsync();
-                await Task.Delay(150); // TODO: var dto = await _productoServicio.ObtenerAsync(idProducto);
-                // Nombre = dto.Nombre; etc.
+                IsLoading = true;
+                var dto = await _productoServicio.ObtenerPorIdAsync(idProducto);
+                if (dto != null)
+                {
+                    IdProducto = dto.IdProducto;
+                    Nombre = dto.Nombre;
+                    CodigoBarra = dto.CodigoBarra;
+                    // Descripcion no existe en ProductoDto
+                    PrecioCostoActual = dto.PrecioCostoActual;
+                    PrecioVentaActual = dto.PrecioVentaActual;
+                    StockMinimo = dto.StockMinimo;
+                    CategoriaSeleccionada = Categorias?.FirstOrDefault(c => c.IdCategoria == dto.IdCategoria);
+                    UnidadMedidaSeleccionada = UnidadesMedida?.FirstOrDefault(u => u.IdUnidadMedida == dto.IdUnidadMedida);
+                    IsEditMode = true;
+                }
             }
-            catch (System.Exception ex) { MostrarError(ex.Message); }
-            finally { IsLoading = false; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando producto");
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
@@ -199,18 +249,55 @@ namespace GestionComercial.UI.ViewModels.Productos
             SKU = $"SKU-{System.DateTime.Now:yyMMddHHmm}";
         }
 
-        public async void Guardar()
+        public async Task<bool> Guardar()
         {
-            if (!CanGuardar) return;
-            IsLoading = true;
-            LimpiarError();
             try
             {
-                await Task.Delay(500); // TODO: llamar al servicio
-                await Volver();
+                IsLoading = true;
+                if (IsEditMode)
+                {
+                    var dto = new ProductoActualizarDto
+                    {
+                        IdProducto = IdProducto,
+                        Nombre = Nombre,
+                        CodigoBarra = CodigoBarra,
+                        PrecioCostoActual = PrecioCostoActual,
+                        PrecioVentaActual = PrecioVentaActual,
+                        StockMinimo = StockMinimo,
+                        IdCategoria = CategoriaSeleccionada?.IdCategoria ?? 0,
+                        IdUnidadMedida = UnidadMedidaSeleccionada?.IdUnidadMedida ?? 0,
+                        Activo = Activo
+                    };
+                    await _productoServicio.ActualizarAsync(dto);
+                }
+                else
+                {
+                    var dto = new ProductoCrearDto
+                    {
+                        Nombre = Nombre,
+                        CodigoBarra = CodigoBarra,
+                        PrecioCostoActual = PrecioCostoActual,
+                        PrecioVentaActual = PrecioVentaActual,
+                        StockMinimo = StockMinimo,
+                        IdCategoria = CategoriaSeleccionada?.IdCategoria ?? 0,
+                        IdUnidadMedida = UnidadMedidaSeleccionada?.IdUnidadMedida ?? 0,
+                        IdEmpresa = _shell.IdEmpresaActual
+                    };
+                    await _productoServicio.CrearAsync(dto);
+                }
+                MessageBox.Show("Producto guardado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                return true;
             }
-            catch (System.Exception ex) { MostrarError($"Error al guardar: {ex.Message}"); }
-            finally { IsLoading = false; }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error guardando producto");
+                MessageBox.Show("Error al guardar: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         public async Task Volver()

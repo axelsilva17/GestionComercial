@@ -48,10 +48,9 @@ namespace GestionComercial.UI.Views.Productos
         }
 
         // Desactivar producto desde sidebar
-        private async void DesactivarProducto_Click(object sender, RoutedEventArgs e)
+        private void DesactivarProducto_Click(object sender, RoutedEventArgs e)
         {
-            if (ViewModel != null)
-                await ViewModel.DesactivarProducto();
+            ViewModel?.DesactivarProducto();
         }
 
         // Paginación
@@ -72,7 +71,7 @@ namespace GestionComercial.UI.Views.Productos
         {
             if (ViewModel == null) return;
             var grid = sender as DataGrid;
-            ViewModel.ProductoSeleccionado = grid?.SelectedItem as GestionComercial.Aplicacion.DTOs.Productos.ProductoItemDto;
+            ViewModel.ProductoSeleccionado = grid?.SelectedItem as GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto;
         }
     }
 }
