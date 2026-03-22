@@ -31,7 +31,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Telefono   = dto.Telefono,
                 Email      = dto.Email,
                 Id_empresa = dto.IdEmpresa,
-                Activo     = true,
+                Activo     = dto.Activo,
             };
             await _uow.Clientes.AgregarAsync(cliente);
             await _uow.GuardarCambiosAsync();
@@ -46,6 +46,7 @@ namespace GestionComercial.Aplicacion.Servicios
             cliente.Documento = dto.Documento;
             cliente.Telefono  = dto.Telefono;
             cliente.Email     = dto.Email;
+            cliente.Activo    = dto.Activo;
             _uow.Clientes.Actualizar(cliente);
             await _uow.GuardarCambiosAsync();
         }

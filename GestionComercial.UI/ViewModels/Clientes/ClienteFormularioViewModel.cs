@@ -185,7 +185,8 @@ namespace GestionComercial.UI.ViewModels.Clientes
                         Documento = int.TryParse(Documento, out var doc) ? doc : 0,
                         Telefono = Telefono,
                         Email = Email,
-                        IdEmpresa = _shell.IdEmpresaActual
+                        IdEmpresa = _shell.IdEmpresaActual,
+                        Activo = Activo
                     };
                     await _clienteServicio.CrearAsync(dto);
                 }

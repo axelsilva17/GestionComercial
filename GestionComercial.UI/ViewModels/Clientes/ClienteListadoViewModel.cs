@@ -80,6 +80,13 @@ namespace GestionComercial.UI.ViewModels.Clientes
             set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
         }
 
+        private bool _verSoloActivos = true;
+        public bool VerSoloActivos
+        {
+            get => _verSoloActivos;
+            set { _verSoloActivos = value; NotifyOfPropertyChange(() => VerSoloActivos); }
+        }
+
         // ── Paginación ────────────────────────────────────────────────────────
         private int _clientesMostrados;
         public int ClientesMostrados
@@ -112,10 +119,24 @@ namespace GestionComercial.UI.ViewModels.Clientes
             {
                 IsLoading = true;
                 var clientes = await _clienteServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
-                Clientes = new ObservableCollection<ClienteDto>(clientes);
+
+                // Filtrar por estado (activos/inactivos)
+                var filtrados = clientes.Where(c => c.Activo == VerSoloActivos);
+
+                // Filtrar por texto de búsqueda
+                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+                {
+                    var busqueda = TextoBusqueda.Trim().ToLower();
+                    filtrados = filtrados.Where(c =>
+                        c.Nombre.ToLower().Contains(busqueda) ||
+                        c.Email.ToLower().Contains(busqueda) ||
+                        c.Documento.ToString().Contains(busqueda));
+                }
+
+                Clientes = new ObservableCollection<ClienteDto>(filtrados);
                 TotalClientes = Clientes.Count;
-                ClientesActivos = Clientes.Count(c => c.Activo);
-                ClientesInactivos = Clientes.Count(c => !c.Activo);
+                ClientesActivos = clientes.Count(c => c.Activo);
+                ClientesInactivos = clientes.Count(c => !c.Activo);
             }
             catch (Exception ex)
             {
@@ -129,7 +150,7 @@ namespace GestionComercial.UI.ViewModels.Clientes
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
-        public async Task Buscar() { PaginaActual = 1; await CargarAsync(); }
+        public async Task Buscar() { await CargarAsync(); }
 
         public async Task NuevoCliente()
         {
