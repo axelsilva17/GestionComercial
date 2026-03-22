@@ -95,6 +95,13 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _categoriaSeleccionada = value; NotifyOfPropertyChange(() => CategoriaSeleccionada); }
         }
 
+        private int _filtroActivo;
+        public int FiltroActivo
+        {
+            get => _filtroActivo;
+            set { _filtroActivo = value; NotifyOfPropertyChange(() => FiltroActivo); }
+        }
+
         // ── Paginación ────────────────────────────────────────────────
         private int _productosMostrados;
         public int ProductosMostrados
@@ -119,7 +126,23 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         // ── Lifecycle ─────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
-            => await CargarAsync();
+        {
+            await CargarCategoriasAsync();
+            await CargarAsync();
+        }
+
+        private async Task CargarCategoriasAsync()
+        {
+            try
+            {
+                var categorias = await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual);
+                Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando categorías");
+            }
+        }
 
         private async Task CargarAsync()
         {
@@ -127,11 +150,40 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 IsLoading = true;
                 var productos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
-                productos = productos.ToList(); // Materialize for counting
-                Productos = new ObservableCollection<ProductoListadoDto>(productos);
-                TotalProductos = Productos.Count;
-                var conStock = productos.Count(p => p.StockActual > 0);
-                var sinStock = productos.Count(p => p.StockActual <= 0);
+                var productosList = productos.ToList();
+
+                // Aplicar filtros
+                var filtrados = productosList.AsEnumerable();
+
+                // Filtro por texto de búsqueda
+                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+                {
+                    var busqueda = TextoBusqueda.Trim().ToLower();
+                    filtrados = filtrados.Where(p =>
+                        (p.Nombre?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (p.CodigoBarra?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
+                }
+
+                // Filtro por categoría
+                if (CategoriaSeleccionada != null)
+                {
+                    filtrados = filtrados.Where(p => p.IdCategoria == CategoriaSeleccionada.IdCategoria);
+                }
+
+                // Filtro por estado activo/inactivo
+                if (FiltroActivo == 1)
+                    filtrados = filtrados.Where(p => p.Activo);
+                else if (FiltroActivo == 2)
+                    filtrados = filtrados.Where(p => !p.Activo);
+
+                var filtradosList = filtrados.ToList();
+                Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);
+                TotalProductos = filtradosList.Count;
+
+                // Métricas (sobre toda la lista, no filtrada)
+                ProductosActivos = productosList.Count(p => p.Activo);
+                ProductosStockBajo = productosList.Count(p => p.StockActual > 0 && p.StockActual <= 10);
+                ProductosSinStock = productosList.Count(p => p.StockActual <= 0);
             }
             catch (Exception ex)
             {

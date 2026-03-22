@@ -108,6 +108,7 @@ namespace GestionComercial.Aplicacion.Servicios
             IdProducto = p.Id,
             Nombre = p.Nombre,
             CodigoBarra = p.CodigoBarra,
+            IdCategoria = p.Id_categoria,
             PrecioVentaActual = p.PrecioVentaActual,
             PrecioCostoActual = p.PrecioCostoActual,
             StockActual = (int)p.StockActual,

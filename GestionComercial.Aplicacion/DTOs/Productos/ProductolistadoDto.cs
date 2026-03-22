@@ -5,6 +5,7 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
         public int     IdProducto        { get; set; }
         public string  Nombre            { get; set; }
         public string  CodigoBarra       { get; set; }
+        public int     IdCategoria       { get; set; }
         public decimal PrecioVentaActual { get; set; }
         public decimal PrecioCostoActual { get; set; }
         public int     StockActual       { get; set; }

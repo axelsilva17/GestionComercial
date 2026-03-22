@@ -28,6 +28,16 @@ namespace GestionComercial.UI.ViewModels.Clientes
             Subtitulo = "Gestión de clientes";
         }
 
+        // ── Enum Filtro Estado ─────────────────────────────────────────────────
+        public enum EstadoFiltro { Todos = 0, Activos = 1, Inactivos = 2 }
+
+        private EstadoFiltro _filtroEstado = EstadoFiltro.Activos;
+        public EstadoFiltro FiltroEstado
+        {
+            get => _filtroEstado;
+            set { _filtroEstado = value; NotifyOfPropertyChange(() => FiltroEstado); _ = CargarAsync(); }
+        }
+
         // ── Métricas ──────────────────────────────────────────────────────────
         private int _totalClientes;
         public int TotalClientes
@@ -80,12 +90,7 @@ namespace GestionComercial.UI.ViewModels.Clientes
             set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
         }
 
-        private bool _verSoloActivos = true;
-        public bool VerSoloActivos
-        {
-            get => _verSoloActivos;
-            set { _verSoloActivos = value; NotifyOfPropertyChange(() => VerSoloActivos); }
-        }
+        // Nota: FiltroEstado enum está definido arriba
 
         // ── Paginación ────────────────────────────────────────────────────────
         private int _clientesMostrados;
@@ -120,8 +125,13 @@ namespace GestionComercial.UI.ViewModels.Clientes
                 IsLoading = true;
                 var clientes = await _clienteServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
 
-                // Filtrar por estado (activos/inactivos)
-                var filtrados = clientes.Where(c => c.Activo == VerSoloActivos);
+                // Filtrar por estado usando FiltroEstado
+                IEnumerable<ClienteDto> filtrados = FiltroEstado switch
+                {
+                    EstadoFiltro.Activos => clientes.Where(c => c.Activo),
+                    EstadoFiltro.Inactivos => clientes.Where(c => !c.Activo),
+                    _ => clientes
+                };
 
                 // Filtrar por texto de búsqueda
                 if (!string.IsNullOrWhiteSpace(TextoBusqueda))

@@ -32,6 +32,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
         }
 
+        private bool _soloActivos = true;
+        public bool SoloActivos
+        {
+            get => _soloActivos;
+            set { _soloActivos = value; NotifyOfPropertyChange(() => SoloActivos); _ = Buscar(); }
+        }
+
         private ObservableCollection<ClienteDto> _clientes = new();
         public ObservableCollection<ClienteDto> Clientes
         {
@@ -62,11 +69,19 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     return;
                 }
 
-                var filtrados = string.IsNullOrWhiteSpace(TextoBusqueda)
-                    ? todos
-                    : todos.Where(c => 
-                        (c.Nombre?.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                        c.Documento.ToString().Contains(TextoBusqueda));
+                // Filtrar por activos
+                var filtrados = SoloActivos
+                    ? todos.Where(c => c.Activo)
+                    : todos;
+
+                // Filtrar por texto
+                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+                {
+                    var texto = TextoBusqueda.Trim().ToLower();
+                    filtrados = filtrados.Where(c =>
+                        (c.Nombre?.Contains(texto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        c.Documento.ToString().Contains(texto));
+                }
 
                 Clientes.Clear();
                 foreach (var c in filtrados) Clientes.Add(c);

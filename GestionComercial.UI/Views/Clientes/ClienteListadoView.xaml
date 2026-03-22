@@ -7,6 +7,7 @@
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
+        <converters:EnumToIntConverter         x:Key="EnumToIntConverter"/>
 
         <Style x:Key="ClienteRow" TargetType="DataGridRow">
             <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
@@ -231,7 +232,7 @@
                               Background="{DynamicResource SurfaceBrush}"
                               Foreground="{DynamicResource TextPrimaryBrush}"
                               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                              SelectedIndex="0">
+                              SelectedIndex="{Binding FiltroEstado, Mode=TwoWay}">
                         <ComboBoxItem Content="Todos"/>
                         <ComboBoxItem Content="Activos"/>
                         <ComboBoxItem Content="Inactivos"/>
