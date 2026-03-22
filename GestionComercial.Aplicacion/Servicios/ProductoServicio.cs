@@ -99,7 +99,7 @@ namespace GestionComercial.Aplicacion.Servicios
             Activo = p.Activo,
             IdCategoria = p.Id_categoria,
             CategoriaNombre = p.Categoria?.Nombre ?? string.Empty,
-            IdUnidadMedia = p.Id_unidadMedida,
+            IdUnidadMedida = p.Id_unidadMedida,
             UnidadMedida = p.UnidadMedida?.Nombre ?? string.Empty,
         };
     }

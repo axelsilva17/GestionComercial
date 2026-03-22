@@ -10,6 +10,7 @@ namespace GestionComercial.Dominio.Entidades.Cliente
         public string? Telefono   { get; set; }
         public string? Email      { get; set; }
         public int     Id_empresa { get; set; }
+        public bool    Activo     { get; set; } = true;
 
         public Empresa            Empresa { get; set; } = null!;
         public ICollection<Venta> Ventas  { get; set; } = new List<Venta>();

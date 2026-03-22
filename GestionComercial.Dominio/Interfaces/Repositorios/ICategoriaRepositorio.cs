@@ -11,7 +11,7 @@ using GestionComercial.Dominio.Entidades.Ventas;
 namespace GestionComercial.Dominio.Interfaces.Repositorios
 {
    
-    public interface ICateogoriaRepositorio : IRepositorioBase<Categoria>
+    public interface ICategoriaRepositorio : IRepositorioBase<Categoria>
     {
         Task<IEnumerable<Categoria>> ObtenerPorEmpresaAsync(int idEmpresa);
         Task<IEnumerable<Categoria>> ObtenerRaicesAsync(int idEmpresa);

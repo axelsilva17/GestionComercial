@@ -19,7 +19,7 @@ namespace GestionComercial.Dominio.Repositorio
         public IMovimientoStockRepositorio MovimientosStock { get; }
         public IMovimientoCajaRepositorio  MovimientosCaja  { get; }
         public IUsuarioRepositorio         Usuarios         { get; }
-        public ICateogoriaRepositorio      Categorias       { get; }
+        public ICategoriaRepositorio      Categorias       { get; }
         public IEmpresaRepositorio         Empresas         { get; }
         public ISucursalRepositorio        Sucursales       { get; }
         public IPagoRepositorio            Pagos            { get; }

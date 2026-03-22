@@ -31,6 +31,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Telefono   = dto.Telefono,
                 Email      = dto.Email,
                 Id_empresa = dto.IdEmpresa,
+                Activo     = true,
             };
             await _uow.Clientes.AgregarAsync(cliente);
             await _uow.GuardarCambiosAsync();
@@ -53,8 +54,9 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Cliente {id} no encontrado");
-            // La entidad no tiene Activo — soft delete via eliminación o flag adicional
-            _uow.Clientes.Eliminar(cliente);
+            // Soft delete: marcar como inactivo
+            cliente.Activo = false;
+            _uow.Clientes.Actualizar(cliente);
             await _uow.GuardarCambiosAsync();
         }
 
@@ -66,6 +68,7 @@ namespace GestionComercial.Aplicacion.Servicios
             Telefono  = uint.TryParse(c.Telefono, out var tel) ? tel : 0,
             Email     = c.Email ?? string.Empty,
             IdEmpresa = c.Id_empresa,
+            Activo    = c.Activo,
         };
     }
 }

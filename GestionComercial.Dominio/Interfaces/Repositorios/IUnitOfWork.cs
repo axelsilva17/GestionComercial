@@ -13,7 +13,7 @@ namespace GestionComercial.Dominio.Interfaces
         IMovimientoStockRepositorio MovimientosStock { get; }
         IMovimientoCajaRepositorio  MovimientosCaja  { get; }
         IUsuarioRepositorio         Usuarios         { get; }
-        ICateogoriaRepositorio      Categorias       { get; }
+        ICategoriaRepositorio      Categorias       { get; }
         IEmpresaRepositorio         Empresas         { get; }
         ISucursalRepositorio        Sucursales       { get; }
         IPagoRepositorio            Pagos            { get; }

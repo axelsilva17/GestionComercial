@@ -5,7 +5,7 @@ using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
 using GestionComercial.Persistencia.Repositorio;
 
-public class CategoriaRepositorio : RepositorioBase<Categoria>, ICateogoriaRepositorio
+public class CategoriaRepositorio : RepositorioBase<Categoria>, ICategoriaRepositorio
 {
     public CategoriaRepositorio(GestionComercialContext context) : base(context) { }
 

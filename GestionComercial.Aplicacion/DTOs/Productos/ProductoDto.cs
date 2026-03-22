@@ -13,7 +13,7 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
         public int     IdEmpresa        { get; set; }
         public int     IdCategoria      { get; set; }
         public string  CategoriaNombre  { get; set; }
-        public int     IdUnidadMedia    { get; set; }
+        public int     IdUnidadMedida   { get; set; }
         public string  UnidadMedida     { get; set; }
         public string  Inicial => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
     }
