@@ -255,18 +255,62 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Buscador de productos -->
+            <!-- Buscador de productos con filtro de categoría -->
             <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="12" Padding="14,10">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border x:Name="BusquedaProductoBorder" Grid.Column="0"
+                    <!-- ComboBox de categorías (Feature 2) -->
+                    <ComboBox x:Name="CategoriaFiltroCombo"
+                              Grid.Column="0"
+                              Height="44"
+                              ItemsSource="{Binding Categorias}"
+                              SelectedItem="{Binding CategoriaFiltro}"
+                              DisplayMemberPath="Nombre"
+                              VerticalContentAlignment="Center"
+                              Padding="12,0"
+                              Background="{DynamicResource SurfaceBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+
+                    <!-- Test barcode input (Feature 7) - pequeño input para testing -->
+                    <Border Grid.Column="1"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="8" Height="44"
+                            ToolTip="Código de barras (test) - Enter para agregar">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="📷" FontSize="12" VerticalAlignment="Center"
+                                       Margin="8,0,4,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox x:Name="TestBarcodeInput" Grid.Column="1"
+                                     Background="Transparent" BorderThickness="0"
+                                     Foreground="{DynamicResource TextPrimaryBrush}"
+                                     FontSize="11" VerticalContentAlignment="Center"
+                                     Text="{Binding TestBarcodeInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="4,0,8,0"
+                                     KeyDown="TestBarcodeInput_KeyDown"/>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="BusquedaProductoBorder" Grid.Column="2"
                             Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" Height="44">
@@ -286,9 +330,9 @@
                         </Grid>
                     </Border>
 
-                    <Button x:Name="AgregarProducto" Grid.Column="2"
+                    <Button x:Name="AgregarProducto" Grid.Column="4"
                             Height="44" Padding="20,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}" Grid.ColumnSpan="2" Margin="10,0,0,0"
+                            Style="{StaticResource PrimaryButton}"
                             ToolTip="F6 - Agregar producto"
                             cal:Message.Attach="[Event Click] = [Action AgregarProducto]">
                         <StackPanel Orientation="Horizontal">
@@ -327,7 +371,7 @@
                                    Margin="16"
                                    Visibility="{Binding BuscandoProductos, Converter={StaticResource BoolToVisibility}}"/>
 
-                        <!-- Lista de resultados -->
+                        <!-- Lista de resultados (mostrar cuando NO estamos buscando y hay resultados) -->
                         <ListBox x:Name="ResultadosBusquedaList"
                                  ItemsSource="{Binding ResultadosBusqueda}"
                                  Background="Transparent"
@@ -833,6 +877,83 @@
                         </Button>
                     </Grid>
                     
+                    <!-- Filtros de historial (Feature 3) -->
+                    <Border Grid.Row="0" Margin="0,40,0,0" Background="{DynamicResource SurfaceBrush}" 
+                            CornerRadius="8" Padding="12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Desde" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <DatePicker SelectedDate="{Binding FechaDesde}" 
+                                           Background="{DynamicResource SurfaceBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Hasta" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <DatePicker SelectedDate="{Binding FechaHasta}"
+                                           Background="{DynamicResource SurfaceBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="DNI Cliente" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding DniClienteFiltro, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="{DynamicResource SurfaceBrush}"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         BorderBrush="{DynamicResource BorderBrush}"
+                                         Padding="8,6"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="6">
+                                <TextBlock Text="Estado" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <ComboBox SelectedValue="{Binding EstadoVentaFiltro}"
+                                          SelectedValuePath="Tag"
+                                          Background="{DynamicResource SurfaceBrush}"
+                                          Foreground="{DynamicResource TextPrimaryBrush}">
+                                    <ComboBoxItem Content="Todos" Tag="{x:Null}"/>
+                                    <ComboBoxItem Content="Pendiente" Tag="1"/>
+                                    <ComboBoxItem Content="Pagada" Tag="2"/>
+                                    <ComboBoxItem Content="Anulada" Tag="3"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <Button Grid.Column="8" Content="🔍 Filtrar"
+                                    Command="{Binding FiltrarHistorialCommand}"
+                                    Height="32" Padding="16,0"
+                                    Background="{DynamicResource PrimaryBrush}"
+                                    Foreground="White"
+                                    Cursor="Hand"
+                                    VerticalAlignment="Bottom"
+                                    ToolTip="Aplicar filtros">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="b" Property="Opacity" Value="0.85"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    
                     <!-- DataGrid con estilo mejorado -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialVentas}" AutoGenerateColumns="False"
                               IsReadOnly="True" CanUserAddRows="False"
@@ -843,7 +964,7 @@
                               HeadersVisibility="Column"
                               CanUserReorderColumns="False"
                               SelectionMode="Single"
-                              FontSize="13">
+                              FontSize="13" Margin="0,70,0,0">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="140">
                                 <DataGridTextColumn.ElementStyle>
@@ -880,6 +1001,36 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
+                            <!-- Columna de acciones con botón Anular (Feature 4) -->
+                            <DataGridTemplateColumn Header="" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑 Anular"
+                                                FontSize="11"
+                                                Padding="8,4"
+                                                Background="Transparent"
+                                                Foreground="{DynamicResource ErrorBrush}"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                cal:Message.Attach="[Event Click] = [Action AnularVentaDesdeHistorial($dataContext)]"
+                                                ToolTip="Anular esta venta">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="b" Background="{TemplateBinding Background}"
+                                                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                     

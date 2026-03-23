@@ -55,6 +55,7 @@ namespace GestionComercial.UI
 
             // ── Servicios ─────────────────────────────────────────────────────
             _container.Singleton<SesionServicio>();
+            _container.Singleton<IServicioImpresion, ServicioImpresionTermica>();
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<IClienteServicio, ClienteServicio>();
             _container.PerRequest<IVentaServicio, VentaServicio>();
@@ -69,6 +70,7 @@ namespace GestionComercial.UI
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
             _container.PerRequest<IAuditoriaAppService, AuditoriaAppService>();
+            _container.Singleton<IValidator<VentaCrearDto>, VentaValidator>();
 
             // ── Validators (FluentValidation) ─────────────────────────────────
             // Nota: c.GetInstance<IUnitOfWork>().Clientes asume que IUnitOfWork

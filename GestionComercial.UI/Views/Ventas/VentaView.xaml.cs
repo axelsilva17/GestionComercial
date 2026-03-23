@@ -68,5 +68,17 @@ namespace GestionComercial.UI.Views.Ventas
         {
             ViewModel?.CerrarHistorialCommand?.Execute(null);
         }
+
+        /// <summary>
+        /// Maneja Enter en el input de test de código de barras (Feature 7).
+        /// </summary>
+        private void TestBarcodeInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && ViewModel != null)
+            {
+                ViewModel.TestBarcodeCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
     }
 }

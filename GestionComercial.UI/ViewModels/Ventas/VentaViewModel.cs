@@ -58,6 +58,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             CerrarPopupBusquedaCommand  = new RelayCommand(CerrarPopupBusqueda);
             VerHistorialCommand = new RelayCommand(() => { _ = CargarHistorialAsync(); MostrarHistorial = true; });
             CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
+            FiltrarHistorialCommand = new RelayCommand(() => FiltrarHistorial());
+            TestBarcodeCommand = new RelayCommand(TestBarcodeKeyDown);
             LimiteDescuento = _sesion.Rol?.ToLowerInvariant() switch
             {
                 "gerente"       => 30m,
@@ -90,6 +92,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     // Guardar en cache para búsquedas rápidas
                     _productosCache = productos.ToList();
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
+
+                    // Cargar categorías para el filtro (Feature 2)
+                    var categorias = await _productoServicio.ObtenerCategoriasAsync(_sesion.IdEmpresa);
+                    Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargadas {Categorias.Count} categorías");
                 }
                 catch (Exception ex)
                 {
@@ -106,6 +113,60 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         // ── Límite de descuento según rol ──────────────────────────────────────
         public decimal LimiteDescuento { get; }
+
+        // ── Feature 2: Filtro por categoría ─────────────────────────────────
+        private ObservableCollection<CategoriaItemDto> _categorias = new();
+        public ObservableCollection<CategoriaItemDto> Categorias
+        {
+            get => _categorias;
+            set => SetProperty(ref _categorias, value);
+        }
+
+        private CategoriaItemDto? _categoriaFiltro;
+        public CategoriaItemDto? CategoriaFiltro
+        {
+            get => _categoriaFiltro;
+            set { SetProperty(ref _categoriaFiltro, value); }
+        }
+
+        // ── Feature 3: Filtros de historial ───────────────────────────────────
+        private DateTime? _fechaDesde;
+        public DateTime? FechaDesde
+        {
+            get => _fechaDesde;
+            set { SetProperty(ref _fechaDesde, value); }
+        }
+
+        private DateTime? _fechaHasta;
+        public DateTime? FechaHasta
+        {
+            get => _fechaHasta;
+            set { SetProperty(ref _fechaHasta, value); }
+        }
+
+        private string _dniClienteFiltro = string.Empty;
+        public string DniClienteFiltro
+        {
+            get => _dniClienteFiltro;
+            set { SetProperty(ref _dniClienteFiltro, value); }
+        }
+
+        private int? _estadoVentaFiltro;
+        public int? EstadoVentaFiltro
+        {
+            get => _estadoVentaFiltro;
+            set { SetProperty(ref _estadoVentaFiltro, value); }
+        }
+
+        // ── Feature 7: Test barcode ─────────────────────────────────────────────
+        private string _testBarcodeInput = string.Empty;
+        public string TestBarcodeInput
+        {
+            get => _testBarcodeInput;
+            set { SetProperty(ref _testBarcodeInput, value); }
+        }
+
+        public RelayCommand TestBarcodeCommand { get; }
 
         /// <summary>
         /// Maneja atajos de teclado globales en la vista de venta.
@@ -212,6 +273,36 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 IsLoading = false;
             }
+        }
+
+        /// <summary>
+        /// Feature 4: Anula una venta desde el historial.
+        /// Muestra confirmación y luego el popup para ingresar el motivo.
+        /// </summary>
+        public void AnularVentaDesdeHistorial(VentaResumenDto? ventaResumen)
+        {
+            if (ventaResumen == null) return;
+
+            // Verificar que la venta no esté ya anulada
+            if (ventaResumen.Estado == "Anulada")
+            {
+                MessageBox.Show("Esta venta ya está anulada.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Mostrar confirmación
+            var result = MessageBox.Show(
+                $"¿Está seguro que desea anular la venta #{ventaResumen.IdVenta}?\n\nEsta acción no se puede deshacer.",
+                "Confirmar anulación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            // Setear el ID de la venta activa y mostrar popup de motivo
+            VentaActualId = ventaResumen.IdVenta;
+            MotivoAnulacion = string.Empty;
+            MostrarPopupAnulacion = true;
         }
 
         private void AgregarItemConDescuento(DescuentoItemParam? param)
@@ -362,6 +453,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     var resultadosCache = _productosCache
                         .Where(p => (p.Nombre?.ToLowerInvariant().Contains(busqueda) ?? false) ||
                                    (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
+                        .Where(p => CategoriaFiltro == null || p.IdCategoria == CategoriaFiltro.IdCategoria)
                         .Take(8)
                         .ToList();
 
@@ -383,6 +475,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 var resultados = todos
                     .Where(p => (p.Nombre?.ToLowerInvariant().Contains(textoBusqueda) ?? false) ||
                                (p.CodigoBarra?.ToLowerInvariant().Contains(textoBusqueda) ?? false))
+                    .Where(p => CategoriaFiltro == null || p.IdCategoria == CategoriaFiltro.IdCategoria)
                     .Take(8) // Limitar a 8 resultados para el popup
                     .ToList();
 
@@ -791,21 +884,89 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public RelayCommand VerHistorialCommand { get; }
         public RelayCommand CerrarHistorialCommand { get; }
+        public RelayCommand FiltrarHistorialCommand { get; }
 
         public async Task CargarHistorialAsync()
         {
             try
             {
-                // Obtener ventas de hoy (últimas 20)
-                var desde = DateTime.Today;
-                var hasta = DateTime.Today.AddDays(1).AddSeconds(-1);
-                var ventas = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
-                HistorialVentas = new ObservableCollection<VentaResumenDto>(ventas.Take(20));
+                // Por defecto: últimos 30 días (spec dice 30 días, no solo hoy)
+                var desde = FechaDesde ?? DateTime.Today.AddDays(-30);
+                var hasta = FechaHasta ?? DateTime.Today.AddDays(1).AddSeconds(-1);
+
+                IEnumerable<VentaResumenDto> ventas;
+
+                // Si hay filtros activos, usar el método con filtros
+                if (FechaDesde.HasValue || FechaHasta.HasValue || !string.IsNullOrWhiteSpace(DniClienteFiltro) || EstadoVentaFiltro.HasValue)
+                {
+                    ventas = await _ventaServicio.ObtenerVentasAsync(
+                        _sesion.IdSucursal, FechaDesde, FechaHasta, DniClienteFiltro, EstadoVentaFiltro);
+                }
+                else
+                {
+                    ventas = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
+                }
+
+                HistorialVentas = new ObservableCollection<VentaResumenDto>(ventas.Take(50));
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// Feature 3: Filtra el historial aplicando los filtros activos.
+        /// </summary>
+        public void FiltrarHistorial()
+        {
+            _ = CargarHistorialAsync();
+        }
+
+        /// <summary>
+        /// Feature 7: Test barcode - procesa el código de barras del input de test.
+        /// </summary>
+        public async void TestBarcodeKeyDown()
+        {
+            if (string.IsNullOrWhiteSpace(TestBarcodeInput)) return;
+
+            var codigo = TestBarcodeInput.Trim();
+            TestBarcodeInput = string.Empty;
+
+            System.Diagnostics.Debug.WriteLine($"[VentaVM] TestBarcodeKeyDown: {codigo}");
+
+            // Buscar por código de barras exacto
+            var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+            var producto = todos.FirstOrDefault(p =>
+                p.CodigoBarra != null &&
+                p.CodigoBarra.Trim().Equals(codigo, StringComparison.OrdinalIgnoreCase));
+
+            if (producto == null)
+            {
+                MessageBox.Show($"No se encontró ningún producto con código de barras '{codigo}'.", 
+                    "Código no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (producto.StockActual <= 0)
+            {
+                MessageBox.Show($"'{producto.Nombre}' no tiene stock disponible.", 
+                    "Sin stock", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Agregar el producto al carrito (usar el método existente de selección)
+            var dtoParaAgregar = new ProductoListadoDto
+            {
+                IdProducto = producto.IdProducto,
+                Nombre = producto.Nombre,
+                CodigoBarra = producto.CodigoBarra,
+                PrecioVentaActual = producto.PrecioVentaActual,
+                PrecioCostoActual = producto.PrecioCostoActual,
+                StockActual = producto.StockActual,
+            };
+
+            SeleccionarProductoDelPopup(dtoParaAgregar);
         }
     }
 

@@ -17,14 +17,24 @@ namespace GestionComercial.UI.Views.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             bool visible = value is bool b && b;
-            if (InvertirValor) visible = !visible;
+            // Leer ConverterParameter="Inverse" desde XAML para invertir el valor
+            if (parameter is string paramStr && paramStr.Equals("Inverse", StringComparison.OrdinalIgnoreCase))
+                visible = !visible;
+            // Si no hay parameter, usar la propiedad InvertirValor (backwards compatible)
+            else if (InvertirValor)
+                visible = !visible;
             return visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             bool visible = value is Visibility v && v == Visibility.Visible;
-            return InvertirValor ? !visible : visible;
+            // Leer ConverterParameter="Inverse" desde XAML para invertir el valor
+            if (parameter is string paramStr && paramStr.Equals("Inverse", StringComparison.OrdinalIgnoreCase))
+                visible = !visible;
+            else if (InvertirValor)
+                visible = !visible;
+            return visible;
         }
     }
 }

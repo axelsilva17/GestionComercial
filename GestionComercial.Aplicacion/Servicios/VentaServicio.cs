@@ -26,6 +26,40 @@ namespace GestionComercial.Aplicacion.Servicios
             return ventas.Select(MapearResumen);
         }
 
+        /// <summary>
+        /// Feature 3: Obtiene ventas con filtros opcionales y combinables.
+        /// </summary>
+        public async Task<IEnumerable<VentaResumenDto>> ObtenerVentasAsync(
+            int idSucursal,
+            DateTime? fechaDesde = null,
+            DateTime? fechaHasta = null,
+            string? dniCliente = null,
+            int? estado = null)
+        {
+            // Usar rango de fechas default si no se especifican
+            var desde = fechaDesde ?? DateTime.Today.AddDays(-30);
+            var hasta = fechaHasta ?? DateTime.Today.AddDays(1).AddSeconds(-1);
+
+            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(desde, hasta, idSucursal);
+
+            // Aplicar filtros opcionales
+            if (!string.IsNullOrWhiteSpace(dniCliente))
+            {
+                // Convertir el filtro a int para comparar con Documento
+                if (int.TryParse(dniCliente, out var dniBuscado))
+                {
+                    ventas = ventas.Where(v => v.Cliente != null && v.Cliente.Documento == dniBuscado);
+                }
+            }
+
+            if (estado.HasValue)
+            {
+                ventas = ventas.Where(v => v.Estado == estado.Value);
+            }
+
+            return ventas.Select(MapearResumen);
+        }
+
         public async Task<VentaDto?> ObtenerPorIdAsync(int id)
         {
             var v = await _uow.Ventas.ObtenerConDetallesAsync(id);
