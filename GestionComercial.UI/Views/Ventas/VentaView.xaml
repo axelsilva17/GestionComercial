@@ -182,6 +182,33 @@
                     </Button.Style>
                 </Button>
 
+                <Button Content="📋 Historial"
+                        Click="VerHistorial_Click"
+                        Grid.Column="1"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource PrimaryBrush}"
+                        FontSize="14" Cursor="Hand" VerticalAlignment="Center"
+                        Margin="0,0,20,0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="b" Background="Transparent" CornerRadius="8" Padding="10,8">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="Nueva Venta"
                                FontSize="26" FontWeight="Bold"
@@ -795,5 +822,38 @@
                 </Border>
             </Grid>
         </Popup>
+
+        <!-- Popup Historial de Ventas -->
+        <Grid x:Name="HistorialPopup" Visibility="{Binding MostrarHistorial, Converter={StaticResource BoolToVisibility}}"
+              Panel.ZIndex="100" Background="#80000000">
+            <Border Background="White" CornerRadius="8" Padding="20"
+                    MaxWidth="800" MaxHeight="600"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="Historial de Ventas" FontSize="18" FontWeight="Bold"/>
+                    </StackPanel>
+                    
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialVentas}" AutoGenerateColumns="False"
+                              IsReadOnly="True" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="120"/>
+                            <DataGridTextColumn Header="Total" Binding="{Binding TotalFinal, StringFormat='$ {0:N0}'}" Width="100"/>
+                            <DataGridTextColumn Header="Cliente" Binding="{Binding ClienteNombre}" Width="*"/>
+                            <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    
+                    <Button Grid.Row="2" Content="Cerrar" Click="CerrarHistorial_Click"
+                            HorizontalAlignment="Right" Margin="0,16,0,0"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

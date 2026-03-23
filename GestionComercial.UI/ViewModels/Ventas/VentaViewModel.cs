@@ -53,6 +53,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             });
             SeleccionarProductoCommand = new RelayCommand<ProductoListadoDto>(SeleccionarProductoDelPopup);
             CerrarPopupBusquedaCommand  = new RelayCommand(CerrarPopupBusqueda);
+            VerHistorialCommand = new RelayCommand(() => { _ = CargarHistorialAsync(); MostrarHistorial = true; });
+            CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
             LimiteDescuento = _sesion.Rol?.ToLowerInvariant() switch
             {
                 "gerente"       => 30m,
@@ -579,6 +581,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// </summary>
         public async Task IrACobrar()
         {
+            // Verificar que hay una caja abierta
+            if (!_sesion.IdCajaActual.HasValue)
+            {
+                MessageBox.Show("Debe abrir una caja antes de realizar ventas.", "Caja cerrada", 
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (Items.Count == 0) { MostrarError("Agregá al menos un producto."); return; }
 
             IsLoading = true;
@@ -646,8 +656,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public async Task Volver()
         {
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
+            // Stay on Venta screen - show recent sales instead
+            await CargarHistorialAsync();
+            MostrarHistorial = true;
         }
 
         // ── Lógica interna ────────────────────────────────────────────────────
@@ -711,6 +722,40 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 LimpiarError();
 
             NotifyOfPropertyChange(() => CanIrACobrar);
+        }
+
+        // ── Popup Historial ──────────────────────────────────────────────────
+        private bool _mostrarHistorial;
+        public bool MostrarHistorial
+        {
+            get => _mostrarHistorial;
+            set { _mostrarHistorial = value; NotifyOfPropertyChange(() => MostrarHistorial); }
+        }
+
+        private ObservableCollection<VentaResumenDto> _historialVentas = new();
+        public ObservableCollection<VentaResumenDto> HistorialVentas
+        {
+            get => _historialVentas;
+            set { _historialVentas = value; NotifyOfPropertyChange(() => HistorialVentas); }
+        }
+
+        public RelayCommand VerHistorialCommand { get; }
+        public RelayCommand CerrarHistorialCommand { get; }
+
+        public async Task CargarHistorialAsync()
+        {
+            try
+            {
+                // Obtener ventas de hoy (últimas 20)
+                var desde = DateTime.Today;
+                var hasta = DateTime.Today.AddDays(1).AddSeconds(-1);
+                var ventas = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
+                HistorialVentas = new ObservableCollection<VentaResumenDto>(ventas.Take(20));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 

@@ -7,6 +7,8 @@ namespace GestionComercial.UI.Views.Ventas
 {
     public partial class VentaView : UserControl
     {
+        private VentaViewModel ViewModel => DataContext as VentaViewModel;
+
         public VentaView()
         {
             InitializeComponent();
@@ -55,6 +57,16 @@ namespace GestionComercial.UI.Views.Ventas
                 vm.SeleccionarProductoDelPopup(producto);
                 e.Handled = true;
             }
+        }
+
+        private void VerHistorial_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.VerHistorialCommand?.Execute(null);
+        }
+
+        private void CerrarHistorial_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.CerrarHistorialCommand?.Execute(null);
         }
     }
 }
