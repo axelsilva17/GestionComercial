@@ -176,7 +176,7 @@
                         <Border Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
                                 Background="#15EF4444" BorderBrush="{DynamicResource ErrorBrush}"
                                 BorderThickness="1" CornerRadius="8" Padding="12,8" Height="38"
-                                Visibility="{Binding EmailValido, Converter={StaticResource BoolToVisibility}}">
+                                Visibility="{Binding EmailInvalido, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="⚠  El email no tiene un formato válido (debe contener @)"
                                        Foreground="{DynamicResource ErrorBrush}" FontSize="12" VerticalAlignment="Center"/>
                         </Border>

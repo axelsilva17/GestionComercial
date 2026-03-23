@@ -176,6 +176,61 @@ namespace GestionComercial.UI.Helpers
             });
         }
 
+        public static void ExportarTopProductos(IEnumerable<ReporteTopProductoDto> datos, DateTime desde, DateTime hasta)
+        {
+            Exportar("Top Productos", $"TopProductos_{Fecha()}", wb =>
+            {
+                var ws = wb.Worksheets.Add("Top Productos");
+                var headers = new[] { "Producto", "Categoría", "Cant. Vendida", "Ingresos", "Margen Total", "Margen %" };
+                AgregarHeaders(ws, headers);
+
+                int fila = 2;
+                foreach (var d in datos)
+                {
+                    ws.Cell(fila, 1).Value = d.ProductoNombre;
+                    ws.Cell(fila, 2).Value = d.Categoria;
+                    ws.Cell(fila, 3).Value = d.CantidadVendida;
+                    ws.Cell(fila, 4).Value = (double)d.Ingresos;
+                    ws.Cell(fila, 5).Value = (double)d.MargenTotal;
+                    ws.Cell(fila, 6).Value = d.MargenPorcentaje / 100;
+
+                    ws.Cell(fila, 4).Style.NumberFormat.Format = "$ #,##0";
+                    ws.Cell(fila, 5).Style.NumberFormat.Format = "$ #,##0";
+                    ws.Cell(fila, 6).Style.NumberFormat.Format = "0.0%";
+                    fila++;
+                }
+
+                FormatearHoja(ws, headers.Length);
+                AgregarMetadatos(ws, "Top Productos Más Vendidos", desde, hasta);
+            });
+        }
+
+        public static void ExportarMetodosPago(IEnumerable<ReporteMetodosPagoDto> datos, DateTime desde, DateTime hasta)
+        {
+            Exportar("Métodos de Pago", $"MetodosPago_{Fecha()}", wb =>
+            {
+                var ws = wb.Worksheets.Add("Métodos de Pago");
+                var headers = new[] { "Método", "Total", "Cantidad", "Porcentaje" };
+                AgregarHeaders(ws, headers);
+
+                int fila = 2;
+                foreach (var d in datos)
+                {
+                    ws.Cell(fila, 1).Value = d.Metodo;
+                    ws.Cell(fila, 2).Value = (double)d.Total;
+                    ws.Cell(fila, 3).Value = d.Cantidad;
+                    ws.Cell(fila, 4).Value = d.Porcentaje / 100;
+
+                    ws.Cell(fila, 2).Style.NumberFormat.Format = "$ #,##0";
+                    ws.Cell(fila, 4).Style.NumberFormat.Format = "0.0%";
+                    fila++;
+                }
+
+                FormatearHoja(ws, headers.Length);
+                AgregarMetadatos(ws, "Resumen Métodos de Pago", desde, hasta);
+            });
+        }
+
         public static void ExportarAuditoria(
             IEnumerable<AuditoriaLogDto> auditoriaCajas,
             IEnumerable<AuditoriaLogDto> auditoriaMovimientos,

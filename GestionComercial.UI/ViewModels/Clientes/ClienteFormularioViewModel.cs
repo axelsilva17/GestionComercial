@@ -95,11 +95,12 @@ namespace GestionComercial.UI.ViewModels.Clientes
         public bool Activo
         {
             get => _activo;
-            set { _activo = value; NotifyOfPropertyChange(() => Activo); }
+            set { _activo = value; NotifyOfPropertyChange(() => Activo); NotifyOfPropertyChange(() => CanGuardar); }
         }
 
         // ── Validación ────────────────────────────────────────────────────────
-        public bool EmailValido => string.IsNullOrWhiteSpace(Email) || Email.Contains("@");
+        public bool EmailValido  => string.IsNullOrWhiteSpace(Email) || Email.Contains("@");
+        public bool EmailInvalido => !EmailValido;
         public bool CanGuardar  => !string.IsNullOrWhiteSpace(Nombre)
                                 && !string.IsNullOrWhiteSpace(Documento)
                                 && EmailValido

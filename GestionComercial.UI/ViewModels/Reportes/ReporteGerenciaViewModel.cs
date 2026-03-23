@@ -353,8 +353,28 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var margen = (await _reporteServicio.MargenPorProductoAsync(
                     _sesion.IdEmpresa, desde, hasta)).ToList();
 
+                // Top Productos
+                var topProductos = (await _reporteServicio.TopProductosAsync(
+                    _sesion.IdSucursal, desde, hasta, 20)).ToList();
+
+                // Ventas por Vendedor
+                var vendedores = (await _reporteServicio.VentasPorVendedorAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+
+                // Rotación de Productos
+                var rotacion = (await _reporteServicio.RotacionProductosAsync(
+                    _sesion.IdEmpresa, desde, hasta)).ToList();
+
+                // Métodos de Pago
+                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+
                 ExportHelper.ExportarVentasPorDia(ventaPorDia, desde, hasta);
                 ExportHelper.ExportarMargen(margen, desde, hasta);
+                ExportHelper.ExportarTopProductos(topProductos, desde, hasta);
+                ExportHelper.ExportarVendedores(vendedores, desde, hasta);
+                ExportHelper.ExportarRotacion(rotacion, desde, hasta);
+                ExportHelper.ExportarMetodosPago(metodosPago, desde, hasta);
             }
             catch (Exception ex)
             {

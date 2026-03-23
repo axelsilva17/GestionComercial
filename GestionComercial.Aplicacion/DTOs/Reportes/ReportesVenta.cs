@@ -22,6 +22,31 @@ namespace GestionComercial.Aplicacion.DTOs.Reportes
         public double Margen { get; set; }
     }
 
+    /// <summary>
+    /// DTO for top products report - used by ExportHelper and reportes.
+    /// </summary>
+    public class ReporteTopProductoDto
+    {
+        public int IdProducto { get; set; }
+        public string ProductoNombre { get; set; } = string.Empty;
+        public string Categoria { get; set; } = string.Empty;
+        public int CantidadVendida { get; set; }
+        public decimal Ingresos { get; set; }
+        public decimal MargenTotal { get; set; }
+        public double MargenPorcentaje { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for payment methods summary in reports.
+    /// </summary>
+    public class ReporteMetodosPagoDto
+    {
+        public string Metodo { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+        public int Cantidad { get; set; }
+        public double Porcentaje { get; set; }
+    }
+
     public class ReporteVentaMensualDto
     {
         public string Mes { get; set; } = string.Empty;
