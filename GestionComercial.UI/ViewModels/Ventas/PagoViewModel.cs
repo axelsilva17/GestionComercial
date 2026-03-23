@@ -146,8 +146,23 @@ namespace GestionComercial.UI.ViewModels.Ventas
             try
             {
                 var sucursal  = await _uow.Sucursales.ObtenerPorIdAsync(_sesion.IdSucursal);
-                var idEmpresa = sucursal?.Id_empresa ?? 0;
+                if (sucursal == null)
+                {
+                    MostrarError("No se encontró la sucursal configurada.");
+                    return;
+                }
+                var idEmpresa = sucursal.Id_empresa;
+                if (idEmpresa <= 0)
+                {
+                    MostrarError("ID de empresa inválido.");
+                    return;
+                }
                 var metodos   = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(idEmpresa);
+                if (metodos == null)
+                {
+                    MetodosPago = new ObservableCollection<PagoItemDto>();
+                    return;
+                }
 
                 MetodosPago = new ObservableCollection<PagoItemDto>(
                     metodos.Select(m => new PagoItemDto
@@ -164,7 +179,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 // Precompletar con el total en el campo de monto
                 MontoIngresado = TotalVenta.ToString("F2");
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex)
+            {
+                var mensaje = $"Error al cargar métodos de pago: {ex.Message}";
+                MostrarError(mensaje);
+                System.Windows.MessageBox.Show(mensaje, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
         }
 
         /// <summary>Llamado desde VentaViewModel antes de navegar.</summary>
@@ -311,6 +331,19 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     EsEfectivo   = p.EsEfectivo,
                 }).ToList();
 
+                // Verificar null antes de llamar al servicio
+                if (_idVenta <= 0)
+                {
+                    MostrarError("ID de venta inválido.");
+                    return;
+                }
+
+                if (pagosDto == null || !pagosDto.Any())
+                {
+                    MostrarError("No hay pagos registrados.");
+                    return;
+                }
+
                 await _ventaServicio.RegistrarPagoAsync(_idVenta, pagosDto);
 
                 // Ir al comprobante
@@ -318,7 +351,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 await vm.CargarAsync(_idVenta, Vuelto);
                 await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex)
+            {
+                var mensaje = $"Error al confirmar el pago: {ex.Message}";
+                MostrarError(mensaje);
+                System.Windows.MessageBox.Show(mensaje, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
             finally { IsLoading = false; }
         }
 

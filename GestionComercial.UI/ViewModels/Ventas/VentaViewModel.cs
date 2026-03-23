@@ -6,6 +6,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using FluentValidation;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private readonly IProductoServicio _productoServicio;
         private readonly IVentaServicio    _ventaServicio;
         private readonly SesionServicio    _sesion;
+        private readonly IValidator<VentaCrearDto> _validator;
 
         // ── Timer para debounce de búsqueda ──────────────────────────────────────
         private readonly DispatcherTimer _debounceTimer;
@@ -32,7 +34,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public VentaViewModel(
             IProductoServicio productoServicio,
             IVentaServicio    ventaServicio,
-            SesionServicio    sesion)
+            SesionServicio    sesion,
+            IValidator<VentaCrearDto> validator)
         {
             _productoServicio     = productoServicio;
             _ventaServicio        = ventaServicio;
@@ -119,6 +122,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             switch (key)
             {
+                case Key.Enter:
+                    _ = AgregarProducto();
+                    break;
                 case Key.F2:
                     if (Items.Count > 0) _ = IrACobrar();
                     break;
@@ -602,6 +608,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     IdUsuario      = _sesion.IdUsuario,
                     IdCaja         = _sesion.IdCajaActual ?? 0,
                     TotalDescuento = TotalDescuento,
+                    TotalFinal     = TotalFinal,
                     Items          = Items.Select(i => new VentaDetalleCrearDto
                     {
                         IdProducto     = i.ProductoId,
@@ -622,6 +629,15 @@ namespace GestionComercial.UI.ViewModels.Ventas
                             : new List<DescuentoItemDto>(),
                     }).ToList(),
                 };
+
+                // Validar con FluentValidation antes de crear
+                var validationResult = await _validator.ValidateAsync(dto);
+                if (!validationResult.IsValid)
+                {
+                    var errores = string.Join("\n", validationResult.Errors.Select(e => e.ErrorMessage));
+                    MostrarError(errores);
+                    return;
+                }
 
                 var venta = await _ventaServicio.CrearAsync(dto);
 

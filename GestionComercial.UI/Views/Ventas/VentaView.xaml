@@ -146,70 +146,16 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+                <!-- Header -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Button x:Name="Volver" Grid.Column="0"
-                        Content="← Volver"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="{DynamicResource PrimaryBrush}"
-                        FontSize="14" Cursor="Hand" VerticalAlignment="Center"
-                        Margin="0,0,20,0"
-                        ToolTip="Escape - Volver"
-                        cal:Message.Attach="[Event Click] = [Action Volver]">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="Transparent" CornerRadius="8" Padding="10,8">
-                                            <ContentPresenter/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
-
-                <Button Content="📋 Historial"
-                        Click="VerHistorial_Click"
-                        Grid.Column="1"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="{DynamicResource PrimaryBrush}"
-                        FontSize="14" Cursor="Hand" VerticalAlignment="Center"
-                        Margin="0,0,20,0">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="Transparent" CornerRadius="8" Padding="10,8">
-                                            <ContentPresenter/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
-
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <!-- Título y cliente -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="Nueva Venta"
                                FontSize="26" FontWeight="Bold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -230,6 +176,35 @@
                         </TextBlock.Style>
                     </TextBlock>
                 </StackPanel>
+
+                <!-- Botón Historial (antes mal ubicado como "Volver") -->
+                <Button Grid.Column="1"
+                        Content="📋 Historial"
+                        Click="VerHistorial_Click"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource PrimaryBrush}"
+                        FontSize="14" Cursor="Hand" VerticalAlignment="Center"
+                        Margin="0,0,16,0"
+                        ToolTip="Ver historial de ventas">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="b" Background="Transparent" CornerRadius="8" Padding="10,8">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
 
                 <!-- Botón seleccionar cliente -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -325,16 +300,17 @@
                 </Grid>
             </Border>
 
-            <!-- ══════════════════════════════════════════════════════
-                 POPUP DE AUTOCOMPLETADO DE PRODUCTOS
-            ═══════════════════════════════════════════════════════ -->
-            <Popup x:Name="PopupBusqueda"
-                   IsOpen="{Binding MostrarPopupBusqueda}"
-                   Placement="Bottom"
-                   PlacementTarget="{Binding ElementName=BusquedaProductoBorder}"
-                   StaysOpen="False"
-                   AllowsTransparency="True"
-                   PopupAnimation="Fade">
+        <!-- ══════════════════════════════════════════════════════
+             POPUP DE AUTOCOMPLETADO DE PRODUCTOS (Z-Index alto)
+        ═══════════════════════════════════════════════════════ -->
+        <Popup x:Name="PopupBusqueda"
+               IsOpen="{Binding MostrarPopupBusqueda}"
+               Placement="Bottom"
+               PlacementTarget="{Binding ElementName=BusquedaProductoBorder}"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               PopupAnimation="Fade"
+               Panel.ZIndex="999">
                 <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"

@@ -230,8 +230,10 @@
                                      FontSize="18" FontWeight="Bold"
                                      TextAlignment="Right"
                                      VerticalContentAlignment="Center"
-                                       Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
-                                       cal:Message.Attach="[Event KeyDown] = [Action AgregarPago]"/>
+                                     MaxLength="15"
+                                     Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
+                                     PreviewTextInput="MontoIngresado_PreviewTextInput"
+                                     cal:Message.Attach="[Event KeyDown] = [Action AgregarPago]"/>
                         </Grid>
                     </Border>
 

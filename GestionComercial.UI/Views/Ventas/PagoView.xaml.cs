@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -24,6 +26,20 @@ namespace GestionComercial.UI.Views.Ventas
 
             vm.HandleKeyDown(e.Key, Keyboard.Modifiers);
             e.Handled = true;
+        }
+
+        /// <summary>
+        /// Valida que solo se permitan dígitos y separadores decimales (coma/punto).
+        /// Esto evita que caracteres inválidos entren en el campo de monto.
+        /// </summary>
+        private void MontoIngresado_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !IsTextAllowed(e.Text);
+        }
+
+        private static bool IsTextAllowed(string text)
+        {
+            return text.All(c => char.IsDigit(c) || c == ',' || c == '.');
         }
     }
 }

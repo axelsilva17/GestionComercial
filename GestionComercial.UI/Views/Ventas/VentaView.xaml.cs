@@ -22,8 +22,8 @@ namespace GestionComercial.UI.Views.Ventas
             // (permitir que el usuario escriba normalmente en el buscador)
             if (e.OriginalSource is System.Windows.Controls.TextBox)
             {
-                // Permitir Escape siempre desde TextBox
-                if (e.Key != Key.Escape) return;
+                // Permitir Escape y Enter siempre desde TextBox (Enter para código de barras)
+                if (e.Key != Key.Escape && e.Key != Key.Enter) return;
             }
 
             vm.HandleKeyDown(e.Key, Keyboard.Modifiers);
