@@ -147,6 +147,20 @@ namespace GestionComercial.UI
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
         {
+            // ── Asegurar base de datos y migraciones ───────────────────────────
+            try
+            {
+                var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
+                
+                // Aplicar migraciones pendientes
+                await context.Database.MigrateAsync();
+                System.Diagnostics.Debug.WriteLine("[Bootstrapper] Migraciones aplicadas OK");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error migraciones: {ex.Message}");
+            }
+            
             (Application.Current as App)?.ApplyTheme();
             await DisplayRootViewForAsync<LoginViewModel>();
         }
