@@ -107,7 +107,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             try
             {
                 var venta = await _ventaServicio.ObtenerPorIdAsync(idVenta);
-                if (venta == null) return;
+                if (venta == null || venta.Items == null) return;
 
                 IdVenta        = venta.IdVenta;
                 ClienteNombre  = venta.ClienteNombre;

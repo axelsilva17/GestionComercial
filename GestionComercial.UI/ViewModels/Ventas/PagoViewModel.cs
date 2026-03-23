@@ -308,6 +308,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 {
                     IdMetodoPago = p.IdMetodoPago,
                     Monto        = p.Monto,
+                    EsEfectivo   = p.EsEfectivo,
                 }).ToList();
 
                 await _ventaServicio.RegistrarPagoAsync(_idVenta, pagosDto);

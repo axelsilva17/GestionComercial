@@ -55,6 +55,7 @@
     <SolidColorBrush x:Key="SuccessBrush" Color="#10B981"/>
     <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
     <SolidColorBrush x:Key="InfoBrush" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#EC4899"/>
     <SolidColorBrush x:Key="LightBackgroundBrush" Color="#F1F5F9"/>
     <SolidColorBrush x:Key="DarkBackgroundBrush" Color="#0F1419"/>
 

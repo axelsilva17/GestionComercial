@@ -151,7 +151,7 @@
                 <UniformGrid Rows="1" Margin="0,0,0,16">
                     <Button x:Name="AgregarEfectivo"
                             Style="{StaticResource BotonPago}"
-                            Background="#22C55E"
+                            Background="{DynamicResource SuccessBrush}"
                             ToolTip="F1 - Efectivo">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💵" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -160,7 +160,7 @@
                     </Button>
                     <Button x:Name="AgregarDebito"
                             Style="{StaticResource BotonPago}"
-                            Background="#3B82F6"
+                            Background="{DynamicResource PrimaryBrush}"
                             ToolTip="F2 - Débito">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -169,7 +169,7 @@
                     </Button>
                     <Button x:Name="AgregarCredito"
                             Style="{StaticResource BotonPago}"
-                            Background="#8B5CF6"
+                            Background="{DynamicResource WarningBrush}"
                             ToolTip="F3 - Crédito">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -178,7 +178,7 @@
                     </Button>
                     <Button x:Name="AgregarQR"
                             Style="{StaticResource BotonPago}"
-                            Background="#EC4899"
+                            Background="{DynamicResource AccentBrush}"
                             ToolTip="F4 - QR">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="📱" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -192,7 +192,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="250"/>
                         <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
@@ -227,10 +227,11 @@
                             <TextBox x:Name="MontoIngresado" Grid.Column="1"
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                     FontSize="15" FontWeight="SemiBold"
+                                     FontSize="18" FontWeight="Bold"
+                                     TextAlignment="Right"
                                      VerticalContentAlignment="Center"
-                                      Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
-                                      cal:Message.Attach="[Event KeyDown] = [Action AgregarPago]"/>
+                                       Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
+                                       cal:Message.Attach="[Event KeyDown] = [Action AgregarPago]"/>
                         </Grid>
                     </Border>
 
