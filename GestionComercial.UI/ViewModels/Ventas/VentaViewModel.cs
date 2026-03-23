@@ -72,6 +72,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
             };
         }
 
+        protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+        }
+
         private string _textoDebounce = string.Empty;
 
         // ── Límite de descuento según rol ──────────────────────────────────────
@@ -405,8 +410,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public ObservableCollection<VentaItemDto> Items
         {
             get => _items;
-            set { _items = value; NotifyOfPropertyChange(() => Items); }
+            set { SetProperty(ref _items, value); NotifyOfPropertyChange(() => CanIrACobrar); }
         }
+
+        public bool CanIrACobrar => Items.Count > 0;
 
         // ── Totales ───────────────────────────────────────────────────────────
         private decimal _totalBruto;
@@ -658,6 +665,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 MostrarError(errorDescuento);
             else
                 LimpiarError();
+
+            NotifyOfPropertyChange(() => CanIrACobrar);
         }
     }
 
