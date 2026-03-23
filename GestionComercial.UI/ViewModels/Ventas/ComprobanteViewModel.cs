@@ -106,8 +106,16 @@ namespace GestionComercial.UI.ViewModels.Ventas
             IsLoading = true;
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[ComprobanteVM-Cargar] Iniciando carga para venta #{idVenta}, Vuelto: {vuelto}");
+                
                 var venta = await _ventaServicio.ObtenerPorIdAsync(idVenta);
-                if (venta == null || venta.Items == null) return;
+                if (venta == null || venta.Items == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ComprobanteVM-Cargar] ERROR: Venta #{idVenta} no encontrada o sin items");
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[ComprobanteVM-Cargar] Venta encontrada: {venta.IdVenta}, Items: {venta.Items.Count}");
 
                 IdVenta        = venta.IdVenta;
                 ClienteNombre  = venta.ClienteNombre;
@@ -125,8 +133,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         PrecioUnitario = i.PrecioUnitario,
                         Subtotal       = i.Subtotal,
                     }));
+                    
+                System.Diagnostics.Debug.WriteLine("[ComprobanteVM-Cargar] Carga completada exitosamente");
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ComprobanteVM-Cargar] ERROR: {ex}");
+                MostrarError(ex.Message);
+            }
             finally { IsLoading = false; }
         }
 

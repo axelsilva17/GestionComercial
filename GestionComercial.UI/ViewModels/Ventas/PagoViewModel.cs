@@ -318,6 +318,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public async Task Confirmar()
         {
+            System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Iniciando confirmación de pago...");
+            
             if (!PuedeCobrar) { MostrarError("El monto no cubre el total."); return; }
 
             IsLoading = true;
@@ -331,28 +333,37 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     EsEfectivo   = p.EsEfectivo,
                 }).ToList();
 
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] Pagos: {pagosDto.Count}, Total: {pagosDto.Sum(p => p.Monto)}");
+
                 // Verificar null antes de llamar al servicio
                 if (_idVenta <= 0)
                 {
+                    System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] ERROR: ID de venta inválido");
                     MostrarError("ID de venta inválido.");
                     return;
                 }
 
                 if (pagosDto == null || !pagosDto.Any())
                 {
+                    System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] ERROR: No hay pagos registrados");
                     MostrarError("No hay pagos registrados.");
                     return;
                 }
 
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] Llamando a RegistrarPagoAsync para venta #{_idVenta}...");
                 await _ventaServicio.RegistrarPagoAsync(_idVenta, pagosDto);
+                System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Pago registrado exitosamente");
 
                 // Ir al comprobante
+                System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Navegando a ComprobanteViewModel...");
                 var vm = IoC.Get<ComprobanteViewModel>();
                 await vm.CargarAsync(_idVenta, Vuelto);
                 await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+                System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Proceso completado");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] ERROR: {ex}");
                 var mensaje = $"Error al confirmar el pago: {ex.Message}";
                 MostrarError(mensaje);
                 System.Windows.MessageBox.Show(mensaje, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);

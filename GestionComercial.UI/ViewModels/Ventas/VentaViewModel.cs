@@ -348,6 +348,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 return;
             }
 
+            System.Diagnostics.Debug.WriteLine($"[VentaVM] BuscarProductosAsync called. Texto: {texto}, Cache count: {_productosCache.Count}");
+
             BuscandoProductos = true;
             try
             {
@@ -368,6 +370,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(resultadosCache);
                         HaySinResultados = false;
                         MostrarPopupBusqueda = true;
+                        System.Diagnostics.Debug.WriteLine($"[VentaVM] Resultados desde cache: {resultadosCache.Count}");
                         return; // Usar cache
                     }
                 }
@@ -383,9 +386,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     .Take(8) // Limitar a 8 resultados para el popup
                     .ToList();
 
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Resultados: {resultados.Count}");
                 ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(resultados);
                 HaySinResultados = resultados.Count == 0;
                 MostrarPopupBusqueda = true;
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] MostrarPopupBusqueda set to true");
             }
             catch (OperationCanceledException)
             {
@@ -587,20 +592,38 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// </summary>
         public async Task IrACobrar()
         {
-            // Verificar que hay una caja abierta
-            if (!_sesion.IdCajaActual.HasValue)
-            {
-                MessageBox.Show("Debe abrir una caja antes de realizar ventas.", "Caja cerrada", 
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (Items.Count == 0) { MostrarError("Agregá al menos un producto."); return; }
-
-            IsLoading = true;
-            LimpiarError();
             try
             {
+                System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] Iniciando proceso de cobro...");
+
+                // Verificar que hay una caja abierta
+                if (!_sesion.IdCajaActual.HasValue)
+                {
+                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] ERROR: Caja no abierta");
+                    MessageBox.Show("Debe abrir una caja antes de realizar ventas.", "Caja cerrada", 
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (Items.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] ERROR: Carrito vacío");
+                    MostrarError("Agregá al menos un producto."); 
+                    return;
+                }
+
+                if (TotalFinal <= 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] ERROR: Total <= 0");
+                    MessageBox.Show("El total debe ser mayor a cero.", "Total inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                IsLoading = true;
+                LimpiarError();
+
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] Items count: {Items.Count}, Total: {TotalFinal}");
+
                 var dto = new VentaCrearDto
                 {
                     IdSucursal     = _sesion.IdSucursal,
@@ -630,20 +653,26 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     }).ToList(),
                 };
 
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] DTO creado con {dto.Items.Count} items");
+
                 // Validar con FluentValidation antes de crear
                 var validationResult = await _validator.ValidateAsync(dto);
                 if (!validationResult.IsValid)
                 {
                     var errores = string.Join("\n", validationResult.Errors.Select(e => e.ErrorMessage));
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] ERROR Validación: {errores}");
                     MostrarError(errores);
                     return;
                 }
 
+                System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] Llamando a VentaServicio.CrearAsync...");
                 var venta = await _ventaServicio.CrearAsync(dto);
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] Venta creada con ID: {venta.IdVenta}");
 
                 // Guardar ID para posible anulación
                 VentaActualId = venta.IdVenta;
 
+                System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] Navegando a PagoViewModel...");
                 var vm = IoC.Get<PagoViewModel>();
                 vm.InicializarConVenta(
                     venta.IdVenta,
@@ -651,8 +680,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     venta.TotalFinal);
 
                 await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+                System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] Proceso completado");
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] ERROR: {ex}");
+                MessageBox.Show($"Error al procesar: {ex.Message}\n\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             finally { IsLoading = false; }
         }
 

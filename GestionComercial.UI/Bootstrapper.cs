@@ -155,10 +155,28 @@ namespace GestionComercial.UI
                 // Aplicar migraciones pendientes
                 await context.Database.MigrateAsync();
                 System.Diagnostics.Debug.WriteLine("[Bootstrapper] Migraciones aplicadas OK");
+
+                // ── Check for orphaned open cajas (app was closed without closing) ─
+                // This ensures cajas don't stay open across sessions
+                var cajasAbiertas = await context.Cajas
+                    .Where(c => c.Estado == 1) // 1 = Abierta
+                    .ToListAsync();
+                
+                foreach (var caja in cajasAbiertas)
+                {
+                    caja.Estado = 2; // 2 = Cerrada
+                    caja.FechaCierre = DateTime.Now;
+                }
+                
+                if (cajasAbiertas.Count > 0)
+                {
+                    await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Cerradas {cajasAbiertas.Count} cajas huérfanas");
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error migraciones: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error: {ex.Message}");
             }
             
             (Application.Current as App)?.ApplyTheme();

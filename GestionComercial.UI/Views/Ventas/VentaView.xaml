@@ -802,9 +802,11 @@
         <!-- Popup Historial de Ventas -->
         <Grid x:Name="HistorialPopup" Visibility="{Binding MostrarHistorial, Converter={StaticResource BoolToVisibility}}"
               Panel.ZIndex="100" Background="#80000000">
-            <Border Background="White" CornerRadius="8" Padding="20"
+            <Border Background="{DynamicResource CardBrush}" 
+                    CornerRadius="12" Padding="24"
                     MaxWidth="800" MaxHeight="600"
-                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -812,22 +814,96 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-                        <TextBlock Text="Historial de Ventas" FontSize="18" FontWeight="Bold"/>
-                    </StackPanel>
+                    <!-- Header con título y botón cerrar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="📋" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Historial de Ventas" FontSize="18" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Click="CerrarHistorial_Click"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Cursor="Hand" Padding="8" ToolTip="Cerrar">
+                            <TextBlock Text="✕" FontSize="16"/>
+                        </Button>
+                    </Grid>
                     
+                    <!-- DataGrid con estilo mejorado -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialVentas}" AutoGenerateColumns="False"
-                              IsReadOnly="True" CanUserAddRows="False">
+                              IsReadOnly="True" CanUserAddRows="False"
+                              Background="Transparent" BorderThickness="0"
+                              GridLinesVisibility="None"
+                              AlternatingRowBackground="{DynamicResource SurfaceBrush}"
+                              RowBackground="Transparent"
+                              HeadersVisibility="Column"
+                              CanUserReorderColumns="False"
+                              SelectionMode="Single"
+                              FontSize="13">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="120"/>
-                            <DataGridTextColumn Header="Total" Binding="{Binding TotalFinal, StringFormat='$ {0:N0}'}" Width="100"/>
-                            <DataGridTextColumn Header="Cliente" Binding="{Binding ClienteNombre}" Width="*"/>
-                            <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="80"/>
+                            <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="140">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="TOTAL" Binding="{Binding TotalFinal, StringFormat='$ {0:N2}'}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="CLIENTE" Binding="{Binding ClienteNombre}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" Width="90">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                     
+                    <!-- Botón cerrar -->
                     <Button Grid.Row="2" Content="Cerrar" Click="CerrarHistorial_Click"
-                            HorizontalAlignment="Right" Margin="0,16,0,0"/>
+                            HorizontalAlignment="Right" Margin="0,16,0,0"
+                            Padding="24,10" FontSize="13"
+                            Background="{DynamicResource PrimaryBrush}"
+                            Foreground="White"
+                            Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                        CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </Grid>
             </Border>
         </Grid>
