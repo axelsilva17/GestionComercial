@@ -10,6 +10,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -26,6 +27,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         // ── Timer para debounce de búsqueda ──────────────────────────────────────
         private readonly DispatcherTimer _debounceTimer;
         private CancellationTokenSource?  _debounceCts;
+        private List<ProductoListadoDto> _productosCache = new(); // Cache de productos precargados
 
         public VentaViewModel(
             IProductoServicio productoServicio,
@@ -74,7 +76,25 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            await Task.CompletedTask;
+            // Precargar productos al abrir la vista de ventas
+            if (_sesion.IdEmpresa > 0)
+            {
+                try
+                {
+                    var productos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                    // Guardar en cache para búsquedas rápidas
+                    _productosCache = productos.ToList();
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync Error: {ex.Message}");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: IdEmpresa = {_sesion.IdEmpresa} (inválido)");
+            }
         }
 
         private string _textoDebounce = string.Empty;
@@ -310,6 +330,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         /// <summary>
         /// Busca productos con debounce de 300ms para autocompletado.
+        /// Primero usa cache local, luego consulta servicio si no hay cache.
         /// </summary>
         private async Task BuscarProductosAsync(string texto, CancellationToken ct)
         {
@@ -322,13 +343,35 @@ namespace GestionComercial.UI.ViewModels.Ventas
             BuscandoProductos = true;
             try
             {
-                var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                var busqueda = texto.Trim().ToLowerInvariant();
+                IEnumerable<ProductoListadoDto> todos;
+
+                // Si tenemos productos en cache, buscar ahí primero
+                if (_productosCache.Count > 0 && _sesion.IdEmpresa > 0)
+                {
+                    var busqueda = texto.Trim().ToLowerInvariant();
+                    var resultadosCache = _productosCache
+                        .Where(p => (p.Nombre?.ToLowerInvariant().Contains(busqueda) ?? false) ||
+                                   (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
+                        .Take(8)
+                        .ToList();
+
+                    if (resultadosCache.Count > 0)
+                    {
+                        ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(resultadosCache);
+                        HaySinResultados = false;
+                        MostrarPopupBusqueda = true;
+                        return; // Usar cache
+                    }
+                }
+
+                // Si no hay resultados en cache o no hay cache, consultar servicio
+                todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var textoBusqueda = texto.Trim().ToLowerInvariant();
 
                 // Buscar por nombre que contenga el texto
                 var resultados = todos
-                    .Where(p => p.Nombre.ToLowerInvariant().Contains(busqueda) ||
-                               (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
+                    .Where(p => (p.Nombre?.ToLowerInvariant().Contains(textoBusqueda) ?? false) ||
+                               (p.CodigoBarra?.ToLowerInvariant().Contains(textoBusqueda) ?? false))
                     .Take(8) // Limitar a 8 resultados para el popup
                     .ToList();
 
@@ -343,6 +386,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Error en búsqueda: {ex.Message}");
+                MessageBox.Show($"Error al buscar productos: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
