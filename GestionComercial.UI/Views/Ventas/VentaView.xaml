@@ -271,21 +271,10 @@
                     <!-- ComboBox de categorías (Feature 2) -->
                     <ComboBox x:Name="CategoriaFiltroCombo"
                               Grid.Column="0"
-                              Height="44"
+                              Style="{StaticResource DarkComboBox}"
                               ItemsSource="{Binding Categorias}"
                               SelectedItem="{Binding CategoriaFiltro}"
-                              DisplayMemberPath="Nombre"
-                              VerticalContentAlignment="Center"
-                              Padding="12,0"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}">
-                        <ComboBox.Style>
-                            <Style TargetType="ComboBox">
-                                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-                            </Style>
-                        </ComboBox.Style>
-                    </ComboBox>
+                              DisplayMemberPath="Nombre"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"
@@ -882,46 +871,72 @@
                             CornerRadius="8" Padding="12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="120"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
+                            <!-- Desde -->
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Desde" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Desde" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                                 <DatePicker SelectedDate="{Binding FechaDesde}" 
+                                           Height="40"
+                                           FontSize="13"
                                            Background="{DynamicResource SurfaceBrush}"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           BorderBrush="{DynamicResource BorderBrush}"/>
                             </StackPanel>
 
+                            <!-- Hasta -->
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Hasta" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Hasta" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                                 <DatePicker SelectedDate="{Binding FechaHasta}"
+                                           Height="40"
+                                           FontSize="13"
                                            Background="{DynamicResource SurfaceBrush}"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           BorderBrush="{DynamicResource BorderBrush}"/>
                             </StackPanel>
 
+                            <!-- DNI Cliente -->
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="DNI Cliente" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="DNI Cliente" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                                 <TextBox Text="{Binding DniClienteFiltro, UpdateSourceTrigger=PropertyChanged}"
+                                         Height="40"
+                                         FontSize="13"
                                          Background="{DynamicResource SurfaceBrush}"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
                                          BorderBrush="{DynamicResource BorderBrush}"
-                                         Padding="8,6"/>
+                                         Padding="12,0"
+                                         VerticalContentAlignment="Center">
+                                    <TextBox.Template>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8">
+                                                <ScrollViewer x:Name="PART_ContentHost"
+                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                              Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </TextBox.Template>
+                                </TextBox>
                             </StackPanel>
 
+                            <!-- Estado -->
                             <StackPanel Grid.Column="6">
-                                <TextBlock Text="Estado" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <ComboBox SelectedValue="{Binding EstadoVentaFiltro}"
-                                          SelectedValuePath="Tag"
-                                          Background="{DynamicResource SurfaceBrush}"
-                                          Foreground="{DynamicResource TextPrimaryBrush}">
+                                <TextBlock Text="Estado" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                <ComboBox Height="40"
+                                          Style="{StaticResource DarkComboBox}"
+                                          SelectedValue="{Binding EstadoVentaFiltro}"
+                                          SelectedValuePath="Tag">
                                     <ComboBoxItem Content="Todos" Tag="{x:Null}"/>
                                     <ComboBoxItem Content="Pendiente" Tag="1"/>
                                     <ComboBoxItem Content="Pagada" Tag="2"/>
@@ -929,28 +944,13 @@
                                 </ComboBox>
                             </StackPanel>
 
+                            <!-- Botón Filtrar -->
                             <Button Grid.Column="8" Content="🔍 Filtrar"
                                     Command="{Binding FiltrarHistorialCommand}"
-                                    Height="32" Padding="16,0"
-                                    Background="{DynamicResource PrimaryBrush}"
-                                    Foreground="White"
-                                    Cursor="Hand"
+                                    Height="40" Padding="20,0"
+                                    Style="{StaticResource PrimaryButton}"
                                     VerticalAlignment="Bottom"
-                                    ToolTip="Aplicar filtros">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="b" Background="{TemplateBinding Background}"
-                                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="b" Property="Opacity" Value="0.85"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                                    ToolTip="Aplicar filtros"/>
                         </Grid>
                     </Border>
                     

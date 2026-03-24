@@ -18,6 +18,7 @@
                 <ResourceDictionary Source="/Views/Recursos/Estilos/CardStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/DataGridStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/TextBoxStyles.xaml"/>
+                <ResourceDictionary Source="/Views/Recursos/Estilos/ComboBoxStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/Animations.xaml"/>
                 
             </ResourceDictionary.MergedDictionaries>
