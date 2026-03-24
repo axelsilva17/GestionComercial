@@ -509,6 +509,10 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
                 var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
 
+                // Deserializar JSON para mostrar montos correctamente
+                foreach (var a in auditoriaCajas) a.DeserializarJson();
+                foreach (var a in auditoriaMovimientos) a.DeserializarJson();
+
                 LogHelper.Log($"[ReporteAdmin] AuditoriaCajas: {auditoriaCajas.Count}, AuditoriaMovimientos: {auditoriaMovimientos.Count}");
                 AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(auditoriaCajas);
                 AuditoriaMovimientos = new ObservableCollection<AuditoriaLogDto>(auditoriaMovimientos);
@@ -544,7 +548,44 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 foreach (var a in auditoriaCajas) a.DeserializarJson();
                 foreach (var a in auditoriaMovimientos) a.DeserializarJson();
 
-                ExportHelper.ExportarAuditoria(auditoriaCajas, auditoriaMovimientos, desde, hasta);
+                // Cargar datos de cajas para los nuevos exports
+                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                var historialCajas = cajas.Select(caja =>
+                {
+                    var diff = caja.MontoFinal.HasValue
+                        ? caja.MontoFinal.Value - (caja.MontoInicial + caja.Ventas.Sum(v => v.TotalFinal))
+                        : (decimal?)null;
+                    return new CajaHistorialDto
+                    {
+                        Id = caja.Id,
+                        FechaApertura = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm"),
+                        FechaCierre = caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm"),
+                        MontoInicial = caja.MontoInicial,
+                        MontoFinal = caja.MontoFinal,
+                        Diferencia = diff,
+                        TipoDiferencia = diff.HasValue ? (diff.Value > 0 ? "Positivo" : diff.Value < 0 ? "Negativo" : "Cero") : "Cero",
+                        UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
+                        UsuarioCierre = caja.UsuarioCierre?.Nombre,
+                        Estado = caja.Estado == 1 ? "Abierta" : "Cerrada",
+                        TieneDiferencia = diff.HasValue && Math.Abs(diff.Value) > 0.01m,
+                    };
+                }).ToList();
+
+                // Cargar ventas por caja
+                var ventasPorCaja = cajas
+                    .SelectMany(caja => caja.Ventas.Select(venta => new VentaResumenCajaDto
+                    {
+                        CajaId = caja.Id,
+                        NumeroCaja = $"Caja {caja.Id}",
+                        FechaVenta = venta.Fecha.ToString("dd/MM/yyyy HH:mm"),
+                        Total = venta.TotalFinal,
+                        MetodoPago = venta.Pagos?.FirstOrDefault()?.MetodoPago?.Nombre ?? "—",
+                        Vendedor = venta.Usuario?.Nombre ?? "—"
+                    }))
+                    .OrderByDescending(v => v.FechaVenta)
+                    .ToList();
+
+                ExportHelper.ExportarAuditoriaCompleto(auditoriaCajas, auditoriaMovimientos, historialCajas, ventasPorCaja, desde, hasta);
             }
             catch (Exception ex)
             {
@@ -557,5 +598,18 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 IsLoading = false;
             }
         }
+    }
+
+    /// <summary>
+    /// DTO para ventas por caja en export.
+    /// </summary>
+    public class VentaResumenCajaDto
+    {
+        public int CajaId { get; set; }
+        public string NumeroCaja { get; set; } = string.Empty;
+        public string FechaVenta { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+        public string MetodoPago { get; set; } = string.Empty;
+        public string Vendedor { get; set; } = string.Empty;
     }
 }

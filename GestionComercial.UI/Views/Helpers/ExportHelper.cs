@@ -179,31 +179,92 @@ namespace GestionComercial.UI.Helpers
 
         public static void ExportarTopProductos(IEnumerable<ReporteTopProductoDto> datos, DateTime desde, DateTime hasta)
         {
+            ExportarTopProductosCompleto(datos, desde, hasta);
+        }
+
+        public static void ExportarTopProductosCompleto(IEnumerable<ReporteTopProductoDto> datos, DateTime desde, DateTime hasta, bool shouldOpenAfterDownload = false)
+        {
             Exportar("Top Productos", $"TopProductos_{Fecha()}", wb =>
             {
                 var ws = wb.Worksheets.Add("Top Productos");
-                var headers = new[] { "Producto", "Categoría", "Cant. Vendida", "Ingresos", "Margen Total", "Margen %" };
+                var headers = new[] { "#", "Producto", "Código", "Categoría", "Cant. Vendida", "Precio Unit.", "Subtotal", "Descuentos", "Margen Unit.", "Margen Total", "Margen %" };
                 AgregarHeaders(ws, headers);
 
-                int fila = 2;
-                foreach (var d in datos)
-                {
-                    ws.Cell(fila, 1).Value = d.ProductoNombre;
-                    ws.Cell(fila, 2).Value = d.Categoria;
-                    ws.Cell(fila, 3).Value = d.CantidadVendida;
-                    ws.Cell(fila, 4).Value = (double)d.Ingresos;
-                    ws.Cell(fila, 5).Value = (double)d.MargenTotal;
-                    ws.Cell(fila, 6).Value = d.MargenPorcentaje / 100;
+                // Convertir a lista para poder agregar ranking
+                var datosList = datos.ToList();
 
-                    ws.Cell(fila, 4).Style.NumberFormat.Format = "$ #,##0";
-                    ws.Cell(fila, 5).Style.NumberFormat.Format = "$ #,##0";
-                    ws.Cell(fila, 6).Style.NumberFormat.Format = "0.0%";
+                int fila = 2;
+                int ranking = 1;
+                decimal totalIngresos = 0;
+                decimal totalDescuentos = 0;
+                decimal totalMargen = 0;
+
+                foreach (var d in datosList)
+                {
+                    // Calcular valores derivados
+                    var precioUnitario = d.CantidadVendida > 0 ? d.Ingresos / d.CantidadVendida : 0;
+                    var subtotal = d.Ingresos;
+                    var descuento = 0m; // Por ahora 0, luego puede venir del DTO
+                    var margenUnitario = d.CantidadVendida > 0 ? d.MargenTotal / d.CantidadVendida : 0;
+
+                    ws.Cell(fila, 1).Value = ranking;
+                    ws.Cell(fila, 2).Value = d.ProductoNombre;
+                    ws.Cell(fila, 3).Value = d.IdProducto.ToString(); // Código producto
+                    ws.Cell(fila, 4).Value = d.Categoria;
+                    ws.Cell(fila, 5).Value = d.CantidadVendida;
+                    ws.Cell(fila, 6).Value = (double)precioUnitario;
+                    ws.Cell(fila, 7).Value = (double)subtotal;
+                    ws.Cell(fila, 8).Value = (double)descuento;
+                    ws.Cell(fila, 9).Value = (double)margenUnitario;
+                    ws.Cell(fila, 10).Value = (double)d.MargenTotal;
+                    ws.Cell(fila, 11).Value = d.MargenPorcentaje / 100;
+
+                    ws.Cell(fila, 6).Style.NumberFormat.Format = "$ #,##0.00";
+                    ws.Cell(fila, 7).Style.NumberFormat.Format = "$ #,##0";
+                    ws.Cell(fila, 8).Style.NumberFormat.Format = "$ #,##0";
+                    ws.Cell(fila, 9).Style.NumberFormat.Format = "$ #,##0.00";
+                    ws.Cell(fila, 10).Style.NumberFormat.Format = "$ #,##0";
+                    ws.Cell(fila, 11).Style.NumberFormat.Format = "0.0%";
+
+                    totalIngresos += subtotal;
+                    totalDescuentos += descuento;
+                    totalMargen += d.MargenTotal;
+                    ranking++;
                     fila++;
                 }
 
+                // Fila de totales
+                ws.Cell(fila, 1).Value = "";
+                ws.Cell(fila, 2).Value = "TOTALES:";
+                ws.Cell(fila, 2).Style.Font.Bold = true;
+                ws.Cell(fila, 5).Value = datosList.Sum(d => d.CantidadVendida);
+                ws.Cell(fila, 7).Value = (double)totalIngresos;
+                ws.Cell(fila, 8).Value = (double)totalDescuentos;
+                ws.Cell(fila, 10).Value = (double)totalMargen;
+                
+                // Calcular margen total %
+                var margenTotalPorcentaje = totalIngresos > 0 ? (double)(totalMargen / totalIngresos * 100) : 0;
+                ws.Cell(fila, 11).Value = margenTotalPorcentaje / 100;
+
+                ws.Cell(fila, 7).Style.NumberFormat.Format = "$ #,##0";
+                ws.Cell(fila, 8).Style.NumberFormat.Format = "$ #,##0";
+                ws.Cell(fila, 10).Style.NumberFormat.Format = "$ #,##0";
+                ws.Cell(fila, 11).Style.NumberFormat.Format = "0.0%";
+                
+                // Estilar fila de totales
+                ws.Cell(fila, 2).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+                ws.Cell(fila, 5).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+                ws.Cell(fila, 7).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+                ws.Cell(fila, 8).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+                ws.Cell(fila, 10).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+                ws.Cell(fila, 11).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+
+                for (int c = 1; c <= 11; c++)
+                    ws.Cell(fila, c).Style.Font.Bold = true;
+
                 FormatearHoja(ws, headers.Length);
                 AgregarMetadatos(ws, "Top Productos Más Vendidos", desde, hasta);
-            });
+            }, shouldOpenAfterDownload);
         }
 
         public static void ExportarMetodosPago(IEnumerable<ReporteMetodosPagoDto> datos, DateTime desde, DateTime hasta)
@@ -237,6 +298,18 @@ namespace GestionComercial.UI.Helpers
             IEnumerable<AuditoriaLogDto> auditoriaMovimientos,
             DateTime desde,
             DateTime hasta)
+        {
+            ExportarAuditoriaCompleto(auditoriaCajas, auditoriaMovimientos, null, null, desde, hasta);
+        }
+
+        public static void ExportarAuditoriaCompleto(
+            IEnumerable<AuditoriaLogDto> auditoriaCajas,
+            IEnumerable<AuditoriaLogDto> auditoriaMovimientos,
+            IEnumerable<GestionComercial.UI.ViewModels.Reportes.CajaHistorialDto>? historialCajas,
+            IEnumerable<GestionComercial.UI.ViewModels.Reportes.VentaResumenCajaDto>? ventasPorCaja,
+            DateTime desde,
+            DateTime hasta,
+            bool shouldOpenAfterDownload = false)
         {
             Exportar("Auditoría", $"Auditoria_{Fecha()}", wb =>
             {
@@ -316,7 +389,93 @@ namespace GestionComercial.UI.Helpers
 
                 FormatearHoja(wsMovs, headersMovs.Length);
                 AgregarMetadatos(wsMovs, "Auditoría de Movimientos", desde, hasta);
-            });
+
+                // ── Hoja 3: Resumen de Cajas (nueva) ───────────────────────────
+                if (historialCajas != null && historialCajas.Any())
+                {
+                    var wsResumen = wb.Worksheets.Add("Resumen Cajas");
+                    var headersResumen = new[]
+                    {
+                        "Caja", "Fecha Apertura", "Fecha Cierre", "Monto Inicial", "Monto Final", "Diferencia", "Tipo Diferencia", "Usuario Apertura", "Usuario Cierre", "Estado"
+                    };
+                    AgregarHeaders(wsResumen, headersResumen);
+
+                    int filaR = 2;
+                    decimal totalDiferencia = 0;
+                    foreach (var c in historialCajas)
+                    {
+                        wsResumen.Cell(filaR, 1).Value = $"Caja {c.Id}";
+                        wsResumen.Cell(filaR, 2).Value = c.FechaApertura;
+                        wsResumen.Cell(filaR, 3).Value = c.FechaCierre ?? "—";
+                        wsResumen.Cell(filaR, 4).Value = (double)c.MontoInicial;
+                        wsResumen.Cell(filaR, 5).Value = c.MontoFinal.HasValue ? (double)c.MontoFinal.Value : 0;
+                        wsResumen.Cell(filaR, 6).Value = c.Diferencia.HasValue ? (double)c.Diferencia.Value : 0;
+                        wsResumen.Cell(filaR, 7).Value = c.TipoDiferencia;
+                        wsResumen.Cell(filaR, 8).Value = c.UsuarioApertura;
+                        wsResumen.Cell(filaR, 9).Value = c.UsuarioCierre ?? "—";
+                        wsResumen.Cell(filaR, 10).Value = c.Estado;
+
+                        wsResumen.Cell(filaR, 4).Style.NumberFormat.Format = "$ #,##0";
+                        wsResumen.Cell(filaR, 5).Style.NumberFormat.Format = "$ #,##0";
+                        wsResumen.Cell(filaR, 6).Style.NumberFormat.Format = "$ #,##0";
+
+                        // Color por tipo de diferencia
+                        if (c.TipoDiferencia == "Negativo")
+                            wsResumen.Cell(filaR, 6).Style.Font.FontColor = XLColor.Red;
+                        else if (c.TipoDiferencia == "Positivo")
+                            wsResumen.Cell(filaR, 6).Style.Font.FontColor = XLColor.Green;
+
+                        if (c.Diferencia.HasValue) totalDiferencia += c.Diferencia.Value;
+                        filaR++;
+                    }
+
+                    // Fila de totales
+                    wsResumen.Cell(filaR, 5).Value = "TOTALES:";
+                    wsResumen.Cell(filaR, 5).Style.Font.Bold = true;
+                    wsResumen.Cell(filaR, 6).Value = (double)totalDiferencia;
+                    wsResumen.Cell(filaR, 6).Style.NumberFormat.Format = "$ #,##0";
+                    wsResumen.Cell(filaR, 6).Style.Font.Bold = true;
+
+                    FormatearHoja(wsResumen, headersResumen.Length);
+                    AgregarMetadatos(wsResumen, "Resumen de Cajas", desde, hasta);
+                }
+
+                // ── Hoja 4: Ventas por Caja (nueva) ───────────────────────────
+                if (ventasPorCaja != null && ventasPorCaja.Any())
+                {
+                    var wsVentas = wb.Worksheets.Add("Ventas por Caja");
+                    var headersVentas = new[]
+                    {
+                        "Caja", "Fecha Venta", "Total", "Método Pago", "Vendedor"
+                    };
+                    AgregarHeaders(wsVentas, headersVentas);
+
+                    int filaV = 2;
+                    decimal totalVentas = 0;
+                    foreach (var v in ventasPorCaja)
+                    {
+                        wsVentas.Cell(filaV, 1).Value = v.NumeroCaja;
+                        wsVentas.Cell(filaV, 2).Value = v.FechaVenta;
+                        wsVentas.Cell(filaV, 3).Value = (double)v.Total;
+                        wsVentas.Cell(filaV, 4).Value = v.MetodoPago;
+                        wsVentas.Cell(filaV, 5).Value = v.Vendedor;
+
+                        wsVentas.Cell(filaV, 3).Style.NumberFormat.Format = "$ #,##0";
+                        totalVentas += v.Total;
+                        filaV++;
+                    }
+
+                    // Fila de totales
+                    wsVentas.Cell(filaV, 2).Value = "TOTALES:";
+                    wsVentas.Cell(filaV, 2).Style.Font.Bold = true;
+                    wsVentas.Cell(filaV, 3).Value = (double)totalVentas;
+                    wsVentas.Cell(filaV, 3).Style.NumberFormat.Format = "$ #,##0";
+                    wsVentas.Cell(filaV, 3).Style.Font.Bold = true;
+
+                    FormatearHoja(wsVentas, headersVentas.Length);
+                    AgregarMetadatos(wsVentas, "Ventas por Caja", desde, hasta);
+                }
+            }, shouldOpenAfterDownload);
         }
 
         public static void ExportarCierre(ResumenCierreDto resumen)
@@ -469,7 +628,7 @@ namespace GestionComercial.UI.Helpers
 
         // ── Motor genérico ───────────────────────────────────────────────────
 
-        private static void Exportar(string titulo, string nombreArchivo, Action<XLWorkbook> construir)
+        private static void Exportar(string titulo, string nombreArchivo, Action<XLWorkbook> construir, bool shouldOpenAfterDownload = false)
         {
             try
             {
@@ -487,18 +646,30 @@ namespace GestionComercial.UI.Helpers
                 construir(wb);
                 wb.SaveAs(dialogo.FileName);
 
-                var resultado = MessageBox.Show(
-                    $"Archivo exportado correctamente.\n¿Deseás abrirlo ahora?",
-                    "Exportación exitosa",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information);
-
-                if (resultado == MessageBoxResult.Yes)
+                // Si shouldOpenAfterDownload es true, abrir automáticamente
+                if (shouldOpenAfterDownload)
+                {
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                     {
                         FileName        = dialogo.FileName,
                         UseShellExecute = true
                     });
+                }
+                else
+                {
+                    var resultado = MessageBox.Show(
+                        $"Archivo exportado correctamente.\n¿Deseá abrirlo ahora?",
+                        "Exportación exitosa",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (resultado == MessageBoxResult.Yes)
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName        = dialogo.FileName,
+                            UseShellExecute = true
+                        });
+                }
             }
             catch (Exception ex)
             {
