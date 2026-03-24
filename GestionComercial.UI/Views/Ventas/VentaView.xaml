@@ -274,7 +274,8 @@
                               Style="{StaticResource DarkComboBox}"
                               ItemsSource="{Binding Categorias}"
                               SelectedItem="{Binding CategoriaFiltro}"
-                              DisplayMemberPath="Nombre"/>
+                              DisplayMemberPath="Nombre"
+                              SelectionChanged="CategoriaFiltroCombo_SelectionChanged"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"
@@ -959,12 +960,25 @@
                               IsReadOnly="True" CanUserAddRows="False"
                               Background="Transparent" BorderThickness="0"
                               GridLinesVisibility="None"
-                              AlternatingRowBackground="{DynamicResource SurfaceBrush}"
+                              AlternationCount="2"
                               RowBackground="Transparent"
+                              AlternatingRowBackground="{DynamicResource SurfaceBrush}"
                               HeadersVisibility="Column"
                               CanUserReorderColumns="False"
                               SelectionMode="Single"
                               FontSize="13" Margin="0,70,0,0">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <Trigger Property="AlternationIndex" Value="0">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Trigger>
+                                    <Trigger Property="AlternationIndex" Value="1">
+                                        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="140">
                                 <DataGridTextColumn.ElementStyle>

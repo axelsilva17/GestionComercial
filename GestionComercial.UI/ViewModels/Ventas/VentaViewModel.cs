@@ -556,6 +556,45 @@ namespace GestionComercial.UI.ViewModels.Ventas
             ResultadosBusqueda?.Clear();
         }
 
+        /// <summary>
+        /// Refresca los productos según el filtro de categoría seleccionado.
+        /// Llamado desde el SelectionChanged del ComboBox de categorías.
+        /// </summary>
+        public async Task RefrescarProductosPorCategoriaAsync()
+        {
+            // Si hay texto de búsqueda, repetir la búsqueda con la nueva categoría
+            if (!string.IsNullOrWhiteSpace(BusquedaProducto) && BusquedaProducto.Length >= 3)
+            {
+                await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
+            }
+            // También recargar el cache de productos si es necesario
+            else if (_productosCache.Count == 0 && _sesion.IdEmpresa > 0)
+            {
+                await RefrescarCacheProductosAsync();
+            }
+        }
+
+        /// <summary>
+        /// Refresca el cache de productos desde el servidor.
+        /// </summary>
+        private async Task RefrescarCacheProductosAsync()
+        {
+            try
+            {
+                var productos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                _productosCache.Clear();
+                foreach (var p in productos)
+                {
+                    _productosCache.Add(p);
+                }
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Cache de productos refrescado: {_productosCache.Count} productos");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Error refrescando cache: {ex.Message}");
+            }
+        }
+
         // ── Items del carrito ─────────────────────────────────────────────────
         private ObservableCollection<VentaItemDto> _items = new();
         public ObservableCollection<VentaItemDto> Items
@@ -688,30 +727,36 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] =======================================");
                 System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] Iniciando proceso de cobro...");
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] Validación: IdCajaActual={_sesion.IdCajaActual}, IdSucursal={_sesion.IdSucursal}");
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] Validación: Items.Count={Items.Count}, ClienteId={ClienteId}");
 
                 // Verificar que hay una caja abierta
                 if (!_sesion.IdCajaActual.HasValue)
                 {
-                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] ERROR: Caja no abierta");
+                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] VALIDACIÓN FALLIDA: Caja no abierta (IdCajaActual es null)");
                     MessageBox.Show("Debe abrir una caja antes de realizar ventas.", "Caja cerrada", 
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+                System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] VALIDACIÓN OK: Caja abierta");
 
                 if (Items.Count == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] ERROR: Carrito vacío");
+                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] VALIDACIÓN FALLIDA: Carrito vacío (Items.Count=0)");
                     MostrarError("Agregá al menos un producto."); 
                     return;
                 }
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] VALIDACIÓN OK: Carrito con {Items.Count} items");
 
                 if (TotalFinal <= 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] ERROR: Total <= 0");
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] VALIDACIÓN FALLIDA: TotalFinal={TotalFinal} <= 0");
                     MessageBox.Show("El total debe ser mayor a cero.", "Total inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+                System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] VALIDACIÓN OK: TotalFinal={TotalFinal} > 0");
 
                 IsLoading = true;
                 LimpiarError();

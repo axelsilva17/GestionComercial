@@ -80,5 +80,16 @@ namespace GestionComercial.UI.Views.Ventas
                 e.Handled = true;
             }
         }
+
+        /// <summary>
+        /// Maneja el cambio de selección en el ComboBox de categorías para auto-refrescar productos.
+        /// </summary>
+        private void CategoriaFiltroCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is ViewModels.Ventas.VentaViewModel vm)
+            {
+                _ = vm.RefrescarProductosPorCategoriaAsync();
+            }
+        }
     }
 }
