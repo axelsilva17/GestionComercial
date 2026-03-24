@@ -6,6 +6,7 @@
 
 using ClosedXML.Excel;
 using GestionComercial.Aplicacion.DTOs.Auditoria;
+using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Reportes;
 using System;
 using System.Collections.Generic;
@@ -315,6 +316,154 @@ namespace GestionComercial.UI.Helpers
 
                 FormatearHoja(wsMovs, headersMovs.Length);
                 AgregarMetadatos(wsMovs, "Auditoría de Movimientos", desde, hasta);
+            });
+        }
+
+        public static void ExportarCierre(ResumenCierreDto resumen)
+        {
+            Exportar("Informe de Cierre", $"CierreCaja_{resumen.FechaApertura:yyyyMMdd_HHmm}", wb =>
+            {
+                var ws = wb.Worksheets.Add("Informe de Cierre");
+
+                // ── Encabezado del informe ─────────────────────────────────────
+                ws.Cell(1, 1).Value = "INFORME DE CIERRE DE CAJA";
+                ws.Cell(1, 1).Style.Font.Bold = true;
+                ws.Cell(1, 1).Style.Font.FontSize = 16;
+                ws.Range(1, 1, 1, 3).Merge();
+                ws.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // ── Datos del turno ─────────────────────────────────────────────
+                ws.Cell(3, 1).Value = "Fecha de Apertura:";
+                ws.Cell(3, 2).Value = resumen.FechaApertura.ToString("dd/MM/yyyy HH:mm");
+                ws.Cell(3, 1).Style.Font.Bold = true;
+
+                ws.Cell(4, 1).Value = "Fecha de Cierre:";
+                ws.Cell(4, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                ws.Cell(4, 1).Style.Font.Bold = true;
+
+                ws.Cell(5, 1).Value = "Transacciones:";
+                ws.Cell(5, 2).Value = resumen.CantidadVentas;
+                ws.Cell(5, 1).Style.Font.Bold = true;
+
+                // ── Sección Efectivo ───────────────────────────────────────────
+                ws.Cell(7, 1).Value = "MOVIMIENTOS DE EFECTIVO";
+                ws.Cell(7, 1).Style.Font.Bold = true;
+                ws.Cell(7, 1).Style.Font.FontSize = 12;
+                ws.Cell(7, 1).Style.Font.FontColor = XLColor.FromHtml("#1E3A5F");
+
+                var headersEfectivo = new[] { "Concepto", "Monto" };
+                AgregarHeaders(ws, headersEfectivo);
+                ws.Cell(8, 1).Value = "Monto Inicial";
+                ws.Cell(8, 2).Value = (double)resumen.MontoInicial;
+                ws.Cell(8, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                ws.Cell(9, 1).Value = "Ventas en Efectivo";
+                ws.Cell(9, 2).Value = (double)resumen.VentasEfectivo;
+                ws.Cell(9, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                ws.Cell(10, 1).Value = "Ingresos";
+                ws.Cell(10, 2).Value = (double)resumen.IngresosEfectivo;
+                ws.Cell(10, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                ws.Cell(11, 1).Value = "Egresos";
+                ws.Cell(11, 2).Value = (double)resumen.EgresosEfectivo;
+                ws.Cell(11, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                ws.Cell(12, 1).Value = "SALDO ESPERADO";
+                ws.Cell(12, 1).Style.Font.Bold = true;
+                ws.Cell(12, 2).Value = (double)resumen.SaldoEsperado;
+                ws.Cell(12, 2).Style.NumberFormat.Format = "$ #,##0";
+                ws.Cell(12, 2).Style.Font.Bold = true;
+                ws.Cell(12, 2).Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+
+                // ── Sección Otros Métodos ───────────────────────────────────────
+                ws.Cell(14, 1).Value = "OTROS MÉTODOS DE PAGO";
+                ws.Cell(14, 1).Style.Font.Bold = true;
+                ws.Cell(14, 1).Style.Font.FontSize = 12;
+                ws.Cell(14, 1).Style.Font.FontColor = XLColor.FromHtml("#1E3A5F");
+
+                var headersOtros = new[] { "Método", "Total" };
+                AgregarHeaders(ws, headersOtros);
+                int filaOtros = 15;
+
+                if (resumen.VentasTarjeta > 0)
+                {
+                    ws.Cell(filaOtros, 1).Value = "Tarjeta";
+                    ws.Cell(filaOtros, 2).Value = (double)resumen.VentasTarjeta;
+                    ws.Cell(filaOtros, 2).Style.NumberFormat.Format = "$ #,##0";
+                    filaOtros++;
+                }
+                if (resumen.VentasTransferencia > 0)
+                {
+                    ws.Cell(filaOtros, 1).Value = "Transferencia";
+                    ws.Cell(filaOtros, 2).Value = (double)resumen.VentasTransferencia;
+                    ws.Cell(filaOtros, 2).Style.NumberFormat.Format = "$ #,##0";
+                    filaOtros++;
+                }
+                if (resumen.VentasQR > 0)
+                {
+                    ws.Cell(filaOtros, 1).Value = "QR";
+                    ws.Cell(filaOtros, 2).Value = (double)resumen.VentasQR;
+                    ws.Cell(filaOtros, 2).Style.NumberFormat.Format = "$ #,##0";
+                    filaOtros++;
+                }
+                if (resumen.VentasCuentaCte > 0)
+                {
+                    ws.Cell(filaOtros, 1).Value = "Cuenta Corriente";
+                    ws.Cell(filaOtros, 2).Value = (double)resumen.VentasCuentaCte;
+                    ws.Cell(filaOtros, 2).Style.NumberFormat.Format = "$ #,##0";
+                    filaOtros++;
+                }
+                if (resumen.VentasOtros > 0)
+                {
+                    ws.Cell(filaOtros, 1).Value = "Otros";
+                    ws.Cell(filaOtros, 2).Value = (double)resumen.VentasOtros;
+                    ws.Cell(filaOtros, 2).Style.NumberFormat.Format = "$ #,##0";
+                    filaOtros++;
+                }
+
+                // ── Total General ───────────────────────────────────────────────
+                ws.Cell(filaOtros + 1, 1).Value = "TOTAL VENDIDO";
+                ws.Cell(filaOtros + 1, 1).Style.Font.Bold = true;
+                ws.Cell(filaOtros + 1, 1).Style.Font.FontSize = 12;
+                ws.Cell(filaOtros + 1, 2).Value = (double)resumen.TotalVendido;
+                ws.Cell(filaOtros + 1, 2).Style.NumberFormat.Format = "$ #,##0";
+                ws.Cell(filaOtros + 1, 2).Style.Font.Bold = true;
+                ws.Cell(filaOtros + 1, 2).Style.Fill.BackgroundColor = XLColor.FromHtml("#E3F2FD");
+
+                // ── Desglose detallado ─────────────────────────────────────────
+                if (resumen.DesglosePorMetodo != null && resumen.DesglosePorMetodo.Count > 0)
+                {
+                    int filaDesglose = filaOtros + 3;
+                    ws.Cell(filaDesglose, 1).Value = "DETALLE POR MÉTODO";
+                    ws.Cell(filaDesglose, 1).Style.Font.Bold = true;
+                    ws.Cell(filaDesglose, 1).Style.Font.FontSize = 12;
+                    ws.Cell(filaDesglose, 1).Style.Font.FontColor = XLColor.FromHtml("#1E3A5F");
+
+                    var headersDetalle = new[] { "Método", "Total", "Cantidad" };
+                    AgregarHeaders(ws, headersDetalle);
+                    filaDesglose++;
+
+                    foreach (var item in resumen.DesglosePorMetodo)
+                    {
+                        ws.Cell(filaDesglose, 1).Value = item.Metodo;
+                        ws.Cell(filaDesglose, 2).Value = (double)item.Total;
+                        ws.Cell(filaDesglose, 3).Value = item.Cantidad > 0 ? item.Cantidad : 1;
+                        ws.Cell(filaDesglose, 2).Style.NumberFormat.Format = "$ #,##0";
+                        filaDesglose++;
+                    }
+                }
+
+                // ── Formatear ───────────────────────────────────────────────────
+                ws.Column(1).Width = 25;
+                ws.Column(2).Width = 18;
+                ws.Column(3).Width = 12;
+
+                // ── Metadatos al pie ───────────────────────────────────────────
+                int ultimaFila = (ws.RangeUsed()?.LastRowUsed()?.RowNumber() ?? 1) + 2;
+                ws.Cell(ultimaFila, 1).Value = $"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}";
+                ws.Cell(ultimaFila, 1).Style.Font.Italic = true;
+                ws.Cell(ultimaFila, 1).Style.Font.FontColor = XLColor.Gray;
             });
         }
 

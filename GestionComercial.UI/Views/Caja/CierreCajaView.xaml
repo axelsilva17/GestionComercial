@@ -31,9 +31,17 @@
                         <TextBlock Text="{Binding SucursalNombre}" FontSize="13"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                        <TextBlock Text="{Binding FechaApertura, StringFormat='Turno abierto: dd/MM/yyyy  HH:mm'}"
-                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
-                                   HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,3,0,0">
+                            <TextBlock Text="{Binding FechaApertura, StringFormat='Apertura: dd/MM/yyyy HH:mm'}"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="  |  " FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding FechaCierre, StringFormat='Cierre: dd/MM/yyyy HH:mm'}"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                        <TextBlock HorizontalAlignment="Center" Margin="0,3,0,0">
+                            <Run Text="Transacciones: " FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <Run Text="{Binding CantidadVentas}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        </TextBlock>
                     </StackPanel>
 
                     <!-- ── Sección 1: Lo que mueve la caja física ─────────── -->
@@ -274,8 +282,29 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="Cancelar" Grid.Column="0" Content="Cancelar" Height="48" FontSize="14"
+                        <Button x:Name="ExportarExcel" Grid.Column="0" Height="48" FontSize="14"
+                                FontWeight="SemiBold" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="b" Background="{DynamicResource PrimaryBrush}" CornerRadius="10">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="#CC2563EB"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📊" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Exportar" VerticalAlignment="Center" Foreground="White"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="Cancelar" Grid.Column="2" Content="Cancelar" Height="48" FontSize="14"
                                 Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Cursor="Hand">
@@ -294,7 +323,7 @@
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                        <Button x:Name="Confirmar" Grid.Column="2" Height="48" FontSize="14"
+                        <Button x:Name="Confirmar" Grid.Column="4" Height="48" FontSize="14"
                                 FontWeight="SemiBold" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">

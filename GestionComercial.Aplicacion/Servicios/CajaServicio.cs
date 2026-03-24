@@ -405,6 +405,10 @@ namespace GestionComercial.Aplicacion.Servicios
                 }
             }
 
+            // ── Cantidad de transacciones ─────────────────────────────────────
+            // Contar desde el desglose de pagos (cada item es una transacción)
+            resumen.CantidadVentas = resumen.DesglosePorMetodo.Sum(d => d.Cantidad > 0 ? d.Cantidad : 1);
+
             // ── Movimientos manuales de caja (ingresos/egresos) ───────────────
             var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
             foreach (var mov in movimientos)

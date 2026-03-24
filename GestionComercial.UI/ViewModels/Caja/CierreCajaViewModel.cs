@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -37,6 +38,20 @@ namespace GestionComercial.UI.ViewModels.Caja
         {
             get => _fechaApertura;
             set { _fechaApertura = value; NotifyOfPropertyChange(() => FechaApertura); }
+        }
+
+        private DateTime _fechaCierre;
+        public DateTime FechaCierre
+        {
+            get => _fechaCierre;
+            set { _fechaCierre = value; NotifyOfPropertyChange(() => FechaCierre); }
+        }
+
+        private int _cantidadVentas;
+        public int CantidadVentas
+        {
+            get => _cantidadVentas;
+            set { _cantidadVentas = value; NotifyOfPropertyChange(() => CantidadVentas); }
         }
 
         // ── Efectivo (afecta saldo físico) ────────────────────────────────────
@@ -197,6 +212,8 @@ namespace GestionComercial.UI.ViewModels.Caja
                 Desglose = new ObservableCollection<DesglosePagoDto>(resumen.DesglosePorMetodo);
 
                 FechaApertura = resumen.FechaApertura;
+                FechaCierre   = DateTime.Now;
+                CantidadVentas = resumen.CantidadVentas;
 
                 NotifyOfPropertyChange(() => TotalVendido);
                 NotifyOfPropertyChange(() => HayOtrosMetodos);
@@ -263,6 +280,43 @@ namespace GestionComercial.UI.ViewModels.Caja
         {
             await IoC.Get<ShellViewModel>()
                      .ActivateItemAsync(IoC.Get<CajaViewModel>(), CancellationToken.None);
+        }
+
+        // ── Exportar a Excel ─────────────────────────────────────────────────
+        public async Task ExportarExcel()
+        {
+            try
+            {
+                IsLoading = true;
+                LimpiarError();
+
+                // Crear un DTO con los datos actuales para exportar
+                var resumen = new ResumenCierreDto
+                {
+                    MontoInicial       = MontoInicial,
+                    VentasEfectivo     = VentasEfectivo,
+                    IngresosEfectivo   = IngresosEfectivo,
+                    EgresosEfectivo    = EgresosEfectivo,
+                    VentasTarjeta      = VentasTarjeta,
+                    VentasTransferencia= VentasTransferencia,
+                    VentasQR           = VentasQR,
+                    VentasCuentaCte    = VentasCuentaCte,
+                    VentasOtros        = VentasOtros,
+                    FechaApertura      = FechaApertura,
+                    CantidadVentas     = CantidadVentas,
+                    DesglosePorMetodo  = new List<DesglosePagoDto>(Desglose)
+                };
+
+                ExportHelper.ExportarCierre(resumen);
+            }
+            catch (Exception ex)
+            {
+                MostrarError($"Error al exportar: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }
