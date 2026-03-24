@@ -69,7 +69,6 @@ namespace GestionComercial.UI
             _container.PerRequest<IReporteServicio, ReporteServicio>();
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
-            _container.PerRequest<IAuditoriaAppService, AuditoriaAppService>();
             _container.Singleton<IValidator<VentaCrearDto>, VentaValidator>();
 
             // ── Validators (FluentValidation) ─────────────────────────────────
