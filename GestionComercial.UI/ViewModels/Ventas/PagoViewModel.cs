@@ -319,6 +319,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public async Task Confirmar()
         {
             System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Iniciando confirmación de pago...");
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] _idVenta={_idVenta}, Vuelto={Vuelto}, TotalPagado={TotalPagado}, TotalVenta={TotalVenta}");
             
             if (!PuedeCobrar) { MostrarError("El monto no cubre el total."); return; }
 
@@ -357,7 +358,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 // Ir al comprobante
                 System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Navegando a ComprobanteViewModel...");
                 var vm = IoC.Get<ComprobanteViewModel>();
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] ComprobanteVM obtenido: {vm != null}");
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] Llamando CargarAsync con idVenta={_idVenta}, Vuelto={Vuelto}");
                 await vm.CargarAsync(_idVenta, Vuelto);
+                System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] CargarAsync completado");
                 await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
                 System.Diagnostics.Debug.WriteLine("[PagoVM-Confirmar] Proceso completado");
             }

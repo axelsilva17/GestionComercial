@@ -40,6 +40,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             _productoServicio     = productoServicio;
             _ventaServicio        = ventaServicio;
             _sesion               = sesion;
+            _validator            = validator;
             Titulo                = "Nueva Venta";
             Items                 = new ObservableCollection<VentaItemDto>();
             ResultadosBusqueda    = new ObservableCollection<ProductoListadoDto>();
