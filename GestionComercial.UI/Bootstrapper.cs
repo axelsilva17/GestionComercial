@@ -69,7 +69,7 @@ namespace GestionComercial.UI
             _container.PerRequest<IReporteServicio, ReporteServicio>();
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
-            _container.Singleton<IValidator<VentaCrearDto>, VentaValidator>();
+            // NOTE: VentaValidator se registra más abajo con Handler para pasar IUnitOfWork.Productos
 
             // ── Validators (FluentValidation) ─────────────────────────────────
             // Nota: c.GetInstance<IUnitOfWork>().Clientes asume que IUnitOfWork
