@@ -264,40 +264,59 @@ namespace GestionComercial.UI.ViewModels.Main
 
         private async Task CargarVendedor()
         {
-            var hoy = DateTime.Today;
-
-            // Caja abierta
-            var caja = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
-            if (caja != null)
+            try
             {
-                CajaAbierta      = true;
-                SaldoCaja        = (decimal)caja.MontoFinal;
-                HoraAperturaCaja = caja.FechaApertura.ToString("HH:mm");
+                System.Diagnostics.Debug.WriteLine("[DashboardVendedor] Iniciando carga...");
+                
+                var hoy = DateTime.Today;
+                System.Diagnostics.Debug.WriteLine($"[DashboardVendedor] Fecha: {hoy}");
+
+                // Caja abierta
+                var caja = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
+                System.Diagnostics.Debug.WriteLine($"[DashboardVendedor] Caja consultada, resultado: {caja?.Id ?? 0}");
+                
+                if (caja != null)
+                {
+                    CajaAbierta      = true;
+                    SaldoCaja        = (decimal)caja.MontoFinal;
+                    HoraAperturaCaja = caja.FechaApertura.ToString("HH:mm");
+                }
+                else
+                {
+                    CajaAbierta      = false;
+                    SaldoCaja        = 0;
+                    HoraAperturaCaja = "--:--";
+                }
+
+                // Ventas de hoy del vendedor
+                var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
+                        _sesion.IdSucursal, hoy, hoy))
+                    .Where(v => v.UsuarioNombre.Contains(
+                        _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                MisVentasHoy        = ventasHoy.Sum(v => v.TotalFinal);
+                MiCantidadVentasHoy = ventasHoy.Count;
+
+                // Últimas ventas propias (7 días)
+                var ventasSemana = await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, hoy.AddDays(-7), hoy);
+                VentasRecientes = new ObservableCollection<VentaResumenDto>(
+                    ventasSemana.OrderByDescending(v => v.Fecha).Take(5));
+
+                NotifyOfPropertyChange(() => VentasRecientes);
+                System.Diagnostics.Debug.WriteLine("[DashboardVendedor] Carga completada exitosamente");
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                CajaAbierta      = false;
-                SaldoCaja        = 0;
-                HoraAperturaCaja = "--:--";
+                System.Diagnostics.Debug.WriteLine($"[DashboardVendedor] ERROR InvalidOperationException: {ex.Message}");
+                throw new Exception($"Error al cargar datos del vendedor: {ex.Message}", ex);
             }
-
-            // Ventas de hoy del vendedor
-            var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, hoy, hoy))
-                .Where(v => v.UsuarioNombre.Contains(
-                    _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            MisVentasHoy        = ventasHoy.Sum(v => v.TotalFinal);
-            MiCantidadVentasHoy = ventasHoy.Count;
-
-            // Últimas ventas propias (7 días)
-            var ventasSemana = await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, hoy.AddDays(-7), hoy);
-            VentasRecientes = new ObservableCollection<VentaResumenDto>(
-                ventasSemana.OrderByDescending(v => v.Fecha).Take(5));
-
-            NotifyOfPropertyChange(() => VentasRecientes);
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DashboardVendedor] ERROR: {ex.GetType().Name} - {ex.Message}");
+                throw;
+            }
         }
 
         // ── Navegación rápida ─────────────────────────────────────────────────

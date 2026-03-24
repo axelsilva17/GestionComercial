@@ -14,17 +14,21 @@ namespace GestionComercial.Aplicacion.Servicios
             var ventas = await _uow.Ventas.ObtenerPorFechaAsync(desde, hasta, idSucursal);
             return ventas
                 .GroupBy(v => v.Id_usuario)
-                .Select(g => new ReporteVendedorDto
+                .Select(g =>
                 {
-                    IdUsuario      = g.Key,
-                    UsuarioNombre  = g.First().Usuario != null
-                        ? $"{g.First().Usuario!.Nombre} {g.First().Usuario!.Apellido}"
-                        : string.Empty,
-                    Sucursal       = g.First().Sucursal?.Nombre ?? string.Empty,
-                    CantidadVentas = g.Count(),
-                    TotalVendido   = g.Sum(v => v.TotalFinal),
-                    PromedioVenta  = g.Average(v => v.TotalFinal),
-                    TotalDescuentos = g.Sum(v => v.TotalDescuento),
+                    var primerVenta = g.FirstOrDefault();
+                    return new ReporteVendedorDto
+                    {
+                        IdUsuario      = g.Key,
+                        UsuarioNombre  = primerVenta?.Usuario != null
+                            ? $"{primerVenta.Usuario.Nombre} {primerVenta.Usuario.Apellido}"
+                            : string.Empty,
+                        Sucursal       = primerVenta?.Sucursal?.Nombre ?? string.Empty,
+                        CantidadVentas = g.Count(),
+                        TotalVendido   = g.Sum(v => v.TotalFinal),
+                        PromedioVenta  = g.Average(v => v.TotalFinal),
+                        TotalDescuentos = g.Sum(v => v.TotalDescuento),
+                    };
                 });
         }
 
@@ -36,17 +40,18 @@ namespace GestionComercial.Aplicacion.Servicios
                 .GroupBy(d => d.Id_producto)
                 .Select(g =>
                 {
+                    var primerDetalle = g.FirstOrDefault();
                     var ingresos   = g.Sum(d => d.Subtotal);
                     var costo      = g.Sum(d => d.CostoUnitario * d.Cantidad);
                     var margenTotal = ingresos - costo;
                     return new ReporteMargenDto
                     {
                         IdProducto       = g.Key,
-                        ProductoNombre   = g.First().Producto?.Nombre ?? string.Empty,
-                        Categoria        = g.First().Producto?.Categoria?.Nombre ?? string.Empty,
-                        PrecioVenta      = g.First().PrecioUnitario,
-                        PrecioCosto      = g.First().CostoUnitario,
-                        MargenUnitario   = g.First().PrecioUnitario - g.First().CostoUnitario,
+                        ProductoNombre   = primerDetalle?.Producto?.Nombre ?? string.Empty,
+                        Categoria        = primerDetalle?.Producto?.Categoria?.Nombre ?? string.Empty,
+                        PrecioVenta      = primerDetalle?.PrecioUnitario ?? 0,
+                        PrecioCosto      = primerDetalle?.CostoUnitario ?? 0,
+                        MargenUnitario   = (primerDetalle?.PrecioUnitario ?? 0) - (primerDetalle?.CostoUnitario ?? 0),
                         MargenPorcentaje = ingresos > 0 ? (margenTotal / ingresos) * 100 : 0,
                         CantidadVendida  = (int)g.Sum(d => d.Cantidad),
                         MargenTotal      = margenTotal,
@@ -76,19 +81,21 @@ public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int id
                 .GroupBy(d => d.Id_producto)
                 .Select(g =>
                 {
+                    var primerDetalle = g.FirstOrDefault();
                     var ingresos   = g.Sum(d => d.Subtotal);
                     var costo      = g.Sum(d => d.CostoUnitario * d.Cantidad);
                     var margenTotal = ingresos - costo;
+                    var stockActual = primerDetalle?.Producto?.StockActual ?? 0;
                     return new ReporteRotacionDto
                     {
                         IdProducto       = g.Key,
-                        ProductoNombre   = g.First().Producto?.Nombre ?? string.Empty,
-                        Categoria        = g.First().Producto?.Categoria?.Nombre ?? string.Empty,
-                        StockActual      = (int)(g.First().Producto?.StockActual ?? 0),
+                        ProductoNombre   = primerDetalle?.Producto?.Nombre ?? string.Empty,
+                        Categoria        = primerDetalle?.Producto?.Categoria?.Nombre ?? string.Empty,
+                        StockActual      = (int)stockActual,
                         CantidadVendida  = (int)g.Sum(d => d.Cantidad),
                         CantidadComprada = 0, // requiere cruzar con compras
-                        IndiceRotacion   = g.First().Producto?.StockActual > 0
-                            ? g.Sum(d => d.Cantidad) / g.First().Producto!.StockActual
+                        IndiceRotacion   = stockActual > 0
+                            ? g.Sum(d => d.Cantidad) / stockActual
                             : 0,
                         UltimaVenta  = ventas
                             .Where(v => v.Detalles.Any(d => d.Id_producto == g.Key))
@@ -108,14 +115,15 @@ public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int id
                 .GroupBy(d => d.Id_producto)
                 .Select(g =>
                 {
+                    var primerDetalle = g.FirstOrDefault();
                     var ingresos = g.Sum(d => d.Subtotal);
                     var costo = g.Sum(d => d.CostoUnitario * d.Cantidad);
                     var margenTotal = ingresos - costo;
                     return new ReporteTopProductoDto
                     {
                         IdProducto = g.Key,
-                        ProductoNombre = g.First().Producto?.Nombre ?? string.Empty,
-                        Categoria = g.First().Producto?.Categoria?.Nombre ?? string.Empty,
+                        ProductoNombre = primerDetalle?.Producto?.Nombre ?? string.Empty,
+                        Categoria = primerDetalle?.Producto?.Categoria?.Nombre ?? string.Empty,
                         CantidadVendida = (int)g.Sum(d => d.Cantidad),
                         Ingresos = ingresos,
                         MargenTotal = margenTotal,
