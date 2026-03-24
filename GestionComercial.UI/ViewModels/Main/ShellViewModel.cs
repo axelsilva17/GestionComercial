@@ -110,7 +110,12 @@ namespace GestionComercial.UI.ViewModels.Main
         }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
-            => await IrVentas();
+        {
+            if (EsVendedor)
+                await IrDashboard();
+            else
+                await IrVentas();
+        }
 
         // ── Navegación ────────────────────────────────────────────────────────
         public async Task IrDashboard()     => await ActivateItemAsync(IoC.Get<DashboardViewModel>(),        CancellationToken.None);
