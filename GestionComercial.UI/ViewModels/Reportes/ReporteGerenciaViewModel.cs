@@ -369,12 +369,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
 
-                ExportHelper.ExportarVentasPorDia(ventaPorDia, desde, hasta);
-                ExportHelper.ExportarMargen(margen, desde, hasta);
-                ExportHelper.ExportarTopProductos(topProductos, desde, hasta);
-                ExportHelper.ExportarVendedores(vendedores, desde, hasta);
-                ExportHelper.ExportarRotacion(rotacion, desde, hasta);
-                ExportHelper.ExportarMetodosPago(metodosPago, desde, hasta);
+                // Exportar todo a un solo archivo con múltiples hojas (evita dialogos duplicados)
+                ExportHelper.ExportarReporteGerenciaCompleto(
+                    ventaPorDia, margen, topProductos, vendedores, rotacion, metodosPago, desde, hasta);
             }
             catch (Exception ex)
             {

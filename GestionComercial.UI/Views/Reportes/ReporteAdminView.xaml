@@ -770,145 +770,54 @@
                             </Grid>
                         </TabItem>
 
-                        <!-- Tab 2: Movimientos de Caja -->
-                        <TabItem Header="Movimientos Caja">
+                        <!-- Tab: Ventas -->
+                        <TabItem Header="Ventas">
                             <Grid Margin="0,16,0,0">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-
-                                <!-- Section Label -->
-                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,0,8,12">
-                                    <Border Width="4" Height="20" CornerRadius="2" Background="{DynamicResource WarningBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="MOVIMIENTOS DE CAJA" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding AuditoriaMovimientos.Count, StringFormat=' ({0} registros)'}"
-                                               FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
-                                               VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="REPORTE DE VENTAS" FontSize="18" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Resumen de ventas del período" FontSize="13"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Próximamente: integración de datos)" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,16,0,0"
+                                               HorizontalAlignment="Center" FontStyle="Italic"/>
                                 </StackPanel>
-
-                                <!-- Separator -->
-                                <Border Grid.Row="1" Height="1" Background="{DynamicResource BorderBrush}" Margin="8,0,8,12"/>
-
-                                <!-- DataGrid with proper alignment -->
-                                <DataGrid Grid.Row="2"
-                                          ItemsSource="{Binding AuditoriaMovimientos}"
-                                          AutoGenerateColumns="False" CanUserAddRows="False"
-                                          GridLinesVisibility="None" HeadersVisibility="Column"
-                                          Background="Transparent" BorderThickness="0"
-                                          RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF"
-                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                          FontSize="12" RowHeight="44" ColumnHeaderHeight="40"
-                                          Margin="8,0,8,8">
-                                    <DataGrid.CellStyle>
-                                        <Style TargetType="DataGridCell">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                            <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="12,0"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="DataGridCell">
-                                                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                                            <ContentPresenter VerticalAlignment="Center"/>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Background" Value="#1A3A5C"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </DataGrid.CellStyle>
-                                    <DataGrid.RowStyle>
-                                        <Style TargetType="DataGridRow">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Background" Value="#1A3A5C"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </DataGrid.RowStyle>
-                                    <DataGrid.ColumnHeaderStyle>
-                                        <Style TargetType="DataGridColumnHeader">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Setter Property="FontSize" Value="11"/>
-                                            <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Padding" Value="12,10"/>
-                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        </Style>
-                                    </DataGrid.ColumnHeaderStyle>
-                                    <DataGrid.Columns>
-                                        <!-- Columnas básicas -->
-                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="100"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="90"/>
-                                        
-                                        <!-- Columnas financieras para prevención de fraude -->
-                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="60"/>
-                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="100"/>
-                                        <DataGridTextColumn Header="VAL. ANTERIOR" Binding="{Binding ValorAnteriorMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
-                                        <DataGridTextColumn Header="VAL. NUEVO" Binding="{Binding ValorNuevoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
-                                        
-                                        <!-- Columna de diferencia con formato condicional -->
-                                        <DataGridTemplateColumn Header="DIFERENCIA" Width="100">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding DiferenciaMonetaria, Converter={StaticResource DecimalToMoneda}}"
-                                                               VerticalAlignment="Center" Padding="12,0">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding DiferenciaMonetaria}" Value="{x:Null}">
-                                                                        <Setter Property="Text" Value="—"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        
-                                        <!-- Alerta visual para diferencias sospechosas -->
-                                        <DataGridTemplateColumn Header="⚠" Width="40">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="⚠" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                               ToolTip="Diferencia sospechosa (&gt;10%)">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="Transparent"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding EsDiferenciaSospechosa}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        
-                                        <!-- Resumen de cambios -->
-                                        <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="*"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
                             </Grid>
                         </TabItem>
+
+                        <!-- Tab: Stock -->
+                        <TabItem Header="Stock">
+                            <Grid Margin="0,16,0,0">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="REPORTE DE STOCK" FontSize="18" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Movimientos de inventario" FontSize="13"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Próximamente: integración de datos)" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,16,0,0"
+                                               HorizontalAlignment="Center" FontStyle="Italic"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Tab: Caja -->
+                        <TabItem Header="Caja">
+                            <Grid Margin="0,16,0,0">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="RESUMEN DE CAJA" FontSize="18" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Resumen de caja del período" FontSize="13"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Próximamente: integración de datos)" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,16,0,0"
+                                               HorizontalAlignment="Center" FontStyle="Italic"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+
                     </TabControl>
                 </Grid>
             </Border>

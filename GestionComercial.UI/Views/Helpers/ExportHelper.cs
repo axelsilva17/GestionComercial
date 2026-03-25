@@ -293,6 +293,150 @@ namespace GestionComercial.UI.Helpers
             });
         }
 
+        // Nuevo: exportar reporte de gerencia completo a un solo archivo
+        public static void ExportarReporteGerenciaCompleto(
+            IEnumerable<VentaPorDiaDto> ventaPorDia,
+            IEnumerable<ReporteMargenDto> margen,
+            IEnumerable<ReporteTopProductoDto> topProductos,
+            IEnumerable<ReporteVendedorDto> vendedores,
+            IEnumerable<ReporteRotacionDto> rotacion,
+            IEnumerable<ReporteMetodosPagoDto> metodosPago,
+            DateTime desde,
+            DateTime hasta)
+        {
+            Exportar("Reporte Gerencia", $"ReporteGerencia_{Fecha()}", wb =>
+            {
+                // Hoja 1: Ventas por Día
+                var wsVentas = wb.Worksheets.Add("Ventas por Día");
+                var headersVentas = new[] { "Día", "Total Ventas", "Cantidad" };
+                AgregarHeaders(wsVentas, headersVentas);
+                int filaV = 2;
+                foreach (var d in ventaPorDia)
+                {
+                    wsVentas.Cell(filaV, 1).Value = d.Dia;
+                    wsVentas.Cell(filaV, 2).Value = (double)d.Total;
+                    wsVentas.Cell(filaV, 3).Value = d.Cantidad;
+                    wsVentas.Cell(filaV, 2).Style.NumberFormat.Format = "$ #,##0";
+                    filaV++;
+                }
+                FormatearHoja(wsVentas, headersVentas.Length);
+                AgregarMetadatos(wsVentas, "Ventas por Día", desde, hasta);
+
+                // Hoja 2: Margen
+                var wsMargen = wb.Worksheets.Add("Margen");
+                var headersMargen = new[] { "Producto", "Categoría", "Costo", "Precio Venta", "Margen Unit.", "Margen %", "Cant. Vendida", "Ganancia Total" };
+                AgregarHeaders(wsMargen, headersMargen);
+                int filaM = 2;
+                foreach (var d in margen)
+                {
+                    wsMargen.Cell(filaM, 1).Value = d.ProductoNombre;
+                    wsMargen.Cell(filaM, 2).Value = d.Categoria;
+                    wsMargen.Cell(filaM, 3).Value = (double)d.PrecioCosto;
+                    wsMargen.Cell(filaM, 4).Value = (double)d.PrecioVenta;
+                    wsMargen.Cell(filaM, 5).Value = (double)d.MargenUnitario;
+                    wsMargen.Cell(filaM, 6).Value = (double)d.MargenPorcentaje / 100;
+                    wsMargen.Cell(filaM, 7).Value = d.CantidadVendida;
+                    wsMargen.Cell(filaM, 8).Value = (double)d.MargenTotal;
+                    wsMargen.Cell(filaM, 3).Style.NumberFormat.Format = "$ #,##0";
+                    wsMargen.Cell(filaM, 4).Style.NumberFormat.Format = "$ #,##0";
+                    wsMargen.Cell(filaM, 5).Style.NumberFormat.Format = "$ #,##0";
+                    wsMargen.Cell(filaM, 6).Style.NumberFormat.Format = "0.0%";
+                    wsMargen.Cell(filaM, 8).Style.NumberFormat.Format = "$ #,##0";
+                    filaM++;
+                }
+                FormatearHoja(wsMargen, headersMargen.Length);
+                AgregarMetadatos(wsMargen, "Margen por Producto", desde, hasta);
+
+                // Hoja 3: Top Productos
+                var wsTop = wb.Worksheets.Add("Top Productos");
+                var headersTop = new[] { "#", "Producto", "Código", "Categoría", "Cant. Vendida", "Precio Unit.", "Subtotal", "Margen Total", "Margen %" };
+                AgregarHeaders(wsTop, headersTop);
+                int filaTop = 2;
+                int ranking = 1;
+                foreach (var d in topProductos)
+                {
+                    var precioUnitario = d.CantidadVendida > 0 ? d.Ingresos / d.CantidadVendida : 0;
+                    wsTop.Cell(filaTop, 1).Value = ranking;
+                    wsTop.Cell(filaTop, 2).Value = d.ProductoNombre;
+                    wsTop.Cell(filaTop, 3).Value = d.IdProducto.ToString();
+                    wsTop.Cell(filaTop, 4).Value = d.Categoria;
+                    wsTop.Cell(filaTop, 5).Value = d.CantidadVendida;
+                    wsTop.Cell(filaTop, 6).Value = (double)precioUnitario;
+                    wsTop.Cell(filaTop, 7).Value = (double)d.Ingresos;
+                    wsTop.Cell(filaTop, 8).Value = (double)d.MargenTotal;
+                    wsTop.Cell(filaTop, 9).Value = d.MargenPorcentaje / 100;
+                    wsTop.Cell(filaTop, 6).Style.NumberFormat.Format = "$ #,##0.00";
+                    wsTop.Cell(filaTop, 7).Style.NumberFormat.Format = "$ #,##0";
+                    wsTop.Cell(filaTop, 8).Style.NumberFormat.Format = "$ #,##0";
+                    wsTop.Cell(filaTop, 9).Style.NumberFormat.Format = "0.0%";
+                    ranking++;
+                    filaTop++;
+                }
+                FormatearHoja(wsTop, headersTop.Length);
+                AgregarMetadatos(wsTop, "Top Productos", desde, hasta);
+
+                // Hoja 4: Vendedores
+                var wsVendedores = wb.Worksheets.Add("Vendedores");
+                var headersVend = new[] { "Vendedor", "Sucursal", "Cant. Ventas", "Total Vendido", "Ticket Promedio", "Descuentos" };
+                AgregarHeaders(wsVendedores, headersVend);
+                int filaVend = 2;
+                foreach (var d in vendedores)
+                {
+                    wsVendedores.Cell(filaVend, 1).Value = d.UsuarioNombre;
+                    wsVendedores.Cell(filaVend, 2).Value = d.Sucursal;
+                    wsVendedores.Cell(filaVend, 3).Value = d.CantidadVentas;
+                    wsVendedores.Cell(filaVend, 4).Value = (double)d.TotalVendido;
+                    wsVendedores.Cell(filaVend, 5).Value = (double)d.PromedioVenta;
+                    wsVendedores.Cell(filaVend, 6).Value = (double)d.TotalDescuentos;
+                    wsVendedores.Cell(filaVend, 4).Style.NumberFormat.Format = "$ #,##0";
+                    wsVendedores.Cell(filaVend, 5).Style.NumberFormat.Format = "$ #,##0";
+                    wsVendedores.Cell(filaVend, 6).Style.NumberFormat.Format = "$ #,##0";
+                    filaVend++;
+                }
+                FormatearHoja(wsVendedores, headersVend.Length);
+                AgregarMetadatos(wsVendedores, "Rendimiento Vendedores", desde, hasta);
+
+                // Hoja 5: Rotación
+                var wsRotacion = wb.Worksheets.Add("Rotación");
+                var headersRot = new[] { "Producto", "Categoría", "Stock Actual", "Cant. Vendida", "Cant. Comprada", "Índice Rotación", "Última Venta", "Última Compra" };
+                AgregarHeaders(wsRotacion, headersRot);
+                int filaRot = 2;
+                foreach (var d in rotacion)
+                {
+                    wsRotacion.Cell(filaRot, 1).Value = d.ProductoNombre;
+                    wsRotacion.Cell(filaRot, 2).Value = d.Categoria;
+                    wsRotacion.Cell(filaRot, 3).Value = d.StockActual;
+                    wsRotacion.Cell(filaRot, 4).Value = d.CantidadVendida;
+                    wsRotacion.Cell(filaRot, 5).Value = d.CantidadComprada;
+                    wsRotacion.Cell(filaRot, 6).Value = (double)d.IndiceRotacion;
+                    wsRotacion.Cell(filaRot, 7).Value = d.UltimaVenta != DateTime.MinValue ? d.UltimaVenta.ToString("dd/MM/yyyy") : "-";
+                    wsRotacion.Cell(filaRot, 8).Value = d.UltimaCompra != DateTime.MinValue ? d.UltimaCompra.ToString("dd/MM/yyyy") : "-";
+                    wsRotacion.Cell(filaRot, 6).Style.NumberFormat.Format = "0.0";
+                    filaRot++;
+                }
+                FormatearHoja(wsRotacion, headersRot.Length);
+                AgregarMetadatos(wsRotacion, "Rotación de Stock", desde, hasta);
+
+                // Hoja 6: Métodos de Pago
+                var wsMetodos = wb.Worksheets.Add("Métodos de Pago");
+                var headersMet = new[] { "Método", "Total", "Cantidad", "Porcentaje" };
+                AgregarHeaders(wsMetodos, headersMet);
+                int filaMet = 2;
+                foreach (var d in metodosPago)
+                {
+                    wsMetodos.Cell(filaMet, 1).Value = d.Metodo;
+                    wsMetodos.Cell(filaMet, 2).Value = (double)d.Total;
+                    wsMetodos.Cell(filaMet, 3).Value = d.Cantidad;
+                    wsMetodos.Cell(filaMet, 4).Value = d.Porcentaje / 100;
+                    wsMetodos.Cell(filaMet, 2).Style.NumberFormat.Format = "$ #,##0";
+                    wsMetodos.Cell(filaMet, 4).Style.NumberFormat.Format = "0.0%";
+                    filaMet++;
+                }
+                FormatearHoja(wsMetodos, headersMet.Length);
+                AgregarMetadatos(wsMetodos, "Métodos de Pago", desde, hasta);
+            });
+        }
+
         public static void ExportarAuditoria(
             IEnumerable<AuditoriaLogDto> auditoriaCajas,
             IEnumerable<AuditoriaLogDto> auditoriaMovimientos,

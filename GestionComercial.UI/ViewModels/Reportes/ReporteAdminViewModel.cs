@@ -489,13 +489,27 @@ namespace GestionComercial.UI.ViewModels.Reportes
         // ── Acciones de Auditoría ─────────────────────────────────────────────
         public void MostrarAuditoria()
         {
-            MostrarPanelAuditoria = true;
-            _ = CargarAuditoriaAsync();
+            try
+            {
+                MostrarPanelAuditoria = true;
+                _ = CargarAuditoriaAsync();
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
+            }
         }
 
         public void CargarAuditoria()
         {
-            _ = CargarAuditoriaAsync();
+            try
+            {
+                _ = CargarAuditoriaAsync();
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
+            }
         }
 
         public void OcultarAuditoria()
