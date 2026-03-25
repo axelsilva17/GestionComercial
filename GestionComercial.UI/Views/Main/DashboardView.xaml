@@ -297,7 +297,7 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding IngresosHoy, Converter={StaticResource DecimalToMoneda}}"
+                        <TextBlock Text="{Binding MisVentasHoy, Converter={StaticResource DecimalToMoneda}}"
                                    FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
                         <TextBlock Text="cobros del día" FontSize="11"
                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
