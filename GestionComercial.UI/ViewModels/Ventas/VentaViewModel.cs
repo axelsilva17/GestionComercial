@@ -37,49 +37,67 @@ namespace GestionComercial.UI.ViewModels.Ventas
             SesionServicio    sesion,
             IValidator<VentaCrearDto> validator)
         {
-            _productoServicio     = productoServicio;
-            _ventaServicio        = ventaServicio;
-            _sesion               = sesion;
-            _validator            = validator;
-            Titulo                = "Nueva Venta";
-            Items                 = new ObservableCollection<VentaItemDto>();
-            ResultadosBusqueda    = new ObservableCollection<ProductoListadoDto>();
-            SumarCantidadCommand  = new RelayCommand<VentaItemDto>(SumarCantidad);
-            RestarCantidadCommand = new RelayCommand<VentaItemDto>(RestarCantidad);
-            QuitarItemCommand     = new RelayCommand<VentaItemDto>(QuitarItem);
-            AgregarItemDescuentoCommand = new RelayCommand<DescuentoItemParam>(AgregarItemConDescuento);
-            AnularVentaCommand    = new RelayCommand(async () => await AnularVentaAsync(), () => _ventaActualId > 0);
-            MostrarPopupAnulacionCommand = new RelayCommand(() => MostrarPopupAnulacion = true);
-            CerrarPopupAnulacionCommand = new RelayCommand(() =>
-            {
-                MotivoAnulacion = string.Empty;
-                MostrarPopupAnulacion = false;
-            });
-            SeleccionarProductoCommand = new RelayCommand<ProductoListadoDto>(SeleccionarProductoDelPopup);
-            CerrarPopupBusquedaCommand  = new RelayCommand(CerrarPopupBusqueda);
-            VerHistorialCommand = new RelayCommand(() => { _ = CargarHistorialAsync(); MostrarHistorial = true; });
-            CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
-            FiltrarHistorialCommand = new RelayCommand(() => FiltrarHistorial());
-            TestBarcodeCommand = new RelayCommand(TestBarcodeKeyDown);
-            LimiteDescuento = _sesion.Rol?.ToLowerInvariant() switch
-            {
-                "gerente"       => 30m,
-                "administrador" => 15m,
-                _               => 5m,
-            };
+            System.Diagnostics.Debug.WriteLine("[VentaVM] Constructor INICIO");
 
-            // Configurar debounce de 300ms
-            _debounceTimer = new DispatcherTimer
+            try
             {
-                Interval = TimeSpan.FromMilliseconds(300)
-            };
-            _debounceTimer.Tick += async (s, e) =>
+                _productoServicio     = productoServicio;
+                _ventaServicio        = ventaServicio;
+                _sesion               = sesion;
+                _validator            = validator;
+                Titulo                = "Nueva Venta";
+                Items                 = new ObservableCollection<VentaItemDto>();
+                ResultadosBusqueda    = new ObservableCollection<ProductoListadoDto>();
+                SumarCantidadCommand  = new RelayCommand<VentaItemDto>(SumarCantidad);
+                RestarCantidadCommand = new RelayCommand<VentaItemDto>(RestarCantidad);
+                QuitarItemCommand     = new RelayCommand<VentaItemDto>(QuitarItem);
+                AgregarItemDescuentoCommand = new RelayCommand<DescuentoItemParam>(AgregarItemConDescuento);
+                AnularVentaCommand    = new RelayCommand(async () => await AnularVentaAsync(), () => _ventaActualId > 0);
+                MostrarPopupAnulacionCommand = new RelayCommand(() => MostrarPopupAnulacion = true);
+                CerrarPopupAnulacionCommand = new RelayCommand(() =>
+                {
+                    MotivoAnulacion = string.Empty;
+                    MostrarPopupAnulacion = false;
+                });
+                SeleccionarProductoCommand = new RelayCommand<ProductoListadoDto>(SeleccionarProductoDelPopup);
+                CerrarPopupBusquedaCommand  = new RelayCommand(CerrarPopupBusqueda);
+                VerHistorialCommand = new RelayCommand(() => { _ = CargarHistorialAsync(); MostrarHistorial = true; });
+                CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
+                FiltrarHistorialCommand = new RelayCommand(() => FiltrarHistorial());
+                TestBarcodeCommand = new RelayCommand(TestBarcodeKeyDown);
+
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Constructor: _sesion={_sesion?.GetType().Name ?? "NULL"}, Rol={_sesion?.Rol ?? "NULL"}");
+                LimiteDescuento = _sesion?.Rol?.ToLowerInvariant() switch
+                {
+                    "gerente"       => 30m,
+                    "administrador" => 15m,
+                    _               => 5m,
+                };
+
+                // Configurar debounce de 300ms
+                _debounceTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(300)
+                };
+                _debounceTimer.Tick += async (s, e) =>
+                {
+                    _debounceTimer.Stop();
+                    _debounceCts?.Cancel();
+                    _debounceCts = new CancellationTokenSource();
+                    await BuscarProductosAsync(_textoDebounce, _debounceCts.Token);
+                };
+
+                System.Diagnostics.Debug.WriteLine("[VentaVM] Constructor FIN OK");
+            }
+            catch (Exception ex)
             {
-                _debounceTimer.Stop();
-                _debounceCts?.Cancel();
-                _debounceCts = new CancellationTokenSource();
-                await BuscarProductosAsync(_textoDebounce, _debounceCts.Token);
-            };
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Constructor ERROR: {ex.Message}\n{ex.StackTrace}");
+                // No lanzar - permitir que el ViewModel se cree aunque haya error
+                Titulo = "Nueva Venta";
+                Items = new ObservableCollection<VentaItemDto>();
+                ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>();
+                LimiteDescuento = 5m;
+            }
         }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
