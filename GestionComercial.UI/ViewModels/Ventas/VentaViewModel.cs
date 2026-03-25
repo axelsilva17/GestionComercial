@@ -84,6 +84,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
+            System.Diagnostics.Debug.WriteLine("[VentaVM] OnActivateAsync INICIO");
+
             // Precargar productos al abrir la vista de ventas
             if (_sesion.IdEmpresa > 0)
             {
@@ -102,12 +104,16 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync Error: {ex.Message}");
+                    // No lanzar la excepción para que el ViewModel no quede en estado null
+                    // El usuario podrá usar la vista aunque los productos no se carguen
                 }
             }
             else
             {
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: IdEmpresa = {_sesion.IdEmpresa} (inválido)");
             }
+
+            System.Diagnostics.Debug.WriteLine("[VentaVM] OnActivateAsync FIN");
         }
 
         private string _textoDebounce = string.Empty;
