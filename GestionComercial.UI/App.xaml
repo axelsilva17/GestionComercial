@@ -4,6 +4,17 @@
              xmlns:local="clr-namespace:GestionComercial.UI">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Estilos globales de cursor -->
+            <Style TargetType="Button">
+                <Setter Property="Cursor" Value="Hand"/>
+            </Style>
+            <Style TargetType="DataGridRow">
+                <Setter Property="Cursor" Value="Hand"/>
+            </Style>
+            <Style TargetType="ListBoxItem">
+                <Setter Property="Cursor" Value="Hand"/>
+            </Style>
+            
             <ResourceDictionary.MergedDictionaries>
                
 
