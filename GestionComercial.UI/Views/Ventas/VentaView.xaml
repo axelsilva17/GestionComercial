@@ -910,14 +910,16 @@
                             <!-- DNI Cliente -->
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="DNI Cliente" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                                <TextBox Text="{Binding DniClienteFiltro, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox x:Name="DniClienteFiltroTextBox"
+                                         Text="{Binding DniClienteFiltro, UpdateSourceTrigger=PropertyChanged}"
                                          Height="40"
                                          FontSize="13"
                                          Background="{DynamicResource SurfaceBrush}"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
                                          BorderBrush="{DynamicResource BorderBrush}"
                                          Padding="12,0"
-                                         VerticalContentAlignment="Center">
+                                         VerticalContentAlignment="Center"
+                                         KeyDown="DniClienteFiltro_KeyDown">
                                     <TextBox.Template>
                                         <ControlTemplate TargetType="TextBox">
                                             <Border Background="{TemplateBinding Background}"
@@ -936,9 +938,10 @@
                             <!-- Estado -->
                             <StackPanel Grid.Column="6">
                                 <TextBlock Text="Estado" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                                <ComboBox Height="40"
+                                <ComboBox x:Name="EstadoFiltroCombo"
+                                          Height="40"
                                           Style="{StaticResource DarkComboBox}"
-                                          SelectedValue="{Binding EstadoVentaFiltro}"
+                                          SelectedValue="{Binding EstadoVentaFiltro, Mode=TwoWay}"
                                           SelectedValuePath="Tag"
                                           SelectionChanged="EstadoFiltro_SelectionChanged">
                                     <ComboBoxItem Content="Todos" Tag="{x:Null}"/>
@@ -962,6 +965,7 @@
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialVentas}" AutoGenerateColumns="False"
                               IsReadOnly="True" CanUserAddRows="False"
                               Background="Transparent" BorderThickness="0"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
                               GridLinesVisibility="None"
                               AlternationCount="2"
                               RowBackground="{DynamicResource CardBrush}"
@@ -976,6 +980,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -994,6 +999,7 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -1003,6 +1009,7 @@
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Padding" Value="8,0"/>
                                         <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>

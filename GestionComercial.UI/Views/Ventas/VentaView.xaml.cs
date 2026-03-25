@@ -115,5 +115,17 @@ namespace GestionComercial.UI.Views.Ventas
         {
             ViewModel?.FiltrarHistorialCommand?.Execute(null);
         }
+
+        /// <summary>
+        /// Maneja Enter en el filtro de DNI del historial.
+        /// </summary>
+        private void DniClienteFiltro_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ViewModel?.FiltrarHistorialCommand?.Execute(null);
+                e.Handled = true;
+            }
+        }
     }
 }

@@ -45,11 +45,10 @@ namespace GestionComercial.Aplicacion.Servicios
             // Aplicar filtros opcionales
             if (!string.IsNullOrWhiteSpace(dniCliente))
             {
-                // Convertir el filtro a int para comparar con Documento
-                if (int.TryParse(dniCliente, out var dniBuscado))
-                {
-                    ventas = ventas.Where(v => v.Cliente != null && v.Cliente.Documento == dniBuscado);
-                }
+                // Convertir a string para buscar por contenido (partial match)
+                var dniBuscado = dniCliente.Trim().ToLower();
+                ventas = ventas.Where(v => v.Cliente != null && 
+                    v.Cliente.Documento.ToString().Contains(dniBuscado));
             }
 
             if (estado.HasValue)
