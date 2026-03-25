@@ -157,6 +157,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
         }
 
+        // ── Opción auto-abrir después de exportar ─────────────────────────────
+        private bool _abrirDespuesDeExportar;
+        public bool AbrirDespuesDeExportar
+        {
+            get => _abrirDespuesDeExportar;
+            set { _abrirDespuesDeExportar = value; NotifyOfPropertyChange(() => AbrirDespuesDeExportar); }
+        }
+
         // ── Listas ────────────────────────────────────────────────────────────
         public ObservableCollection<ReporteStockCriticoDto>   StockCritico     { get; set; } = new();
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
@@ -585,7 +593,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     .OrderByDescending(v => v.FechaVenta)
                     .ToList();
 
-                ExportHelper.ExportarAuditoriaCompleto(auditoriaCajas, auditoriaMovimientos, historialCajas, ventasPorCaja, desde, hasta);
+                ExportHelper.ExportarAuditoriaCompleto(auditoriaCajas, auditoriaMovimientos, historialCajas, ventasPorCaja, desde, hasta, AbrirDespuesDeExportar);
             }
             catch (Exception ex)
             {

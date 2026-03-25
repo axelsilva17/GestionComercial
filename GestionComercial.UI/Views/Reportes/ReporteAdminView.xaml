@@ -89,6 +89,8 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" Text="PERÍODO" Style="{StaticResource ColHeader}"
@@ -156,13 +158,21 @@
                             </Button.Template>
                         </Button>
 
-                        <Button Grid.Column="16" cal:Message.Attach="ExportarExcel"
+                        <CheckBox Grid.Column="16" 
+                                  IsChecked="{Binding AbrirDespuesDeExportar, Mode=TwoWay}"
+                                  Content="Auto-abrir"
+                                  Foreground="{DynamicResource TextSecondaryBrush}"
+                                  FontSize="11"
+                                  VerticalAlignment="Center"
+                                  Margin="8,0,8,0"/>
+
+                        <Button Grid.Column="17" cal:Message.Attach="ExportarExcel"
                                 Content="📊  Exportar"
                                 Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource PrimaryBrush}"
                                 BorderBrush="{DynamicResource PrimaryBrush}"
                                 BorderThickness="1" FontWeight="SemiBold" FontSize="12"
-                                Padding="14,6" Cursor="Hand" Margin="8,0,0,0">
+                                Padding="14,6" Cursor="Hand" Margin="0,0,0,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{TemplateBinding Background}"

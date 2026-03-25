@@ -545,6 +545,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             BusquedaProducto = string.Empty;
             MostrarPopupBusqueda = false;
             RecalcularTotales();
+            NotificarCanIrACobrar();
         }
 
         /// <summary>
@@ -638,6 +639,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public RelayCommand<VentaItemDto> SumarCantidadCommand  { get; }
         public RelayCommand<VentaItemDto> RestarCantidadCommand { get; }
         public RelayCommand<VentaItemDto> QuitarItemCommand     { get; }
+
+        // ── Notificar CanIrACobrar cuando cambian los items ─────────────────────
+        private void NotificarCanIrACobrar()
+        {
+            NotifyOfPropertyChange(() => CanIrACobrar);
+        }
 
         // ── Acciones públicas (bindeadas desde la View) ───────────────────────
 
@@ -860,6 +867,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Items.RemoveAt(idx);
             Items.Insert(idx, item);
             RecalcularTotales();
+            NotificarCanIrACobrar();
         }
 
         private void RestarCantidad(VentaItemDto item)
@@ -872,6 +880,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Items.RemoveAt(idx);
             Items.Insert(idx, item);
             RecalcularTotales();
+            NotificarCanIrACobrar();
         }
 
         private void QuitarItem(VentaItemDto item)
@@ -879,6 +888,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             if (item == null) return;
             Items.Remove(item);
             RecalcularTotales();
+            NotificarCanIrACobrar();
         }
 
         private void RecalcularTotales()

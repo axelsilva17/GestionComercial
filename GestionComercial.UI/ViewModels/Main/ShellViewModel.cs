@@ -111,10 +111,11 @@ namespace GestionComercial.UI.ViewModels.Main
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            if (EsVendedor)
-                await IrDashboard();
-            else
-                await IrVentas();
+            // Por defecto, todos van al Dashboard (Menú principal)
+            // VENDEDOR → Dashboard
+            // GERENTE → Dashboard (Menú)
+            // ADMINISTRADOR → Dashboard (Menú)
+            await IrDashboard();
         }
 
         // ── Navegación ────────────────────────────────────────────────────────

@@ -886,7 +886,7 @@
                             <!-- Desde -->
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Desde" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                                <DatePicker SelectedDate="{Binding FechaDesde}" 
+                                <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}" 
                                            Height="40"
                                            FontSize="13"
                                            Background="{DynamicResource SurfaceBrush}"
@@ -897,7 +897,7 @@
                             <!-- Hasta -->
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Hasta" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                                <DatePicker SelectedDate="{Binding FechaHasta}"
+                                <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
                                            Height="40"
                                            FontSize="13"
                                            Background="{DynamicResource SurfaceBrush}"
@@ -961,24 +961,12 @@
                               Background="Transparent" BorderThickness="0"
                               GridLinesVisibility="None"
                               AlternationCount="2"
-                              RowBackground="Transparent"
+                              RowBackground="{DynamicResource CardBrush}"
                               AlternatingRowBackground="{DynamicResource SurfaceBrush}"
                               HeadersVisibility="Column"
                               CanUserReorderColumns="False"
                               SelectionMode="Single"
                               FontSize="13" Margin="0,70,0,0">
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Style.Triggers>
-                                    <Trigger Property="AlternationIndex" Value="0">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                    </Trigger>
-                                    <Trigger Property="AlternationIndex" Value="1">
-                                        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.RowStyle>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="140">
                                 <DataGridTextColumn.ElementStyle>
