@@ -891,7 +891,8 @@
                                            FontSize="13"
                                            Background="{DynamicResource SurfaceBrush}"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
-                                           BorderBrush="{DynamicResource BorderBrush}"/>
+                                           BorderBrush="{DynamicResource BorderBrush}"
+                                           SelectedDateChanged="FechaDesde_SelectedDateChanged"/>
                             </StackPanel>
 
                             <!-- Hasta -->
@@ -902,7 +903,8 @@
                                            FontSize="13"
                                            Background="{DynamicResource SurfaceBrush}"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
-                                           BorderBrush="{DynamicResource BorderBrush}"/>
+                                           BorderBrush="{DynamicResource BorderBrush}"
+                                           SelectedDateChanged="FechaHasta_SelectedDateChanged"/>
                             </StackPanel>
 
                             <!-- DNI Cliente -->
@@ -937,7 +939,8 @@
                                 <ComboBox Height="40"
                                           Style="{StaticResource DarkComboBox}"
                                           SelectedValue="{Binding EstadoVentaFiltro}"
-                                          SelectedValuePath="Tag">
+                                          SelectedValuePath="Tag"
+                                          SelectionChanged="EstadoFiltro_SelectionChanged">
                                     <ComboBoxItem Content="Todos" Tag="{x:Null}"/>
                                     <ComboBoxItem Content="Pendiente" Tag="1"/>
                                     <ComboBoxItem Content="Pagada" Tag="2"/>

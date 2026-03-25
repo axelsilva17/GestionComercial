@@ -43,8 +43,11 @@ namespace GestionComercial.Aplicacion.Validators
                     .WithMessage(i => $"Stock insuficiente para el producto #{i.IdProducto}.");
             });
 
-            RuleFor(x => x.Pagos)
-                .NotEmpty().WithMessage("La venta debe tener al menos un método de pago.");
+            // NOTA: La validación de pagos se elimina porque el método de pago
+            // se selecciona en PagoView, NO en VentaView. La venta se crea
+            // como "Pendiente" en IrACobrar() y los pagos se registran después.
+            // RuleFor(x => x.Pagos)
+            //     .NotEmpty().WithMessage("La venta debe tener al menos un método de pago.");
 
             RuleFor(x => x)
                 .Must(v =>

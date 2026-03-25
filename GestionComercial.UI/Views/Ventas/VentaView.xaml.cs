@@ -91,5 +91,29 @@ namespace GestionComercial.UI.Views.Ventas
                 _ = vm.RefrescarProductosPorCategoriaAsync();
             }
         }
+
+        /// <summary>
+        /// Maneja el cambio de fecha "Desde" en los filtros del historial.
+        /// </summary>
+        private void FechaDesde_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ViewModel?.FiltrarHistorialCommand?.Execute(null);
+        }
+
+        /// <summary>
+        /// Maneja el cambio de fecha "Hasta" en los filtros del historial.
+        /// </summary>
+        private void FechaHasta_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ViewModel?.FiltrarHistorialCommand?.Execute(null);
+        }
+
+        /// <summary>
+        /// Maneja el cambio de estado en los filtros del historial.
+        /// </summary>
+        private void EstadoFiltro_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ViewModel?.FiltrarHistorialCommand?.Execute(null);
+        }
     }
 }
