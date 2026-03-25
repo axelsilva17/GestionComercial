@@ -216,7 +216,7 @@
                                      MaxLength="15"
                                      Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
                                      PreviewTextInput="MontoIngresado_PreviewTextInput"
-                                     cal:Message.Attach="[Event KeyDown] = [Action AgregarPago]"/>
+                                     KeyDown="MontoIngresado_KeyDown"/>
                         </Grid>
                     </Border>
 
@@ -308,7 +308,7 @@
         <StackPanel Grid.Row="8" Orientation="Vertical">
             <Border Background="#1AEF4444" BorderBrush="{DynamicResource ErrorBrush}"
                     BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
-                    Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
+                    Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="{Binding ErrorMessage}"
                            Foreground="{DynamicResource ErrorBrush}" FontSize="13"/>
             </Border>

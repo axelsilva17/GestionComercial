@@ -563,15 +563,22 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// </summary>
         public async Task RefrescarProductosPorCategoriaAsync()
         {
+            System.Diagnostics.Debug.WriteLine($"[VentaVM] RefrescarProductosPorCategoriaAsync: CategoriaFiltro={CategoriaFiltro?.Nombre}, BusquedaProducto={BusquedaProducto}");
+            
             // Si hay texto de búsqueda, repetir la búsqueda con la nueva categoría
             if (!string.IsNullOrWhiteSpace(BusquedaProducto) && BusquedaProducto.Length >= 3)
             {
                 await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
             }
-            // También recargar el cache de productos si es necesario
-            else if (_productosCache.Count == 0 && _sesion.IdEmpresa > 0)
+            // Siempre recargar el cache de productos cuando cambia la categoría
+            else if (_sesion.IdEmpresa > 0)
             {
                 await RefrescarCacheProductosAsync();
+                // Si no hay búsqueda activa, también mostrar popup con productos de la categoría
+                if (!string.IsNullOrWhiteSpace(BusquedaProducto) && BusquedaProducto.Length >= 3)
+                {
+                    await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
+                }
             }
         }
 

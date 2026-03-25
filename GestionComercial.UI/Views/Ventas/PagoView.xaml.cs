@@ -41,5 +41,17 @@ namespace GestionComercial.UI.Views.Ventas
         {
             return text.All(c => char.IsDigit(c) || c == ',' || c == '.');
         }
+
+        /// <summary>
+        /// Maneja KeyDown en el campo de monto - solo agrega pago si es Enter.
+        /// </summary>
+        private void MontoIngresado_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && DataContext is PagoViewModel vm)
+            {
+                vm.AgregarPago();
+                e.Handled = true;
+            }
+        }
     }
 }

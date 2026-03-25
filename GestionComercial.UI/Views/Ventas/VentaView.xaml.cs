@@ -88,6 +88,7 @@ namespace GestionComercial.UI.Views.Ventas
         {
             if (DataContext is ViewModels.Ventas.VentaViewModel vm)
             {
+                System.Diagnostics.Debug.WriteLine($"[VentaView] CategoriaFiltroCombo_SelectionChanged: SelectedItem={vm.CategoriaFiltro?.Nombre}");
                 _ = vm.RefrescarProductosPorCategoriaAsync();
             }
         }
@@ -113,6 +114,18 @@ namespace GestionComercial.UI.Views.Ventas
         /// </summary>
         private void EstadoFiltro_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (sender is System.Windows.Controls.ComboBox combo && combo.SelectedItem is System.Windows.Controls.ComboBoxItem item)
+            {
+                // Convertir Tag string a int? para el filtro
+                if (item.Tag is string tagString && int.TryParse(tagString, out int intValue))
+                {
+                    ViewModel.EstadoVentaFiltro = intValue;
+                }
+                else
+                {
+                    ViewModel.EstadoVentaFiltro = null;
+                }
+            }
             ViewModel?.FiltrarHistorialCommand?.Execute(null);
         }
 

@@ -284,7 +284,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
             if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
             MetodoSeleccionado = debito;
-            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            var monto = Faltante > 0 ? Faltante : TotalVenta;
+            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarDebito: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
+            MontoIngresado = monto.ToString("F2");
             AgregarPago();
         }
 
@@ -298,7 +300,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
             if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
             MetodoSeleccionado = credito;
-            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            var monto = Faltante > 0 ? Faltante : TotalVenta;
+            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarCredito: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
+            MontoIngresado = monto.ToString("F2");
             AgregarPago();
         }
 
@@ -312,7 +316,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 m.NombreMetodo.Contains("Transferencia", StringComparison.OrdinalIgnoreCase));
             if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
             MetodoSeleccionado = qr;
-            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
+            var monto = Faltante > 0 ? Faltante : TotalVenta;
+            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarQR: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
+            MontoIngresado = monto.ToString("F2");
             AgregarPago();
         }
 
