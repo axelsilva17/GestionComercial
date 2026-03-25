@@ -114,6 +114,8 @@ namespace GestionComercial.UI.Views.Ventas
         /// </summary>
         private void EstadoFiltro_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (ViewModel == null) return; // Protección: DataContext puede no estar asignado aún
+
             if (sender is System.Windows.Controls.ComboBox combo && combo.SelectedItem is System.Windows.Controls.ComboBoxItem item)
             {
                 // Convertir Tag string a int? para el filtro
