@@ -950,6 +950,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 var desde = FechaDesde ?? DateTime.Today.AddDays(-30);
                 var hasta = FechaHasta ?? DateTime.Today.AddDays(1).AddSeconds(-1);
 
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] CargarHistorialAsync: IdSucursal={_sesion.IdSucursal}, desde={desde:yyyy-MM-dd}, hasta={hasta:yyyy-MM-dd HH:mm:ss}");
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] CargarHistorialAsync: Filtros - FechaDesde={FechaDesde}, FechaHasta={FechaHasta}, Dni={DniClienteFiltro}, Estado={EstadoVentaFiltro}");
+
                 IEnumerable<VentaResumenDto> ventas;
 
                 // Si hay filtros activos, usar el método con filtros
@@ -963,10 +966,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     ventas = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
                 }
 
-                HistorialVentas = new ObservableCollection<VentaResumenDto>(ventas.Take(50));
+                var listaVentas = ventas.Take(50).ToList();
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] CargarHistorialAsync: {listaVentas.Count} ventas encontradas");
+
+                HistorialVentas = new ObservableCollection<VentaResumenDto>(listaVentas);
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] CargarHistorialAsync ERROR: {ex.Message}");
                 MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

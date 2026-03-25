@@ -342,8 +342,8 @@
                Placement="Bottom"
                PlacementTarget="{Binding ElementName=BusquedaProductoBorder}"
                StaysOpen="False"
-               AllowsTransparency="True"
-               PopupAnimation="Fade"
+               AllowsTransparency="False"
+               PopupAnimation="Slide"
                Panel.ZIndex="999">
                 <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"
