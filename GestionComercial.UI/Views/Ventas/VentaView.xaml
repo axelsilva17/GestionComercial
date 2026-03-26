@@ -269,16 +269,19 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- ComboBox de categorías (Feature 2) -->
+                    <!-- ComboBox de categorías -->
                     <ComboBox x:Name="CategoriaFiltroCombo"
                               Grid.Column="0"
                               ItemsSource="{Binding Categorias}"
                               SelectedItem="{Binding CategoriaFiltro, Mode=TwoWay}"
                               DisplayMemberPath="Nombre"
                               SelectionChanged="CategoriaFiltroCombo_SelectionChanged"
-                              GotFocus="CategoriaFiltroCombo_GotFocus"
-                              DropDownOpened="CategoriaFiltroCombo_DropDownOpened"
-                              Style="{StaticResource FilterComboBox}"/>
+                              Height="44"
+                              FontSize="13"
+                              VerticalContentAlignment="Center"
+                              Background="{DynamicResource SurfaceBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"

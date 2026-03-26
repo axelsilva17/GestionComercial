@@ -652,7 +652,7 @@
                                           Background="Transparent" BorderThickness="0"
                                           RowBackground="Transparent" AlternatingRowBackground="#10FFFFFF"
                                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                          FontSize="12" RowHeight="44" ColumnHeaderHeight="40"
+                                          FontSize="11" RowHeight="36" ColumnHeaderHeight="36"
                                           Margin="8,0,8,8">
                                     <DataGrid.CellStyle>
                                         <Style TargetType="DataGridCell">
@@ -702,21 +702,16 @@
                                         </Style>
                                     </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
-                                        <!-- Columnas minimalistas -->
-                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM HH:mm}'}" Width="100"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="90"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="80"/>
-                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="50"/>
-                                        
-                                        <!-- Monto principal -->
-                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                                        
-                                        <!-- Diferencia simple -->
-                                        <DataGridTemplateColumn Header="DIF." Width="80">
+                                        <!-- Columnas ultra minimalistas -->
+                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM HH:mm}'}" Width="80"/>
+                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="80"/>
+                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="70"/>
+                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="40"/>
+                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, StringFormat='{}{0:C0}'}" Width="80"/>
+                                        <DataGridTemplateColumn Header="DIF." Width="60">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding DiferenciaMonetaria, Converter={StaticResource DecimalToMoneda}}"
-                                                               VerticalAlignment="Center" Padding="8,0">
+                                                    <TextBlock Text="{Binding DiferenciaMonetaria, StringFormat='{}{0:C0}'}" VerticalAlignment="Center">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
                                                                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -731,30 +726,7 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        
-                                        <!-- Alerta visual compacta -->
-                                        <DataGridTemplateColumn Header="" Width="30">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="!" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                               ToolTip="Diferencia sospechosa (&gt;10%)">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="Transparent"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding EsDiferenciaSospechosa}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        
-                                        <!-- Resumen compacto -->
-                                        <DataGridTextColumn Header="DETALLE" Binding="{Binding DetalleCambios}" Width="*"/>
+                                        <DataGridTextColumn Header="DETALLE" Binding="{Binding Descripcion}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>

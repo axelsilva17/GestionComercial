@@ -12,16 +12,16 @@
             <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius"    Value="14"/>
-            <Setter Property="Padding"         Value="18,14"/>
+            <Setter Property="CornerRadius"    Value="12"/>
+            <Setter Property="Padding"         Value="14,10"/>
         </Style>
 
         <Style x:Key="SubCard" TargetType="Border">
             <Setter Property="Background"      Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius"    Value="12"/>
-            <Setter Property="Padding"         Value="18,14"/>
+            <Setter Property="CornerRadius"    Value="10"/>
+            <Setter Property="Padding"         Value="12,10"/>
         </Style>
 
         <Style x:Key="QuickAction" TargetType="Button">
@@ -52,19 +52,18 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="0,0,0,16">
+        <Grid Margin="0,0,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>  <!-- Saludo -->
-                <RowDefinition Height="16"/>
-                <RowDefinition Height="Auto"/>  <!-- KPIs según rol -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="12"/>
-                <RowDefinition Height="Auto"/>  <!-- Fila finanzas Gerente -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="12"/>
-                <RowDefinition Height="Auto"/>  <!-- Fila operaciones Admin -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="12"/>
-                <RowDefinition Height="Auto"/>  <!-- Acciones rápidas -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="12"/>
-                <RowDefinition Height="Auto"/>  <!-- Actividad + stock/caja -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- ══ SALUDO ════════════════════════════════════════════════════ -->
