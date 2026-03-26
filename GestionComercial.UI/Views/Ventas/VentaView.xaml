@@ -281,7 +281,8 @@
                               VerticalContentAlignment="Center"
                               Background="{DynamicResource SurfaceBrush}"
                               Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}"/>
+                              BorderBrush="{DynamicResource BorderBrush}"
+                              BorderThickness="1"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"
