@@ -88,14 +88,21 @@ namespace GestionComercial.UI.Views.Ventas
         {
             if (DataContext is ViewModels.Ventas.VentaViewModel vm)
             {
-                System.Diagnostics.Debug.WriteLine($"[VentaView] CategoriaFiltroCombo_SelectionChanged: SelectedItem={vm.CategoriaFiltro?.Nombre}");
-                System.Diagnostics.Debug.WriteLine($"[VentaView] CategoriaFiltroCombo_SelectionChanged: Categorias count={vm.Categorias?.Count ?? 0}");
-                if (vm.Categorias != null && vm.Categorias.Count == 0)
+                System.Diagnostics.Debug.WriteLine($"[VentaView] SelectionChanged fired!");
+                System.Diagnostics.Debug.WriteLine($"[VentaView] Categorias count: {vm.Categorias?.Count ?? 0}");
+                System.Diagnostics.Debug.WriteLine($"[VentaView] SelectedItem: {vm.CategoriaFiltro?.Nombre ?? "NULL"}");
+                
+                if (vm.Categorias == null || vm.Categorias.Count == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[VentaView] ERROR: Categorias está vacío! Cargando...");
+                    System.Diagnostics.Debug.WriteLine($"[VentaView] ERROR: Categorias está vacío!");
                     return;
                 }
+                
                 _ = vm.RefrescarProductosPorCategoriaAsync();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaView] ERROR: DataContext no es VentaViewModel, es: {DataContext?.GetType().Name}");
             }
         }
 
