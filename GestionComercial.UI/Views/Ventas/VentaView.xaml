@@ -278,7 +278,7 @@
                               SelectionChanged="CategoriaFiltroCombo_SelectionChanged"
                               GotFocus="CategoriaFiltroCombo_GotFocus"
                               DropDownOpened="CategoriaFiltroCombo_DropDownOpened"
-                              Style="{StaticResource DarkComboBox}"/>
+                              Style="{StaticResource FilterComboBox}"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"
