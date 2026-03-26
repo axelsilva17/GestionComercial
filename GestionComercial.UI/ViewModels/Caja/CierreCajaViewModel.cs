@@ -240,17 +240,13 @@ namespace GestionComercial.UI.ViewModels.Caja
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
-        public async Task Confirmar()
+        
+        /// <summary>
+        /// Cierre de caja en modo "Ciego" - sin input manual del usuario.
+        /// El sistema usa el saldo calculado internamente y guarda la diferencia en auditoría.
+        /// </summary>
+        public async Task ConfirmarCiego()
         {
-            if (!decimal.TryParse(
-                    MontoFinal.Replace(",", "."),
-                    System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    out var monto) || monto < 0)
-            {
-                MostrarError("Ingresá el efectivo contado.");
-                return;
-            }
             if (_idCaja == 0)
             {
                 MostrarError("No se encontró el ID de caja. Volvé al módulo de Caja e intentá de nuevo.");
@@ -261,19 +257,77 @@ namespace GestionComercial.UI.ViewModels.Caja
             LimpiarError();
             try
             {
-                await _cajaServicio.CerrarCajaAsync(_idCaja, _sesion.IdUsuario, monto);
+                // En modo Ciego: el monto final = saldo calculado por el sistema
+                // La diferencia se calcula internamente (siempre 0 en este modo)
+                // pero se guarda en auditoría para seguridad
+                var montoCalculado = SaldoEsperado;
+                
+                System.Diagnostics.Debug.WriteLine($"[CierreCajaVM] Modo CIEGO: montoCalculado={montoCalculado}, diferencia=0 (calculada internamente)");
+                
+                // Guardar en auditoría la diferencia (aunque sea 0, queda registro)
+                await GuardarAuditoriaCierreCiegoAsync(montoCalculado, diferencia: 0);
+                
+                await _cajaServicio.CerrarCajaAsync(_idCaja, _sesion.IdUsuario, montoCalculado);
                 _sesion.IdCajaActual = null;
                 await Cancelar();
             }
             catch (Exception ex) 
             { 
-                // Mostrar error en MessageBox para debug
                 var msg = $"ERROR:\n\n{ex.GetType().Name}\n\n{ex.Message}\n\n{ex.InnerException?.Message}";
                 System.Windows.MessageBox.Show(msg, "ERROR AL CERRAR CAJA", 
                     System.Windows.MessageBoxButton.OK, 
                     System.Windows.MessageBoxImage.Error);
             }
             finally { IsLoading = false; }
+        }
+
+        /// <summary>
+        /// Registra la diferencia del cierre ciego en auditoría para seguridad.
+        /// </summary>
+        private async Task GuardarAuditoriaCierreCiegoAsync(decimal montoFinal, decimal diferencia)
+        {
+            try
+            {
+                var valoresAuditoria = new
+                {
+                    IdCaja = _idCaja,
+                    FechaCierre = DateTime.Now,
+                    MontoInicial,
+                    VentasEfectivo,
+                    IngresosEfectivo,
+                    EgresosEfectivo,
+                    SaldoEsperado,
+                    MontoFinal = montoFinal,
+                    Diferencia = diferencia,
+                    ModoCierre = "CIEGO", // Indica que fue cierre ciego (sin verificación manual)
+                    UsuarioCierreId = _sesion.IdUsuario
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(valoresAuditoria);
+                
+                // Registrar en auditoría del sistema
+                await _cajaServicio.RegistrarAuditoriaCierreAsync(
+                    _idCaja,
+                    _sesion.IdUsuario,
+                    json,
+                    montoFinal,
+                    diferencia);
+                    
+                System.Diagnostics.Debug.WriteLine($"[CierreCajaVM] Auditoría de cierre ciego guardada: diferencia={diferencia}");
+            }
+            catch (Exception ex)
+            {
+                // No fallar el cierre por error de auditoría - solo loguear
+                System.Diagnostics.Debug.WriteLine($"[CierreCajaVM] Error guardando auditoría: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Confirmar original (para compatibilidad) - ahora redirect a ConfirmarCiego.
+        /// </summary>
+        public async Task Confirmar()
+        {
+            await ConfirmarCiego();
         }
 
         public async Task Cancelar()

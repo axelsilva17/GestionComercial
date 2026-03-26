@@ -432,5 +432,35 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
             => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta);
+
+        /// <summary>
+        /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
+        /// </summary>
+        public async Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia)
+        {
+            try
+            {
+                LogHelper.Log($"[CajaServicio] Registrando auditoría de cierre: idCaja={idCaja}, diferencia={diferencia}");
+                
+                // Registrar en auditoría del sistema (usar Update ya que no existe Close en el enum)
+                await _uow.Auditoria.RegistrarAuditoriaAsync(
+                    nombreTabla: "Cajas_Cierre",
+                    registroId: idCaja,
+                    tipoOperacion: OperacionAuditoriaEnum.Update,
+                    idUsuario: idUsuario,
+                    nombreUsuario: _sesion.Nombre ?? "Sistema",
+                    valoresAnteriores: null,
+                    valoresNuevos: datosAuditoriaJson,
+                    workstation: Environment.MachineName,
+                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null);
+                    
+                LogHelper.Log("[CajaServicio] Auditoría de cierre registrada exitosamente");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError("[CajaServicio] Error al registrar auditoría de cierre", ex);
+                // No lanzar - el cierre principal no debe fallar por auditoría
+            }
+        }
     }
 }

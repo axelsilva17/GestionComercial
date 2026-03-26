@@ -105,15 +105,16 @@
 
                             <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,4,0,14"/>
 
-                            <!-- Saldo esperado -->
+                            <!-- Cierre Ciego: NO se muestra saldo esperado al usuario -->
+                            <!-- El sistema lo calcula internamente y guarda la diferencia en auditoría -->
                             <Border Background="#1510B981" BorderBrush="{DynamicResource SuccessBrush}"
                                     BorderThickness="1" CornerRadius="8" Padding="14,12">
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="SALDO ESPERADO EN CAJA" FontSize="10" FontWeight="Bold"
+                                        <TextBlock Text="MONTO EN CAJA" FontSize="10" FontWeight="Bold"
                                                    Foreground="{DynamicResource SuccessBrush}"/>
-                                        <TextBlock Text="Efectivo físico que debería haber" FontSize="11"
+                                        <TextBlock Text="Calculado por el sistema" FontSize="11"
                                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"
@@ -188,30 +189,36 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ── Efectivo contado ───────────────────────────────── -->
-                    <TextBlock Text="EFECTIVO CONTADO EN CAJA" FontSize="10" FontWeight="Bold"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <!-- ── Cierre Ciego: Solo datos calculados (sin input manual) ─── -->
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1"
-                            CornerRadius="10" Margin="0,0,0,8">
-                        <Grid Height="58">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="$" FontSize="24" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryBrush}"
-                                       VerticalAlignment="Center" Margin="16,0,8,0"/>
-                             <TextBox x:Name="MontoFinal" Grid.Column="1"
-                                     Text="{Binding MontoFinal, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="Transparent" BorderThickness="0"
-                                     Foreground="{DynamicResource TextPrimaryBrush}"
-                                     FontSize="24" FontWeight="Bold"
-                                     VerticalContentAlignment="Center" Padding="0,0,16,0"
-                                     CaretBrush="{DynamicResource PrimaryBrush}"/>
-                        </Grid>
+                            CornerRadius="10" Padding="16,12" Margin="0,0,0,8">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Width="6" CornerRadius="3"
+                                        Background="{DynamicResource PrimaryBrush}" Margin="0,0,10,0"/>
+                                <TextBlock Text="CIERRE CIEGO" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="El sistema calcula automáticamente el saldo esperado."
+                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" 
+                                       TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Efectivo en caja (calculado)" FontSize="13" 
+                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding SaldoEsperado, Converter={StaticResource DecimalToMoneda}}"
+                                           FontSize="20" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
                     </Border>
-                    <TextBlock Text="Contá el efectivo físico e ingresá el total"
-                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                    <TextBlock Text="No se muestra el monto esperado al usuario -差异 se calcula internamente"
+                               FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" 
+                               FontStyle="Italic" Margin="0,0,0,12"/>
 
-                    <!-- ── Diferencia dinámica ────────────────────────────── -->
+                    <!-- ── Diferencia calculada internamente (no visible hasta cerrar) ─ -->
                     <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,16">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -233,7 +240,7 @@
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="DIFERENCIA" FontSize="10" FontWeight="Bold"
+                                <TextBlock Text="RESULTADO DEL CIERRE" FontSize="10" FontWeight="Bold"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding DiferenciaTexto}" FontSize="11"
                                            Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
@@ -326,7 +333,8 @@
                             </Button.Template>
                         </Button>
                         <Button x:Name="Confirmar" Grid.Column="4" Height="48" FontSize="14"
-                                FontWeight="SemiBold" Cursor="Hand">
+                                FontWeight="SemiBold" Cursor="Hand"
+                                cal:Message.Attach="[Event Click] = [Action ConfirmarCiego]">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b" Background="{DynamicResource ErrorBrush}" CornerRadius="10">

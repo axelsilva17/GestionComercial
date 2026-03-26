@@ -31,6 +31,15 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private CancellationTokenSource?  _debounceCts;
         private List<ProductoListadoDto> _productosCache = new(); // Cache de productos precargados
 
+        // ── Scanner Fast-Entry Detection ──────────────────────────────────────────
+        // Un escáner de código de barras tipea muy rápido (>8 chars en <500ms)
+        // Typing manual es más lento
+        private readonly DispatcherTimer _scannerTimer;
+        private DateTime _typingStartTime;
+        private string _scannerBuffer = string.Empty;
+        private const int ScannerMinLength = 8;
+        private const int ScannerMaxMs = 500;
+
         public VentaViewModel(
             IProductoServicio productoServicio,
             IVentaServicio    ventaServicio,
@@ -85,6 +94,19 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     _debounceCts?.Cancel();
                     _debounceCts = new CancellationTokenSource();
                     await BuscarProductosAsync(_textoDebounce, _debounceCts.Token);
+                };
+
+                // Configurar timer para detección de escáner (500ms para detectar typing lento)
+                _scannerTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(ScannerMaxMs)
+                };
+                _scannerTimer.Tick += (s, e) =>
+                {
+                    _scannerTimer.Stop();
+                    // Si pasaron 500ms y no se activó el scanner, es typing manual
+                    // Limpiar el buffer
+                    _scannerBuffer = string.Empty;
                 };
 
                 System.Diagnostics.Debug.WriteLine("[VentaVM] Constructor FIN OK");
@@ -402,9 +424,51 @@ namespace GestionComercial.UI.ViewModels.Ventas
             get => _busquedaProducto;
             set
             {
-                if (SetProperty(ref _busquedaProducto, value))
+                if (SetProperty(ref _busquedaProducto, value) && !string.IsNullOrWhiteSpace(value))
                 {
-                    // Iniciar debounce solo si hay texto suficiente
+                    // ── Scanner Fast-Entry Detection ───────────────────────────────
+                    // Detectar si es输入 rápida (escáner) o typing manual
+                    var now = DateTime.Now;
+                    
+                    if (value.Length >= ScannerMinLength)
+                    {
+                        // Primer caracter del buffer o después de un timeout
+                        if (string.IsNullOrEmpty(_scannerBuffer))
+                        {
+                            _typingStartTime = now;
+                            _scannerBuffer = value;
+                            _scannerTimer.Stop();
+                            _scannerTimer.Start();
+                        }
+                        else
+                        {
+                            // Ya tenemos caracteres previos - verificar si es entrada rápida
+                            var elapsed = (now - _typingStartTime).TotalMilliseconds;
+                            
+                            // Si vienen más de 8 chars en menos de 500ms desde el inicio → ESCÁNER
+                            if (elapsed < ScannerMaxMs && value.Length >= ScannerMinLength)
+                            {
+                                // ¡ESCÁNER DETECTADO! → Buscar por código de barras directamente
+                                _scannerTimer.Stop();
+                                System.Diagnostics.Debug.WriteLine($"[VentaVM] ESCÁNER DETECTADO: {value} en {elapsed}ms");
+                                _scannerBuffer = string.Empty;
+                                _ = ProcesarBarcodeEscaneadoAsync(value);
+                                return; // No hacer debounce normal
+                            }
+                            
+                            // Actualizar buffer y tiempo
+                            _scannerBuffer = value;
+                            _typingStartTime = now;
+                        }
+                    }
+                    else
+                    {
+                        // Menos de 8 chars - es typing manual normal
+                        _scannerBuffer = string.Empty;
+                        _scannerTimer.Stop();
+                    }
+
+                    // ── Debounce normal para búsqueda ───────────────────────────────
                     if (!string.IsNullOrWhiteSpace(value) && value.Length >= 3)
                     {
                         _textoDebounce = value;
@@ -417,6 +481,66 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         MostrarPopupBusqueda = false;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Procesa un código de barras escaneado rápidamente.
+        /// Busca por código exacto y agrega el producto si existe.
+        /// </summary>
+        private async Task ProcesarBarcodeEscaneadoAsync(string barcode)
+        {
+            if (string.IsNullOrWhiteSpace(barcode)) return;
+
+            try
+            {
+                // Limpiar campo de búsqueda
+                _busquedaProducto = string.Empty;
+                MostrarPopupBusqueda = false;
+
+                // Buscar por código de barras exacto en cache
+                var producto = _productosCache.FirstOrDefault(p =>
+                    p.CodigoBarra != null &&
+                    p.CodigoBarra.Trim().Equals(barcode.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (producto == null)
+                {
+                    // Si no está en cache, buscar en servicio
+                    var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                    producto = todos.FirstOrDefault(p =>
+                        p.CodigoBarra != null &&
+                        p.CodigoBarra.Trim().Equals(barcode.Trim(), StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (producto == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM] Escáner: código {barcode} no encontrado");
+                    return;
+                }
+
+                if (producto.StockActual <= 0)
+                {
+                    MostrarError($"'{producto.Nombre}' no tiene stock disponible.");
+                    return;
+                }
+
+                // Agregar el producto directamente (como si fuera el escáner físico)
+                var dtoParaAgregar = new ProductoListadoDto
+                {
+                    IdProducto = producto.IdProducto,
+                    Nombre = producto.Nombre,
+                    CodigoBarra = producto.CodigoBarra,
+                    PrecioVentaActual = producto.PrecioVentaActual,
+                    PrecioCostoActual = producto.PrecioCostoActual,
+                    StockActual = producto.StockActual,
+                };
+
+                SeleccionarProductoDelPopup(dtoParaAgregar);
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Escáner: agregado {producto.Nombre}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Error procesando barcode escaneado: {ex.Message}");
             }
         }
 

@@ -14,6 +14,19 @@ namespace GestionComercial.UI.Views.Ventas
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Maneja el clic en el botón "Ver Historial" para mostrar el popup de historial.
+        /// </summary>
+        private void VerHistorial_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is PagoViewModel vm)
+            {
+                // Cargar historial y mostrar popup
+                _ = vm.CargarHistorialAsync();
+                vm.MostrarHistorial = true;
+            }
+        }
+
         private void PagoView_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (DataContext is not PagoViewModel vm) return;

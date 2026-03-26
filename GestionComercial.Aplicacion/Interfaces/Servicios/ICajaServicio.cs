@@ -16,5 +16,10 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         /// de otros métodos de pago. Usar antes de mostrar el cierre.
         /// </summary>
         Task<ResumenCierreDto> ObtenerResumenCierreAsync(int idCaja);
+
+        /// <summary>
+        /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
+        /// </summary>
+        Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia);
     }
 }

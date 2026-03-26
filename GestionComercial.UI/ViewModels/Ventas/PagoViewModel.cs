@@ -396,6 +396,103 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         private void RecalcularVuelto()
             => Vuelto = TotalPagado > TotalVenta ? TotalPagado - TotalVenta : 0;
+
+        // ── Popup Historial (same as VentaViewModel) ─────────────────────────────
+        private bool _mostrarHistorial;
+        public bool MostrarHistorial
+        {
+            get => _mostrarHistorial;
+            set { _mostrarHistorial = value; NotifyOfPropertyChange(() => MostrarHistorial); }
+        }
+
+        private ObservableCollection<VentaResumenDto> _historialVentas = new();
+        public ObservableCollection<VentaResumenDto> HistorialVentas
+        {
+            get => _historialVentas;
+            set { _historialVentas = value; NotifyOfPropertyChange(() => HistorialVentas); }
+        }
+
+        private DateTime? _fechaDesde;
+        public DateTime? FechaDesde
+        {
+            get => _fechaDesde;
+            set { SetProperty(ref _fechaDesde, value); }
+        }
+
+        private DateTime? _fechaHasta;
+        public DateTime? FechaHasta
+        {
+            get => _fechaHasta;
+            set { SetProperty(ref _fechaHasta, value); }
+        }
+
+        private string _dniClienteFiltro = string.Empty;
+        public string DniClienteFiltro
+        {
+            get => _dniClienteFiltro;
+            set { SetProperty(ref _dniClienteFiltro, value); }
+        }
+
+        private int? _estadoVentaFiltro;
+        public int? EstadoVentaFiltro
+        {
+            get => _estadoVentaFiltro;
+            set { SetProperty(ref _estadoVentaFiltro, value); }
+        }
+
+        /// <summary>
+        /// Carga el historial de ventas (reutiliza la lógica de VentaViewModel).
+        /// </summary>
+        public async Task CargarHistorialAsync()
+        {
+            try
+            {
+                var desde = FechaDesde ?? DateTime.Today.AddDays(-30);
+                var hasta = FechaHasta ?? DateTime.Today.AddDays(1).AddSeconds(-1);
+
+                IEnumerable<VentaResumenDto> ventas;
+
+                if (FechaDesde.HasValue || FechaHasta.HasValue || !string.IsNullOrWhiteSpace(DniClienteFiltro) || EstadoVentaFiltro.HasValue)
+                {
+                    ventas = await _ventaServicio.ObtenerVentasAsync(
+                        _sesion.IdSucursal, FechaDesde, FechaHasta, DniClienteFiltro, EstadoVentaFiltro);
+                }
+                else
+                {
+                    ventas = await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta);
+                }
+
+                var listaVentas = ventas.Take(50).ToList();
+                HistorialVentas = new ObservableCollection<VentaResumenDto>(listaVentas);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PagoVM] CargarHistorialAsync ERROR: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Filtra el historial aplicando los filtros activos.
+        /// </summary>
+        public void FiltrarHistorial()
+        {
+            _ = CargarHistorialAsync();
+        }
+
+        /// <summary>
+        /// Cierra el popup de historial.
+        /// </summary>
+        public void CerrarHistorial()
+        {
+            MostrarHistorial = false;
+        }
+
+        private bool _ventaCompletada;
+        public bool VentaCompletada
+        {
+            get => _ventaCompletada;
+            set { _ventaCompletada = value; NotifyOfPropertyChange(() => VentaCompletada); }
+        }
     }
 
     public class PagoLineaVm
