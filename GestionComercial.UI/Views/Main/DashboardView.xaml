@@ -13,7 +13,7 @@
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius"    Value="14"/>
-            <Setter Property="Padding"         Value="22,18"/>
+            <Setter Property="Padding"         Value="18,14"/>
         </Style>
 
         <Style x:Key="SubCard" TargetType="Border">
@@ -52,18 +52,18 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="0,0,0,24">
+        <Grid Margin="0,0,0,16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>  <!-- Saludo -->
-                <RowDefinition Height="20"/>
+                <RowDefinition Height="16"/>
                 <RowDefinition Height="Auto"/>  <!-- KPIs según rol -->
-                <RowDefinition Height="16"/>
+                <RowDefinition Height="12"/>
                 <RowDefinition Height="Auto"/>  <!-- Fila finanzas Gerente -->
-                <RowDefinition Height="16"/>
+                <RowDefinition Height="12"/>
                 <RowDefinition Height="Auto"/>  <!-- Fila operaciones Admin -->
-                <RowDefinition Height="16"/>
+                <RowDefinition Height="12"/>
                 <RowDefinition Height="Auto"/>  <!-- Acciones rápidas -->
-                <RowDefinition Height="16"/>
+                <RowDefinition Height="12"/>
                 <RowDefinition Height="Auto"/>  <!-- Actividad + stock/caja -->
             </Grid.RowDefinitions>
 

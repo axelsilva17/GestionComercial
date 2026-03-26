@@ -226,7 +226,7 @@
                           Style="{StaticResource ClientesGrid}"
                           ItemsSource="{Binding Clientes}"
                           SelectedItem="{Binding ClienteSeleccionado}"
-                          Margin="4,4"
+                          Margin="0,0"
                           MouseDoubleClick="ClientesDataGrid_MouseDoubleClick"
                           PreviewKeyDown="ClientesDataGrid_PreviewKeyDown">
                     <DataGrid.Columns>

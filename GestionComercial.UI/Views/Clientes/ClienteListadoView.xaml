@@ -257,11 +257,11 @@
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="12" ClipToBounds="True">
                 <Grid>
-                    <DataGrid x:Name="ClientesGridCtrl"
-                              Style="{StaticResource ClientesGrid}"
-                              ItemsSource="{Binding Clientes}"
-                              SelectionChanged="Clientes_SelectionChanged"
-                              Margin="4,4">
+                <DataGrid x:Name="ClientesGridCtrl"
+                          Style="{StaticResource ClientesGrid}"
+                          ItemsSource="{Binding Clientes}"
+                          SelectionChanged="Clientes_SelectionChanged"
+                          Margin="0,0">
                         <DataGrid.Columns>
 
                             <!-- Cliente -->

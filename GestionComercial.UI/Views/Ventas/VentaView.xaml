@@ -466,7 +466,7 @@
                 <Grid>
                     <DataGrid x:Name="ItemSeleccionado"
                               ItemsSource="{Binding Items}"
-                              Margin="4,4">
+                              Margin="0,0">
                         <DataGrid.Style>
                             <Style TargetType="DataGrid" BasedOn="{StaticResource ItemsGrid}">
                                 <Style.Triggers>

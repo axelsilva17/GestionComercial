@@ -702,23 +702,21 @@
                                         </Style>
                                     </DataGrid.ColumnHeaderStyle>
                                     <DataGrid.Columns>
-                                        <!-- Columnas básicas -->
-                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="130"/>
-                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="100"/>
-                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="90"/>
+                                        <!-- Columnas minimalistas -->
+                                        <DataGridTextColumn Header="FECHA" Binding="{Binding FechaOperacion, StringFormat='{}{0:dd/MM HH:mm}'}" Width="100"/>
+                                        <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="90"/>
+                                        <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding TipoOperacionCaja}" Width="80"/>
+                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="50"/>
                                         
-                                        <!-- Columnas financieras para prevención de fraude -->
-                                        <DataGridTextColumn Header="CAJA" Binding="{Binding NumeroCaja}" Width="60"/>
-                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="100"/>
-                                        <DataGridTextColumn Header="VAL. ANTERIOR" Binding="{Binding ValorAnteriorMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
-                                        <DataGridTextColumn Header="VAL. NUEVO" Binding="{Binding ValorNuevoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="110"/>
+                                        <!-- Monto principal -->
+                                        <DataGridTextColumn Header="MONTO" Binding="{Binding MontoMostrar, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
                                         
-                                        <!-- Columna de diferencia con formato condicional -->
-                                        <DataGridTemplateColumn Header="DIFERENCIA" Width="100">
+                                        <!-- Diferencia simple -->
+                                        <DataGridTemplateColumn Header="DIF." Width="80">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding DiferenciaMonetaria, Converter={StaticResource DecimalToMoneda}}"
-                                                               VerticalAlignment="Center" Padding="12,0">
+                                                               VerticalAlignment="Center" Padding="8,0">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
                                                                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -734,11 +732,11 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
                                         
-                                        <!-- Alerta visual para diferencias sospechosas -->
-                                        <DataGridTemplateColumn Header="⚠" Width="40">
+                                        <!-- Alerta visual compacta -->
+                                        <DataGridTemplateColumn Header="" Width="30">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="⚠" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                    <TextBlock Text="!" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"
                                                                ToolTip="Diferencia sospechosa (&gt;10%)">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
@@ -755,8 +753,8 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
                                         
-                                        <!-- Resumen de cambios -->
-                                        <DataGridTextColumn Header="CAMBIOS" Binding="{Binding DetalleCambios}" Width="*"/>
+                                        <!-- Resumen compacto -->
+                                        <DataGridTextColumn Header="DETALLE" Binding="{Binding DetalleCambios}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
