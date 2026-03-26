@@ -173,7 +173,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public CategoriaItemDto? CategoriaFiltro
         {
             get => _categoriaFiltro;
-            set { SetProperty(ref _categoriaFiltro, value); }
+            set 
+            { 
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] CategoriaFiltro SET: {value?.Nombre}");
+                SetProperty(ref _categoriaFiltro, value); 
+            }
         }
 
         // ── Feature 3: Filtros de historial ───────────────────────────────────
