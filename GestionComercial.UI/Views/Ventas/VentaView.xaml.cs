@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -104,6 +105,30 @@ namespace GestionComercial.UI.Views.Ventas
             {
                 System.Diagnostics.Debug.WriteLine($"[VentaView] ERROR: DataContext no es VentaViewModel, es: {DataContext?.GetType().Name}");
             }
+        }
+
+        /// <summary>
+        /// Debug: cuando el ComboBox recibe foco.
+        /// </summary>
+        private void CategoriaFiltroCombo_GotFocus(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("[VentaView] CategoriaFiltroCombo_GotFocus!");
+            if (DataContext is ViewModels.Ventas.VentaViewModel vm)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaView] GotFocus - Categorias count: {vm.Categorias?.Count ?? 0}");
+                foreach (var cat in vm.Categorias)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VentaView]   - {cat.Nombre}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Debug: cuando se abre el dropdown.
+        /// </summary>
+        private void CategoriaFiltroCombo_DropDownOpened(object sender, EventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("[VentaView] CategoriaFiltroCombo_DropDownOpened!");
         }
 
         /// <summary>
