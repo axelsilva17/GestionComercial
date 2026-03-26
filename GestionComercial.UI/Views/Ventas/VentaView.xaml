@@ -278,11 +278,7 @@
                               SelectionChanged="CategoriaFiltroCombo_SelectionChanged"
                               GotFocus="CategoriaFiltroCombo_GotFocus"
                               DropDownOpened="CategoriaFiltroCombo_DropDownOpened"
-                              Height="40"
-                              FontSize="13"
-                              VerticalContentAlignment="Center"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"/>
+                              Style="{StaticResource DarkComboBox}"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"

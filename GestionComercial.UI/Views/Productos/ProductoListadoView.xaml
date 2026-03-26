@@ -237,18 +237,12 @@
                     </Border>
 
                     <ComboBox x:Name="CategoriaSeleccionada" Grid.Column="2"
-                              Height="38" FontSize="13"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                              Style="{StaticResource DarkComboBox}"
                               ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
                               SelectedItem="{Binding CategoriaSeleccionada}"/>
 
                     <ComboBox x:Name="FiltroActivo" Grid.Column="4"
-                              Height="38" FontSize="13"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                              Style="{StaticResource DarkComboBox}"
                               SelectedIndex="{Binding FiltroActivo, Mode=TwoWay}">
                         <ComboBoxItem Content="Todos"/>
                         <ComboBoxItem Content="Activos"/>

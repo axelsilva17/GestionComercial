@@ -91,4 +91,15 @@
         </Setter>
     </Style>
 
+    <Style x:Key="FilterDatePicker" TargetType="DatePicker">
+        <Setter Property="Height"              Value="40"/>
+        <Setter Property="FontSize"          Value="12"/>
+        <Setter Property="Background"         Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground"         Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush"        Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness"   Value="1"/>
+        <Setter Property="Padding"            Value="8,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
 </ResourceDictionary>
