@@ -90,6 +90,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 NotifyOfPropertyChange(() => HayFaltante);
                 NotifyOfPropertyChange(() => PuedeCobrar);
                 RecalcularVuelto();
+                // Notificaciones explícitas para asegurar que el binding se actualice
+                NotifyOfPropertyChange(() => Vuelto);
+                NotifyOfPropertyChange(() => HayVuelto);
             }
         }
 

@@ -718,12 +718,38 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
             }
-            // Siempre recargar el cache de productos cuando cambia la categoría
+            // Si hay una categoría seleccionada pero NO hay búsqueda, mostrar productos filtrados
+            else if (CategoriaFiltro != null && _sesion.IdEmpresa > 0)
+            {
+                // Recargar cache y mostrar popup con productos de la categoría
+                await RefrescarCacheProductosAsync();
+                
+                // Filtrar productos por categoría desde el cache
+                var productosFiltrados = _productosCache
+                    .Where(p => p.IdCategoria == CategoriaFiltro.IdCategoria)
+                    .Take(8)
+                    .ToList();
+                
+                if (productosFiltrados.Count > 0)
+                {
+                    ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(productosFiltrados);
+                    HaySinResultados = false;
+                    MostrarPopupBusqueda = true;
+                    System.Diagnostics.Debug.WriteLine($"[VentaVM] Mostrando {productosFiltrados.Count} productos de categoría {CategoriaFiltro.Nombre}");
+                }
+                else
+                {
+                    ResultadosBusqueda.Clear();
+                    HaySinResultados = true;
+                    MostrarPopupBusqueda = true;
+                }
+            }
+            // Si no hay categoría ni búsqueda, solo recargar cache
             else if (_sesion.IdEmpresa > 0)
             {
                 await RefrescarCacheProductosAsync();
-                // Si no hay búsqueda activa, también mostrar popup con productos de la categoría
-                if (!string.IsNullOrWhiteSpace(BusquedaProducto) && BusquedaProducto.Length >= 3)
+                // Cerrar popup si no hay filtro activo
+                if (!string.IsNullOrWhiteSpace(BusquedaProducto))
                 {
                     await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
                 }
