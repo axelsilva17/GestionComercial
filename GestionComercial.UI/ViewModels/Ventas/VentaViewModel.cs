@@ -136,10 +136,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     _productosCache = productos.ToList();
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
 
-                    // Cargar categorías para el filtro (Feature 2)
-                    var categorias = await _productoServicio.ObtenerCategoriasAsync(_sesion.IdEmpresa);
-                    Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
-                    System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargadas {Categorias.Count} categorías");
+
                 }
                 catch (Exception ex)
                 {
@@ -161,26 +158,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         // ── Límite de descuento según rol ──────────────────────────────────────
         public decimal LimiteDescuento { get; }
 
-        // ── Feature 2: Filtro por categoría ─────────────────────────────────
-        private ObservableCollection<CategoriaItemDto> _categorias = new();
-        public ObservableCollection<CategoriaItemDto> Categorias
-        {
-            get => _categorias;
-            set => SetProperty(ref _categorias, value);
-        }
 
-        private CategoriaItemDto? _categoriaFiltro;
-        public CategoriaItemDto? CategoriaFiltro
-        {
-            get => _categoriaFiltro;
-            set 
-            { 
-                System.Diagnostics.Debug.WriteLine($"[VentaVM] CategoriaFiltro SET: {value?.Nombre}");
-                SetProperty(ref _categoriaFiltro, value); 
-            }
-        }
-
-        // ── Feature 3: Filtros de historial ───────────────────────────────────
         private DateTime? _fechaDesde;
         public DateTime? FechaDesde
         {
@@ -606,7 +584,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     var resultadosCache = _productosCache
                         .Where(p => (p.Nombre?.ToLowerInvariant().Contains(busqueda) ?? false) ||
                                    (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
-                        .Where(p => CategoriaFiltro == null || p.IdCategoria == CategoriaFiltro.IdCategoria)
                         .Take(8)
                         .ToList();
 
@@ -628,7 +605,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 var resultados = todos
                     .Where(p => (p.Nombre?.ToLowerInvariant().Contains(textoBusqueda) ?? false) ||
                                (p.CodigoBarra?.ToLowerInvariant().Contains(textoBusqueda) ?? false))
-                    .Where(p => CategoriaFiltro == null || p.IdCategoria == CategoriaFiltro.IdCategoria)
                     .Take(8) // Limitar a 8 resultados para el popup
                     .ToList();
 
@@ -713,51 +689,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// Refresca los productos según el filtro de categoría seleccionado.
         /// Llamado desde el SelectionChanged del ComboBox de categorías.
         /// </summary>
-        public async Task RefrescarProductosPorCategoriaAsync()
+        public Task RefrescarProductosPorCategoriaAsync()
         {
-            System.Diagnostics.Debug.WriteLine($"[VentaVM] RefrescarProductosPorCategoriaAsync: CategoriaFiltro={CategoriaFiltro?.Nombre}, BusquedaProducto={BusquedaProducto}");
-            
-            // Si hay texto de búsqueda, repetir la búsqueda con la nueva categoría
-            if (!string.IsNullOrWhiteSpace(BusquedaProducto) && BusquedaProducto.Length >= 3)
-            {
-                await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
-            }
-            // Si hay una categoría seleccionada pero NO hay búsqueda, mostrar productos filtrados
-            else if (CategoriaFiltro != null && _sesion.IdEmpresa > 0)
-            {
-                // Recargar cache y mostrar popup con productos de la categoría
-                await RefrescarCacheProductosAsync();
-                
-                // Filtrar productos por categoría desde el cache
-                var productosFiltrados = _productosCache
-                    .Where(p => p.IdCategoria == CategoriaFiltro.IdCategoria)
-                    .Take(8)
-                    .ToList();
-                
-                if (productosFiltrados.Count > 0)
-                {
-                    ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(productosFiltrados);
-                    HaySinResultados = false;
-                    MostrarPopupBusqueda = true;
-                    System.Diagnostics.Debug.WriteLine($"[VentaVM] Mostrando {productosFiltrados.Count} productos de categoría {CategoriaFiltro.Nombre}");
-                }
-                else
-                {
-                    ResultadosBusqueda.Clear();
-                    HaySinResultados = true;
-                    MostrarPopupBusqueda = true;
-                }
-            }
-            // Si no hay categoría ni búsqueda, solo recargar cache
-            else if (_sesion.IdEmpresa > 0)
-            {
-                await RefrescarCacheProductosAsync();
-                // Cerrar popup si no hay filtro activo
-                if (!string.IsNullOrWhiteSpace(BusquedaProducto))
-                {
-                    await BuscarProductosAsync(BusquedaProducto, CancellationToken.None);
-                }
-            }
+            // Feature 2 disabled - category filter removed per change cierre-caja-sin-estres
+            return Task.CompletedTask;
         }
 
         /// <summary>

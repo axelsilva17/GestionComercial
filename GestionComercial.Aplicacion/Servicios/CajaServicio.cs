@@ -462,5 +462,29 @@ namespace GestionComercial.Aplicacion.Servicios
                 // No lanzar - el cierre principal no debe fallar por auditoría
             }
         }
+
+        /// <summary>
+        /// Obtiene el total de efectivo recibido por caja desde las ventas.
+        /// Usado para cierre automático de caja.
+        /// </summary>
+        public async Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja)
+        {
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);
+            if (caja == null)
+                return 0;
+
+            // Obtener ventas pagadas en efectivo de esta caja
+            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(
+                caja.FechaApertura,
+                DateTime.Now,
+                caja.Id_sucursal);
+
+            // Filtrar ventas de esta caja que tienen EfectivoRecibido
+            return ventas
+                .Where(v => v.Id_caja == idCaja 
+                         && v.Estado == 2 // Pagada
+                         && v.EfectivoRecibido.HasValue)
+                .Sum(v => v.EfectivoRecibido!.Value);
+        }
     }
 }

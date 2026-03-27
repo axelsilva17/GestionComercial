@@ -18,6 +18,9 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         public int      Id_usuario     { get; set; }
         public int?     Id_caja        { get; set; }
 
+        // ── Campo para tracking de efectivo en cierre de caja ─────────────────────
+        public decimal? EfectivoRecibido { get; set; }
+
         public Sucursal                  Sucursal { get; set; } = null!;
         public Cliente.Cliente           Cliente  { get; set; } = null!;
         public Usuario                   Usuario  { get; set; } = null!;

@@ -270,18 +270,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- ComboBox de categorías -->
-                    <ComboBox x:Name="CategoriaFiltroCombo"
-                              Grid.Column="0"
-                              ItemsSource="{Binding Categorias}"
-                              SelectedItem="{Binding CategoriaFiltro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="Nombre"
-                              SelectionChanged="CategoriaFiltroCombo_SelectionChanged"
-                              GotFocus="CategoriaFiltroCombo_GotFocus"
-                              Style="{StaticResource FilterComboBoxStyle}"/>
-
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
-                    <Border Grid.Column="1"
+                    <Border Grid.Column="0"
                             Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" Height="44"

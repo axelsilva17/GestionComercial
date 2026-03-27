@@ -8,6 +8,7 @@ using ClosedXML.Excel;
 using GestionComercial.Aplicacion.DTOs.Auditoria;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Reportes;
+using GestionComercial.UI.ViewModels.Reportes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -886,6 +887,68 @@ namespace GestionComercial.UI.Helpers
         }
 
         private static string Fecha() => DateTime.Now.ToString("yyyyMMdd_HHmm");
+
+        /// <summary>
+        /// Exporta auditoría de caja a Excel con todos los datos relevantes.
+        /// </summary>
+        public static void ExportarAuditoriaCaja(List<CajaAuditoriaItemDto> cajas)
+        {
+            var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Auditoría Caja");
+
+            // Título
+            ws.Cell(1, 1).Value = "Auditoría de Caja";
+            ws.Cell(1, 1).Style.Font.Bold = true;
+            ws.Cell(1, 1).Style.Font.FontSize = 16;
+            ws.Range(1, 1, 1, 8).Merge();
+
+            // Headers
+            string[] headers = { "Fecha", "Hora", "Usuario Apertura", "Monto Inicial", "Ventas Efectivo", "Efectivo en Caja", "Monto Final", "Diff s/Efectivo", "Diff c/Efectivo", "Estado" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                ws.Cell(3, i + 1).Value = headers[i];
+                ws.Cell(3, i + 1).Style.Font.Bold = true;
+                ws.Cell(3, i + 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E293B");
+                ws.Cell(3, i + 1).Style.Font.FontColor = XLColor.White;
+            }
+
+            // Datos
+            for (int i = 0; i < cajas.Count; i++)
+            {
+                var c = cajas[i];
+                int row = 4 + i;
+                ws.Cell(row, 1).Value = c.FechaApertura;
+                ws.Cell(row, 2).Value = c.HoraApertura;
+                ws.Cell(row, 3).Value = c.UsuarioApertura;
+                ws.Cell(row, 4).Value = (double)c.MontoInicial;
+                ws.Cell(row, 4).Style.NumberFormat.Format = "$ #,##0.00";
+                ws.Cell(row, 5).Value = (double)c.VentasEfectivo;
+                ws.Cell(row, 5).Style.NumberFormat.Format = "$ #,##0.00";
+                ws.Cell(row, 6).Value = (double)c.EfectivoEnCaja;
+                ws.Cell(row, 6).Style.NumberFormat.Format = "$ #,##0.00";
+                ws.Cell(row, 7).Value = c.MontoFinal.HasValue ? (double)c.MontoFinal.Value : 0;
+                ws.Cell(row, 7).Style.NumberFormat.Format = "$ #,##0.00";
+                ws.Cell(row, 8).Value = (double)c.DiferenciaSinEfectivo;
+                ws.Cell(row, 8).Style.NumberFormat.Format = "$ #,##0.00";
+                ws.Cell(row, 9).Value = (double)c.DiferenciaConEfectivo;
+                ws.Cell(row, 9).Style.NumberFormat.Format = "$ #,##0.00";
+                ws.Cell(row, 10).Value = c.Estado;
+
+                // Color diferencia
+                if (c.DiferenciaConEfectivo != 0)
+                {
+                    ws.Cell(row, 9).Style.Font.FontColor = XLColor.FromHtml("#EF4444");
+                }
+            }
+
+            // Auto-ajustar columnas
+            ws.Columns().AdjustToContents();
+
+            // Guardar
+            var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"AuditoriaCaja_{Fecha()}.xlsx");
+            wb.SaveAs(path);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+        }
     }
 }
 

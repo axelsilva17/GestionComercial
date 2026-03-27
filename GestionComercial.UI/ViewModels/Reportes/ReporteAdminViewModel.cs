@@ -553,7 +553,41 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public async Task FiltrarUltimos6() { FechaDesde = DateTime.Today.AddMonths(-6); FechaHasta = DateTime.Today; await CargarAsync(); }
         public async Task FiltrarEsteAnio() { FechaDesde = new DateTime(DateTime.Today.Year, 1, 1); FechaHasta = DateTime.Today; await CargarAsync(); }
 
-        // ── Exportar Excel ───────────────────────────────────────────────────
+        // ── Exportar Excel: Solo Caja Auditoría ─────────────────────────────────
+        public async Task ExportarCajaAuditoriaExcel()
+        {
+            try
+            {
+                IsLoading = true;
+                var desde = FechaDesde.Date;
+                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
+
+                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                var cajasDto = cajas.Select(c => new CajaAuditoriaItemDto
+                {
+                    Id = c.Id,
+                    FechaApertura = c.FechaApertura.ToString("dd/MM/yyyy"),
+                    HoraApertura = c.FechaApertura.ToString("HH:mm"),
+                    UsuarioApertura = c.UsuarioApertura?.Nombre ?? "—",
+                    MontoInicial = c.MontoInicial,
+                    VentasEfectivo = c.Ventas.Sum(v => v.TotalFinal),
+                    MontoFinal = c.MontoFinal,
+                    FechaCierre = c.FechaCierre?.ToString("dd/MM/yyyy"),
+                    UsuarioCierre = c.UsuarioCierre?.Nombre,
+                    Estado = c.Estado == 1 ? "Abierta" : "Cerrada"
+                }).ToList();
+
+                ExportHelper.ExportarAuditoriaCaja(cajasDto);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
+                    "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsLoading = false; }
+        }
+
+        // ── Exportar Excel: Completo (Auditoría + Cajas + Ventas) ───────────────
         public async Task ExportarExcel()
         {
             try

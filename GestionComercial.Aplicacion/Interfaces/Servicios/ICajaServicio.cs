@@ -21,5 +21,11 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
         /// </summary>
         Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia);
+
+        /// <summary>
+        /// Obtiene el total de efectivo recibido por caja desde las ventas.
+        /// Usado para cierre automático de caja.
+        /// </summary>
+        Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja);
     }
 }

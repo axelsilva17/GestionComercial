@@ -21,45 +21,25 @@
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
                         <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
                                 CornerRadius="8">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="30"/>
-                                </Grid.ColumnDefinitions>
-                                <ContentPresenter Grid.Column="0"
-                                                  Margin="{TemplateBinding Padding}"
+                                <ContentPresenter x:Name="ContentSite"
+                                                  Margin="12,0,30,0"
                                                   VerticalAlignment="Center"
                                                   Content="{TemplateBinding SelectionBoxItem}"
                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
-                                <TextBlock Grid.Column="1" Text="▼"
-                                           FontSize="10"
+                                <TextBlock x:Name="Arrow"
+                                           Text="▼"
+                                           FontSize="12"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
+                                           HorizontalAlignment="Right"
                                            VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
+                                           Margin="0,0,12,0"/>
                             </Grid>
                         </Border>
-                        <!-- IMPORTANTE: El Popup debe llamarse PART_Popup para que WPF lo reconozca -->
-                        <Popup x:Name="PART_Popup"
-                               Placement="Bottom"
-                               AllowsTransparency="True"
-                               IsOpen="{TemplateBinding IsDropDownOpen}"
-                               PlacementTarget="{Binding ElementName=border}"
-                               StaysOpen="False">
-                            <Border Background="{DynamicResource CardBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    MinWidth="{TemplateBinding ActualWidth}"
-                                    MaxHeight="300">
-                                <ScrollViewer>
-                                    <ItemsPresenter/>
-                                </ScrollViewer>
-                            </Border>
-                        </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -67,6 +47,7 @@
                         </Trigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter TargetName="Arrow" Property="Text" Value="▲"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

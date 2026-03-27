@@ -89,55 +89,6 @@ namespace GestionComercial.UI.Views.Ventas
         }
 
         /// <summary>
-        /// Maneja el cambio de selección en el ComboBox de categorías para auto-refrescar productos.
-        /// </summary>
-        private void CategoriaFiltroCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (DataContext is ViewModels.Ventas.VentaViewModel vm)
-            {
-                System.Diagnostics.Debug.WriteLine($"[VentaView] SelectionChanged fired!");
-                System.Diagnostics.Debug.WriteLine($"[VentaView] Categorias count: {vm.Categorias?.Count ?? 0}");
-                System.Diagnostics.Debug.WriteLine($"[VentaView] SelectedItem: {vm.CategoriaFiltro?.Nombre ?? "NULL"}");
-                
-                if (vm.Categorias == null || vm.Categorias.Count == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[VentaView] ERROR: Categorias está vacío!");
-                    return;
-                }
-                
-                _ = vm.RefrescarProductosPorCategoriaAsync();
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"[VentaView] ERROR: DataContext no es VentaViewModel, es: {DataContext?.GetType().Name}");
-            }
-        }
-
-        /// <summary>
-        /// Debug: cuando el ComboBox recibe foco.
-        /// </summary>
-        private void CategoriaFiltroCombo_GotFocus(object sender, RoutedEventArgs e)
-        {
-            System.Diagnostics.Debug.WriteLine("[VentaView] CategoriaFiltroCombo_GotFocus!");
-            if (DataContext is ViewModels.Ventas.VentaViewModel vm)
-            {
-                System.Diagnostics.Debug.WriteLine($"[VentaView] GotFocus - Categorias count: {vm.Categorias?.Count ?? 0}");
-                foreach (var cat in vm.Categorias)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[VentaView]   - {cat.Nombre}");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Debug: cuando se abre el dropdown.
-        /// </summary>
-        private void CategoriaFiltroCombo_DropDownOpened(object sender, EventArgs e)
-        {
-            System.Diagnostics.Debug.WriteLine("[VentaView] CategoriaFiltroCombo_DropDownOpened!");
-        }
-
-        /// <summary>
         /// Maneja el cambio de fecha "Desde" en los filtros del historial.
         /// </summary>
         private void FechaDesde_SelectedDateChanged(object sender, SelectionChangedEventArgs e)

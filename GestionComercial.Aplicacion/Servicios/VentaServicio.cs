@@ -1,6 +1,7 @@
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
@@ -12,11 +13,13 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         private readonly IUnitOfWork _uow;
         private readonly IServicioImpresion _servicioImpresion;
+        private readonly SesionServicio _sesion;
 
-        public VentaServicio(IUnitOfWork uow, IServicioImpresion servicioImpresion)
+        public VentaServicio(IUnitOfWork uow, IServicioImpresion servicioImpresion, SesionServicio sesion)
         {
             _uow = uow;
             _servicioImpresion = servicioImpresion;
+            _sesion = sesion;
         }
 
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
@@ -188,6 +191,9 @@ namespace GestionComercial.Aplicacion.Servicios
                     
                     // Vincular el pago con el movimiento de caja
                     pagoEntity.Id_movimientoCaja = movimiento.Id;
+
+                    // ── Registrar monto efectivo para cierre de caja ───────────────
+                    venta.EfectivoRecibido = pago.Monto;
                 }
 
                 await _uow.Pagos.AgregarAsync(pagoEntity);
