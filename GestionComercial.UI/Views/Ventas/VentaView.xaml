@@ -273,16 +273,19 @@
                     <ComboBox x:Name="CategoriaFiltroCombo"
                               Grid.Column="0"
                               ItemsSource="{Binding Categorias}"
-                              SelectedItem="{Binding CategoriaFiltro, Mode=TwoWay}"
+                              SelectedItem="{Binding CategoriaFiltro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               DisplayMemberPath="Nombre"
                               SelectionChanged="CategoriaFiltroCombo_SelectionChanged"
+                              GotFocus="CategoriaFiltroCombo_GotFocus"
                               Height="44"
                               FontSize="13"
                               VerticalContentAlignment="Center"
                               Background="{DynamicResource SurfaceBrush}"
                               Foreground="{DynamicResource TextPrimaryBrush}"
                               BorderBrush="{DynamicResource BorderBrush}"
-                              BorderThickness="1"/>
+                              BorderThickness="1"
+                              Padding="10,0"
+                              IsEditable="False"/>
 
                     <!-- Test barcode input (Feature 7) - pequeño input para testing -->
                     <Border Grid.Column="1"
@@ -839,17 +842,5 @@
                 </Border>
             </Grid>
         </Popup>
-
-        <!-- Popup Historial de Ventas (shared HistorialControl) -->
-        <Grid x:Name="HistorialPopup" Visibility="{Binding MostrarHistorial, Converter={StaticResource BoolToVisibility}}"
-              Panel.ZIndex="100" Background="#80000000">
-            <Border Background="{DynamicResource CardBrush}" 
-                    CornerRadius="12" Padding="24"
-                    MaxWidth="800" MaxHeight="600"
-                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                <controls:HistorialControl/>
-            </Border>
-        </Grid>
     </Grid>
 </UserControl>

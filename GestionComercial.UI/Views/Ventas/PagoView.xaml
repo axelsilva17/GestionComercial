@@ -18,7 +18,7 @@
             <Setter Property="FontSize"    Value="13"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
             <Setter Property="Cursor"      Value="Hand"/>
-            <Setter Property="Foreground"  Value="White"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -148,42 +148,58 @@
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,0,0,14"/>
 
-                <!-- Botones grandes de formas de pago (spec modulo-ventas-full) -->
+                <!-- Botones grandes de formas de pago -->
                 <UniformGrid Rows="1" Margin="0,0,0,16">
                     <Button x:Name="AgregarEfectivo"
-                            Style="{StaticResource BotonPago}"
-                            Background="{DynamicResource SuccessBrush}"
+                            Height="50"
+                            Background="{DynamicResource SurfaceBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            Cursor="Hand"
                             ToolTip="F1 - Efectivo">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💵" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Efectivo" VerticalAlignment="Center"/>
+                            <TextBlock Text="💵" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="Efectivo" VerticalAlignment="Center" FontSize="12"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="AgregarDebito"
-                            Style="{StaticResource BotonPago}"
-                            Background="{DynamicResource PrimaryBrush}"
+                            Height="50"
+                            Background="{DynamicResource SurfaceBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            Cursor="Hand"
                             ToolTip="F2 - Débito">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Débito" VerticalAlignment="Center"/>
+                            <TextBlock Text="💳" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="Débito" VerticalAlignment="Center" FontSize="12"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="AgregarCredito"
-                            Style="{StaticResource BotonPago}"
-                            Background="{DynamicResource WarningBrush}"
+                            Height="50"
+                            Background="{DynamicResource SurfaceBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            Cursor="Hand"
                             ToolTip="F3 - Crédito">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Crédito" VerticalAlignment="Center"/>
+                            <TextBlock Text="💳" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="Crédito" VerticalAlignment="Center" FontSize="12"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="AgregarQR"
-                            Style="{StaticResource BotonPago}"
-                            Background="{DynamicResource AccentBrush}"
+                            Height="50"
+                            Background="{DynamicResource SurfaceBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            Cursor="Hand"
                             ToolTip="F4 - QR">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📱" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="QR" VerticalAlignment="Center"/>
+                            <TextBlock Text="📱" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="QR" VerticalAlignment="Center" FontSize="12"/>
                         </StackPanel>
                     </Button>
                 </UniformGrid>

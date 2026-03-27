@@ -3,7 +3,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Caliburn.Micro;
 using GestionComercial.UI.ViewModels.Ventas;
+using GestionComercial.UI.ViewModels.Main;
 
 namespace GestionComercial.UI.Views.Ventas
 {
@@ -15,16 +17,12 @@ namespace GestionComercial.UI.Views.Ventas
         }
 
         /// <summary>
-        /// Maneja el clic en el botón "Ver Historial" para mostrar el popup de historial.
+        /// Maneja el clic en el botón "Ver Historial" para navegar al historial de ventas.
         /// </summary>
-        private void VerHistorial_Click(object sender, RoutedEventArgs e)
+        private async void VerHistorial_Click(object sender, RoutedEventArgs e)
         {
-            if (DataContext is PagoViewModel vm)
-            {
-                // Cargar historial y mostrar popup
-                _ = vm.CargarHistorialAsync();
-                vm.MostrarHistorial = true;
-            }
+            var shell = IoC.Get<GestionComercial.UI.ViewModels.Main.ShellViewModel>();
+            await shell.ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
         }
 
         private void PagoView_PreviewKeyDown(object sender, KeyEventArgs e)

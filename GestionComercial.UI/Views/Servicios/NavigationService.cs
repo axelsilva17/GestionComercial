@@ -33,6 +33,9 @@ namespace GestionComercial.UI.Views.Servicios
         public async Task IrVentasAsync() =>
             await _shell.ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
 
+        public async Task IrNuevaVentaAsync() =>
+            await _shell.ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
+
         public async Task IrComprasAsync() =>
             await _shell.ActivateItemAsync(IoC.Get<CompraListadoViewModel>(), CancellationToken.None);
 

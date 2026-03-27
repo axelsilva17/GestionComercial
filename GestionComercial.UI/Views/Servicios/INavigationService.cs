@@ -11,8 +11,11 @@ namespace GestionComercial.UI.Views.Servicios
         /// <summary>Navega a la sección Dashboard.</summary>
         Task IrDashboardAsync();
 
-        /// <summary>Navega a la sección Ventas.</summary>
+        /// <summary>Navega a la sección Ventas (Listado/Historial).</summary>
         Task IrVentasAsync();
+
+        /// <summary>Navega a la sección Nueva Venta.</summary>
+        Task IrNuevaVentaAsync();
 
         /// <summary>Navega a la sección Compras.</summary>
         Task IrComprasAsync();

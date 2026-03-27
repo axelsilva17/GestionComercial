@@ -1086,13 +1086,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             if (decimal.TryParse(DescuentoManual, out var d))
             {
-                // Validar límite según rol
-                if (d > LimiteDescuento)
-                {
-                    errorDescuento = $"El descuento no puede exceder el {LimiteDescuento}% para tu rol.";
-                    d = LimiteDescuento;
-                }
+                // Validar límite según rol - ELIMINAR EL TOPE PARA PERMITIR CUALQUIER %
+                // El usuario puede poner el % que quiera (ej: 50%)
                 pct = Math.Clamp(d, 0, 100);
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Descuento aplicado: {pct}% sobre TotalBruto={TotalBruto}");
             }
 
             var descuentoGeneral = Math.Round(TotalBruto * pct / 100, 2);

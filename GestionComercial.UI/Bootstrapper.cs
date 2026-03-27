@@ -16,6 +16,7 @@ using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.Views.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
@@ -98,6 +99,9 @@ namespace GestionComercial.UI
 
             _container.Handler<IValidator<CajaAbrirDto>>(
                 c => new CajaValidator(c.GetInstance<IUnitOfWork>().Cajas));
+
+            // ── Navigation Service ─────────────────────────────────────────────────
+            _container.Singleton<GestionComercial.UI.Views.Servicios.INavigationService, GestionComercial.UI.Views.Servicios.NavigationService>();
 
             // ── ViewModels ────────────────────────────────────────────────────
             var assembly = Assembly.GetExecutingAssembly();
