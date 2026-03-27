@@ -259,14 +259,14 @@
                             <RowDefinition Height="200"/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="20,16,20,10">
-                            <TextBlock Text="VENTAS DEL PERÍODO" Style="{StaticResource ColHeader}"/>
-                            <TextBlock Text="Actividad acumulada" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="STOCK ACTUAL VS MÍNIMO" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Productos con reposición urgente" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                         <lvc:CartesianChart Grid.Row="1" Margin="12,0,12,12"
                                             Series="{Binding SeriesVentasDia}"
                                             XAxes="{Binding EjeXVentasDia}"
-                                            YAxes="{Binding EjeYMoneda}"
+                                            YAxes="{Binding EjeYEntero}"
                                             Background="Transparent"
                                             TooltipPosition="Top"/>
                     </Grid>
