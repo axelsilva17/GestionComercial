@@ -238,6 +238,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.Property(v => v.TotalBruto).HasColumnType("decimal(18,2)");
                 b.Property(v => v.TotalDescuento).HasColumnType("decimal(18,2)");
                 b.Property(v => v.TotalFinal).HasColumnType("decimal(18,2)");
+                // ── Tracking de efectivo para cierre de caja ──────────────────────
+                b.Property(v => v.EfectivoRecibido).HasColumnType("decimal(18,2)");
                 b.Property(v => v.Observacion).HasMaxLength(500);
                 // ── Campos de anulación ─────────────────────────────────────────
                 b.Property(v => v.MotivoAnulacion).HasMaxLength(500);

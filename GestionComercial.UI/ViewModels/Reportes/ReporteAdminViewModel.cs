@@ -69,6 +69,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private readonly IUnitOfWork      _uow;
         private readonly SesionServicio    _sesion;
         private readonly IAuditoriaServicio _auditoriaServicio;
+        private readonly IReporteServicio  _reporteServicio;
 
         // Paleta del sistema
         private static readonly SKColor Col_Primary = SKColor.Parse("#38BDF8");
@@ -78,6 +79,19 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private static readonly SKColor Col_TextSec = SKColor.Parse("#64748B");
         private static readonly SKColor Col_Sep     = SKColor.Parse("#2A3D52");
 
+        // Colores para gráficos
+        private static readonly SKColor[] ColoresGrafico = new[]
+        {
+            SKColor.Parse("#38BDF8"), // azul
+            SKColor.Parse("#10B981"), // verde
+            SKColor.Parse("#F59E0B"), // amarillo
+            SKColor.Parse("#EF4444"), // rojo
+            SKColor.Parse("#8B5CF6"), // violeta
+            SKColor.Parse("#EC4899"), // rosa
+            SKColor.Parse("#06B6D4"), // cian
+            SKColor.Parse("#84CC16"), // lima
+        };
+
         public ReporteAdminViewModel(
             IVentaServicio    ventaServicio,
             IProductoServicio productoServicio,
@@ -85,7 +99,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
             ICajaServicio     cajaServicio,
             IUnitOfWork      uow,
             SesionServicio    sesion,
-            IAuditoriaServicio auditoriaServicio)
+            IAuditoriaServicio auditoriaServicio,
+            IReporteServicio  reporteServicio)
         {
             _ventaServicio    = ventaServicio;
             _productoServicio = productoServicio;
@@ -94,6 +109,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             _uow            = uow;
             _sesion           = sesion;
             _auditoriaServicio = auditoriaServicio;
+            _reporteServicio  = reporteServicio;
             Titulo            = "Reportes";
             Subtitulo         = "Administración — operaciones";
         }
@@ -230,6 +246,29 @@ namespace GestionComercial.UI.ViewModels.Reportes
         {
             get => _seriesStock;
             set { _seriesStock = value; NotifyOfPropertyChange(() => SeriesStock); }
+        }
+
+        // ── Gráfico 3: Métodos de Pago (dona) ─────────────────────────────────
+        private ISeries[] _seriesMetodosPago = Array.Empty<ISeries>();
+        public ISeries[] SeriesMetodosPago
+        {
+            get => _seriesMetodosPago;
+            set { _seriesMetodosPago = value; NotifyOfPropertyChange(() => SeriesMetodosPago); }
+        }
+
+        // ── Gráfico 4: Top Productos ───────────────────────────────────────────
+        private ISeries[] _seriesTopProductos = Array.Empty<ISeries>();
+        public ISeries[] SeriesTopProductos
+        {
+            get => _seriesTopProductos;
+            set { _seriesTopProductos = value; NotifyOfPropertyChange(() => SeriesTopProductos); }
+        }
+
+        private Axis[] _ejeXTopProductos = Array.Empty<Axis>();
+        public Axis[] EjeXTopProductos
+        {
+            get => _ejeXTopProductos;
+            set { _ejeXTopProductos = value; NotifyOfPropertyChange(() => EjeXTopProductos); }
         }
 
         private Axis[] _ejeXStock = Array.Empty<Axis>();
@@ -381,6 +420,56 @@ namespace GestionComercial.UI.ViewModels.Reportes
                             LabelsPaint     = new SolidColorPaint(Col_TextSec),
                             SeparatorsPaint = new SolidColorPaint(SKColors.Transparent),
                             LabelsRotation  = -30,
+                        }
+                    };
+                }
+
+                // ── Gráfico dona: Métodos de Pago ────────────────────────────────
+                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                if (metodosPago.Any())
+                {
+                    var totalMetodos = metodosPago.Sum(m => m.Total);
+                    SeriesMetodosPago = metodosPago.Select((m, i) => new PieSeries<double>
+                    {
+                        Name       = m.Metodo,
+                        Values     = new[] { (double)m.Total },
+                        Fill       = new SolidColorPaint(ColoresGrafico[i % ColoresGrafico.Length]),
+                        DataLabelsSize = 11,
+                        DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                        DataLabelsFormatter = p => $"{m.Metodo} ({m.Porcentaje:F0}%)",
+                    } as ISeries).ToArray();
+                }
+
+                // ── Gráfico barras: Top Productos ─────────────────────────────────
+                var topProductos = (await _reporteServicio.TopProductosAsync(
+                    _sesion.IdSucursal, desde, hasta, 10)).ToList();
+                if (topProductos.Any())
+                {
+                    var top10 = topProductos.Take(10).ToList();
+                    var nombresTop = top10.Select(p => p.ProductoNombre.Length > 15 
+                        ? p.ProductoNombre[..15] + "…" 
+                        : p.ProductoNombre).ToArray();
+                    var cantidades = top10.Select(p => (double)p.CantidadVendida).ToArray();
+
+                    SeriesTopProductos = new ISeries[]
+                    {
+                        new RowSeries<double>
+                        {
+                            Name        = "Cantidad Vendida",
+                            Values      = cantidades,
+                            Fill        = new SolidColorPaint(Col_Primary),
+                            MaxBarWidth = 25,
+                        },
+                    };
+
+                    EjeXTopProductos = new[]
+                    {
+                        new Axis
+                        {
+                            Labels          = cantidades.Select((_, i) => $"{cantidades[i]:F0}").ToArray(),
+                            LabelsPaint     = new SolidColorPaint(Col_TextSec),
+                            SeparatorsPaint = new SolidColorPaint(SKColors.Transparent),
                         }
                     };
                 }
