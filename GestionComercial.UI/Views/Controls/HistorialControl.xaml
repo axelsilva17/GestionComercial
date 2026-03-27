@@ -55,11 +55,7 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Desde" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                     <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}" 
-                               Height="40"
-                               FontSize="13"
-                               Background="{DynamicResource SurfaceBrush}"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
-                               BorderBrush="{DynamicResource BorderBrush}"
+                               Style="{StaticResource FilterDatePickerStyle}"
                                SelectedDateChanged="FechaDesde_SelectedDateChanged"/>
                 </StackPanel>
 
@@ -67,11 +63,7 @@
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Hasta" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                     <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
-                               Height="40"
-                               FontSize="13"
-                               Background="{DynamicResource SurfaceBrush}"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
-                               BorderBrush="{DynamicResource BorderBrush}"
+                               Style="{StaticResource FilterDatePickerStyle}"
                                SelectedDateChanged="FechaHasta_SelectedDateChanged"/>
                 </StackPanel>
 
@@ -79,27 +71,9 @@
                 <StackPanel Grid.Column="4">
                     <TextBlock Text="DNI Cliente" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                     <TextBox x:Name="DniClienteFiltroTextBox"
+                             Style="{StaticResource FilterTextBoxStyle}"
                              Text="{Binding DniClienteFiltro, UpdateSourceTrigger=PropertyChanged}"
-                             Height="40"
-                             FontSize="13"
-                             Background="{DynamicResource SurfaceBrush}"
-                             Foreground="{DynamicResource TextPrimaryBrush}"
-                             BorderBrush="{DynamicResource BorderBrush}"
-                             Padding="12,0"
-                             VerticalContentAlignment="Center"
                              KeyDown="DniClienteFiltro_KeyDown">
-                        <TextBox.Template>
-                            <ControlTemplate TargetType="TextBox">
-                                <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8">
-                                    <ScrollViewer x:Name="PART_ContentHost"
-                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                  Margin="{TemplateBinding Padding}"/>
-                                </Border>
-                            </ControlTemplate>
-                        </TextBox.Template>
                     </TextBox>
                 </StackPanel>
 
@@ -107,8 +81,8 @@
                 <StackPanel Grid.Column="6">
                     <TextBlock Text="Estado" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                     <ComboBox x:Name="EstadoFiltroCombo"
-                              Height="40"
-                              Style="{StaticResource DarkComboBox}"
+                              Height="44"
+                              Style="{StaticResource FilterComboBoxStyle}"
                               SelectedValue="{Binding EstadoVentaFiltro, Mode=TwoWay}"
                               SelectedValuePath="Tag"
                               SelectionChanged="EstadoFiltro_SelectionChanged">

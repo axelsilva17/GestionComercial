@@ -123,14 +123,10 @@
 
             <TextBlock Text="Desde:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                        VerticalAlignment="Center" Margin="0,0,8,0"/>
-            <DatePicker SelectedDate="{Binding FechaDesde}" Height="36"
-                        Background="{DynamicResource SurfaceBrush}"
-                        Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,12,0"/>
+            <DatePicker SelectedDate="{Binding FechaDesde}" Style="{StaticResource FilterDatePickerStyle}" Margin="0,0,12,0"/>
             <TextBlock Text="Hasta:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                        VerticalAlignment="Center" Margin="0,0,8,0"/>
-            <DatePicker SelectedDate="{Binding FechaHasta}" Height="36"
-                        Background="{DynamicResource SurfaceBrush}"
-                        Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,12,0"/>
+            <DatePicker SelectedDate="{Binding FechaHasta}" Style="{StaticResource FilterDatePickerStyle}" Margin="0,0,12,0"/>
             <Button x:Name="Buscar" Content="🔍 Buscar" Height="36" Padding="16,0" FontSize="13"
                     Style="{StaticResource PrimaryButton}" ToolTip="Enter - Buscar"/>
         </StackPanel>
@@ -142,9 +138,7 @@
                        VerticalAlignment="Center" Margin="0,0,12,0"/>
             <ComboBox ItemsSource="{Binding EstadosFiltro}"
                       SelectedItem="{Binding FiltroEstado}"
-                      Width="140" Height="36"
-                      Background="{DynamicResource SurfaceBrush}"
-                      Foreground="{DynamicResource TextPrimaryBrush}"/>
+                      Style="{StaticResource FilterComboBoxStyle}" Width="140"/>
         </StackPanel>
 
         <!-- Tabla historial -->

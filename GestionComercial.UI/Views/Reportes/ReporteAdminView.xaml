@@ -100,14 +100,14 @@
                             <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
-                                        Style="{StaticResource FilterDatePicker}" Width="130"/>
+                                        Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                        VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
-                                        Style="{StaticResource FilterDatePicker}" Width="130"/>
+                                        Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
                         </StackPanel>
 
                         <Button Grid.Column="6" Style="{StaticResource FiltroBtn}" Content="Este mes" cal:Message.Attach="FiltrarEsteMes"/>
@@ -496,13 +496,13 @@
                                 <TextBlock Text="Desde" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
-                                            Style="{StaticResource FilterDatePicker}" Width="140"/>
+                                            Style="{StaticResource FilterDatePickerStyle}" Width="140"/>
                             </StackPanel>
                             <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="Hasta" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
-                                            Style="{StaticResource FilterDatePicker}" Width="140"/>
+                                            Style="{StaticResource FilterDatePickerStyle}" Width="140"/>
                             </StackPanel>
                             <Button Grid.Column="6" cal:Message.Attach="CargarAuditoria"
                                     Content="🔍" FontSize="14"

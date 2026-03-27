@@ -88,18 +88,14 @@
                         <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
-                                    FontSize="12" Width="130"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
-                                    FontSize="12" Width="130"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
                     </StackPanel>
 
                     <!-- Accesos rápidos -->

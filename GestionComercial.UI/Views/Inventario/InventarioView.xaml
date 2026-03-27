@@ -337,28 +337,19 @@
                     <StackPanel Grid.Column="2">
                         <ComboBox ItemsSource="{Binding TiposFiltro}"
                                   SelectedItem="{Binding FiltroTipo}"
-                                  Height="38"
-                                  Background="{DynamicResource SurfaceBrush}"
-                                  Foreground="{DynamicResource TextPrimaryBrush}"
-                                  BorderBrush="{DynamicResource BorderBrush}"/>
+                                  Style="{StaticResource FilterComboBoxStyle}"/>
                     </StackPanel>
 
                     <!-- Fecha desde -->
                     <DatePicker Grid.Column="4"
                                 SelectedDate="{Binding FechaDesde}"
-                                Height="38"
-                                Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"/>
+                                Style="{StaticResource FilterDatePickerStyle}"/>
 
                     <!-- Filtro Sucursal -->
                     <ComboBox Grid.Column="6"
                               ItemsSource="{Binding Sucursales}"
                               SelectedItem="{Binding FiltroSucursal}"
-                              Height="38"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}"/>
+                              Style="{StaticResource FilterComboBoxStyle}"/>
 
                     <!-- Botón aplicar -->
                     <Button Grid.Column="8" x:Name="AplicarFiltros"

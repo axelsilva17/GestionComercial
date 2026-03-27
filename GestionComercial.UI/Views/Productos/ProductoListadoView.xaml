@@ -237,12 +237,12 @@
                     </Border>
 
                     <ComboBox x:Name="CategoriaSeleccionada" Grid.Column="2"
-                              Style="{StaticResource DarkComboBox}"
+                              Style="{StaticResource FilterComboBoxStyle}"
                               ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
                               SelectedItem="{Binding CategoriaSeleccionada}"/>
 
                     <ComboBox x:Name="FiltroActivo" Grid.Column="4"
-                              Style="{StaticResource DarkComboBox}"
+                              Style="{StaticResource FilterComboBoxStyle}"
                               SelectedIndex="{Binding FiltroActivo, Mode=TwoWay}">
                         <ComboBoxItem Content="Todos"/>
                         <ComboBoxItem Content="Activos"/>

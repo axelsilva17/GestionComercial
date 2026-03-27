@@ -226,24 +226,13 @@
                         </Grid>
                     </Border>
 
-                    <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="38" Padding="10,0">
-                        <DatePicker x:Name="FechaDesde" Background="Transparent" BorderThickness="0"
-                                    Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center"/>
-                    </Border>
+                    <DatePicker x:Name="FechaDesde" Style="{StaticResource FilterDatePickerStyle}"/>
 
-                    <Border Grid.Column="4" Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="38" Padding="10,0">
-                        <DatePicker x:Name="FechaHasta" Background="Transparent" BorderThickness="0"
-                                    Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center"/>
-                    </Border>
+                    <DatePicker x:Name="FechaHasta" Style="{StaticResource FilterDatePickerStyle}"/>
 
-                    <ComboBox x:Name="ProveedorFiltro" Grid.Column="6" Height="38" FontSize="13"
+                    <ComboBox x:Name="ProveedorFiltro" Style="{StaticResource FilterComboBoxStyle}"
                               ItemsSource="{Binding Proveedores}"
-                              DisplayMemberPath="Nombre"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"/>
+                              DisplayMemberPath="Nombre"/>
 
                     <Button x:Name="Buscar" Grid.Column="8"
                             Content="Buscar" Height="38" Padding="18,0"
