@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Caja;
+using GestionComercial.UI.ViewModels.Cajas;
 using GestionComercial.UI.ViewModels.Clientes;
 using GestionComercial.UI.ViewModels.Compras;
 using GestionComercial.UI.ViewModels.Configuracion;
@@ -123,6 +124,7 @@ namespace GestionComercial.UI.ViewModels.Main
         public async Task IrVentas()        => await ActivateItemAsync(IoC.Get<VentaViewModel>(),            CancellationToken.None);
         public async Task IrCompras()       => await ActivateItemAsync(IoC.Get<CompraListadoViewModel>(),    CancellationToken.None);
         public async Task IrCaja()          => await ActivateItemAsync(IoC.Get<CajaViewModel>(),             CancellationToken.None);
+        public async Task IrCajaTurnos()    => await ActivateItemAsync(IoC.Get<CajaTurnosViewModel>(),       CancellationToken.None);
         public async Task IrProductos()     => await ActivateItemAsync(IoC.Get<ProductoListadoViewModel>(),  CancellationToken.None);
         public async Task IrInventario()    => await ActivateItemAsync(IoC.Get<InventarioViewModel>(),       CancellationToken.None);
         public async Task IrClientes()      => await ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(),   CancellationToken.None);
