@@ -12,6 +12,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -314,19 +315,53 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 LogHelper.Log($"[ReporteAdmin] Filtro: desde={desde:yyyy-MM-dd HH:mm} hasta={hasta:yyyy-MM-dd HH:mm}");
 
+                var swTotal = Stopwatch.StartNew();
+
                 // Ejecutar todas las consultas en background thread
                 await Task.Run(async () =>
                 {
+                    var sw = Stopwatch.StartNew();
+
                     // ── KPIs básicos (solo lo esencial) ───────────────────────────────
+                    sw.Restart();
                     var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
                         _sesion.IdSucursal, desde, hasta)).ToList();
+                    LogHelper.Log($"[ReporteAdmin] Ventas: {ventasPeriodo.Count} registros en {sw.ElapsedMilliseconds}ms");
 
                     // Stock crítico (solo contar, no cargar detalles)
+                    sw.Restart();
                     var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
+                    LogHelper.Log($"[ReporteAdmin] Stock crítico: {criticos.Count} en {sw.ElapsedMilliseconds}ms");
 
                     // Clientes nuevos
+                    sw.Restart();
                     var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
                         _sesion.IdEmpresa, desde, hasta.AddDays(1));
+                    var clientesCount = clientesNuevos.Count();
+                    LogHelper.Log($"[ReporteAdmin] Clientes nuevos: {clientesCount} en {sw.ElapsedMilliseconds}ms");
+
+                    // Compras del período
+                    sw.Restart();
+                    var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                        .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
+                    LogHelper.Log($"[ReporteAdmin] Compras: {comprasPeriodo.Count} en {sw.ElapsedMilliseconds}ms");
+
+                    // Cajas
+                    sw.Restart();
+                    var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                    LogHelper.Log($"[ReporteAdmin] Cajas: {cajas.Count} en {sw.ElapsedMilliseconds}ms");
+
+                    // Métodos de pago
+                    sw.Restart();
+                    var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
+                        _sesion.IdSucursal, desde, hasta)).ToList();
+                    LogHelper.Log($"[ReporteAdmin] Métodos pago: {metodosPago.Count} en {sw.ElapsedMilliseconds}ms");
+
+                    // Top 3 Productos
+                    sw.Restart();
+                    var topProductos = (await _reporteServicio.TopProductosAsync(
+                        _sesion.IdSucursal, desde, hasta, 3)).ToList();
+                    LogHelper.Log($"[ReporteAdmin] Top productos: {topProductos.Count} en {sw.ElapsedMilliseconds}ms");
 
                     // ── Gráfico línea simple: ventas por día (solo si rango <= 31 días) ──
                     int diasRango = (hasta - desde).Days + 1;
@@ -367,14 +402,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         valoresLinea = valoresList.ToArray();
                     }
 
-                    // ── Gráfico dona: Métodos de Pago (solo si < 6 items) ────────────
-                    var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
-                        _sesion.IdSucursal, desde, hasta)).ToList();
-
-                    // ── Top 3 Productos (gráfico simple sin RowSeries) ──────────────
-                    var topProductos = (await _reporteServicio.TopProductosAsync(
-                        _sesion.IdSucursal, desde, hasta, 3)).ToList();
-
                     // ── Datos simples para tablas (solo últimos 5) ─────────────────
                     var stockCriticoData = criticos.Take(5).Select(p => new ReporteStockCriticoDto
                     {
@@ -382,10 +409,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         StockActual = p.StockActual,
                         StockMinimo = p.StockMinimo,
                     }).ToList();
-
-                    // ── Compras del período ─────────────────────────────────────────
-                    var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                        .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
 
                     var comprasRecientesData = comprasPeriodo
                         .OrderByDescending(c => c.Fecha)
@@ -398,8 +421,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         }).ToList();
 
                     // ── Historial de cajas (solo últimos 5) ───────────────────────
-                    var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
-
                     var historialList = new List<CajaHistorialDto>();
                     foreach (var caja in cajas.Take(5))
                     {
@@ -502,6 +523,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         TotalIngresos = totalIng;
                         TotalEgresos = totalEgr;
                     });
+
+                    LogHelper.Log($"[ReporteAdmin] ✓ Carga total: {swTotal.ElapsedMilliseconds}ms");
                 });
             }
             catch (Exception ex)
