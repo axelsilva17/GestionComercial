@@ -23,6 +23,10 @@ namespace GestionComercial.Dominio.Entidades.Caja
         public ICollection<Venta>          Ventas      { get; set; } = new List<Venta>();
 
         public bool EstaAbierta => Estado == 1;
+        public bool EsPrimaria { get; set; }
+        public string? Turno { get; set; }
+
+
     }
 
 }

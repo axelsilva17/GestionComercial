@@ -24,5 +24,39 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
             _ => "·"
         };
     }
- 
+    public class MovimientoAuditoriaDto
+    {
+        public string TipoOperacion { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string Fecha { get; set; } = string.Empty;
+        public string Usuario { get; set; } = string.Empty;
+        public string Icono { get; set; } = string.Empty;
+        public bool EsIngreso { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para mostrar un cierre de caja en la auditoría.
+    /// </summary>
+    public class CajaAuditoriaItemDto
+    {
+        public int Id { get; set; }
+        public string FechaApertura { get; set; } = string.Empty;
+        public string HoraApertura { get; set; } = string.Empty;
+        public string UsuarioApertura { get; set; } = string.Empty;
+        public string Turno { get; set; } = string.Empty;
+        public decimal MontoInicial { get; set; }
+        public decimal VentasEfectivo { get; set; }
+        public decimal Ingresos { get; set; }
+        public decimal Egresos { get; set; }
+        public decimal EfectivoEnCaja { get; set; } // MontoInicial + VentasEfectivo + Ingresos - Egresos
+        public decimal? MontoFinal { get; set; }
+        public decimal DiferenciaSinEfectivo { get; set; } // Conteo físico - MontoInicial (sin ventas)
+        public decimal DiferenciaConEfectivo { get; set; } // Conteo físico - (MontoInicial + VentasEfectivo + Ingresos - Egresos)
+        public string? FechaCierre { get; set; }
+        public string? UsuarioCierre { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public string EstadoColor { get; set; } = "#10B981"; // Verde por defecto
+    }
+
 }
