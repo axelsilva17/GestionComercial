@@ -350,11 +350,17 @@ namespace GestionComercial.UI.ViewModels.Reportes
             try
             {
                 IsLoading = true;
+                var swExport = Stopwatch.StartNew();
                 var desde = FechaDesde;
                 var hasta = FechaHasta;
 
+                LogHelper.Log($"[ReporteGerencia] Iniciando exportación: {desde:dd/MM} - {hasta:dd/MM}");
+
                 // VentaPorDia: agrupar las ventas ya cargadas en memoria
+                swExport.Restart();
                 var ventas = (await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: Ventas cargadas ({ventas.Count}) en {swExport.ElapsedMilliseconds}ms");
+                
                 var ventaPorDia = ventas
                     .GroupBy(v => v.Fecha.Date)
                     .Select(g => new VentaPorDiaDto
@@ -367,28 +373,48 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     .ToList();
 
                 // Margen: usar IReporteServicio.MargenPorProductoAsync
+                swExport.Restart();
                 var margen = (await _reporteServicio.MargenPorProductoAsync(
                     _sesion.IdEmpresa, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: Margen ({margen.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Top Productos
+                swExport.Restart();
                 var topProductos = (await _reporteServicio.TopProductosAsync(
                     _sesion.IdSucursal, desde, hasta, 20)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: Top productos ({topProductos.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Ventas por Vendedor
+                swExport.Restart();
                 var vendedores = (await _reporteServicio.VentasPorVendedorAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: Vendedores ({vendedores.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Rotación de Productos
+                swExport.Restart();
                 var rotacion = (await _reporteServicio.RotacionProductosAsync(
                     _sesion.IdEmpresa, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: Rotación ({rotacion.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Métodos de Pago
+                swExport.Restart();
                 var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: Métodos pago ({metodosPago.Count}) en {swExport.ElapsedMilliseconds}ms");
+
+                // Ventas mensuales (ya calculadas en CargarAsync)
+                var ventasMensuales = VentasMensuales.ToList();
 
                 // Exportar todo a un solo archivo con múltiples hojas (evita dialogos duplicados)
+                swExport.Restart();
                 ExportHelper.ExportarReporteGerenciaCompleto(
-                    ventaPorDia, margen, topProductos, vendedores, rotacion, metodosPago, desde, hasta);
+                    ventaPorDia, margen, topProductos, vendedores, rotacion, metodosPago, desde, hasta,
+                    ventasAcumuladas: VentasAcumuladas,
+                    comprasAcumuladas: ComprasAcumuladas,
+                    resultadoNeto: ResultadoAcumulado,
+                    margenPromedio: MargenPromedio,
+                    ventasMensuales: ventasMensuales);
+                LogHelper.Log($"[ReporteGerencia] ✓ Exportación completada en {swExport.ElapsedMilliseconds}ms");
             }
             catch (Exception ex)
             {

@@ -303,10 +303,89 @@ namespace GestionComercial.UI.Helpers
             IEnumerable<ReporteRotacionDto> rotacion,
             IEnumerable<ReporteMetodosPagoDto> metodosPago,
             DateTime desde,
-            DateTime hasta)
+            DateTime hasta,
+            decimal ventasAcumuladas = 0,
+            decimal comprasAcumuladas = 0,
+            decimal resultadoNeto = 0,
+            double margenPromedio = 0,
+            IEnumerable<ReporteVentaMensualDto>? ventasMensuales = null)
         {
             Exportar("Reporte Gerencia", $"ReporteGerencia_{Fecha()}", wb =>
             {
+                // ── Hoja 0: Resumen KPIs ─────────────────────────────────────────
+                var wsResumen = wb.Worksheets.Add("Resumen");
+                wsResumen.Cell(1, 1).Value = "REPORTE DE GERENCIA";
+                wsResumen.Cell(1, 1).Style.Font.Bold = true;
+                wsResumen.Cell(1, 1).Style.Font.FontSize = 16;
+                wsResumen.Range(1, 1, 1, 3).Merge();
+                wsResumen.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                wsResumen.Cell(3, 1).Value = "Período:";
+                wsResumen.Cell(3, 2).Value = $"{desde:dd/MM/yyyy} - {hasta:dd/MM/yyyy}";
+                wsResumen.Cell(3, 1).Style.Font.Bold = true;
+
+                wsResumen.Cell(5, 1).Value = "INDICADORES CLAVE";
+                wsResumen.Cell(5, 1).Style.Font.Bold = true;
+                wsResumen.Cell(5, 1).Style.Font.FontSize = 12;
+
+                wsResumen.Cell(6, 1).Value = "Ventas Acumuladas:";
+                wsResumen.Cell(6, 2).Value = (double)ventasAcumuladas;
+                wsResumen.Cell(6, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                wsResumen.Cell(7, 1).Value = "Compras Acumuladas:";
+                wsResumen.Cell(7, 2).Value = (double)comprasAcumuladas;
+                wsResumen.Cell(7, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                wsResumen.Cell(8, 1).Value = "Resultado Neto:";
+                wsResumen.Cell(8, 2).Value = (double)resultadoNeto;
+                wsResumen.Cell(8, 2).Style.NumberFormat.Format = "$ #,##0";
+                if (resultadoNeto < 0)
+                    wsResumen.Cell(8, 2).Style.Font.FontColor = XLColor.Red;
+                else
+                    wsResumen.Cell(8, 2).Style.Font.FontColor = XLColor.Green;
+
+                wsResumen.Cell(9, 1).Value = "Margen Promedio:";
+                wsResumen.Cell(9, 2).Value = margenPromedio / 100;
+                wsResumen.Cell(9, 2).Style.NumberFormat.Format = "0.0%";
+
+                wsResumen.Cell(10, 1).Value = "Total Ventas (registros):";
+                wsResumen.Cell(10, 2).Value = ventaPorDia.Sum(v => v.Cantidad);
+
+                wsResumen.Cell(11, 1).Value = "Ticket Promedio:";
+                var totalVentas = ventaPorDia.Sum(v => v.Total);
+                var totalCantidad = ventaPorDia.Sum(v => v.Cantidad);
+                wsResumen.Cell(11, 2).Value = totalCantidad > 0 ? (double)(totalVentas / totalCantidad) : 0;
+                wsResumen.Cell(11, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                // Formato
+                wsResumen.Column(1).Width = 25;
+                wsResumen.Column(2).Width = 18;
+                wsResumen.Range(6, 1, 11, 1).Style.Font.Bold = true;
+
+                // ── Hoja 1: Ventas Mensuales (si se proporcionan) ────────────────
+                if (ventasMensuales != null && ventasMensuales.Any())
+                {
+                    var wsMensual = wb.Worksheets.Add("Ventas Mensuales");
+                    var headersMensual = new[] { "Mes", "Ventas", "Compras", "Resultado", "Margen %" };
+                    AgregarHeaders(wsMensual, headersMensual);
+                    int filaMen = 2;
+                    foreach (var m in ventasMensuales)
+                    {
+                        wsMensual.Cell(filaMen, 1).Value = m.Mes;
+                        wsMensual.Cell(filaMen, 2).Value = (double)m.Ventas;
+                        wsMensual.Cell(filaMen, 3).Value = (double)m.Compras;
+                        wsMensual.Cell(filaMen, 4).Value = (double)m.Resultado;
+                        wsMensual.Cell(filaMen, 5).Value = m.Margen / 100;
+                        wsMensual.Cell(filaMen, 2).Style.NumberFormat.Format = "$ #,##0";
+                        wsMensual.Cell(filaMen, 3).Style.NumberFormat.Format = "$ #,##0";
+                        wsMensual.Cell(filaMen, 4).Style.NumberFormat.Format = "$ #,##0";
+                        wsMensual.Cell(filaMen, 5).Style.NumberFormat.Format = "0.0%";
+                        filaMen++;
+                    }
+                    FormatearHoja(wsMensual, headersMensual.Length);
+                    AgregarMetadatos(wsMensual, "Ventas Mensuales", desde, hasta);
+                }
+
                 // Hoja 1: Ventas por Día
                 var wsVentas = wb.Worksheets.Add("Ventas por Día");
                 var headersVentas = new[] { "Día", "Total Ventas", "Cantidad" };
