@@ -387,22 +387,6 @@ namespace GestionComercial.UI.Helpers
                     AgregarMetadatos(wsMensual, "Ventas Mensuales", desde, hasta);
                 }
 
-                // Hoja 1: Ventas por Día
-                var wsVentas = wb.Worksheets.Add("Ventas por Día");
-                var headersVentas = new[] { "Día", "Total Ventas", "Cantidad" };
-                AgregarHeaders(wsVentas, headersVentas);
-                int filaV = 2;
-                foreach (var d in ventaPorDia)
-                {
-                    wsVentas.Cell(filaV, 1).Value = d.Dia;
-                    wsVentas.Cell(filaV, 2).Value = (double)d.Total;
-                    wsVentas.Cell(filaV, 3).Value = d.Cantidad;
-                    wsVentas.Cell(filaV, 2).Style.NumberFormat.Format = "$ #,##0";
-                    filaV++;
-                }
-                FormatearHoja(wsVentas, headersVentas.Length);
-                AgregarMetadatos(wsVentas, "Ventas por Día", desde, hasta);
-
                 // Hoja 2: Margen
                 var wsMargen = wb.Worksheets.Add("Margen");
                 var headersMargen = new[] { "Producto", "Categoría", "Costo", "Precio Venta", "Margen Unit.", "Margen %", "Cant. Vendida", "Ganancia Total" };
