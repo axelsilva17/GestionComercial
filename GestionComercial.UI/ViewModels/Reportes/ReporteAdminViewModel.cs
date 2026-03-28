@@ -800,6 +800,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 IsLoading = false;
             }
         }
+
+        // ── Navegar a Caja Turnos ─────────────────────────────────────────────
+        public async Task IrCajaTurnos()
+        {
+            await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
+                .ActivateItemAsync(Caliburn.Micro.IoC.Get<Cajas.CajaTurnosViewModel>(),
+                    System.Threading.CancellationToken.None);
+        }
     }
 
     /// <summary>
