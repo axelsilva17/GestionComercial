@@ -519,7 +519,7 @@ namespace GestionComercial.UI.Helpers
                 // ── Hoja 7: Distribución Mensual de Métodos de Pago (si se proporciona) ─
                 if (metodosPagoMensual != null && metodosPagoMensual.Any())
                 {
-                    var wsMetodosMensual = wb.Worksheets.Add("Distribución Mensual de Métodos de Pago");
+                    var wsMetodosMensual = wb.Worksheets.Add("Metodos Pago x Mes");
                     var headersMetMen = new[] { "Mes", "Método", "Total", "Cant." };
                     AgregarHeaders(wsMetodosMensual, headersMetMen);
                     int filaMetMen = 2;
@@ -562,9 +562,8 @@ namespace GestionComercial.UI.Helpers
                 var wsCajas = wb.Worksheets.Add("Auditoría Cajas");
                 var headersCajas = new[]
                 {
-                    "Caja", "Turno", "Fecha Apertura", "Hora Apertura", "Usuario Apertura",
-                    "Monto Inicial", "Ventas Efectivo", "Ingresos", "Egresos",
-                    "Monto Final", "Fecha Cierre", "Usuario Cierre", "Estado", "Diferencia", "Cambios"
+                    "Fecha", "Usuario", "Operación", "Caja",
+                    "Monto", "Valor Anterior", "Valor Nuevo", "Diferencia", "Cambios"
                 };
                 AgregarHeaders(wsCajas, headersCajas);
 
