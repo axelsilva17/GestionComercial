@@ -51,6 +51,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
     public class CajaHistorialDto
     {
         public int     Id            { get; set; }
+        public string? Turno         { get; set; }
         public string  FechaApertura { get; set; } = string.Empty;
         public string? FechaCierre   { get; set; }
         public decimal MontoInicial  { get; set; }
@@ -432,6 +433,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         historialList.Add(new CajaHistorialDto
                         {
                             Id = caja.Id,
+                            Turno = caja.Turno,
                             FechaApertura = caja.FechaApertura.ToString("dd/MM HH:mm"),
                             FechaCierre = caja.FechaCierre?.ToString("dd/MM HH:mm"),
                             MontoInicial = caja.MontoInicial,
@@ -669,6 +671,75 @@ namespace GestionComercial.UI.ViewModels.Reportes
             finally { IsLoading = false; }
         }
 
+        // ── Exportar Informe Admin (simple, sin auditoría) ───────────────────────
+        public async Task ExportarInformeAdmin()
+        {
+            try
+            {
+                IsLoading = true;
+                var desde = FechaDesde.Date;
+                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
+
+                // Hoja 1: Resumen de cajas
+                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                var cajasResumen = cajas.Select(caja =>
+                {
+                    var diff = caja.MontoFinal.HasValue
+                        ? caja.MontoFinal.Value - (caja.MontoInicial + caja.Ventas.Sum(v => v.TotalFinal))
+                        : (decimal?)null;
+                    return new CajaHistorialDto
+                    {
+                        Id = caja.Id,
+                        Turno = caja.Turno,
+                        FechaApertura = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm"),
+                        FechaCierre = caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm"),
+                        MontoInicial = caja.MontoInicial,
+                        MontoFinal = caja.MontoFinal,
+                        Diferencia = diff,
+                        TipoDiferencia = diff.HasValue ? (diff.Value > 0 ? "Positivo" : diff.Value < 0 ? "Negativo" : "Cero") : "Cero",
+                        UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
+                        UsuarioCierre = caja.UsuarioCierre?.Nombre,
+                        Estado = caja.Estado == 1 ? "Abierta" : "Cerrada",
+                        TieneDiferencia = diff.HasValue && Math.Abs(diff.Value) > 0.01m,
+                    };
+                }).ToList<object>();
+
+                // Hoja 2: Stock crítico
+                var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
+                var stockCritico = criticos.Select(p => new ReporteStockCriticoDto
+                {
+                    Nombre = p.Nombre,
+                    StockActual = p.StockActual,
+                    StockMinimo = p.StockMinimo,
+                }).ToList<object>();
+
+                // Hoja 3: Compras recientes
+                var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                    .Where(c => c.Fecha >= desde && c.Fecha <= hasta)
+                    .OrderByDescending(c => c.Fecha)
+                    .ToList();
+                var comprasRecientes = comprasPeriodo.Select(c => new ReporteCompraRecienteDto
+                {
+                    Proveedor = c.ProveedorNombre,
+                    Fecha = c.Fecha.ToString("dd/MM/yyyy"),
+                    Total = c.Total,
+                    Productos = c.CantidadProductos,
+                }).ToList<object>();
+
+                ExportHelper.ExportarInformeAdmin(cajasResumen, stockCritico, comprasRecientes, desde, hasta, AbrirDespuesDeExportar);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
+                    "Error", System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
         // ── Exportar Excel: Completo (Auditoría + Cajas + Ventas) ───────────────
         public async Task ExportarExcel()
         {
@@ -696,6 +767,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     return new CajaHistorialDto
                     {
                         Id = caja.Id,
+                        Turno = caja.Turno,
                         FechaApertura = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm"),
                         FechaCierre = caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm"),
                         MontoInicial = caja.MontoInicial,

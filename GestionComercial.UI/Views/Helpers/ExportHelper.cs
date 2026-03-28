@@ -872,6 +872,98 @@ namespace GestionComercial.UI.Helpers
             });
         }
 
+        // ── Exportar Informe Admin (simple, sin auditoría) ───────────────────
+        public static void ExportarInformeAdmin(
+            IEnumerable<object> cajasResumen,
+            IEnumerable<object> stockCritico,
+            IEnumerable<object> comprasRecientes,
+            DateTime desde,
+            DateTime hasta,
+            bool shouldOpenAfterDownload = false)
+        {
+            Exportar("Informe Admin", $"InformeAdmin_{Fecha()}", wb =>
+            {
+                // ── Hoja 1: Resumen de Cajas ────────────────────────────────
+                var wsCajas = wb.Worksheets.Add("Resumen Cajas");
+                var headersCajas = new[] { "Caja", "Turno", "Fecha Apertura", "Fecha Cierre", "Monto Inicial", "Monto Final", "Diferencia", "Estado", "Usuario Apertura" };
+                AgregarHeaders(wsCajas, headersCajas);
+
+                int filaC = 2;
+                foreach (dynamic c in cajasResumen)
+                {
+                    wsCajas.Cell(filaC, 1).Value = $"Caja {c.Id}";
+                    wsCajas.Cell(filaC, 2).Value = c.Turno ?? "—";
+                    wsCajas.Cell(filaC, 3).Value = c.FechaApertura;
+                    wsCajas.Cell(filaC, 4).Value = c.FechaCierre ?? "—";
+                    wsCajas.Cell(filaC, 5).Value = (double)c.MontoInicial;
+                    wsCajas.Cell(filaC, 6).Value = c.MontoFinal.HasValue ? (double)c.MontoFinal.Value : 0;
+                    wsCajas.Cell(filaC, 7).Value = c.Diferencia.HasValue ? (double)c.Diferencia.Value : 0;
+                    wsCajas.Cell(filaC, 8).Value = c.Estado;
+                    wsCajas.Cell(filaC, 9).Value = c.UsuarioApertura;
+
+                    wsCajas.Cell(filaC, 5).Style.NumberFormat.Format = "$ #,##0";
+                    wsCajas.Cell(filaC, 6).Style.NumberFormat.Format = "$ #,##0";
+                    wsCajas.Cell(filaC, 7).Style.NumberFormat.Format = "$ #,##0";
+
+                    if (c.Diferencia.HasValue && (decimal)c.Diferencia.Value < 0)
+                        wsCajas.Cell(filaC, 7).Style.Font.FontColor = XLColor.Red;
+                    else if (c.Diferencia.HasValue && (decimal)c.Diferencia.Value > 0)
+                        wsCajas.Cell(filaC, 7).Style.Font.FontColor = XLColor.Green;
+
+                    filaC++;
+                }
+                FormatearHoja(wsCajas, headersCajas.Length);
+                AgregarMetadatos(wsCajas, "Resumen de Cajas", desde, hasta);
+
+                // ── Hoja 2: Stock Crítico ───────────────────────────────────
+                var wsStock = wb.Worksheets.Add("Stock Crítico");
+                var headersStock = new[] { "Producto", "Stock Actual", "Stock Mínimo", "Diferencia" };
+                AgregarHeaders(wsStock, headersStock);
+
+                int filaS = 2;
+                foreach (dynamic p in stockCritico)
+                {
+                    int stockActual = p.StockActual;
+                    int stockMinimo = p.StockMinimo;
+                    int diferencia = stockActual - stockMinimo;
+
+                    wsStock.Cell(filaS, 1).Value = p.Nombre;
+                    wsStock.Cell(filaS, 2).Value = stockActual;
+                    wsStock.Cell(filaS, 3).Value = stockMinimo;
+                    wsStock.Cell(filaS, 4).Value = diferencia;
+
+                    if (stockActual == 0)
+                        wsStock.Cell(filaS, 2).Style.Font.FontColor = XLColor.Red;
+                    else if (diferencia < 0)
+                        wsStock.Cell(filaS, 2).Style.Font.FontColor = XLColor.Orange;
+
+                    filaS++;
+                }
+                FormatearHoja(wsStock, headersStock.Length);
+                AgregarMetadatos(wsStock, "Stock Crítico", desde, hasta);
+
+                // ── Hoja 3: Compras Recientes ───────────────────────────────
+                var wsCompras = wb.Worksheets.Add("Compras Recientes");
+                var headersCompras = new[] { "Fecha", "Proveedor", "Total", "Productos" };
+                AgregarHeaders(wsCompras, headersCompras);
+
+                int filaCo = 2;
+                foreach (dynamic c in comprasRecientes)
+                {
+                    wsCompras.Cell(filaCo, 1).Value = c.Fecha;
+                    wsCompras.Cell(filaCo, 2).Value = c.Proveedor;
+                    wsCompras.Cell(filaCo, 3).Value = (double)c.Total;
+                    wsCompras.Cell(filaCo, 4).Value = c.Productos;
+
+                    wsCompras.Cell(filaCo, 3).Style.NumberFormat.Format = "$ #,##0";
+                    filaCo++;
+                }
+                FormatearHoja(wsCompras, headersCompras.Length);
+                AgregarMetadatos(wsCompras, "Compras Recientes", desde, hasta);
+
+            }, shouldOpenAfterDownload);
+        }
+
         // ── Motor genérico ───────────────────────────────────────────────────
 
         private static void Exportar(string titulo, string nombreArchivo, Action<XLWorkbook> construir, bool shouldOpenAfterDownload = false)

@@ -76,7 +76,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="16"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto"/>
@@ -86,10 +86,8 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="12"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
@@ -130,22 +128,14 @@
                             </Button.Template>
                         </Button>
 
-                        <CheckBox Grid.Column="15" 
-                                  IsChecked="{Binding AbrirDespuesDeExportar, Mode=TwoWay}"
-                                  Content="Auto-abrir"
-                                  Foreground="{DynamicResource TextSecondaryBrush}"
-                                  FontSize="11"
-                                  VerticalAlignment="Center"
-                                  Margin="8,0,8,0"/>
-
                         <!-- Botón Exportar Caja Auditoría -->
-                    <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
-                                Content="📦 Caja Auditoría"
+                        <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
+                                Content="📦 Exportar Caja"
                                 Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="1" FontWeight="SemiBold" FontSize="12"
-                                Padding="12,6" Cursor="Hand" Margin="0,0,8,0">
+                                Padding="12,6" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{TemplateBinding Background}"
@@ -164,13 +154,13 @@
                             </Button.Template>
                         </Button>
 
-                        <!-- Botón Exportar Todo Completo -->
-                        <Button Grid.Column="17" cal:Message.Attach="ExportarExcel"
-                                Content="📊 Informe Completo"
+                        <!-- Botón Informe Admin -->
+                        <Button Grid.Column="17" cal:Message.Attach="ExportarInformeAdmin"
+                                Content="📊 Informe Admin"
                                 Background="{DynamicResource PrimaryBrush}"
                                 Foreground="White"
                                 BorderThickness="0" FontWeight="SemiBold" FontSize="12"
-                                Padding="14,6" Cursor="Hand" Margin="0,0,0,0">
+                                Padding="14,6" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{TemplateBinding Background}"
