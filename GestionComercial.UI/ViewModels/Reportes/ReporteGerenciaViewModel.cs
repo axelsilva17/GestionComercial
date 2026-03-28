@@ -12,6 +12,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -176,27 +177,39 @@ namespace GestionComercial.UI.ViewModels.Reportes
         {
             IsLoading = true;
             LimpiarError();
+            
+            var swTotal = Stopwatch.StartNew();
+            var sw = new Stopwatch();
+            
             try
             {
                 var desde = FechaDesde;
                 var hasta = FechaHasta;
 
+                LogHelper.Log($"[ReporteGerencia] Filtro: desde={desde:yyyy-MM-dd} hasta={hasta:yyyy-MM-dd}");
+
                 // Ventas del período
+                sw.Restart();
                 var todasVentas = (await _ventaServicio.ObtenerPorSucursalAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
                 VentasAcumuladas = todasVentas.Sum(v => v.TotalFinal);
+                LogHelper.Log($"[ReporteGerencia] Ventas: {todasVentas.Count} registros en {sw.ElapsedMilliseconds}ms");
 
                 // Compras del período
+                sw.Restart();
                 var todasCompras = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
                     .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
                 ComprasAcumuladas = todasCompras.Sum(c => c.Total);
+                LogHelper.Log($"[ReporteGerencia] Compras: {todasCompras.Count} registros en {sw.ElapsedMilliseconds}ms");
 
                 MargenPromedio = VentasAcumuladas > 0
                     ? (double)(ResultadoAcumulado / VentasAcumuladas * 100) : 0;
 
                 // Calcular meses dentro del rango (máx 12)
+                sw.Restart();
                 var meses = GenerarMeses(desde, hasta, todasVentas, todasCompras);
                 VentasMensuales = new ObservableCollection<ReporteVentaMensualDto>(meses);
+                LogHelper.Log($"[ReporteGerencia] Meses calculados: {meses.Count} en {sw.ElapsedMilliseconds}ms");
 
                 var labels   = meses.Select(m => m.Mes).ToArray();
                 var venArray = meses.Select(m => (double)m.Ventas).ToArray();
@@ -257,8 +270,10 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 };
 
                 // ── Torta: métodos de pago reales ─────────────────────────────
+                sw.Restart();
                 var pagosAgrupados = (await _uow.Pagos.ObtenerTotalesPorMetodoAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Métodos pago: {pagosAgrupados.Count} en {sw.ElapsedMilliseconds}ms");
 
                 SeriesTorta = pagosAgrupados.Any()
                     ? pagosAgrupados.Select((item, i) =>
@@ -287,6 +302,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 NotifyOfPropertyChange(() => TopProductos);
                 NotifyOfPropertyChange(() => Vendedores);
                 NotifyOfPropertyChange(() => ResultadoAcumulado);
+                
+                LogHelper.Log($"[ReporteGerencia] ✓ Carga total: {swTotal.ElapsedMilliseconds}ms");
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
