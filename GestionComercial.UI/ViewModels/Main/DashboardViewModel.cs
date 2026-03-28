@@ -320,10 +320,10 @@ namespace GestionComercial.UI.ViewModels.Main
         }
 
         // ── Navegación rápida ─────────────────────────────────────────────────
-        public async void IrVentasCompleto() => await Shell.IrVentas();
-        public async void IrProductosStock() => await Shell.IrProductos();
-        public async void IrCompras()        => await Shell.IrCompras();
-        public async void IrReportes()       => await Shell.IrReportes();
+        public async void IrVentasCompleto() { try { await Shell.IrVentas(); } catch (Exception ex) { MostrarError(ex.Message); } }
+        public async void IrProductosStock() { try { await Shell.IrProductos(); } catch (Exception ex) { MostrarError(ex.Message); } }
+        public async void IrCompras()        { try { await Shell.IrCompras(); } catch (Exception ex) { MostrarError(ex.Message); } }
+        public async void IrReportes()       { try { await Shell.IrReportes(); } catch (Exception ex) { MostrarError(ex.Message); } }
     }
 
     public class ProductoCriticoDash

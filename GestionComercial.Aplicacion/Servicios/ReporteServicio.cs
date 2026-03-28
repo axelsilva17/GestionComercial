@@ -108,7 +108,9 @@ public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int id
 
         public async Task<IEnumerable<ReporteTopProductoDto>> TopProductosAsync(int idSucursal, DateTime desde, DateTime hasta, int top = 20)
         {
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(_uow.Sucursales.ObtenerPorIdAsync(idSucursal).Result?.Id_empresa ?? 0, desde, hasta);
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal);
+            var idEmpresa = sucursal?.Id_empresa ?? 0;
+            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
             var ventasSucursal = ventas.Where(v => v.Id_sucursal == idSucursal);
             return ventasSucursal
                 .SelectMany(v => v.Detalles)

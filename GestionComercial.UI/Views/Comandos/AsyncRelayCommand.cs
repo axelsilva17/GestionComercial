@@ -40,6 +40,10 @@ namespace GestionComercial.UI.Views.Comandos
             {
                 await _execute();
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AsyncRelayCommand] Error: {ex.Message}");
+            }
             finally
             {
                 _isExecuting = false;
@@ -86,6 +90,10 @@ namespace GestionComercial.UI.Views.Comandos
             try
             {
                 await _execute(parameter is T t ? t : default);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AsyncRelayCommand<T>] Error: {ex.Message}");
             }
             finally
             {

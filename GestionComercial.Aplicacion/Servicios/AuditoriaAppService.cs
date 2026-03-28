@@ -43,8 +43,8 @@ namespace GestionComercial.Aplicacion.Servicios
 
             return new AuditoriaCompletaCajaDto
             {
-                AuditoriaCajas = tareaAuditoriaCajas.Result.ToList(),
-                MovimientosCaja = tareaMovimientosCaja.Result.ToList()
+                AuditoriaCajas = (await tareaAuditoriaCajas).ToList(),
+                MovimientosCaja = (await tareaMovimientosCaja).ToList()
             };
         }
 

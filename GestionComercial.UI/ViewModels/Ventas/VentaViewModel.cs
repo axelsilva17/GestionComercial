@@ -1108,45 +1108,52 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// </summary>
         public async void TestBarcodeKeyDown()
         {
-            if (string.IsNullOrWhiteSpace(TestBarcodeInput)) return;
-
-            var codigo = TestBarcodeInput.Trim();
-            TestBarcodeInput = string.Empty;
-
-            System.Diagnostics.Debug.WriteLine($"[VentaVM] TestBarcodeKeyDown: {codigo}");
-
-            // Buscar por código de barras exacto
-            var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-            var producto = todos.FirstOrDefault(p =>
-                p.CodigoBarra != null &&
-                p.CodigoBarra.Trim().Equals(codigo, StringComparison.OrdinalIgnoreCase));
-
-            if (producto == null)
+            try
             {
-                MessageBox.Show($"No se encontró ningún producto con código de barras '{codigo}'.", 
-                    "Código no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                if (string.IsNullOrWhiteSpace(TestBarcodeInput)) return;
+
+                var codigo = TestBarcodeInput.Trim();
+                TestBarcodeInput = string.Empty;
+
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] TestBarcodeKeyDown: {codigo}");
+
+                // Buscar por código de barras exacto
+                var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var producto = todos.FirstOrDefault(p =>
+                    p.CodigoBarra != null &&
+                    p.CodigoBarra.Trim().Equals(codigo, StringComparison.OrdinalIgnoreCase));
+
+                if (producto == null)
+                {
+                    MessageBox.Show($"No se encontró ningún producto con código de barras '{codigo}'.", 
+                        "Código no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (producto.StockActual <= 0)
+                {
+                    MessageBox.Show($"'{producto.Nombre}' no tiene stock disponible.", 
+                        "Sin stock", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Agregar el producto al carrito (usar el método existente de selección)
+                var dtoParaAgregar = new ProductoListadoDto
+                {
+                    IdProducto = producto.IdProducto,
+                    Nombre = producto.Nombre,
+                    CodigoBarra = producto.CodigoBarra,
+                    PrecioVentaActual = producto.PrecioVentaActual,
+                    PrecioCostoActual = producto.PrecioCostoActual,
+                    StockActual = producto.StockActual,
+                };
+
+                SeleccionarProductoDelPopup(dtoParaAgregar);
             }
-
-            if (producto.StockActual <= 0)
+            catch (Exception ex)
             {
-                MessageBox.Show($"'{producto.Nombre}' no tiene stock disponible.", 
-                    "Sin stock", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                MessageBox.Show($"Error al buscar producto: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            // Agregar el producto al carrito (usar el método existente de selección)
-            var dtoParaAgregar = new ProductoListadoDto
-            {
-                IdProducto = producto.IdProducto,
-                Nombre = producto.Nombre,
-                CodigoBarra = producto.CodigoBarra,
-                PrecioVentaActual = producto.PrecioVentaActual,
-                PrecioCostoActual = producto.PrecioCostoActual,
-                StockActual = producto.StockActual,
-            };
-
-            SeleccionarProductoDelPopup(dtoParaAgregar);
         }
     }
 
