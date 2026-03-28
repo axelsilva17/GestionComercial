@@ -18,39 +18,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
     /// <summary>
     /// DTO para mostrar movimientos de caja en la auditoría.
     /// </summary>
-    public class MovimientoAuditoriaDto
-    {
-        public string TipoOperacion { get; set; } = string.Empty;
-        public string Descripcion   { get; set; } = string.Empty;
-        public decimal Monto        { get; set; }
-        public string Fecha        { get; set; } = string.Empty;
-        public string Usuario       { get; set; } = string.Empty;
-        public string Icono        { get; set; } = string.Empty;
-        public bool   EsIngreso    { get; set; }
-    }
-
-    /// <summary>
-    /// DTO para mostrar un cierre de caja en la auditoría.
-    /// </summary>
-    public class CajaAuditoriaItemDto
-    {
-        public int     Id              { get; set; }
-        public string  FechaApertura   { get; set; } = string.Empty;
-        public string  HoraApertura    { get; set; } = string.Empty;
-        public string  UsuarioApertura { get; set; } = string.Empty;
-        public decimal MontoInicial   { get; set; }
-        public decimal VentasEfectivo { get; set; }
-        public decimal Ingresos       { get; set; }
-        public decimal Egresos        { get; set; }
-        public decimal EfectivoEnCaja  { get; set; } // MontoInicial + VentasEfectivo + Ingresos - Egresos
-        public decimal? MontoFinal    { get; set; }
-        public decimal DiferenciaSinEfectivo { get; set; } // Conteo físico - MontoInicial (sin ventas)
-        public decimal DiferenciaConEfectivo { get; set; } // Conteo físico - (MontoInicial + VentasEfectivo + Ingresos - Egresos)
-        public string? FechaCierre     { get; set; }
-        public string? UsuarioCierre  { get; set; }
-        public string  Estado          { get; set; } = string.Empty;
-        public string  EstadoColor     { get; set; } = "#10B981"; // Verde por defecto
-    }
+   
 
     public class CajaAuditoriaViewModel : NavigableViewModel
     {
@@ -72,6 +40,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
         }
 
         private ObservableCollection<CajaAuditoriaItemDto> _cajas = new();
+        // Nueva exposición para total de ingresos/egresos por caja actual
+        public decimal TotalIngresos { get; set; }
+        public decimal TotalEgresos { get; set; }
         public ObservableCollection<CajaAuditoriaItemDto> Cajas
         {
             get => _cajas;
@@ -164,6 +135,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     MontoFinal      = c.MontoFinal,
                     FechaCierre     = c.FechaCierre?.ToString("dd/MM/yyyy"),
                     UsuarioCierre   = c.UsuarioCierre?.Nombre,
+                    Turno           = c.Turno ?? string.Empty,
                     Estado          = c.EstaAbierta ? "Abierta" : "Cerrada",
                     EstadoColor     = c.EstaAbierta ? "#F59E0B" : "#10B981"
                 }).ToList();
@@ -174,6 +146,10 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     var ventasEfvo = await _cajaServicio.ObtenerTotalEfectivoPorCajaAsync(caja.Id);
                     caja.VentasEfectivo = ventasEfvo;
                     caja.EfectivoEnCaja = caja.MontoInicial + ventasEfvo;
+                    // Asumimos ingresos totales como ventas en efectivo para mostrar en la UI,
+                    // y egresos como 0 por now (puedes ajustar si tienes datos de egresos específicos).
+                    caja.Ingresos = ventasEfvo;
+                    caja.Egresos = 0;
 
                     // Calcular diferencias si hay monto final
                     if (caja.MontoFinal.HasValue)

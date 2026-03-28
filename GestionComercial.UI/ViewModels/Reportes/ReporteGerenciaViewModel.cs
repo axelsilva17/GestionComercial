@@ -112,6 +112,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public ObservableCollection<ReporteVentaMensualDto> VentasMensuales { get; set; } = new();
         public ObservableCollection<ReporteProductoTopDto>  TopProductos    { get; set; } = new();
         public ObservableCollection<ReporteVendedorDto>     Vendedores      { get; set; } = new();
+        public List<MetodosPagoMesDto> MetodosMensuales { get; set; } = new();
 
         // ── Gráfico 1: Barras ─────────────────────────────────────────────────
         private ISeries[] _seriesBarras = Array.Empty<ISeries>();
@@ -402,6 +403,31 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     _sesion.IdSucursal, desde, hasta)).ToList();
                 LogHelper.Log($"[ReporteGerencia] Export: Métodos pago ({metodosPago.Count}) en {swExport.ElapsedMilliseconds}ms");
 
+                // Distribución mensual de métodos de pago
+                swExport.Restart();
+                var metodosMensuales = new List<MetodosPagoMesDto>();
+                var cursor = new DateTime(desde.Year, desde.Month, 1);
+                var fin = new DateTime(hasta.Year, hasta.Month, 1);
+                while (cursor <= fin)
+                {
+                    var inicioMes = cursor;
+                    var finMes = cursor.AddMonths(1).AddDays(-1);
+                    var metodosDelMes = await _reporteServicio.MetodosPagoUtilizadosAsync(
+                        _sesion.IdSucursal, inicioMes, finMes);
+                    foreach (var m in metodosDelMes)
+                    {
+                        metodosMensuales.Add(new MetodosPagoMesDto
+                        {
+                            Mes = cursor.ToString("MMM yy"),
+                            Metodo = m.Metodo,
+                            Total = m.Total,
+                            Cantidad = m.Cantidad
+                        });
+                    }
+                    cursor = cursor.AddMonths(1);
+                }
+                LogHelper.Log($"[ReporteGerencia] Export: Métodos pago mensuales ({metodosMensuales.Count}) en {swExport.ElapsedMilliseconds}ms");
+
                 // Ventas mensuales (ya calculadas en CargarAsync)
                 var ventasMensuales = VentasMensuales.ToList();
 
@@ -413,7 +439,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     comprasAcumuladas: ComprasAcumuladas,
                     resultadoNeto: ResultadoAcumulado,
                     margenPromedio: MargenPromedio,
-                    ventasMensuales: ventasMensuales);
+                    ventasMensuales: ventasMensuales,
+                    metodosPagoMensual: metodosMensuales);
                 LogHelper.Log($"[ReporteGerencia] ✓ Exportación completada en {swExport.ElapsedMilliseconds}ms");
             }
             catch (Exception ex)

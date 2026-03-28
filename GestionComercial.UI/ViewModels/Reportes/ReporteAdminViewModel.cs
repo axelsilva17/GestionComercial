@@ -1,4 +1,5 @@
 using GestionComercial.Aplicacion.DTOs.Auditoria;
+using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;

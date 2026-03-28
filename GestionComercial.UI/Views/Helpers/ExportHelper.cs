@@ -308,7 +308,8 @@ namespace GestionComercial.UI.Helpers
             decimal comprasAcumuladas = 0,
             decimal resultadoNeto = 0,
             double margenPromedio = 0,
-            IEnumerable<ReporteVentaMensualDto>? ventasMensuales = null)
+            IEnumerable<ReporteVentaMensualDto>? ventasMensuales = null,
+            IEnumerable<MetodosPagoMesDto>? metodosPagoMensual = null)
         {
             Exportar("Reporte Gerencia", $"ReporteGerencia_{Fecha()}", wb =>
             {
@@ -514,6 +515,26 @@ namespace GestionComercial.UI.Helpers
                 }
                 FormatearHoja(wsMetodos, headersMet.Length);
                 AgregarMetadatos(wsMetodos, "Métodos de Pago", desde, hasta);
+
+                // ── Hoja 7: Distribución Mensual de Métodos de Pago (si se proporciona) ─
+                if (metodosPagoMensual != null && metodosPagoMensual.Any())
+                {
+                    var wsMetodosMensual = wb.Worksheets.Add("Distribución Mensual de Métodos de Pago");
+                    var headersMetMen = new[] { "Mes", "Método", "Total", "Cant." };
+                    AgregarHeaders(wsMetodosMensual, headersMetMen);
+                    int filaMetMen = 2;
+                    foreach (var m in metodosPagoMensual)
+                    {
+                        wsMetodosMensual.Cell(filaMetMen, 1).Value = m.Mes;
+                        wsMetodosMensual.Cell(filaMetMen, 2).Value = m.Metodo;
+                        wsMetodosMensual.Cell(filaMetMen, 3).Value = (double)m.Total;
+                        wsMetodosMensual.Cell(filaMetMen, 4).Value = m.Cantidad;
+                        wsMetodosMensual.Cell(filaMetMen, 3).Style.NumberFormat.Format = "$ #,##0";
+                        filaMetMen++;
+                    }
+                    FormatearHoja(wsMetodosMensual, headersMetMen.Length);
+                    AgregarMetadatos(wsMetodosMensual, "Distribución Mensual de Métodos de Pago", desde, hasta);
+                }
             });
         }
 
@@ -541,8 +562,9 @@ namespace GestionComercial.UI.Helpers
                 var wsCajas = wb.Worksheets.Add("Auditoría Cajas");
                 var headersCajas = new[]
                 {
-                    "Fecha", "Usuario", "Operación", "Caja",
-                    "Monto", "Valor Anterior", "Valor Nuevo", "Diferencia", "Cambios"
+                    "Caja", "Turno", "Fecha Apertura", "Hora Apertura", "Usuario Apertura",
+                    "Monto Inicial", "Ventas Efectivo", "Ingresos", "Egresos",
+                    "Monto Final", "Fecha Cierre", "Usuario Cierre", "Estado", "Diferencia", "Cambios"
                 };
                 AgregarHeaders(wsCajas, headersCajas);
 

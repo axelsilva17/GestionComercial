@@ -139,8 +139,8 @@
                                   Margin="8,0,8,0"/>
 
                         <!-- Botón Exportar Caja Auditoría -->
-                        <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
-                                Content="📦 Caja"
+                    <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
+                                Content="📦 Caja Auditoría"
                                 Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
@@ -166,7 +166,7 @@
 
                         <!-- Botón Exportar Todo Completo -->
                         <Button Grid.Column="17" cal:Message.Attach="ExportarExcel"
-                                Content="📊 Completo"
+                                Content="📊 Informe Completo"
                                 Background="{DynamicResource PrimaryBrush}"
                                 Foreground="White"
                                 BorderThickness="0" FontWeight="SemiBold" FontSize="12"
