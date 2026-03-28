@@ -1049,6 +1049,89 @@ namespace GestionComercial.UI.Helpers
             wb.SaveAs(path);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
         }
+
+        // ── Exportar Informe Admin (simple, distinto de Gerencia) ────────────────
+        public static void ExportarInformeAdmin(
+            IEnumerable<object> cajasResumen,
+            IEnumerable<object> stockCritico,
+            IEnumerable<object> comprasRecientes,
+            DateTime desde,
+            DateTime hasta)
+        {
+            Exportar("Informe Admin", $"InformeAdmin_{Fecha()}", wb =>
+            {
+                // Hoja 1: Resumen de Cajas
+                var wsCajas = wb.Worksheets.Add("Resumen Cajas");
+                var cajasList = cajasResumen.ToList();
+                if (cajasList.Any())
+                {
+                    var headers = new[] { "Caja", "Turno", "Apertura", "Cierre", "Monto Inicial", "Monto Final", "Diferencia", "Estado", "Usuario" };
+                    AgregarHeaders(wsCajas, headers);
+                    int fila = 2;
+                    foreach (var c in cajasList)
+                    {
+                        var props = c.GetType().GetProperties();
+                        for (int i = 0; i < props.Length && i < headers.Length; i++)
+                        {
+                            var val = props[i].GetValue(c);
+                            if (val is decimal d) { wsCajas.Cell(fila, i + 1).Value = (double)d; wsCajas.Cell(fila, i + 1).Style.NumberFormat.Format = "$ #,##0"; }
+                            else if (val != null) wsCajas.Cell(fila, i + 1).Value = val.ToString();
+                        }
+                        fila++;
+                    }
+                    FormatearHoja(wsCajas, headers.Length);
+                    AgregarMetadatos(wsCajas, "Resumen de Cajas", desde, hasta);
+                }
+
+                // Hoja 2: Stock Crítico
+                var wsStock = wb.Worksheets.Add("Stock Crítico");
+                var stockList = stockCritico.ToList();
+                if (stockList.Any())
+                {
+                    var headers = new[] { "Producto", "Stock Actual", "Stock Mínimo", "Diferencia" };
+                    AgregarHeaders(wsStock, headers);
+                    int fila = 2;
+                    foreach (var s in stockList)
+                    {
+                        var props = s.GetType().GetProperties();
+                        for (int i = 0; i < props.Length && i < headers.Length; i++)
+                        {
+                            var val = props[i].GetValue(s);
+                            if (val is int iv) wsStock.Cell(fila, i + 1).Value = iv;
+                            else if (val != null) wsStock.Cell(fila, i + 1).Value = val.ToString();
+                        }
+                        fila++;
+                    }
+                    FormatearHoja(wsStock, headers.Length);
+                    AgregarMetadatos(wsStock, "Stock Crítico", desde, hasta);
+                }
+
+                // Hoja 3: Compras Recientes
+                var wsCompras = wb.Worksheets.Add("Compras Recientes");
+                var comprasList = comprasRecientes.ToList();
+                if (comprasList.Any())
+                {
+                    var headers = new[] { "Fecha", "Proveedor", "Total", "Productos" };
+                    AgregarHeaders(wsCompras, headers);
+                    int fila = 2;
+                    foreach (var c in comprasList)
+                    {
+                        var props = c.GetType().GetProperties();
+                        for (int i = 0; i < props.Length && i < headers.Length; i++)
+                        {
+                            var val = props[i].GetValue(c);
+                            if (val is decimal d) { wsCompras.Cell(fila, i + 1).Value = (double)d; wsCompras.Cell(fila, i + 1).Style.NumberFormat.Format = "$ #,##0"; }
+                            else if (val is int iv) wsCompras.Cell(fila, i + 1).Value = iv;
+                            else if (val != null) wsCompras.Cell(fila, i + 1).Value = val.ToString();
+                        }
+                        fila++;
+                    }
+                    FormatearHoja(wsCompras, headers.Length);
+                    AgregarMetadatos(wsCompras, "Compras Recientes", desde, hasta);
+                }
+            });
+        }
+
     }
 }
 

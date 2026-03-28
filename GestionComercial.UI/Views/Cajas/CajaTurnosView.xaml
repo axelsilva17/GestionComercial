@@ -1,0 +1,81 @@
+<UserControl x:Class="GestionComercial.UI.Views.Cajas.CajaTurnosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cal="http://www.caliburnproject.org"
+             Background="{DynamicResource BackgroundBrush}">
+    <UserControl.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20,16"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header: Crear nueva caja -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Nuevo Turno:" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TurnoNuevo, Mode=TwoWay}" Width="160" Margin="12,0,0,0" FontSize="13"/>
+                <Button cal:Message.Attach="CrearCaja" Content="+ Crear Caja"
+                        Background="{DynamicResource PrimaryBrush}"
+                        Foreground="#0F172A" FontWeight="Bold" FontSize="13"
+                        Padding="20,8" Cursor="Hand" Margin="16,0,0,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button cal:Message.Attach="CerrarCaja" Content="Cerrar Seleccionada"
+                        Background="{DynamicResource ErrorBrush}"
+                        Foreground="White" FontWeight="SemiBold" FontSize="12"
+                        Padding="16,8" Cursor="Hand" Margin="16,0,0,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- DataGrid: Lista de cajas -->
+        <Border Grid.Row="1" Style="{StaticResource Card}">
+            <DataGrid ItemsSource="{Binding Cajas}"
+                      SelectedItem="{Binding CajaSeleccionada}"
+                      AutoGenerateColumns="False" CanUserAddRows="False"
+                      GridLinesVisibility="None" HeadersVisibility="Column"
+                      Background="Transparent" BorderThickness="0"
+                      FontSize="12" RowHeight="38" ColumnHeaderHeight="38">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+                    <DataGridTextColumn Header="Turno" Binding="{Binding Turno}" Width="120"/>
+                    <DataGridTextColumn Header="Apertura" Binding="{Binding FechaApertura, StringFormat='dd/MM HH:mm'}" Width="130"/>
+                    <DataGridTextColumn Header="Cierre" Binding="{Binding FechaCierre, StringFormat='dd/MM HH:mm'}" Width="130"/>
+                    <DataGridTextColumn Header="Monto Inicial" Binding="{Binding MontoInicial, StringFormat='C0'}" Width="110"/>
+                    <DataGridTextColumn Header="Monto Final" Binding="{Binding MontoFinal, StringFormat='C0'}" Width="110"/>
+                    <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
+                    <DataGridTemplateColumn Header="Principal" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding EsPrimaria}" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>
