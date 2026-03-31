@@ -1,0 +1,26 @@
+<UserControl x:Class="GestionComercial.UI.Views.Cajas.CajaTurnosAdminExportOnDemandView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cal="http://www.caliburnproject.org"
+             Background="{DynamicResource BackgroundBrush}">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8" VerticalAlignment="Center">
+      <TextBlock Text="Rango de fechas:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <DatePicker SelectedDate="{Binding StartDate}" Width="140" Margin="0,0,8,0"/>
+      <TextBlock Text="a" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <DatePicker SelectedDate="{Binding EndDate}" Width="140"/>
+    </StackPanel>
+
+    <Button cal:Message.Attach="ExportarAuditoria" Content="Exportar Auditoría On-Demand" Grid.Row="1"
+            Background="{DynamicResource PrimaryBrush}" Foreground="Black" FontWeight="SemiBold"
+            Padding="16,8" Width="260" Cursor="Hand" Margin="0,0,0,8"/>
+
+    <TextBlock Grid.Row="2" Text="{Binding ExportStatus}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+  </Grid>
+  </UserControl>
