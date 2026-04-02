@@ -3,6 +3,8 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.UI.Helpers;
 
 namespace GestionComercial.UI.ViewModels.Cajas
 {
@@ -40,12 +42,23 @@ namespace GestionComercial.UI.ViewModels.Cajas
                 MessageBox.Show("La fecha de inicio debe ser anterior o igual a la fecha de fin.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             try
             {
                 IsExporting = true;
                 ExportStatus = "Export en progreso...";
-                await Task.Delay(600);
+                // Llamar al servicio de aplicación de auditoría para obtener los datos consolidados
+                var auditoriaApp = IoC.Get<IAuditoriaAppService>();
+                var datos = await auditoriaApp.ObtenerAuditoriaCompletaCajaAsync(StartDate, EndDate);
+
+                // Exportar usando el helper de Excel con las listas ya deserializadas
+                ExportHelper.ExportarAuditoriaCompleto(
+                    datos.AuditoriaCajas,
+                    datos.MovimientosCaja,
+                    null,
+                    null,
+                    StartDate,
+                    EndDate
+                );
                 ExportStatus = $"Export realizado: {StartDate:yyyy-MM-dd} a {EndDate:yyyy-MM-dd}";
             }
             catch (Exception ex)
