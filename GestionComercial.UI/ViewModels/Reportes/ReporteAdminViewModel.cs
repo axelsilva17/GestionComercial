@@ -51,13 +51,12 @@ namespace GestionComercial.UI.ViewModels.Reportes
     public class CajaHistorialDto
     {
         public int     Id            { get; set; }
-        public string  Turno         { get; set; } = string.Empty;
         public string  FechaApertura { get; set; } = string.Empty;
         public string? FechaCierre   { get; set; }
         public decimal MontoInicial  { get; set; }
         public decimal? MontoFinal   { get; set; }
         public decimal? Diferencia    { get; set; }
-        public string  TipoDiferencia { get; set; } = "Cero";
+        public string  TipoDiferencia { get; set; } = "Cero"; // Positivo, Negativo, Cero
         public string  UsuarioApertura { get; set; } = string.Empty;
         public string? UsuarioCierre  { get; set; }
         public string  Estado         { get; set; } = string.Empty;
@@ -697,7 +696,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     return new CajaHistorialDto
                     {
                         Id = caja.Id,
-                        Turno = caja.Turno ?? "General",
                         FechaApertura = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm"),
                         FechaCierre = caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm"),
                         MontoInicial = caja.MontoInicial,
@@ -737,76 +735,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             {
                 IsLoading = false;
             }
-        }
-
-        // ── Exportar Informe Admin (distinto de Gerencia) ──────────────────────
-        public async Task ExportarInformeAdmin()
-        {
-            try
-            {
-                IsLoading = true;
-                var desde = FechaDesde.Date;
-                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
-
-                // Cajas
-                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
-                var cajasResumen = cajas.Select(c => new
-                {
-                    Caja = c.Id,
-                    Turno = c.Turno ?? "General",
-                    Apertura = c.FechaApertura.ToString("dd/MM/yyyy HH:mm"),
-                    Cierre = c.FechaCierre?.ToString("dd/MM/yyyy HH:mm") ?? "Abierta",
-                    MontoInicial = c.MontoInicial,
-                    MontoFinal = c.MontoFinal,
-                    Diferencia = c.MontoFinal.HasValue
-                        ? c.MontoFinal.Value - (c.MontoInicial + c.Ventas.Sum(v => v.TotalFinal))
-                        : (decimal?)null,
-                    Estado = c.Estado == 1 ? "Abierta" : "Cerrada",
-                    Usuario = c.UsuarioApertura?.Nombre ?? "—"
-                }).ToList();
-
-                // Stock crítico
-                var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
-                var stockCritico = criticos.Select(p => new
-                {
-                    Producto = p.Nombre,
-                    StockActual = p.StockActual,
-                    StockMinimo = p.StockMinimo,
-                    Diferencia = p.StockActual - p.StockMinimo
-                }).ToList();
-
-                // Compras recientes
-                var compras = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                    .Where(c => c.Fecha >= desde && c.Fecha <= hasta)
-                    .OrderByDescending(c => c.Fecha).Take(50).ToList();
-                var comprasRecientes = compras.Select(c => new
-                {
-                    Fecha = c.Fecha.ToString("dd/MM/yyyy"),
-                    Proveedor = c.ProveedorNombre,
-                    Total = c.Total,
-                    Productos = c.Items?.Count ?? 0
-                }).ToList();
-
-                ExportHelper.ExportarInformeAdmin(cajasResumen, stockCritico, comprasRecientes, desde, hasta);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
-                    "Error", System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        // ── Navegar a Caja Turnos ─────────────────────────────────────────────
-        public async Task IrCajaTurnos()
-        {
-            await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
-                .ActivateItemAsync(Caliburn.Micro.IoC.Get<Cajas.CajaTurnosViewModel>(),
-                    System.Threading.CancellationToken.None);
         }
     }
 

@@ -2,7 +2,6 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
-using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -15,13 +14,11 @@ namespace GestionComercial.UI.ViewModels.Caja
     public class CajaViewModel : NavigableViewModel
     {
         private readonly ICajaServicio  _cajaServicio;
-        private readonly IUnitOfWork    _uow;
         private readonly SesionServicio _sesion;
 
-        public CajaViewModel(ICajaServicio cajaServicio, IUnitOfWork uow, SesionServicio sesion)
+        public CajaViewModel(ICajaServicio cajaServicio, SesionServicio sesion)
         {
             _cajaServicio = cajaServicio;
-            _uow          = uow;
             _sesion       = sesion;
         }
 
@@ -159,33 +156,6 @@ namespace GestionComercial.UI.ViewModels.Caja
                 _sesion.IdCajaActual = caja.Id;
                 MontoInicial         = caja.MontoInicial;
                 FechaApertura        = caja.FechaApertura;
-
-                // Calcular totales de ingresos/egresos desde movimientos
-                var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(caja.Id);
-                var movList = movimientos.ToList();
-                
-                TotalIngresos     = movList.Where(m => m.Tipo == 2).Sum(m => m.Monto);
-                TotalEgresos      = movList.Where(m => m.Tipo == 3).Sum(m => m.Monto);
-                CantidadIngresos  = movList.Count(m => m.Tipo == 2);
-                CantidadEgresos   = movList.Count(m => m.Tipo == 3);
-                
-                // Ventas del día
-                var ventasHoy = (await _uow.Ventas.ObtenerPorFechaAsync(
-                    DateTime.Today, DateTime.Today.AddDays(1).AddTicks(-1), _sesion.IdSucursal)).ToList();
-                TotalVentasDia    = ventasHoy.Sum(v => v.TotalFinal);
-                CantidadVentasDia = ventasHoy.Count;
-
-                SaldoActual = MontoInicial + TotalIngresos - TotalEgresos + TotalVentasDia;
-
-                // Cargar movimientos para la tabla
-                Movimientos = new ObservableCollection<MovimientoCajaDto>(
-                    movList.OrderByDescending(m => m.Fecha).Select(m => new MovimientoCajaDto
-                    {
-                        Tipo = m.Tipo == 1 ? "Ingreso" : m.Tipo == 2 ? "Ingreso" : "Egreso",
-                        Descripcion = m.Concepto ?? "—",
-                        Monto = m.Monto,
-                        Fecha = m.Fecha,
-                    }));
             }
             catch (Exception ex)
             {
