@@ -745,6 +745,15 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 .ActivateItemAsync(Caliburn.Micro.IoC.Get<Cajas.CajaTurnosViewModel>(),
                     System.Threading.CancellationToken.None);
         }
+
+        // ── Navegar a Caja Auditoría ───────────────────────────────────────────
+        public async Task MostrarAuditoria()
+        {
+            // Navega a la vista de Auditoría de Cajas
+            await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
+                .ActivateItemAsync(Caliburn.Micro.IoC.Get<CajaAuditoriaViewModel>(),
+                    System.Threading.CancellationToken.None);
+        }
     }
 
     /// <summary>
