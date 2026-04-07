@@ -32,7 +32,15 @@ namespace GestionComercial.UI.ViewModels.Cajas
             set { _cajaSeleccionada = value; NotifyOfPropertyChange(() => CajaSeleccionada); }
         }
 
-        private string _turnoNuevo = "General";
+        // ── Turnos disponibles ─────────────────────────────────────────────
+        private ObservableCollection<string> _turnos = new() { "Mañana", "Tarde", "Noche" };
+        public ObservableCollection<string> Turnos
+        {
+            get => _turnos;
+            set { _turnos = value; NotifyOfPropertyChange(() => Turnos); }
+        }
+
+        private string _turnoNuevo = "Mañana";
         public string TurnoNuevo
         {
             get => _turnoNuevo;
@@ -70,7 +78,7 @@ namespace GestionComercial.UI.ViewModels.Cajas
             {
                 if (string.IsNullOrWhiteSpace(TurnoNuevo))
                 {
-                    MessageBox.Show("Debe ingresar un turno.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Debe seleccionar un turno.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -92,7 +100,7 @@ namespace GestionComercial.UI.ViewModels.Cajas
                 await _uow.GuardarCambiosAsync();
 
                 await CargarCajasAsync();
-                TurnoNuevo = "General";
+                TurnoNuevo = "Mañana";
 
                 LogHelper.Log($"[CajaTurnos] Caja creada con Turno: {nuevaCaja.Turno}, EsPrimaria: {nuevaCaja.EsPrimaria}");
             }
@@ -100,6 +108,50 @@ namespace GestionComercial.UI.ViewModels.Cajas
             {
                 LogHelper.Log($"[CajaTurnos] Error al crear caja: {ex.Message}");
                 MessageBox.Show($"Error al crear caja: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task EliminarCaja()
+        {
+            if (CajaSeleccionada == null)
+            {
+                MessageBox.Show("Seleccione una caja para eliminar.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (CajaSeleccionada.EsPrimaria)
+            {
+                MessageBox.Show("No se puede eliminar la caja principal.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (CajaSeleccionada.Estado == 1) // Abierta
+            {
+                MessageBox.Show("No se puede eliminar una caja abierta. Ciérrela primero.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"¿Está seguro de eliminar la caja #{CajaSeleccionada.Id} del turno {CajaSeleccionada.Turno}?",
+                "Confirmar eliminación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                _uow.Cajas.Eliminar(CajaSeleccionada.Id);
+                await _uow.GuardarCambiosAsync();
+
+                await CargarCajasAsync();
+                LogHelper.Log($"[CajaTurnos] Caja eliminada: {CajaSeleccionada.Id}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Log($"[CajaTurnos] Error al eliminar caja: {ex.Message}");
+                MessageBox.Show($"Error al eliminar caja: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

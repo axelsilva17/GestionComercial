@@ -1,9 +1,12 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,11 +15,13 @@ namespace GestionComercial.UI.ViewModels.Caja
     public class AperturaCajaViewModel : NavigableViewModel
     {
         private readonly ICajaServicio  _cajaServicio;
+        private readonly IUnitOfWork     _uow;
         private readonly SesionServicio _sesion;
 
-        public AperturaCajaViewModel(ICajaServicio cajaServicio, SesionServicio sesion)
+        public AperturaCajaViewModel(ICajaServicio cajaServicio, IUnitOfWork uow, SesionServicio sesion)
         {
             _cajaServicio = cajaServicio;
+            _uow          = uow;
             _sesion       = sesion;
         }
 
@@ -50,6 +55,35 @@ namespace GestionComercial.UI.ViewModels.Caja
             set { _montoInicial = value; NotifyOfPropertyChange(() => MontoInicial); }
         }
 
+        // ── Selección de Caja y Turno ─────────────────────────────────────────
+        private ObservableCollection<CajaDisponibleDto> _cajasDisponibles = new();
+        public ObservableCollection<CajaDisponibleDto> CajasDisponibles
+        {
+            get => _cajasDisponibles;
+            set { _cajasDisponibles = value; NotifyOfPropertyChange(() => CajasDisponibles); }
+        }
+
+        private CajaDisponibleDto? _cajaSeleccionada;
+        public CajaDisponibleDto? CajaSeleccionada
+        {
+            get => _cajaSeleccionada;
+            set { _cajaSeleccionada = value; NotifyOfPropertyChange(() => CajaSeleccionada); }
+        }
+
+        private ObservableCollection<string> _turnos = new() { "General", "Mañana", "Tarde", "Noche" };
+        public ObservableCollection<string> Turnos
+        {
+            get => _turnos;
+            set { _turnos = value; NotifyOfPropertyChange(() => Turnos); }
+        }
+
+        private string _turnoSeleccionado = "General";
+        public string TurnoSeleccionado
+        {
+            get => _turnoSeleccionado;
+            set { _turnoSeleccionado = value; NotifyOfPropertyChange(() => TurnoSeleccionado); }
+        }
+
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             IsLoading = true;
@@ -64,9 +98,19 @@ namespace GestionComercial.UI.ViewModels.Caja
                     return;
                 }
 
-                // Cargar datos del último cierre para mostrar en pantalla
-                // Si el servicio expone un método para esto, usarlo.
-                // Por ahora usamos la fecha actual como referencia.
+                // Cargar cajas disponibles para seleccionar
+                var todasCajas = (await _uow.Cajas.ObtenerTodosAsync()).ToList();
+                CajasDisponibles = new ObservableCollection<CajaDisponibleDto>(
+                    todasCajas.Select(c => new CajaDisponibleDto
+                    {
+                        Id = c.Id,
+                        Nombre = c.EsPrimaria ? $"Caja {c.Id} (Principal)" : $"Caja {c.Id} - {c.Turno ?? "General"}",
+                        Turno = c.Turno ?? "General",
+                    }));
+
+                if (CajasDisponibles.Any())
+                    CajaSeleccionada = CajasDisponibles.First();
+
                 UltimoCierre  = DateTime.Now;
                 SaldoAnterior = 0;
             }
@@ -82,6 +126,12 @@ namespace GestionComercial.UI.ViewModels.Caja
 
         public async Task Confirmar()
         {
+            if (CajaSeleccionada == null)
+            {
+                MostrarError("Seleccioná una caja.");
+                return;
+            }
+
             if (!decimal.TryParse(
                     MontoInicial.Replace(",", "."),
                     System.Globalization.NumberStyles.Any,
@@ -118,5 +168,12 @@ namespace GestionComercial.UI.ViewModels.Caja
             await IoC.Get<ShellViewModel>()
                      .ActivateItemAsync(IoC.Get<CajaViewModel>(), CancellationToken.None);
         }
+    }
+
+    public class CajaDisponibleDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Turno { get; set; } = "General";
     }
 }
