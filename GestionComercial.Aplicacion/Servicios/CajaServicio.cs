@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using GestionComercial.Aplicacion.DTOs.Caja;
+using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Auditoria;
@@ -526,14 +527,14 @@ namespace GestionComercial.Aplicacion.Servicios
                 {
                     IdVenta = v.Id,
                     Fecha = v.Fecha,
-                    Total = v.Total,
+                    Total = v.TotalFinal,
                     TotalFinal = v.TotalFinal,
                     TotalBruto = v.TotalBruto,
-                    TotalDescuento = v.Descuento,
+                    TotalDescuento = v.TotalDescuento,
                     Estado = v.Estado.ToString(),
                     IdSucursal = v.Id_sucursal,
-                    IdCaja = v.Id_caja,
-                    EfectivoRecibido = v.EfectivoRecibido
+                    IdCaja = v.Id_caja ?? 0,
+                    EfectivoRecibido = v.EfectivoRecibido ?? 0
                 });
         }
 
@@ -553,7 +554,7 @@ namespace GestionComercial.Aplicacion.Servicios
             // Agrupar por método de pago
             var desglose = ventasCaja
                 .SelectMany(v => v.Pagos)
-                .GroupBy(p => p.Metodo)
+                .GroupBy(p => p.MetodoPago.Nombre)
                 .Select(g => new DesglosePagoDto
                 {
                     Metodo = g.Key,

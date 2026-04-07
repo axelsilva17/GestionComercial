@@ -1,4 +1,5 @@
 using GestionComercial.Aplicacion.DTOs.Caja;
+using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Dominio.Entidades.Caja;
 
 namespace GestionComercial.Aplicacion.Interfaces.Servicios
