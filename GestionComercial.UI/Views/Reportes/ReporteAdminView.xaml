@@ -72,24 +72,27 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="16"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="16"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
@@ -135,17 +138,16 @@
                                   Content="Auto-abrir"
                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                   FontSize="11"
-                                  VerticalAlignment="Center"
-                                  Margin="8,0,8,0"/>
+                                  VerticalAlignment="Center"/>
 
                         <!-- Botón Exportar Caja Auditoría -->
-                    <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
-                                Content="📦 Caja Auditoría"
+                        <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
+                                Content="📦 Exp. Caja"
                                 Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1" FontWeight="SemiBold" FontSize="12"
-                                Padding="12,6" Cursor="Hand" Margin="0,0,8,0">
+                                BorderThickness="1" FontWeight="SemiBold" FontSize="11"
+                                Padding="10,6" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{TemplateBinding Background}"
@@ -165,12 +167,12 @@
                         </Button>
 
                         <!-- Botón Exportar Todo Completo -->
-                        <Button Grid.Column="17" cal:Message.Attach="ExportarExcel"
-                                Content="📊 Informe Completo"
+                        <Button Grid.Column="18" cal:Message.Attach="ExportarExcel"
+                                Content="📊 Informe"
                                 Background="{DynamicResource PrimaryBrush}"
                                 Foreground="White"
-                                BorderThickness="0" FontWeight="SemiBold" FontSize="12"
-                                Padding="14,6" Cursor="Hand" Margin="0,0,0,0">
+                                BorderThickness="0" FontWeight="SemiBold" FontSize="11"
+                                Padding="12,6" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="{TemplateBinding Background}"
@@ -189,17 +191,17 @@
                         </Button>
 
                         <!-- Botón Turnos -->
-                        <Button Grid.Column="18" cal:Message.Attach="MostrarTurnos" 
+                        <Button Grid.Column="20" cal:Message.Attach="MostrarTurnos" 
                                 Content="Turnos" Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
+                                FontWeight="SemiBold" FontSize="11" Padding="10,6" Cursor="Hand" />
                         <!-- Botón Caja Auditoría (navegación) -->
-                        <Button Grid.Column="19" cal:Message.Attach="MostrarAuditoria" 
+                        <Button Grid.Column="22" cal:Message.Attach="MostrarAuditoria" 
                                 Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
+                                FontWeight="SemiBold" FontSize="11" Padding="10,6" Cursor="Hand" />
                     </Grid>
                 </Border>
 

@@ -154,35 +154,5 @@ namespace GestionComercial.UI.ViewModels.Cajas
                 MessageBox.Show($"Error al eliminar caja: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        public async Task CerrarCaja()
-        {
-            if (CajaSeleccionada == null)
-            {
-                MessageBox.Show("Seleccione una caja.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (CajaSeleccionada.EsPrimaria)
-            {
-                MessageBox.Show("No se puede cerrar la caja principal. Cree otra caja y transfiera el estado.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                CajaSeleccionada.Estado = 2;
-                CajaSeleccionada.FechaCierre = DateTime.Now;
-                _uow.Cajas.Actualizar(CajaSeleccionada);
-                await _uow.GuardarCambiosAsync();
-
-                await CargarCajasAsync();
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Log($"[CajaTurnos] Error al cerrar caja: {ex.Message}");
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
     }
 }
