@@ -191,17 +191,17 @@
                         </Button>
 
                         <!-- Botón Turnos -->
-                        <Button Grid.Column="20" cal:Message.Attach="MostrarTurnos" 
+                        <Button Grid.Column="18" cal:Message.Attach="MostrarTurnos" 
                                 Content="Turnos" Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="11" Padding="10,6" Cursor="Hand" />
+                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
                         <!-- Botón Caja Auditoría (navegación) -->
-                        <Button Grid.Column="22" cal:Message.Attach="MostrarAuditoria" 
+                        <Button Grid.Column="19" cal:Message.Attach="IrCajaAuditoria" 
                                 Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="11" Padding="10,6" Cursor="Hand" />
+                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
                     </Grid>
                 </Border>
 

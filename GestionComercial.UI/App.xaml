@@ -1,9 +1,27 @@
 <Application x:Class="GestionComercial.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GestionComercial.UI">
+             xmlns:local="clr-namespace:GestionComercial.UI"
+             xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Converters globales -->
+            <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+            <converters:BoolToColorConverter x:Key="BoolToColor"/>
+            <converters:BoolToOpacityConverter x:Key="BoolToOpacity"/>
+            <converters:InverseBoolConverter x:Key="InverseBool"/>
+            <converters:NullVisibilityConverter x:Key="NullVisibility"/>
+            <converters:NullToVisibilityConverter x:Key="NullToVisibility"/>
+            <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
+            <converters:EstadoToColorConverter x:Key="EstadoToColor"/>
+            <converters:FechaToStringConverter x:Key="FechaToString"/>
+            <converters:DiferenciaToColorConverter x:Key="DiferenciaToColor"/>
+            <converters:EnumToIntConverter x:Key="EnumToInt"/>
+            <converters:ProgressToWidthConverter x:Key="ProgressToWidth"/>
+            <converters:TabIndexToBoolConverter x:Key="TabIndexToBool"/>
+            <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
+            
             <!-- Estilos globales de cursor -->
             <Style TargetType="Button">
                 <Setter Property="Cursor" Value="Hand"/>

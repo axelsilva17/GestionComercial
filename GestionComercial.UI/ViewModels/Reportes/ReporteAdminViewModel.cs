@@ -747,7 +747,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         }
 
         // ── Navegar a Caja Auditoría ───────────────────────────────────────────
-        public async Task MostrarAuditoria()
+        public async Task IrCajaAuditoria()
         {
             // Navega a la vista de Auditoría de Cajas
             await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
