@@ -187,6 +187,13 @@
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
+
+                        <!-- Botón Turnos -->
+                        <Button Grid.Column="18" cal:Message.Attach="MostrarTurnos" 
+                                Content="Turnos" Background="{DynamicResource SurfaceBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
                     </Grid>
                 </Border>
 
