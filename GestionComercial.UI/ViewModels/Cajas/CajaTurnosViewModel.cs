@@ -22,7 +22,14 @@ namespace GestionComercial.UI.ViewModels.Cajas
         public ObservableCollection<CajaEntity> Cajas
         {
             get => _cajas;
-            set { _cajas = value; NotifyOfPropertyChange(() => Cajas); }
+            set { _cajas = value; NotifyOfPropertyChange(() => Cajas); ActualizarCajasFiltradas(); }
+        }
+
+        private ObservableCollection<CajaEntity> _cajasFiltradas = new();
+        public ObservableCollection<CajaEntity> CajasFiltradas
+        {
+            get => _cajasFiltradas;
+            set { _cajasFiltradas = value; NotifyOfPropertyChange(() => CajasFiltradas); }
         }
 
         private CajaEntity? _cajaSeleccionada;
@@ -47,6 +54,21 @@ namespace GestionComercial.UI.ViewModels.Cajas
             set { _turnoNuevo = value; NotifyOfPropertyChange(() => TurnoNuevo); }
         }
 
+        // ── Filtro por Turno ───────────────────────────────────────────────
+        private ObservableCollection<string> _filtroTurnos = new() { "Todos", "Mañana", "Tarde", "Noche" };
+        public ObservableCollection<string> FiltroTurnos
+        {
+            get => _filtroTurnos;
+            set { _filtroTurnos = value; NotifyOfPropertyChange(() => FiltroTurnos); }
+        }
+
+        private string _turnoFiltro = "Todos";
+        public string TurnoFiltro
+        {
+            get => _turnoFiltro;
+            set { _turnoFiltro = value; NotifyOfPropertyChange(() => TurnoFiltro); ActualizarCajasFiltradas(); }
+        }
+
         public CajaTurnosViewModel(IUnitOfWork uow, SesionServicio sesion)
         {
             _uow = uow;
@@ -69,6 +91,19 @@ namespace GestionComercial.UI.ViewModels.Cajas
             catch (Exception ex)
             {
                 LogHelper.Log($"[CajaTurnos] Error al cargar cajas: {ex.Message}");
+            }
+        }
+
+        private void ActualizarCajasFiltradas()
+        {
+            if (string.IsNullOrEmpty(TurnoFiltro) || TurnoFiltro == "Todos")
+            {
+                CajasFiltradas = new ObservableCollection<CajaEntity>(Cajas);
+            }
+            else
+            {
+                CajasFiltradas = new ObservableCollection<CajaEntity>(
+                    Cajas.Where(c => c.Turno == TurnoFiltro));
             }
         }
 
