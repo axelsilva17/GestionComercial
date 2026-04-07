@@ -6,6 +6,8 @@
              xmlns:cal="http://www.caliburnproject.org"
              Background="{DynamicResource BackgroundBrush}">
     <UserControl.Resources>
+        <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
+        <converters:BoolToColorConverter x:Key="BoolToColor"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -26,14 +28,6 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="{Binding Titulo}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="{Binding Subtitulo}" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
-            <!-- Apertura Caja: selection of Caja and Turno to open -->
-            <GroupBox Header="Apertura Caja" Margin="0,12,0,0" Padding="10">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0">
-                    <ComboBox Width="180" ItemsSource="{Binding AvailableCajas}" DisplayMemberPath="Nombre" SelectedItem="{Binding SelectedCaja}" Margin="0,0,10,0"/>
-                    <ComboBox Width="180" ItemsSource="{Binding AvailableTurnos}" DisplayMemberPath="Nombre" SelectedItem="{Binding SelectedTurno}" Margin="0,0,10,0"/>
-                    <Button Content="Abrir Caja" Command="{Binding OpenCajaCommand}" Width="120"/>
-                </StackPanel>
-            </GroupBox>
         </StackPanel>
 
         <!-- Filtros y KPIs -->
