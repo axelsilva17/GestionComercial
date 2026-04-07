@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:cal="http://www.caliburnproject.org"
              Background="{DynamicResource BackgroundBrush}">
     <UserControl.Resources>
         <Style x:Key="Card" TargetType="Border">

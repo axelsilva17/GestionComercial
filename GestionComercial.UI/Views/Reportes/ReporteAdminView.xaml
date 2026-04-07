@@ -195,7 +195,7 @@
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                 FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
                         <!-- Botón Caja Auditoría (navegación) -->
-                        <Button Grid.Column="19" cal:Message.Attach="MostrarAuditoria" 
+                        <Button Grid.Column="19" cal:Message.Attach="IrCajaAuditoria" 
                                 Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"

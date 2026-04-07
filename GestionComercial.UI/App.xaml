@@ -19,7 +19,8 @@
             <converters:DiferenciaToColorConverter x:Key="DiferenciaToColor"/>
             <converters:EnumToIntConverter x:Key="EnumToInt"/>
             <converters:ProgressToWidthConverter x:Key="ProgressToWidth"/>
-            <converters:TabConverters x:Key="TabConverters"/>
+            <converters:TabIndexToBoolConverter x:Key="TabIndexToBool"/>
+            <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
             
             <!-- Estilos globales de cursor -->
             <Style TargetType="Button">
