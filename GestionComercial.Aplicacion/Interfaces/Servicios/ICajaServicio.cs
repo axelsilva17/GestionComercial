@@ -12,6 +12,21 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta);
 
         /// <summary>
+        /// Obtiene los movimientos de una caja para mostrar en la UI.
+        /// </summary>
+        Task<IEnumerable<MovimientoCajaDto>> ObtenerMovimientosAsync(int idCaja);
+
+        /// <summary>
+        /// Obtiene las ventas del día para una caja.
+        /// </summary>
+        Task<IEnumerable<VentaDto>> ObtenerVentasDelDiaAsync(int idCaja);
+
+        /// <summary>
+        /// Obtiene el desglose de pagos por método para una caja.
+        /// </summary>
+        Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja);
+
+        /// <summary>
         /// Calcula automáticamente el resumen del turno separando efectivo
         /// de otros métodos de pago. Usar antes de mostrar el cierre.
         /// </summary>

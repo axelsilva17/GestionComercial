@@ -10,6 +10,8 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal  TotalBruto     { get; set; }
         public decimal  TotalDescuento { get; set; }
         public decimal  TotalFinal     { get; set; }
+        /// <summary>Total de la venta (sin descuentos). Usado para cálculos de caja.</summary>
+        public decimal  Total          { get; set; }
         public string   Estado         { get; set; }
         public int      IdSucursal     { get; set; }
         public string   SucursalNombre { get; set; }

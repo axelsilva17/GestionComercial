@@ -486,5 +486,83 @@ namespace GestionComercial.Aplicacion.Servicios
                          && v.EfectivoRecibido.HasValue)
                 .Sum(v => v.EfectivoRecibido!.Value);
         }
+
+        // ── Métodos para CajaViewModel ───────────────────────────────────────────
+        public async Task<IEnumerable<MovimientoCajaDto>> ObtenerMovimientosAsync(int idCaja)
+        {
+            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
+            return movimientos.Select(m => new MovimientoCajaDto
+            {
+                IdMovimiento = m.Id,
+                Tipo = m.Tipo switch
+                {
+                    (int)TipoMovimientoCajaEnum.Apertura => "Apertura",
+                    (int)TipoMovimientoCajaEnum.Cierre => "Cierre",
+                    (int)TipoMovimientoCajaEnum.Ingreso => "Ingreso",
+                    (int)TipoMovimientoCajaEnum.Egreso => "Egreso",
+                    _ => "Otro"
+                },
+                Monto = m.Monto,
+                Fecha = m.Fecha,
+                Descripcion = m.Concepto ?? string.Empty,
+                ReferenciaId = m.Id_venta
+            });
+        }
+
+        public async Task<IEnumerable<VentaDto>> ObtenerVentasDelDiaAsync(int idCaja)
+        {
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);
+            if (caja == null)
+                return Enumerable.Empty<VentaDto>();
+
+            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(
+                caja.FechaApertura,
+                DateTime.Now,
+                caja.Id_sucursal);
+
+            return ventas
+                .Where(v => v.Id_caja == idCaja && v.Estado == 2) // Solo ventas pagadas
+                .Select(v => new VentaDto
+                {
+                    IdVenta = v.Id,
+                    Fecha = v.Fecha,
+                    Total = v.Total,
+                    TotalFinal = v.TotalFinal,
+                    TotalBruto = v.TotalBruto,
+                    TotalDescuento = v.Descuento,
+                    Estado = v.Estado.ToString(),
+                    IdSucursal = v.Id_sucursal,
+                    IdCaja = v.Id_caja,
+                    EfectivoRecibido = v.EfectivoRecibido
+                });
+        }
+
+        public async Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja)
+        {
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);
+            if (caja == null)
+                return Enumerable.Empty<DesglosePagoDto>();
+
+            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(
+                caja.FechaApertura,
+                DateTime.Now,
+                caja.Id_sucursal);
+
+            var ventasCaja = ventas.Where(v => v.Id_caja == idCaja && v.Estado == 2).ToList();
+
+            // Agrupar por método de pago
+            var desglose = ventasCaja
+                .SelectMany(v => v.Pagos)
+                .GroupBy(p => p.Metodo)
+                .Select(g => new DesglosePagoDto
+                {
+                    Metodo = g.Key,
+                    Total = g.Sum(p => p.Monto),
+                    Cantidad = g.Count()
+                })
+                .ToList();
+
+            return desglose;
+        }
     }
 }
