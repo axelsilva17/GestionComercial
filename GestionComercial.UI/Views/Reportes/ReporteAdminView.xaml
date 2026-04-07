@@ -70,136 +70,125 @@
                 <!-- Barra de filtros -->
                 <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="PERÍODO" Style="{StaticResource ColHeader}"
-                                   VerticalAlignment="Center" Margin="0"/>
+                        <!-- Fila 1: Fechas y botones de período -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="PERÍODO" Style="{StaticResource ColHeader}"
+                                       VerticalAlignment="Center" Margin="0,0,16,0"/>
 
-                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
-                                        Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
+                                            Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
+                                            Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
+                            </StackPanel>
+
+                            <Button Style="{StaticResource FiltroBtn}" Content="Este mes" cal:Message.Attach="FiltrarEsteMes" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="3 meses" cal:Message.Attach="FiltrarUltimos3" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="6 meses" cal:Message.Attach="FiltrarUltimos6" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="Este año" cal:Message.Attach="FiltrarEsteAnio" Margin="0,0,20,0"/>
+
+                            <Button cal:Message.Attach="Actualizar"
+                                    Content="▶  Aplicar"
+                                    Background="{DynamicResource PrimaryBrush}"
+                                    Foreground="#0F172A" FontWeight="Bold" FontSize="12"
+                                    Padding="18,6" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <CheckBox IsChecked="{Binding AbrirDespuesDeExportar, Mode=TwoWay}"
+                                      Content="Auto-abrir"
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="11"
+                                      VerticalAlignment="Center"
+                                      Margin="20,0,0,0"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
-                                        Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
+                        <!-- Fila 2: Botones de acción -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Botón Exportar Caja Auditoría -->
+                            <Button cal:Message.Attach="ExportarCajaAuditoriaExcel"
+                                    Content="📦 Exp. Caja"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1" FontWeight="SemiBold" FontSize="11"
+                                    Padding="10,6" Cursor="Hand" Margin="0,0,10,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Botón Exportar Todo Completo -->
+                            <Button cal:Message.Attach="ExportarExcel"
+                                    Content="📊 Informe"
+                                    Background="{DynamicResource PrimaryBrush}"
+                                    Foreground="White"
+                                    BorderThickness="0" FontWeight="SemiBold" FontSize="11"
+                                    Padding="12,6" Cursor="Hand" Margin="0,0,10,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Botón Turnos -->
+                            <Button cal:Message.Attach="MostrarTurnos" 
+                                    Content="Turnos" Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,10,0" />
+
+                            <!-- Botón Caja Auditoría (navegación) -->
+                            <Button cal:Message.Attach="IrCajaAuditoria" 
+                                    Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
                         </StackPanel>
-
-                        <Button Grid.Column="6" Style="{StaticResource FiltroBtn}" Content="Este mes" cal:Message.Attach="FiltrarEsteMes"/>
-                        <Button Grid.Column="8" Style="{StaticResource FiltroBtn}" Content="3 meses" cal:Message.Attach="FiltrarUltimos3"/>
-                        <Button Grid.Column="10" Style="{StaticResource FiltroBtn}" Content="6 meses" cal:Message.Attach="FiltrarUltimos6"/>
-                        <Button Grid.Column="12" Style="{StaticResource FiltroBtn}" Content="Este año" cal:Message.Attach="FiltrarEsteAnio"/>
-
-                        <Button Grid.Column="14" cal:Message.Attach="Actualizar"
-                                Content="▶  Aplicar"
-                                Background="{DynamicResource PrimaryBrush}"
-                                Foreground="#0F172A" FontWeight="Bold" FontSize="12"
-                                Padding="18,6" Cursor="Hand">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="8"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-
-                        <CheckBox Grid.Column="15" 
-                                  IsChecked="{Binding AbrirDespuesDeExportar, Mode=TwoWay}"
-                                  Content="Auto-abrir"
-                                  Foreground="{DynamicResource TextSecondaryBrush}"
-                                  FontSize="11"
-                                  VerticalAlignment="Center"
-                                  Margin="8,0,8,0"/>
-
-                        <!-- Botón Exportar Caja Auditoría -->
-                    <Button Grid.Column="16" cal:Message.Attach="ExportarCajaAuditoriaExcel"
-                                Content="📦 Caja Auditoría"
-                                Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1" FontWeight="SemiBold" FontSize="12"
-                                Padding="12,6" Cursor="Hand" Margin="0,0,8,0">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8" Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-
-                        <!-- Botón Exportar Todo Completo -->
-                        <Button Grid.Column="17" cal:Message.Attach="ExportarExcel"
-                                Content="📊 Informe Completo"
-                                Background="{DynamicResource PrimaryBrush}"
-                                Foreground="White"
-                                BorderThickness="0" FontWeight="SemiBold" FontSize="12"
-                                Padding="14,6" Cursor="Hand" Margin="0,0,0,0">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8" Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-
-                        <!-- Botón Turnos -->
-                        <Button Grid.Column="18" cal:Message.Attach="MostrarTurnos" 
-                                Content="Turnos" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
-                        <!-- Botón Caja Auditoría (navegación) -->
-                        <Button Grid.Column="19" cal:Message.Attach="IrCajaAuditoria" 
-                                Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,0,0" />
                     </Grid>
                 </Border>
 

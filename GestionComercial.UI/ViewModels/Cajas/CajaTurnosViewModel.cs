@@ -22,7 +22,14 @@ namespace GestionComercial.UI.ViewModels.Cajas
         public ObservableCollection<CajaEntity> Cajas
         {
             get => _cajas;
-            set { _cajas = value; NotifyOfPropertyChange(() => Cajas); }
+            set { _cajas = value; NotifyOfPropertyChange(() => Cajas); ActualizarCajasFiltradas(); }
+        }
+
+        private ObservableCollection<CajaEntity> _cajasFiltradas = new();
+        public ObservableCollection<CajaEntity> CajasFiltradas
+        {
+            get => _cajasFiltradas;
+            set { _cajasFiltradas = value; NotifyOfPropertyChange(() => CajasFiltradas); }
         }
 
         private CajaEntity? _cajaSeleccionada;
@@ -47,6 +54,21 @@ namespace GestionComercial.UI.ViewModels.Cajas
             set { _turnoNuevo = value; NotifyOfPropertyChange(() => TurnoNuevo); }
         }
 
+        // ── Filtro por Turno ───────────────────────────────────────────────
+        private ObservableCollection<string> _filtroTurnos = new() { "Todos", "Mañana", "Tarde", "Noche" };
+        public ObservableCollection<string> FiltroTurnos
+        {
+            get => _filtroTurnos;
+            set { _filtroTurnos = value; NotifyOfPropertyChange(() => FiltroTurnos); }
+        }
+
+        private string _turnoFiltro = "Todos";
+        public string TurnoFiltro
+        {
+            get => _turnoFiltro;
+            set { _turnoFiltro = value; NotifyOfPropertyChange(() => TurnoFiltro); ActualizarCajasFiltradas(); }
+        }
+
         public CajaTurnosViewModel(IUnitOfWork uow, SesionServicio sesion)
         {
             _uow = uow;
@@ -69,6 +91,19 @@ namespace GestionComercial.UI.ViewModels.Cajas
             catch (Exception ex)
             {
                 LogHelper.Log($"[CajaTurnos] Error al cargar cajas: {ex.Message}");
+            }
+        }
+
+        private void ActualizarCajasFiltradas()
+        {
+            if (string.IsNullOrEmpty(TurnoFiltro) || TurnoFiltro == "Todos")
+            {
+                CajasFiltradas = new ObservableCollection<CajaEntity>(Cajas);
+            }
+            else
+            {
+                CajasFiltradas = new ObservableCollection<CajaEntity>(
+                    Cajas.Where(c => c.Turno == TurnoFiltro));
             }
         }
 
@@ -156,36 +191,6 @@ namespace GestionComercial.UI.ViewModels.Cajas
             {
                 LogHelper.Log($"[CajaTurnos] Error al eliminar caja: {ex.Message}");
                 MessageBox.Show($"Error al eliminar caja: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        public async Task CerrarCaja()
-        {
-            if (CajaSeleccionada == null)
-            {
-                MessageBox.Show("Seleccione una caja.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (CajaSeleccionada.EsPrimaria)
-            {
-                MessageBox.Show("No se puede cerrar la caja principal. Cree otra caja y transfiera el estado.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                CajaSeleccionada.Estado = 2;
-                CajaSeleccionada.FechaCierre = DateTime.Now;
-                _uow.Cajas.Actualizar(CajaSeleccionada);
-                await _uow.GuardarCambiosAsync();
-
-                await CargarCajasAsync();
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Log($"[CajaTurnos] Error al cerrar caja: {ex.Message}");
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
