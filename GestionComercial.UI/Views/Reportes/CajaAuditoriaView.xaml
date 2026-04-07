@@ -29,11 +29,11 @@
             <TextBlock Text="{Binding Subtitulo}" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
             <!-- Apertura Caja: selection of Caja and Turno to open -->
             <GroupBox Header="Apertura Caja" Margin="0,12,0,0" Padding="10">
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0" Spacing="10">
-                <ComboBox Width="180" ItemsSource="{Binding AvailableCajas}" DisplayMemberPath="Nombre" SelectedItem="{Binding SelectedCaja}" />
-                <ComboBox Width="180" ItemsSource="{Binding AvailableTurnos}" DisplayMemberPath="Nombre" SelectedItem="{Binding SelectedTurno}" />
-                <Button Content="Abrir Caja" Command="{Binding OpenCajaCommand}" Width="120" />
-              </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,0">
+                    <ComboBox Width="180" ItemsSource="{Binding AvailableCajas}" DisplayMemberPath="Nombre" SelectedItem="{Binding SelectedCaja}" Margin="0,0,10,0"/>
+                    <ComboBox Width="180" ItemsSource="{Binding AvailableTurnos}" DisplayMemberPath="Nombre" SelectedItem="{Binding SelectedTurno}" Margin="0,0,10,0"/>
+                    <Button Content="Abrir Caja" Command="{Binding OpenCajaCommand}" Width="120"/>
+                </StackPanel>
             </GroupBox>
         </StackPanel>
 
