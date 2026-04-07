@@ -7,6 +7,7 @@ using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Cajas;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -735,6 +736,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
             {
                 IsLoading = false;
             }
+        }
+
+        // ── Navegar a Caja Turnos ─────────────────────────────────────────────
+        public async Task MostrarTurnos()
+        {
+            await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
+                .ActivateItemAsync(Caliburn.Micro.IoC.Get<Cajas.CajaTurnosViewModel>(),
+                    System.Threading.CancellationToken.None);
         }
     }
 
