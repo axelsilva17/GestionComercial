@@ -142,8 +142,12 @@ namespace GestionComercial.UI.ViewModels.Cajas
 
             try
             {
-                _uow.Cajas.Eliminar(CajaSeleccionada.Id);
-                await _uow.GuardarCambiosAsync();
+                var cajaAEliminar = await _uow.Cajas.ObtenerPorIdAsync(CajaSeleccionada.Id);
+                if (cajaAEliminar != null)
+                {
+                    _uow.Cajas.Eliminar(cajaAEliminar);
+                    await _uow.GuardarCambiosAsync();
+                }
 
                 await CargarCajasAsync();
                 LogHelper.Log($"[CajaTurnos] Caja eliminada: {CajaSeleccionada.Id}");

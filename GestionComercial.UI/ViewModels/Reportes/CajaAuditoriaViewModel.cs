@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Main;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -276,49 +277,51 @@ public class CajaAuditoriaViewModel : NavigableViewModel
                 IsLoading = false;
             }
         }
-    }
 
-    // Simple DTOs for Caja/Turno selections in Apertura Caja
-    public class CajaOption
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-    }
-    public class TurnoOption
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-    }
-
-    // Lightweight async command wrapper for bindable commands in MVVM
-    public class AsyncRelayCommand : ICommand
-    {
-        private readonly Func<object, Task> _execute;
-        private readonly Predicate<object>? _canExecute;
-        public AsyncRelayCommand(Func<object, Task> execute, Predicate<object>? canExecute = null)
+        // Simple DTOs for Caja/Turno selections in Apertura Caja
+        public class CajaOption
         {
-            _execute = execute;
-            _canExecute = canExecute;
+            public int Id { get; set; }
+            public string Nombre { get; set; } = string.Empty;
         }
-        public bool CanExecute(object parameter) => _canExecute?.Invoke(parameter) ?? true;
-        public event EventHandler? CanExecuteChanged { add { } remove { } }
-        public async void Execute(object parameter) => await _execute(parameter);
-    }
-
-    // Action: open caja with selected caja/turno
-    private async Task AbrirCajaAsync()
-    {
-        if (SelectedCaja == null || SelectedTurno == null) return;
-        try
+        public class TurnoOption
         {
-            // Attempt to open the caja for the selected turno; if not supported, this will be a no-op
-            await _cajaServicio.AbrirCajaAsync(SelectedCaja.Id, SelectedTurno.Id);
-            // Refresh data after opening
-            await CargarDatosAsync();
+            public int Id { get; set; }
+            public string Nombre { get; set; } = string.Empty;
         }
-        catch (Exception ex)
+
+        // Lightweight async command wrapper for bindable commands in MVVM
+        public class AsyncRelayCommand : ICommand
         {
-            MostrarError($"Error al abrir caja: {ex.Message}");
+            private readonly Func<object, Task> _execute;
+            private readonly Predicate<object>? _canExecute;
+            public AsyncRelayCommand(Func<object, Task> execute, Predicate<object>? canExecute = null)
+            {
+                _execute = execute;
+                _canExecute = canExecute;
+            }
+            public bool CanExecute(object parameter) => _canExecute?.Invoke(parameter) ?? true;
+            public event EventHandler? CanExecuteChanged { add { } remove { } }
+            public async void Execute(object parameter) => await _execute(parameter);
+        }
+
+        // Action: open caja with selected caja/turno
+        private async Task AbrirCajaAsync()
+        {
+            if (SelectedCaja == null || SelectedTurno == null) return;
+            try
+            {
+                // Get SesionServicio from IoC
+                var sesion = Caliburn.Micro.IoC.Get<GestionComercial.Aplicacion.Servicios.SesionServicio>();
+                // Open caja with default monto inicial 0, in a real app this would come from UI
+                await _cajaServicio.AbrirCajaAsync(sesion.IdSucursal, sesion.IdUsuario, 0);
+                // Refresh data after opening
+                await CargarDatosAsync();
+            }
+            catch (Exception ex)
+            {
+                MostrarError($"Error al abrir caja: {ex.Message}");
+            }
         }
     }
 }
