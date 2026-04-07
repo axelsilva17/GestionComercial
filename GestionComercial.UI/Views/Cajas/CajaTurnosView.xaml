@@ -16,6 +16,7 @@
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -52,9 +53,18 @@
             </StackPanel>
         </Border>
 
+        <!-- Filtro por Turno -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Filtrar por Turno:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <ComboBox ItemsSource="{Binding FiltroTurnos}" SelectedItem="{Binding TurnoFiltro}" 
+                          Width="150" FontSize="13"/>
+            </StackPanel>
+        </Border>
+
         <!-- DataGrid: Lista de cajas -->
-        <Border Grid.Row="1" Style="{StaticResource Card}">
-            <DataGrid ItemsSource="{Binding Cajas}"
+        <Border Grid.Row="2" Style="{StaticResource Card}">
+            <DataGrid ItemsSource="{Binding CajasFiltradas}"
                       SelectedItem="{Binding CajaSeleccionada}"
                       AutoGenerateColumns="False" CanUserAddRows="False"
                       GridLinesVisibility="None" HeadersVisibility="Column"
