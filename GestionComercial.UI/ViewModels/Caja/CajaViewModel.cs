@@ -148,6 +148,7 @@ namespace GestionComercial.UI.ViewModels.Caja
                     TotalVentasDia       = 0;
                     SaldoActual          = 0;
                     Movimientos          = new();
+                    DesglosePorMetodo    = new();
                     return;
                 }
 
@@ -156,6 +157,25 @@ namespace GestionComercial.UI.ViewModels.Caja
                 _sesion.IdCajaActual = caja.Id;
                 MontoInicial         = caja.MontoInicial;
                 FechaApertura        = caja.FechaApertura;
+
+                // Cargar movimientos y calcular totales
+                var movimientos = await _cajaServicio.ObtenerMovimientosAsync(caja.Id);
+                Movimientos = new ObservableCollection<MovimientoCajaDto>(movimientos);
+
+                // Calcular ingresos y egresos desde los movimientos
+                TotalIngresos = movimientos.Where(m => m.EsIngreso).Sum(m => m.Monto);
+                TotalEgresos  = movimientos.Where(m => !m.EsIngreso).Sum(m => m.Monto);
+                CantidadIngresos = movimientos.Count(m => m.EsIngreso);
+                CantidadEgresos  = movimientos.Count(m => !m.EsIngreso);
+
+                // Calcular ventas del día
+                var ventasDia = await _cajaServicio.ObtenerVentasDelDiaAsync(caja.Id);
+                TotalVentasDia = ventasDia.Sum(v => v.Total);
+                CantidadVentasDia = ventasDia.Count();
+
+                // Desglose por método de pago
+                var desglose = await _cajaServicio.ObtenerDesglosePorMetodoAsync(caja.Id);
+                DesglosePorMetodo = new ObservableCollection<DesglosePagoDto>(desglose);
             }
             catch (Exception ex)
             {

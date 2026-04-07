@@ -73,32 +73,31 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="10"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Fila 1: Fechas y botones de período -->
+                        <!-- Fila 1: Fechas, botones de período y acciones -->
                         <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="PERÍODO" Style="{StaticResource ColHeader}"
                                        VerticalAlignment="Center" Margin="0,0,16,0"/>
 
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
                                 <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <DatePicker SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
                                             Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
                             </StackPanel>
 
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
                                 <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <DatePicker SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
                                             Style="{StaticResource FilterDatePickerStyle}" Width="130"/>
                             </StackPanel>
 
-                            <Button Style="{StaticResource FiltroBtn}" Content="Este mes" cal:Message.Attach="FiltrarEsteMes" Margin="0,0,8,0"/>
-                            <Button Style="{StaticResource FiltroBtn}" Content="3 meses" cal:Message.Attach="FiltrarUltimos3" Margin="0,0,8,0"/>
-                            <Button Style="{StaticResource FiltroBtn}" Content="6 meses" cal:Message.Attach="FiltrarUltimos6" Margin="0,0,8,0"/>
-                            <Button Style="{StaticResource FiltroBtn}" Content="Este año" cal:Message.Attach="FiltrarEsteAnio" Margin="0,0,20,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="Este mes" cal:Message.Attach="FiltrarEsteMes" Margin="0,0,6,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="3 meses" cal:Message.Attach="FiltrarUltimos3" Margin="0,0,6,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="6 meses" cal:Message.Attach="FiltrarUltimos6" Margin="0,0,6,0"/>
+                            <Button Style="{StaticResource FiltroBtn}" Content="Este año" cal:Message.Attach="FiltrarEsteAnio" Margin="0,0,16,0"/>
 
                             <Button cal:Message.Attach="Actualizar"
                                     Content="▶  Aplicar"
@@ -115,24 +114,14 @@
                                 </Button.Template>
                             </Button>
 
-                            <CheckBox IsChecked="{Binding AbrirDespuesDeExportar, Mode=TwoWay}"
-                                      Content="Auto-abrir"
-                                      Foreground="{DynamicResource TextSecondaryBrush}"
-                                      FontSize="11"
-                                      VerticalAlignment="Center"
-                                      Margin="20,0,0,0"/>
-                        </StackPanel>
-
-                        <!-- Fila 2: Botones de acción -->
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Botón Exportar Caja Auditoría -->
+                            <!-- Botones de acción -->
                             <Button cal:Message.Attach="ExportarCajaAuditoriaExcel"
                                     Content="📦 Exp. Caja"
                                     Background="{DynamicResource SurfaceBrush}"
                                     Foreground="{DynamicResource TextPrimaryBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1" FontWeight="SemiBold" FontSize="11"
-                                    Padding="10,6" Cursor="Hand" Margin="0,0,10,0">
+                                    Padding="10,6" Cursor="Hand" Margin="16,0,6,0">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}"
@@ -151,13 +140,12 @@
                                 </Button.Template>
                             </Button>
 
-                            <!-- Botón Exportar Todo Completo -->
                             <Button cal:Message.Attach="ExportarExcel"
                                     Content="📊 Informe"
                                     Background="{DynamicResource PrimaryBrush}"
                                     Foreground="White"
                                     BorderThickness="0" FontWeight="SemiBold" FontSize="11"
-                                    Padding="12,6" Cursor="Hand" Margin="0,0,10,0">
+                                    Padding="12,6" Cursor="Hand" Margin="0,0,6,0">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}"
@@ -175,14 +163,12 @@
                                 </Button.Template>
                             </Button>
 
-                            <!-- Botón Turnos -->
                             <Button cal:Message.Attach="MostrarTurnos" 
                                     Content="Turnos" Background="{DynamicResource SurfaceBrush}"
                                     Foreground="{DynamicResource TextPrimaryBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,10,0" />
+                                    FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,6,0" />
 
-                            <!-- Botón Caja Auditoría (navegación) -->
                             <Button cal:Message.Attach="IrCajaAuditoria" 
                                     Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
                                     Foreground="{DynamicResource TextPrimaryBrush}"

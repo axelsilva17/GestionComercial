@@ -73,7 +73,7 @@
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="10" Margin="0,0,0,16">
+                            CornerRadius="10" Margin="0,0,0,4">
                         <ComboBox ItemsSource="{Binding CajasDisponibles}"
                                   SelectedItem="{Binding CajaSeleccionada}"
                                   DisplayMemberPath="Nombre"
@@ -81,18 +81,24 @@
                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                   FontSize="14" Padding="14,12" Cursor="Hand"/>
                     </Border>
+                    <TextBlock Text="{Binding CajaSeleccionada.Nombre, StringFormat='Caja seleccionada: {0}', FallbackValue='Ninguna caja seleccionada'}"
+                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               Margin="0,0,0,16"/>
 
                     <TextBlock Text="TURNO" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="10" Margin="0,0,0,20">
+                            CornerRadius="10" Margin="0,0,0,4">
                         <ComboBox ItemsSource="{Binding Turnos}"
                                   SelectedItem="{Binding TurnoSeleccionado}"
                                   Background="Transparent" BorderThickness="0"
                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                   FontSize="14" Padding="14,12" Cursor="Hand"/>
                     </Border>
+                    <TextBlock Text="{Binding TurnoSeleccionado, StringFormat='Turno seleccionado: {0}', FallbackValue='Ningún turno seleccionado'}"
+                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               Margin="0,0,0,20"/>
 
                     <!-- ── Monto inicial ──────────────────────────────────── -->
                     <TextBlock Text="MONTO INICIAL EN CAJA" FontSize="10" FontWeight="Bold"
