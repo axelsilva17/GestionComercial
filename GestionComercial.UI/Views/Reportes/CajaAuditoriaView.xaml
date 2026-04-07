@@ -5,9 +5,6 @@
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              Background="{DynamicResource BackgroundBrush}">
     <UserControl.Resources>
-        <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
-        <converters:BoolToColorConverter x:Key="BoolToColor"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
