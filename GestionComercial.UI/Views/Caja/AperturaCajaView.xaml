@@ -75,6 +75,7 @@
                     <ComboBox ItemsSource="{Binding CajasDisponibles}"
                               SelectedItem="{Binding CajaSeleccionada}"
                               DisplayMemberPath="Nombre"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
                               Margin="0,0,0,16"/>
 
                     <!-- Turno -->
@@ -82,26 +83,8 @@
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                     <ComboBox ItemsSource="{Binding Turnos}"
                               SelectedItem="{Binding TurnoSeleccionado}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
                               Margin="0,0,0,20"/>
-
-                    <!-- Turno -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <TextBlock Text="TURNO:" FontSize="10" FontWeight="Bold"
-                                   Foreground="{DynamicResource TextSecondaryBrush}" 
-                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding TurnoSeleccionado, FallbackValue='Ninguno'}"
-                                   FontSize="11" Foreground="{DynamicResource PrimaryBrush}"
-                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <Border Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="10" Margin="0,0,0,20">
-                        <ComboBox ItemsSource="{Binding Turnos}"
-                                  SelectedItem="{Binding TurnoSeleccionado}"
-                                  Background="Transparent" BorderThickness="0"
-                                  Foreground="{DynamicResource TextPrimaryBrush}"
-                                  FontSize="14" Padding="14,12" Cursor="Hand"/>
-                    </Border>
 
                     <!-- ── Monto inicial ──────────────────────────────────── -->
                     <TextBlock Text="MONTO INICIAL EN CAJA" FontSize="10" FontWeight="Bold"
