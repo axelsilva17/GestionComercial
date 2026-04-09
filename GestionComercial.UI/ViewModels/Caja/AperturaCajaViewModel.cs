@@ -146,7 +146,7 @@ namespace GestionComercial.UI.ViewModels.Caja
                 if (ultimaCajaCerrada != null)
                 {
                     UltimoCierre  = ultimaCajaCerrada.FechaCierre ?? ultimaCajaCerrada.FechaApertura;
-                    SaldoAnterior = ultimaCajaCerrada.MontoFinal; // Efectivo que quedó al cerrar
+                    SaldoAnterior = (decimal)ultimaCajaCerrada.MontoFinal; // Efectivo que quedó al cerrar
                 }
                 else
                 {

@@ -411,13 +411,17 @@ namespace GestionComercial.Aplicacion.Servicios
             resumen.CantidadVentas = resumen.DesglosePorMetodo.Sum(d => d.Cantidad > 0 ? d.Cantidad : 1);
 
             // ── Movimientos manuales de caja (ingresos/egresos) ───────────────
+            // IMPORTANTE: Solo incluir movimientos MANUALES, NO los de ventas
+            // Los movimientos de ventas ya están incluidos en VentasEfectivo (desde los pagos)
+            // El vuelto de ventas ya está incluido en EgresosEfectivo (desde los pagos)
             var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
             foreach (var mov in movimientos)
             {
-                // Solo incluir Ingreso y Egreso en el resumen (Apertura/Cierre son operativos)
-                if (mov.Tipo == (int)TipoMovimientoCajaEnum.Ingreso)
+                // Solo incluir Ingreso y Egreso MANUAL (los de ventas tienen Id_venta)
+                // Apertura/Cierre son operativos y no afectan el saldo físico
+                if (mov.Tipo == (int)TipoMovimientoCajaEnum.Ingreso && mov.Id_venta == null)
                     resumen.IngresosEfectivo += mov.Monto;
-                else if (mov.Tipo == (int)TipoMovimientoCajaEnum.Egreso)
+                else if (mov.Tipo == (int)TipoMovimientoCajaEnum.Egreso && mov.Id_venta == null)
                     resumen.EgresosEfectivo += mov.Monto;
             }
 

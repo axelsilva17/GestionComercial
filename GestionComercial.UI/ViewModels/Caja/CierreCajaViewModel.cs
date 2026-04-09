@@ -225,6 +225,14 @@ namespace GestionComercial.UI.ViewModels.Caja
 
         private void RecalcularSaldo()
         {
+            // La fórmula correcta según spec es:
+            // SaldoEsperado = MontoInicial + VentasEfectivo + IngresosEfectivo - EgresosEfectivo
+            // 
+            // Esta fórmula ya incluye el Vuelto porque:
+            // - VentasEfectivo = Total de pagos en efectivo (recibido, incluyendo lo que luego se da como vuelto)
+            // - EgresosEfectivo = Egresos manuales + Vuelto (el vuelto se registra como movimiento Egreso)
+            //
+            // Entonces: MontoInicial + Recibido - EgresosManuales - Vuelto = Saldo correcto
             SaldoEsperado = MontoInicial + VentasEfectivo + IngresosEfectivo - EgresosEfectivo;
         }
 
