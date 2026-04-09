@@ -162,9 +162,12 @@ namespace GestionComercial.UI.ViewModels.Caja
                 var movimientos = await _cajaServicio.ObtenerMovimientosAsync(caja.Id);
                 Movimientos = new ObservableCollection<MovimientoCajaDto>(movimientos);
 
-                // Calcular ingresos y egresos desde los movimientos (excluir apertura que es neutral)
-                TotalIngresos = movimientos.Where(m => m.EsIngreso && !m.EsApertura).Sum(m => m.Monto);
-                TotalEgresos  = movimientos.Where(m => !m.EsIngreso && !m.EsApertura).Sum(m => m.Monto);
+                // Calcular ingresos y egresos desde los movimientos (excluir apertura/cierre que son operativos)
+                // Ventas = ingreso neto (recibido - cambio)
+                // Cambio dado = egreso
+                // La fórmula: MontoInicial + TotalIngresos - TotalEgresos es correcta
+                TotalIngresos = movimientos.Where(m => m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
+                TotalEgresos  = movimientos.Where(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
                 CantidadIngresos = movimientos.Count(m => m.EsIngreso && !m.EsApertura);
                 CantidadEgresos  = movimientos.Count(m => !m.EsIngreso && !m.EsApertura);
 

@@ -111,8 +111,8 @@ namespace GestionComercial.UI.ViewModels.Caja
                 if (CajasDisponibles.Any())
                     CajaSeleccionada = CajasDisponibles.First();
 
-                UltimoCierre  = DateTime.Now;
-                SaldoAnterior = 0;
+                // Cargar el último cierre de caja para mostrar saldo anterior
+                await CargarUltimoCierreAsync();
             }
             catch (Exception ex)
             {
@@ -124,6 +124,44 @@ namespace GestionComercial.UI.ViewModels.Caja
             finally { IsLoading = false; }
         }
 
+        /// <summary>
+        /// Carga el último cierre de caja de la sucursal actual.
+        /// Muestra: fecha del último cierre y saldo que quedó en caja.
+        /// </summary>
+        private async Task CargarUltimoCierreAsync()
+        {
+            try
+            {
+                var historial = await _cajaServicio.ObtenerHistorialAsync(
+                    _sesion.IdSucursal,
+                    DateTime.Now.AddDays(-30), // Últimos 30 días
+                    DateTime.Now);
+
+                // Obtener la última caja cerrada (la más reciente por fecha de apertura)
+                var ultimaCajaCerrada = historial
+                    .Where(c => !c.EstaAbierta)
+                    .OrderByDescending(c => c.FechaApertura)
+                    .FirstOrDefault();
+
+                if (ultimaCajaCerrada != null)
+                {
+                    UltimoCierre  = ultimaCajaCerrada.FechaCierre ?? ultimaCajaCerrada.FechaApertura;
+                    SaldoAnterior = ultimaCajaCerrada.MontoFinal; // Efectivo que quedó al cerrar
+                }
+                else
+                {
+                    // No hay cierre previo
+                    UltimoCierre  = DateTime.Now;
+                    SaldoAnterior = 0;
+                }
+            }
+            catch
+            {
+                UltimoCierre  = DateTime.Now;
+                SaldoAnterior = 0;
+            }
+        }
+
         public async Task Confirmar()
         {
             if (CajaSeleccionada == null)
@@ -132,11 +170,17 @@ namespace GestionComercial.UI.ViewModels.Caja
                 return;
             }
 
-            if (!decimal.TryParse(
+            // Si el monto inicial está vacío o en blanco, usar el saldo anterior
+            decimal monto;
+            if (string.IsNullOrWhiteSpace(MontoInicial))
+            {
+                monto = SaldoAnterior; //默认值
+            }
+            else if (!decimal.TryParse(
                     MontoInicial.Replace(",", "."),
                     System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture,
-                    out var monto) || monto < 0)
+                    out monto) || monto < 0)
             {
                 MostrarError("Ingresá un monto inicial válido.");
                 return;
