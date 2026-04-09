@@ -135,29 +135,9 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Caja abierta: Ingreso, Egreso y Cerrar -->
+                <!-- Caja abierta: solo Cerrar -->
                 <StackPanel Orientation="Horizontal"
                             Visibility="{Binding CajaAbierta, Converter={StaticResource BoolToVisibility}}">
-                    <Button x:Name="RegistrarIngreso"
-                            Style="{StaticResource AccionBtn}"
-                            Padding="18,0" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="↑" FontSize="16" FontWeight="Bold"
-                                       Foreground="{DynamicResource SuccessBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,7,0"/>
-                            <TextBlock Text="Ingreso" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="RegistrarEgreso"
-                            Style="{StaticResource AccionBtn}"
-                            Padding="18,0" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="↓" FontSize="16" FontWeight="Bold"
-                                       Foreground="{DynamicResource ErrorBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,7,0"/>
-                            <TextBlock Text="Egreso" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
                     <Button x:Name="CerrarCaja"
                             Height="44" Padding="18,0" FontSize="13"
                             Background="#1AEF4444" BorderBrush="{DynamicResource ErrorBrush}"

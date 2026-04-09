@@ -49,10 +49,10 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Desde:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
-                    <DatePicker SelectedDate="{Binding FechaDesde}" Width="120"/>
+                    <DatePicker SelectedDate="{Binding FechaDesde, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
                     <TextBlock Text="Hasta:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="20,0,8,0" FontSize="12"/>
-                    <DatePicker SelectedDate="{Binding FechaHasta}" Width="120"/>
+                    <DatePicker SelectedDate="{Binding FechaHasta, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
                 </StackPanel>
 
                 <!-- KPIs compactos -->
@@ -119,12 +119,16 @@
                     <TextBlock Grid.Row="0" Text="Cajas del período" FontSize="14" FontWeight="SemiBold" 
                                Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
 
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Cajas}" SelectedItem="{Binding CajaSeleccionada}"
-                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
-                              RowBackground="Transparent" AlternatingRowBackground="#08FFFFFF"
-                              HeadersVisibility="Column" FontSize="12">
-                        <DataGrid.Columns>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding Cajas}" SelectedItem="{Binding CajaSeleccionada}"
+                                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
+                                  RowBackground="Transparent" AlternatingRowBackground="#08FFFFFF"
+                                  HeadersVisibility="Column" FontSize="12"
+                                  Style="{StaticResource DataGridModerno}"
+                                  CellStyle="{StaticResource DataGridCellModerno}"
+                                  RowStyle="{StaticResource DataGridRowModerno}"
+                                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderModerno}">
+                            <DataGrid.Columns>
                             <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="85"/>
                             <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="50"/>
                             <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="90"/>
