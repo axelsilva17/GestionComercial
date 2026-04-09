@@ -16,12 +16,24 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
 
         // Para mostrar en UI
         public bool EsIngreso => Tipo == "Ingreso" || Tipo == "Venta";
+        public bool EsApertura => Tipo == "Apertura";
         public string TipoIcono => Tipo switch
         {
+            "Apertura" => "◯",
+            "Cierre" => "◉",
             "Venta" => "◈",
             "Ingreso" => "↑",
             "Egreso" => "↓",
             _ => "·"
+        };
+        public string TipoDisplay => Tipo switch
+        {
+            "Apertura" => "INICIO",
+            "Cierre" => "CIERRE",
+            "Venta" => "VENTA",
+            "Ingreso" => "INGRESO",
+            "Egreso" => "EGRESO",
+            _ => "OTRO"
         };
     }
     public class MovimientoAuditoriaDto
