@@ -132,10 +132,10 @@
                             <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="85"/>
                             <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="50"/>
                             <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="90"/>
-                            <DataGridTextColumn Header="Inicial" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
-                            <DataGridTextColumn Header="Efectivo" Binding="{Binding VentasEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
-                            <DataGridTextColumn Header="Final" Binding="{Binding MontoFinal, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
-                            <DataGridTextColumn Header="Diff" Binding="{Binding DiferenciaConEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="70"/>
+                            <DataGridTextColumn Header="Inicial $" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                            <DataGridTextColumn Header="Efectivo $" Binding="{Binding VentasEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                            <DataGridTextColumn Header="Final $" Binding="{Binding MontoFinal, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                            <DataGridTextColumn Header="Dif. $" Binding="{Binding DiferenciaConEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="70"/>
                             <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="65"/>
                         </DataGrid.Columns>
                     </DataGrid>
