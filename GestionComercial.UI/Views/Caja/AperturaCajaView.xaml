@@ -70,11 +70,14 @@
 
                     <!-- ── Selección de Caja y Turno ─────────────────────────── -->
                     <!-- Caja -->
-                    <TextBlock Text="SELECCIONAR CAJA" FontSize="10" FontWeight="Bold"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                    <TextBlock Text="{Binding CajaSeleccionada.Nombre, StringFormat='Caja seleccionada: {0}', FallbackValue='Ninguna caja seleccionada'}"
-                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
-                               Margin="0,0,0,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="CAJA:" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" 
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding CajaSeleccionada.Nombre, FallbackValue='Ninguna'}"
+                                   FontSize="11" Foreground="{DynamicResource PrimaryBrush}"
+                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="10" Margin="0,0,0,16">
@@ -87,11 +90,14 @@
                     </Border>
 
                     <!-- Turno -->
-                    <TextBlock Text="TURNO" FontSize="10" FontWeight="Bold"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                    <TextBlock Text="{Binding TurnoSeleccionado, StringFormat='Turno seleccionado: {0}', FallbackValue='Ningún turno seleccionado'}"
-                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
-                               Margin="0,0,0,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="TURNO:" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" 
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding TurnoSeleccionado, FallbackValue='Ninguno'}"
+                                   FontSize="11" Foreground="{DynamicResource PrimaryBrush}"
+                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="10" Margin="0,0,0,20">
