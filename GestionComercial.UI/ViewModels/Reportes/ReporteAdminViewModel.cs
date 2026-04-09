@@ -730,7 +730,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 
                 decimal totalVentas = ventasPeriodo.Sum(v => v.TotalFinal);
                 decimal promedioVenta = ventasPeriodo.Any() ? totalVentas / ventasPeriodo.Count : 0;
-                var clientesUnicos = ventasPeriodo.Select(v => v.Cliente?.Id).Distinct().Count();
+                var clientesUnicos = ventasPeriodo.Select(v => v.ClienteNombre).Distinct().Count();
                 
                 var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
@@ -771,7 +771,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     {
                         Nombre = p.ProductoNombre,
                         Cantidad = p.CantidadVendida,
-                        Total = p.TotalVendido
+                        Total = p.Ingresos
                     }).ToList(),
                     desde, 
                     hasta, 
