@@ -20,12 +20,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
     /// <summary>
     /// DTO para mostrar movimientos de caja en la auditoría.
     /// </summary>
-   
+    
 
 public class CajaAuditoriaViewModel : NavigableViewModel
 {
         private readonly ICajaServicio _cajaServicio;
         private readonly IUnitOfWork   _uow;
+        private CancellationTokenSource? _ctsCargarDatos;
 
         // Apertura Caja: selection of Caja and Turno for opening a new sesión
         public ObservableCollection<CajaOption> AvailableCajas { get; set; } = new();
@@ -49,14 +50,24 @@ public class CajaAuditoriaViewModel : NavigableViewModel
         public DateTime FechaDesde
         {
             get => _fechaDesde;
-            set { _fechaDesde = value; NotifyOfPropertyChange(() => FechaDesde); _ = CargarDatosAsync(); }
+            set 
+            { 
+                _fechaDesde = value; 
+                NotifyOfPropertyChange(() => FechaDesde); 
+                _ = CargarDatosAsync(); 
+            }
         }
 
         private DateTime _fechaHasta = DateTime.Today;
         public DateTime FechaHasta
         {
             get => _fechaHasta;
-            set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); _ = CargarDatosAsync(); }
+            set 
+            { 
+                _fechaHasta = value; 
+                NotifyOfPropertyChange(() => FechaHasta); 
+                _ = CargarDatosAsync(); 
+            }
         }
 
         private ObservableCollection<CajaAuditoriaItemDto> _cajas = new();
@@ -143,65 +154,80 @@ public class CajaAuditoriaViewModel : NavigableViewModel
 
     private async Task CargarDatosAsync()
     {
-            IsLoading = true;
-            try
+        // Cancelar carga anterior para evitar condiciones de carrera
+        _ctsCargarDatos?.Cancel();
+        _ctsCargarDatos = new CancellationTokenSource();
+        var token = _ctsCargarDatos.Token;
+
+        IsLoading = true;
+        try
+        {
+            var historial = await _cajaServicio.ObtenerHistorialAsync(0, FechaDesde, FechaHasta.AddDays(1));
+            
+            if (token.IsCancellationRequested) return;
+
+            var cajasDto = historial.Select(c => new CajaAuditoriaItemDto
             {
-                var historial = await _cajaServicio.ObtenerHistorialAsync(0, FechaDesde, FechaHasta.AddDays(1));
-                
-                var cajasDto = historial.Select(c => new CajaAuditoriaItemDto
-                {
-                    Id              = c.Id,
-                    FechaApertura   = c.FechaApertura.ToString("dd/MM/yyyy"),
-                    HoraApertura    = c.FechaApertura.ToString("HH:mm"),
-                    UsuarioApertura = c.UsuarioApertura?.Nombre ?? "Desconocido",
-                    MontoInicial    = c.MontoInicial,
-                    MontoFinal      = c.MontoFinal,
-                    FechaCierre     = c.FechaCierre?.ToString("dd/MM/yyyy"),
-                    UsuarioCierre   = c.UsuarioCierre?.Nombre,
-                    Turno           = c.Turno ?? string.Empty,
-                    Estado          = c.EstaAbierta ? "Abierta" : "Cerrada",
-                    EstadoColor     = c.EstaAbierta ? "#F59E0B" : "#10B981"
-                }).ToList();
+                Id              = c.Id,
+                FechaApertura   = c.FechaApertura.ToString("dd/MM/yyyy"),
+                HoraApertura    = c.FechaApertura.ToString("HH:mm"),
+                UsuarioApertura = c.UsuarioApertura?.Nombre ?? "Desconocido",
+                MontoInicial    = c.MontoInicial,
+                MontoFinal      = c.MontoFinal,
+                FechaCierre     = c.FechaCierre?.ToString("dd/MM/yyyy"),
+                UsuarioCierre   = c.UsuarioCierre?.Nombre,
+                Turno           = c.Turno ?? string.Empty,
+                Estado          = c.EstaAbierta ? "Abierta" : "Cerrada",
+                EstadoColor     = c.EstaAbierta ? "#F59E0B" : "#10B981"
+            }).ToList();
 
-                // Obtener ventas efectivo por caja (simulado por ahora)
-                foreach (var caja in cajasDto)
-                {
-                    var ventasEfvo = await _cajaServicio.ObtenerTotalEfectivoPorCajaAsync(caja.Id);
-                    caja.VentasEfectivo = ventasEfvo;
-                    caja.EfectivoEnCaja = caja.MontoInicial + ventasEfvo;
-                    // Asumimos ingresos totales como ventas en efectivo para mostrar en la UI,
-                    // y egresos como 0 por now (puedes ajustar si tienes datos de egresos específicos).
-                    caja.Ingresos = ventasEfvo;
-                    caja.Egresos = 0;
+            if (token.IsCancellationRequested) return;
 
-                    // Calcular diferencias si hay monto final
-                    if (caja.MontoFinal.HasValue)
-                    {
-                        caja.DiferenciaSinEfectivo = caja.MontoFinal.Value - caja.MontoInicial;
-                        caja.DiferenciaConEfectivo = caja.MontoFinal.Value - caja.EfectivoEnCaja;
-                    }
+            // Obtener ventas efectivo por caja (simulado por ahora)
+            foreach (var caja in cajasDto)
+            {
+                var ventasEfvo = await _cajaServicio.ObtenerTotalEfectivoPorCajaAsync(caja.Id);
+                caja.VentasEfectivo = ventasEfvo;
+                caja.EfectivoEnCaja = caja.MontoInicial + ventasEfvo;
+                // Asumimos ingresos totales como ventas en efectivo para mostrar en la UI,
+                // y egresos como 0 por now (puedes ajustar si tienes datos de egresos específicos).
+                caja.Ingresos = ventasEfvo;
+                caja.Egresos = 0;
+
+                // Calcular diferencias si hay monto final
+                if (caja.MontoFinal.HasValue)
+                {
+                    caja.DiferenciaSinEfectivo = caja.MontoFinal.Value - caja.MontoInicial;
+                    caja.DiferenciaConEfectivo = caja.MontoFinal.Value - caja.EfectivoEnCaja;
                 }
+            }
 
-                Cajas = new ObservableCollection<CajaAuditoriaItemDto>(cajasDto);
-                
-                // KPIs
-                TotalCajas = cajasDto.Count;
-                CajasCerradas = cajasDto.Count(c => c.Estado == "Cerrada");
-                TotalDiferencias = cajasDto.Where(c => c.MontoFinal.HasValue).Sum(c => Math.Abs(c.DiferenciaConEfectivo));
-                CajasConDiferencia = cajasDto.Count(c => c.MontoFinal.HasValue && c.DiferenciaConEfectivo != 0);
+            if (token.IsCancellationRequested) return;
 
-                // Chart
-                ActualizarGrafico(cajasDto);
-            }
-            catch (Exception ex)
-            {
-                MostrarError($"Error al cargar auditoría: {ex.Message}");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            Cajas = new ObservableCollection<CajaAuditoriaItemDto>(cajasDto);
+            
+            // KPIs
+            TotalCajas = cajasDto.Count;
+            CajasCerradas = cajasDto.Count(c => c.Estado == "Cerrada");
+            TotalDiferencias = cajasDto.Where(c => c.MontoFinal.HasValue).Sum(c => Math.Abs(c.DiferenciaConEfectivo));
+            CajasConDiferencia = cajasDto.Count(c => c.MontoFinal.HasValue && c.DiferenciaConEfectivo != 0);
+
+            // Chart
+            ActualizarGrafico(cajasDto);
         }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - se canceló por cambio de fecha
+        }
+        catch (Exception ex)
+        {
+            MostrarError($"Error al cargar auditoría: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
         // Load options for Apertura Caja (Caja + Turno) with a basic fallback
         private async Task LoadAperturaOpcionesAsync()
