@@ -146,7 +146,7 @@ namespace GestionComercial.Aplicacion.Servicios
         /// Registra los pagos y recién aquí marca la venta como Pagada.
         /// Soporta pagos mixtos (efectivo + tarjeta + QR, etc.).
         /// Para pagos en efectivo, crea automáticamente un movimiento de caja.
-        /// El vuelto NO se guarda — es solo informativo para el vendedor.
+        /// El vuelto se registra como egreso en la caja.
         /// </summary>
         public async Task RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos)
         {
@@ -163,6 +163,9 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException(
                     $"El monto pagado (${totalPagado:N2}) es menor al total (${venta.TotalFinal:N2}).");
 
+            // Calcular el total de vuelto de todos los pagos en efectivo
+            decimal totalVuelto = pagos.Where(p => p.EsEfectivo).Sum(p => p.Vuelto);
+
             foreach (var pago in pagos.Where(p => p.Monto > 0))
             {
                 var pagoEntity = new GestionComercial.Dominio.Entidades.Pagos.Pago
@@ -175,11 +178,14 @@ namespace GestionComercial.Aplicacion.Servicios
                 // ── Crear movimiento de caja SOLO para pagos en efectivo ─────────
                 if (pago.EsEfectivo && venta.Id_caja.HasValue)
                 {
+                    // El monto del movimiento es: efectivo recibido - vuelto dado
+                    var montoNeto = pago.Monto - pago.Vuelto;
+
                     var movimiento = new TipoMovimientoCaja
                     {
                         Tipo         = (int)TipoMovimientoCajaEnum.Ingreso,
-                        Monto        = pago.Monto,
-                        Concepto     = $"Venta #{venta.Id}",
+                        Monto        = montoNeto,
+                        Concepto     = $"Venta #{venta.Id} (recibido: ${pago.Monto:N2}, vuelto: ${pago.Vuelto:N2})",
                         ReferenciaId = venta.Id,
                         Id_venta     = venta.Id,
                         Id_caja      = venta.Id_caja.Value,
@@ -193,7 +199,25 @@ namespace GestionComercial.Aplicacion.Servicios
                     pagoEntity.Id_movimientoCaja = movimiento.Id;
 
                     // ── Registrar monto efectivo para cierre de caja ───────────────
-                    venta.EfectivoRecibido = pago.Monto;
+                    // Guardamos el monto TOTAL recibido (sin restar el vuelto) para el cierre
+                    venta.EfectivoRecibido = (venta.EfectivoRecibido ?? 0) + pago.Monto;
+
+                    // ── Registrar el vuelto como egreso si corresponde ───────────
+                    if (pago.Vuelto > 0)
+                    {
+                        var movimientoVuelto = new TipoMovimientoCaja
+                        {
+                            Tipo         = (int)TipoMovimientoCajaEnum.Egreso,
+                            Monto        = pago.Vuelto,
+                            Concepto     = $"Vuelto venta #{venta.Id}",
+                            ReferenciaId = venta.Id,
+                            Id_venta     = venta.Id,
+                            Id_caja      = venta.Id_caja.Value,
+                            Id_usuario   = venta.Id_usuario,
+                            Fecha        = DateTime.Now,
+                        };
+                        await _uow.MovimientosCaja.AgregarAsync(movimientoVuelto);
+                    }
                 }
 
                 await _uow.Pagos.AgregarAsync(pagoEntity);

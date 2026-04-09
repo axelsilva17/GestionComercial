@@ -343,6 +343,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     EsEfectivo   = p.EsEfectivo,
                 }).ToList();
 
+                // Calcular el vuelto total y asignarlo al primer pago en efectivo
+                var hayVuelto = Vuelto > 0;
+                if (hayVuelto)
+                {
+                    var primerEfectivo = pagosDto.FirstOrDefault(p => p.EsEfectivo);
+                    if (primerEfectivo != null)
+                    {
+                        primerEfectivo.Vuelto = Vuelto;
+                    }
+                }
+
                 System.Diagnostics.Debug.WriteLine($"[PagoVM-Confirmar] Pagos: {pagosDto.Count}, Total: {pagosDto.Sum(p => p.Monto)}");
 
                 // Verificar null antes de llamar al servicio
