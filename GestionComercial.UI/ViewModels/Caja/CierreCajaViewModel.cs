@@ -208,8 +208,9 @@ namespace GestionComercial.UI.ViewModels.Caja
                 VentasCuentaCte     = resumen.VentasCuentaCte;
                 VentasOtros         = resumen.VentasOtros;
 
-                // Desglose libre para lista
-                Desglose = new ObservableCollection<DesglosePagoDto>(resumen.DesglosePorMetodo);
+                // Desglose libre para lista (excluir efectivo que ya se muestra en la sección principal)
+                Desglose = new ObservableCollection<DesglosePagoDto>(
+                    resumen.DesglosePorMetodo.Where(d => !d.EsEfectivo));
 
                 FechaApertura = resumen.FechaApertura;
                 FechaCierre   = DateTime.Now;

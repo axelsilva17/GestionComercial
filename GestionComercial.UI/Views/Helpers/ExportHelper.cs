@@ -718,8 +718,197 @@ namespace GestionComercial.UI.Helpers
                     wsVentas.Cell(filaV, 3).Style.Font.Bold = true;
 
                     FormatearHoja(wsVentas, headersVentas.Length);
-                    AgregarMetadatos(wsVentas, "Ventas por Caja", desde, hasta);
+                AgregarMetadatos(wsVentas, "Ventas por Caja", desde, hasta);
                 }
+            }, shouldOpenAfterDownload);
+        }
+
+        // ── Exportar Informe Admin Completo ─────────────────────────────────────
+        public static void ExportarInformeAdmin(
+            IEnumerable<AuditoriaLogDto> auditoriaCajas,
+            IEnumerable<AuditoriaLogDto> auditoriaMovimientos,
+            IEnumerable<GestionComercial.UI.ViewModels.Reportes.CajaHistorialDto>? historialCajas,
+            IEnumerable<GestionComercial.UI.ViewModels.Reportes.VentaResumenCajaDto>? ventasPorCaja,
+            GestionComercial.UI.ViewModels.Reportes.ReporteAdminViewModel.ResumenAdminKpiDto? kpis,
+            IEnumerable<GestionComercial.UI.ViewModels.Reportes.ReporteAdminViewModel.ResumenMetodoPagoDto>? metodosPago,
+            IEnumerable<GestionComercial.UI.ViewModels.Reportes.ReporteAdminViewModel.ResumenProductoDto>? topProductos,
+            DateTime desde,
+            DateTime hasta,
+            bool shouldOpenAfterDownload = false)
+        {
+            Exportar("Informe Admin", $"InformeAdmin_{Fecha()}", wb =>
+            {
+                // ── Hoja 1: Resumen de KPIs ──────────────────────────────────────
+                var wsKpi = wb.Worksheets.Add("Resumen KPIs");
+                wsKpi.Cell(1, 1).Value = "INFORME ADMINISTRATIVO";
+                wsKpi.Cell(1, 1).Style.Font.Bold = true;
+                wsKpi.Cell(1, 1).Style.Font.FontSize = 16;
+                wsKpi.Range(1, 1, 1, 4).Merge();
+                wsKpi.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                wsKpi.Cell(3, 1).Value = "Período:";
+                wsKpi.Cell(3, 2).Value = $"{desde:dd/MM/yyyy} - {hasta:dd/MM/yyyy}";
+
+                if (kpis != null)
+                {
+                    wsKpi.Cell(5, 1).Value = "RESUMEN DE OPERACIONES";
+                    wsKpi.Cell(5, 1).Style.Font.Bold = true;
+                    wsKpi.Range(5, 1, 5, 2).Merge();
+
+                    wsKpi.Cell(6, 1).Value = "Total Ventas:";
+                    wsKpi.Cell(6, 2).Value = (double)kpis.TotalVentas;
+                    wsKpi.Cell(6, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                    wsKpi.Cell(7, 1).Value = "Cantidad de Ventas:";
+                    wsKpi.Cell(7, 2).Value = kpis.CantidadVentas;
+
+                    wsKpi.Cell(8, 1).Value = "Promedio por Venta:";
+                    wsKpi.Cell(8, 2).Value = (double)kpis.PromedioVenta;
+                    wsKpi.Cell(8, 2).Style.NumberFormat.Format = "$ #,##0.00";
+
+                    wsKpi.Cell(9, 1).Value = "Clientes Únicos:";
+                    wsKpi.Cell(9, 2).Value = kpis.ClientesUnicos;
+
+                    wsKpi.Cell(10, 1).Value = "Clientes Nuevos:";
+                    wsKpi.Cell(10, 2).Value = kpis.ClientesNuevos;
+
+                    wsKpi.Cell(12, 1).Value = "RESUMEN DE CAJAS";
+                    wsKpi.Cell(12, 1).Style.Font.Bold = true;
+                    wsKpi.Range(12, 1, 12, 2).Merge();
+
+                    wsKpi.Cell(13, 1).Value = "Total Cajas:";
+                    wsKpi.Cell(13, 2).Value = kpis.TotalCajas;
+
+                    wsKpi.Cell(14, 1).Value = "Cajas Cerradas:";
+                    wsKpi.Cell(14, 2).Value = kpis.CajasCerradas;
+
+                    wsKpi.Cell(15, 1).Value = "Total Ingresos (aperturas):";
+                    wsKpi.Cell(15, 2).Value = (double)kpis.TotalIngresos;
+                    wsKpi.Cell(15, 2).Style.NumberFormat.Format = "$ #,##0";
+
+                    wsKpi.Cell(16, 1).Value = "Total Diferencias:";
+                    wsKpi.Cell(16, 2).Value = (double)kpis.TotalDiferencias;
+                    wsKpi.Cell(16, 2).Style.NumberFormat.Format = "$ #,##0";
+                }
+
+                wsKpi.Column(1).Width = 30;
+                wsKpi.Column(2).Width = 20;
+                FormatearHoja(wsKpi, 2);
+
+                // ── Hoja 2: Métodos de Pago ─────────────────────────────────────
+                if (metodosPago != null && metodosPago.Any())
+                {
+                    var wsMet = wb.Worksheets.Add("Métodos de Pago");
+                    var headersMet = new[] { "Método", "Total", "Cantidad" };
+                    AgregarHeaders(wsMet, headersMet);
+
+                    int fila = 2;
+                    decimal totalGeneral = 0;
+                    foreach (var m in metodosPago)
+                    {
+                        wsMet.Cell(fila, 1).Value = m.Metodo;
+                        wsMet.Cell(fila, 2).Value = (double)m.Total;
+                        wsMet.Cell(fila, 3).Value = m.Cantidad;
+                        wsMet.Cell(fila, 2).Style.NumberFormat.Format = "$ #,##0";
+                        totalGeneral += m.Total;
+                        fila++;
+                    }
+
+                    wsMet.Cell(fila, 1).Value = "TOTAL";
+                    wsMet.Cell(fila, 1).Style.Font.Bold = true;
+                    wsMet.Cell(fila, 2).Value = (double)totalGeneral;
+                    wsMet.Cell(fila, 2).Style.NumberFormat.Format = "$ #,##0";
+                    wsMet.Cell(fila, 2).Style.Font.Bold = true;
+
+                    FormatearHoja(wsMet, headersMet.Length);
+                    AgregarMetadatos(wsMet, "Métodos de Pago", desde, hasta);
+                }
+
+                // ── Hoja 3: Top Productos ────────────────────────────────────────
+                if (topProductos != null && topProductos.Any())
+                {
+                    var wsProd = wb.Worksheets.Add("Top Productos");
+                    var headersProd = new[] { "Producto", "Cantidad Vendida", "Total" };
+                    AgregarHeaders(wsProd, headersProd);
+
+                    int fila = 2;
+                    foreach (var p in topProductos)
+                    {
+                        wsProd.Cell(fila, 1).Value = p.Nombre;
+                        wsProd.Cell(fila, 2).Value = p.Cantidad;
+                        wsProd.Cell(fila, 3).Value = (double)p.Total;
+                        wsProd.Cell(fila, 3).Style.NumberFormat.Format = "$ #,##0";
+                        fila++;
+                    }
+
+                    FormatearHoja(wsProd, headersProd.Length);
+                    AgregarMetadatos(wsProd, "Top Productos", desde, hasta);
+                }
+
+                // ── Hoja 4: Resumen de Cajas ─────────────────────────────────────
+                if (historialCajas != null && historialCajas.Any())
+                {
+                    var wsResumen = wb.Worksheets.Add("Resumen Cajas");
+                    var headersResumen = new[]
+                    {
+                        "Caja", "Fecha Apertura", "Fecha Cierre", "Monto Inicial", "Monto Final", "Diferencia", "Tipo Diferencia", "Usuario Apertura", "Usuario Cierre", "Estado"
+                    };
+                    AgregarHeaders(wsResumen, headersResumen);
+
+                    int filaR = 2;
+                    decimal totalDiferencia = 0;
+                    foreach (var c in historialCajas)
+                    {
+                        wsResumen.Cell(filaR, 1).Value = $"Caja {c.Id}";
+                        wsResumen.Cell(filaR, 2).Value = c.FechaApertura;
+                        wsResumen.Cell(filaR, 3).Value = c.FechaCierre ?? "—";
+                        wsResumen.Cell(filaR, 4).Value = (double)c.MontoInicial;
+                        wsResumen.Cell(filaR, 5).Value = c.MontoFinal.HasValue ? (double)c.MontoFinal.Value : 0;
+                        wsResumen.Cell(filaR, 6).Value = c.Diferencia.HasValue ? (double)c.Diferencia.Value : 0;
+                        wsResumen.Cell(filaR, 7).Value = c.TipoDiferencia;
+                        wsResumen.Cell(filaR, 8).Value = c.UsuarioApertura;
+                        wsResumen.Cell(filaR, 9).Value = c.UsuarioCierre ?? "—";
+                        wsResumen.Cell(filaR, 10).Value = c.Estado;
+
+                        wsResumen.Cell(filaR, 4).Style.NumberFormat.Format = "$ #,##0";
+                        wsResumen.Cell(filaR, 5).Style.NumberFormat.Format = "$ #,##0";
+                        wsResumen.Cell(filaR, 6).Style.NumberFormat.Format = "$ #,##0";
+
+                        if (c.Diferencia.HasValue) totalDiferencia += c.Diferencia.Value;
+                        filaR++;
+                    }
+
+                    wsResumen.Cell(filaR, 5).Value = "TOTALES:";
+                    wsResumen.Cell(filaR, 5).Style.Font.Bold = true;
+                    wsResumen.Cell(filaR, 6).Value = (double)totalDiferencia;
+                    wsResumen.Cell(filaR, 6).Style.NumberFormat.Format = "$ #,##0";
+                    wsResumen.Cell(filaR, 6).Style.Font.Bold = true;
+
+                    FormatearHoja(wsResumen, headersResumen.Length);
+                    AgregarMetadatos(wsResumen, "Resumen de Cajas", desde, hasta);
+                }
+
+                // ── Hoja 5: Auditoría de Cajas (reducida) ─────────────────────────
+                var wsAud = wb.Worksheets.Add("Auditoría");
+                var headersAud = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Cambios" };
+                AgregarHeaders(wsAud, headersAud);
+
+                int filaAud = 2;
+                foreach (var d in auditoriaCajas.Take(500)) // Limitar a 500 registros
+                {
+                    wsAud.Cell(filaAud, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
+                    wsAud.Cell(filaAud, 2).Value = d.Usuario;
+                    wsAud.Cell(filaAud, 3).Value = d.TipoOperacionCaja;
+                    wsAud.Cell(filaAud, 4).Value = d.NumeroCaja ?? "—";
+                    if (d.MontoMostrar.HasValue) wsAud.Cell(filaAud, 5).Value = (double)d.MontoMostrar.Value;
+                    wsAud.Cell(filaAud, 6).Value = d.DetalleCambios;
+                    if (d.MontoMostrar.HasValue) wsAud.Cell(filaAud, 5).Style.NumberFormat.Format = "$ #,##0";
+                    filaAud++;
+                }
+
+                FormatearHoja(wsAud, headersAud.Length);
+                AgregarMetadatos(wsAud, "Auditoría de Cajas", desde, hasta);
+
             }, shouldOpenAfterDownload);
         }
 

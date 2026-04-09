@@ -670,24 +670,24 @@ namespace GestionComercial.UI.ViewModels.Reportes
             finally { IsLoading = false; }
         }
 
-        // ── Exportar Excel: Completo (Auditoría + Cajas + Ventas) ───────────────
+        // ── Exportar Excel: Completo (Admin Report con KPIs generales) ─────────────
         public async Task ExportarExcel()
         {
             try
             {
                 IsLoading = true;
 
-                // Asegurar datos de auditoría actualizados
                 var desde = FechaDesde.Date;
                 var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
 
+                // ── Datos de auditoría ─────────────────────────────────────────────
                 var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
                 var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
 
                 foreach (var a in auditoriaCajas) a.DeserializarJson();
                 foreach (var a in auditoriaMovimientos) a.DeserializarJson();
 
-                // Cargar datos de cajas para los nuevos exports
+                // ── Datos de cajas ─────────────────────────────────────────────────
                 var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
                 var historialCajas = cajas.Select(caja =>
                 {
@@ -710,7 +710,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     };
                 }).ToList();
 
-                // Cargar ventas por caja
+                // ── Ventas por caja ────────────────────────────────────────────────
                 var ventasPorCaja = cajas
                     .SelectMany(caja => caja.Ventas.Select(venta => new VentaResumenCajaDto
                     {
@@ -724,7 +724,58 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     .OrderByDescending(v => v.FechaVenta)
                     .ToList();
 
-                ExportHelper.ExportarAuditoriaCompleto(auditoriaCajas, auditoriaMovimientos, historialCajas, ventasPorCaja, desde, hasta, AbrirDespuesDeExportar);
+                // ── KPIs adicionales para el informe admin ─────────────────────────
+                var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                
+                decimal totalVentas = ventasPeriodo.Sum(v => v.TotalFinal);
+                decimal promedioVenta = ventasPeriodo.Any() ? totalVentas / ventasPeriodo.Count : 0;
+                var clientesUnicos = ventasPeriodo.Select(v => v.Cliente?.Id).Distinct().Count();
+                
+                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                
+                var topProductos = (await _reporteServicio.TopProductosAsync(
+                    _sesion.IdSucursal, desde, hasta, 10)).ToList();
+
+                // ── Datos de clientes ─────────────────────────────────────────────
+                var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
+                    _sesion.IdEmpresa, desde, hasta.AddDays(1));
+                var nuevosEnPeriodo = clientesNuevos.Count();
+
+                // Exportar informe completo
+                ExportHelper.ExportarInformeAdmin(
+                    auditoriaCajas, 
+                    auditoriaMovimientos, 
+                    historialCajas, 
+                    ventasPorCaja,
+                    new ResumenAdminKpiDto
+                    {
+                        TotalVentas = totalVentas,
+                        CantidadVentas = ventasPeriodo.Count,
+                        PromedioVenta = promedioVenta,
+                        ClientesUnicos = clientesUnicos,
+                        ClientesNuevos = nuevosEnPeriodo,
+                        TotalCajas = cajas.Count,
+                        CajasCerradas = cajas.Count(c => c.Estado == 2),
+                        TotalIngresos = historialCajas.Sum(c => c.MontoInicial),
+                        TotalDiferencias = historialCajas.Where(c => c.Diferencia.HasValue).Sum(c => Math.Abs(c.Diferencia.Value)),
+                    },
+                    metodosPago.Select(m => new ResumenMetodoPagoDto
+                    {
+                        Metodo = m.Metodo,
+                        Total = m.Total,
+                        Cantidad = m.Cantidad
+                    }).ToList(),
+                    topProductos.Select(p => new ResumenProductoDto
+                    {
+                        Nombre = p.ProductoNombre,
+                        Cantidad = p.CantidadVendida,
+                        Total = p.TotalVendido
+                    }).ToList(),
+                    desde, 
+                    hasta, 
+                    AbrirDespuesDeExportar);
             }
             catch (Exception ex)
             {
@@ -736,6 +787,34 @@ namespace GestionComercial.UI.ViewModels.Reportes
             {
                 IsLoading = false;
             }
+        }
+
+        // ── DTOs para exportar ──────────────────────────────────────────────────
+        public class ResumenAdminKpiDto
+        {
+            public decimal TotalVentas { get; set; }
+            public int CantidadVentas { get; set; }
+            public decimal PromedioVenta { get; set; }
+            public int ClientesUnicos { get; set; }
+            public int ClientesNuevos { get; set; }
+            public int TotalCajas { get; set; }
+            public int CajasCerradas { get; set; }
+            public decimal TotalIngresos { get; set; }
+            public decimal TotalDiferencias { get; set; }
+        }
+
+        public class ResumenMetodoPagoDto
+        {
+            public string Metodo { get; set; } = string.Empty;
+            public decimal Total { get; set; }
+            public int Cantidad { get; set; }
+        }
+
+        public class ResumenProductoDto
+        {
+            public string Nombre { get; set; } = string.Empty;
+            public int Cantidad { get; set; }
+            public decimal Total { get; set; }
         }
 
         // ── Navegar a Caja Turnos ─────────────────────────────────────────────

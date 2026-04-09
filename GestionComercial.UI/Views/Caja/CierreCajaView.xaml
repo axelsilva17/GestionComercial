@@ -105,14 +105,13 @@
 
                             <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,4,0,14"/>
 
-                            <!-- Cierre Ciego: NO se muestra saldo esperado al usuario -->
-                            <!-- El sistema lo calcula internamente y guarda la diferencia en auditoría -->
+                            <!-- Saldo en caja -->
                             <Border Background="#1510B981" BorderBrush="{DynamicResource SuccessBrush}"
                                     BorderThickness="1" CornerRadius="8" Padding="14,12">
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="MONTO EN CAJA" FontSize="10" FontWeight="Bold"
+                                        <TextBlock Text="SALDO EN CAJA" FontSize="10" FontWeight="Bold"
                                                    Foreground="{DynamicResource SuccessBrush}"/>
                                         <TextBlock Text="Calculado por el sistema" FontSize="11"
                                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
@@ -126,7 +125,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ── Sección 2: Otros métodos (informativos) ────────── -->
+                    <!-- ── Sección 2: Otros métodos (excluye efectivo) ─────────── -->
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="12" Padding="20,16" Margin="0,0,0,12"
@@ -138,30 +137,20 @@
                                 <TextBlock Text="OTROS MÉTODOS DE PAGO" FontSize="10" FontWeight="Bold"
                                            Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="Estos montos NO se cuentan en caja — se acreditan por separado"
+                            <TextBlock Text="Montos que se acreditan por separado"
                                        FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,0,0,14" TextWrapping="Wrap"/>
 
-                            <!-- Lista dinámica por método -->
+                            <!-- Lista dinámica por método (solo no-efectivo) -->
                             <ItemsControl ItemsSource="{Binding Desglose}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="0,0,0,8">
+                                        <Grid Margin="0,0,0,8" Visibility="{Binding EsEfectivo, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <StackPanel Orientation="Horizontal">
                                                 <Border Width="8" Height="8" CornerRadius="4"
-                                                        VerticalAlignment="Center" Margin="0,0,8,0">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="{DynamicResource InfoBrush}"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding EsEfectivo}" Value="True">
-                                                                    <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                </Border>
+                                                        Background="{DynamicResource InfoBrush}"
+                                                        VerticalAlignment="Center" Margin="0,0,8,0"/>
                                                 <TextBlock Text="{Binding Metodo}" FontSize="13"
                                                            Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                             </StackPanel>
@@ -189,36 +178,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ── Cierre Ciego: Solo datos calculados (sin input manual) ─── -->
-                    <Border Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1"
-                            CornerRadius="10" Padding="16,12" Margin="0,0,0,8">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Border Width="6" CornerRadius="3"
-                                        Background="{DynamicResource PrimaryBrush}" Margin="0,0,10,0"/>
-                                <TextBlock Text="CIERRE CIEGO" FontSize="10" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <TextBlock Text="El sistema calcula automáticamente el saldo esperado."
-                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" 
-                                       TextWrapping="Wrap" Margin="0,0,0,8"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="Efectivo en caja (calculado)" FontSize="13" 
-                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding SaldoEsperado, Converter={StaticResource DecimalToMoneda}}"
-                                           FontSize="20" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                    <TextBlock Text="No se muestra el monto esperado al usuario -差异 se calcula internamente"
-                               FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" 
-                               FontStyle="Italic" Margin="0,0,0,12"/>
-
-                    <!-- ── Diferencia calculada internamente (no visible hasta cerrar) ─ -->
+                    <!-- ── Diferencia calculada internamente ──────────────────────── -->
                     <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,16">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -290,30 +250,8 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="ExportarExcel" Grid.Column="0" Height="48" FontSize="14"
-                                FontWeight="SemiBold" Cursor="Hand"
-                                cal:Message.Attach="[Event Click] = [Action ExportarExcel]">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="b" Background="{DynamicResource PrimaryBrush}" CornerRadius="10">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="b" Property="Background" Value="#CC2563EB"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📊" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Exportar" VerticalAlignment="Center" Foreground="White"/>
-                            </StackPanel>
-                        </Button>
-                        <Button x:Name="Cancelar" Grid.Column="2" Content="Cancelar" Height="48" FontSize="14"
+                        <Button x:Name="Cancelar" Grid.Column="0" Content="Cancelar" Height="48" FontSize="14"
                                 Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Cursor="Hand">
@@ -332,7 +270,7 @@
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                        <Button x:Name="Confirmar" Grid.Column="4" Height="48" FontSize="14"
+                        <Button x:Name="Confirmar" Grid.Column="2" Height="48" FontSize="14"
                                 FontWeight="SemiBold" Cursor="Hand"
                                 cal:Message.Attach="[Event Click] = [Action ConfirmarCiego]">
                             <Button.Template>

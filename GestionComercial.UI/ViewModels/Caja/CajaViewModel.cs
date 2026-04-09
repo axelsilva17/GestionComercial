@@ -162,11 +162,11 @@ namespace GestionComercial.UI.ViewModels.Caja
                 var movimientos = await _cajaServicio.ObtenerMovimientosAsync(caja.Id);
                 Movimientos = new ObservableCollection<MovimientoCajaDto>(movimientos);
 
-                // Calcular ingresos y egresos desde los movimientos
-                TotalIngresos = movimientos.Where(m => m.EsIngreso).Sum(m => m.Monto);
-                TotalEgresos  = movimientos.Where(m => !m.EsIngreso).Sum(m => m.Monto);
-                CantidadIngresos = movimientos.Count(m => m.EsIngreso);
-                CantidadEgresos  = movimientos.Count(m => !m.EsIngreso);
+                // Calcular ingresos y egresos desde los movimientos (excluir apertura que es neutral)
+                TotalIngresos = movimientos.Where(m => m.EsIngreso && !m.EsApertura).Sum(m => m.Monto);
+                TotalEgresos  = movimientos.Where(m => !m.EsIngreso && !m.EsApertura).Sum(m => m.Monto);
+                CantidadIngresos = movimientos.Count(m => m.EsIngreso && !m.EsApertura);
+                CantidadEgresos  = movimientos.Count(m => !m.EsIngreso && !m.EsApertura);
 
                 // Calcular ventas del día
                 var ventasDia = await _cajaServicio.ObtenerVentasDelDiaAsync(caja.Id);
