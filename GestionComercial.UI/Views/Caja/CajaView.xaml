@@ -375,7 +375,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="TIPO" Width="120">
+                        <DataGridTemplateColumn Header="TIPO" Width="130">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="6" Padding="10,4"
@@ -386,6 +386,9 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding EsIngreso}" Value="True">
                                                         <Setter Property="Background" Value="#1A22C55E"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding EsApertura}" Value="True">
+                                                        <Setter Property="Background" Value="#1A64748B"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -400,6 +403,10 @@
                                                             <Setter Property="Text"       Value="INGRESO"/>
                                                             <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
                                                         </DataTrigger>
+                                                        <DataTrigger Binding="{Binding EsApertura}" Value="True">
+                                                            <Setter Property="Text"       Value="INICIO"/>
+                                                            <Setter Property="Foreground" Value="#94A3B8"/>
+                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBlock.Style>
@@ -410,7 +417,7 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="CONCEPTO" Width="*"
-                                            Binding="{Binding Concepto}">
+                                            Binding="{Binding Descripcion}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
@@ -433,6 +440,9 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding EsIngreso}" Value="True">
                                                         <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding EsApertura}" Value="True">
+                                                        <Setter Property="Foreground" Value="#94A3B8"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

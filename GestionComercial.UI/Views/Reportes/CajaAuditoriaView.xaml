@@ -2,18 +2,22 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
-             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:cal="http://www.caliburnproject.org"
              Background="{DynamicResource BackgroundBrush}">
     <UserControl.Resources>
         <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
         <converters:BoolToColorConverter x:Key="BoolToColor"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="20,16"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+        <Style x:Key="KpiValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="Bold"/>
         </Style>
     </UserControl.Resources>
 
@@ -26,66 +30,82 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="{Binding Titulo}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="{Binding Subtitulo}" FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+            <TextBlock Text="Auditoría de Caja" FontSize="24" FontWeight="Bold" 
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="Historial de cajas, movimientos y diferencias" FontSize="13" 
+                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
-        <!-- Filtros y KPIs -->
-        <Grid Grid.Row="1" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- Toolbar: Filtros + KPIs + Acciones -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Fechas -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <DatePicker SelectedDate="{Binding FechaDesde}" Width="130" Margin="0,0,8,0"/>
-                <TextBlock Text="—" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0"/>
-                <DatePicker SelectedDate="{Binding FechaHasta}" Width="130"/>
-            </StackPanel>
+                <!-- Filtros de fecha -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Desde:" Foreground="{DynamicResource TextSecondaryBrush}" 
+                               VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
+                    <DatePicker SelectedDate="{Binding FechaDesde}" Width="120"/>
+                    <TextBlock Text="Hasta:" Foreground="{DynamicResource TextSecondaryBrush}" 
+                               VerticalAlignment="Center" Margin="20,0,8,0" FontSize="12"/>
+                    <DatePicker SelectedDate="{Binding FechaHasta}" Width="120"/>
+                </StackPanel>
 
-            <!-- KPIs -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Border Style="{StaticResource Card}" Margin="0,0,12,0" Padding="16,12">
-                    <StackPanel>
-                        <TextBlock Text="Total Cajas" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding TotalCajas}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Card}" Margin="0,0,12,0" Padding="16,12">
-                    <StackPanel>
-                        <TextBlock Text="Cerradas" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding CajasCerradas}" FontSize="24" FontWeight="Bold" Foreground="#10B981"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Card}" Margin="0,0,12,0" Padding="16,12">
-                    <StackPanel>
-                        <TextBlock Text="Con Diferencia" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding CajasConDiferencia}" FontSize="24" FontWeight="Bold" Foreground="#F59E0B"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Card}" Padding="16,12">
-                    <StackPanel>
-                        <TextBlock Text="Total Diferencia" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding TotalDiferencias, Converter={StaticResource DecimalToMoneda}}" 
-                                   FontSize="24" FontWeight="Bold" Foreground="#EF4444"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
+                <!-- KPIs compactos -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" 
+                            Padding="12,6" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Cajas:" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" 
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding TotalCajas}" Style="{StaticResource KpiValue}" 
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" 
+                            Padding="12,6" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Cerradas:" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" 
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding CajasCerradas}" Style="{StaticResource KpiValue}" 
+                                       Foreground="#10B981"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" 
+                            Padding="12,6" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Con diff:" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" 
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding CajasConDiferencia}" Style="{StaticResource KpiValue}" 
+                                       Foreground="#F59E0B"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" Padding="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Total diff:" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" 
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding TotalDiferencias, Converter={StaticResource DecimalToMoneda}}" 
+                                       Style="{StaticResource KpiValue}" Foreground="#EF4444"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
 
-            <!-- Export -->
-            <Button Grid.Column="3" Content="Exportar Excel" cal:Message.Attach="ExportarExcel"
-                    Padding="16,8" Margin="12,0,0,0" Background="{DynamicResource PrimaryBrush}"
-                    Foreground="White" BorderThickness="0" Cursor="Hand"/>
-        </Grid>
+                <!-- Botón exportar -->
+                <Button Grid.Column="2" Content="Exportar Excel" cal:Message.Attach="ExportarExcel"
+                        Padding="14,8" Background="{DynamicResource PrimaryBrush}"
+                        Foreground="White" BorderThickness="0" Cursor="Hand" FontSize="12"/>
+            </Grid>
+        </Border>
 
-        <!-- Contenido principal: Cajas + Movimientos -->
+        <!-- Contenido principal -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="320"/>
             </Grid.ColumnDefinitions>
 
             <!-- Lista de cajas -->
@@ -96,29 +116,29 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Cajas" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                    <TextBlock Grid.Row="0" Text="Cajas del período" FontSize="14" FontWeight="SemiBold" 
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Cajas}" SelectedItem="{Binding CajaSeleccionada}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                               Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
-                              RowBackground="Transparent" AlternatingRowBackground="#0AFFFFFF"
-                              HeadersVisibility="Column">
+                              RowBackground="Transparent" AlternatingRowBackground="#08FFFFFF"
+                              HeadersVisibility="Column" FontSize="12">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="90"/>
-                            <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="60"/>
-                            <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="100"/>
-                            <DataGridTextColumn Header="Inicial" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                            <DataGridTextColumn Header="Efectivo" Binding="{Binding VentasEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                            <DataGridTextColumn Header="Final" Binding="{Binding MontoFinal, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                            <DataGridTextColumn Header="Diff" Binding="{Binding DiferenciaConEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
-                            <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="70"/>
+                            <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="85"/>
+                            <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="50"/>
+                            <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="90"/>
+                            <DataGridTextColumn Header="Inicial" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                            <DataGridTextColumn Header="Efectivo" Binding="{Binding VentasEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                            <DataGridTextColumn Header="Final" Binding="{Binding MontoFinal, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                            <DataGridTextColumn Header="Diff" Binding="{Binding DiferenciaConEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="70"/>
+                            <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="65"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </Border>
 
-            <!-- Detalle de movimientos -->
+            <!-- Panel de movimientos -->
             <Border Grid.Column="1" Style="{StaticResource Card}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -126,38 +146,55 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Margin="0,0,0,16">
-                        <TextBlock Text="Movimientos" FontSize="16" FontWeight="SemiBold" 
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Text="Movimientos" FontSize="14" FontWeight="SemiBold" 
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="{Binding CajaSeleccionada.FechaApertura, StringFormat='Caja del {0}'}" 
-                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Seleccione una caja"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CajaSeleccionada}" Value="{x:Null}">
+                                            <Setter Property="Text" Value="Seleccione una caja"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
 
+                    <!-- Mensaje cuando no hay caja seleccionada -->
+                    <TextBlock Grid.Row="1" Text="Seleccione una caja para ver sus movimientos"
+                               Foreground="{DynamicResource TextSecondaryBrush}" 
+                               FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding CajaSeleccionada, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"/>
+
+                    <!-- Lista de movimientos -->
                     <ListBox Grid.Row="1" ItemsSource="{Binding Movimientos}" BorderThickness="0" 
-                             Background="Transparent">
+                             Background="Transparent"
+                             Visibility="{Binding CajaSeleccionada, Converter={StaticResource BoolToVisibility}}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" 
-                                        Padding="12,8" Margin="0,0,0,6">
+                                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" 
+                                        Padding="10,8" Margin="0,0,0,6">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Icono}" FontSize="16" 
+                                        <TextBlock Grid.Column="0" Text="{Binding Icono}" FontSize="14" 
                                                    Foreground="{Binding EsIngreso, Converter={StaticResource BoolToColor}}"
-                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{Binding TipoOperacion}" FontWeight="SemiBold" 
+                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding TipoOperacion}" FontSize="12" FontWeight="SemiBold" 
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding Descripcion}" FontSize="11" 
-                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding Fecha}" FontSize="10" 
-                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding Descripcion}" FontSize="10" 
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" 
+                                                       TextTrimming="CharacterEllipsis" MaxWidth="160"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="2" Text="{Binding Monto, Converter={StaticResource DecimalToMoneda}}"
-                                                   FontWeight="Bold" VerticalAlignment="Center"
+                                                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </Grid>
                                 </Border>
