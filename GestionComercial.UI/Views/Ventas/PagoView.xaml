@@ -71,6 +71,25 @@
             <TextBlock Text="{Binding ClienteNombre}"
                        FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}"
                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
+            <!-- Estado del cobro -->
+            <TextBlock HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="14" FontWeight="SemiBold">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Text" Value="Esperando pago..."/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PuedeCobrar}" Value="True">
+                                <Setter Property="Text" Value="✅ Listo para cobrar - Presione F6 o haga clic"/>
+                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding HayVuelto}" Value="True">
+                                <Setter Property="Text" Value="💰 El cliente recibe vuelto"/>
+                                <Setter Property="Foreground" Value="{DynamicResource PositiveBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
         </StackPanel>
 
         <!-- Total a pagar -->
@@ -368,7 +387,6 @@
                 <Button Grid.Column="2" x:Name="Confirmar"
                         Height="48" FontSize="14" FontWeight="SemiBold"
                         IsEnabled="{Binding PuedeCobrar}"
-                        Style="{StaticResource PrimaryButton}"
                         ToolTip="F6 - Confirmar cobro"
                         cal:Message.Attach="[Event Click] = [Action Confirmar]">
                     <StackPanel Orientation="Horizontal">
