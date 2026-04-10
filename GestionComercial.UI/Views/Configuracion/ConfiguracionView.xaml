@@ -727,16 +727,12 @@
                     <ComboBox ItemsSource="{Binding Usuarios.Sucursales}"
                               SelectedItem="{Binding Usuarios.EditSucursal}"
                               DisplayMemberPath="Nombre" Height="40" Margin="0,0,0,16"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}"/>
+                              Style="{StaticResource FilterComboBoxStyle}"/>
                     <TextBlock Text="ROL" Style="{StaticResource FormLabel}"/>
                     <ComboBox ItemsSource="{Binding Usuarios.Roles}"
                               SelectedItem="{Binding Usuarios.EditRol}"
                               DisplayMemberPath="Nombre" Height="40" Margin="0,0,0,16"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}"/>
+                              Style="{StaticResource FilterComboBoxStyle}"/>
                     <CheckBox Content="Usuario activo" IsChecked="{Binding Usuarios.EditActivo}"
                               Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
                     <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"

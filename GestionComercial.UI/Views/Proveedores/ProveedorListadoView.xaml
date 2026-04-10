@@ -213,9 +213,7 @@
                     </Border>
 
                     <ComboBox Grid.Column="2" Height="38" FontSize="13"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                              Style="{StaticResource FilterComboBoxStyle}"
                               SelectedIndex="0">
                         <ComboBoxItem Content="Todos"/>
                         <ComboBoxItem Content="Activos"/>

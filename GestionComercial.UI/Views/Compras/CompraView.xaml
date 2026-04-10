@@ -146,7 +146,8 @@
                               Foreground="{DynamicResource TextPrimaryBrush}"
                               FontSize="13" VerticalAlignment="Center"
                               ItemsSource="{Binding Proveedores}"
-                              DisplayMemberPath="Nombre"/>
+                              DisplayMemberPath="Nombre"
+                              Style="{StaticResource FilterComboBoxStyle}"/>
                 </Border>
             </Grid>
 

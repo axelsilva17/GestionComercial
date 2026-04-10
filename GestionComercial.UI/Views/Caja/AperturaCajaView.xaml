@@ -75,7 +75,10 @@
                               ItemsSource="{Binding CajasDisponibles}"
                               SelectedItem="{Binding CajaSeleccionada}"
                               DisplayMemberPath="Nombre"
-                              Margin="0,0,0,16"/>
+                              Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding CajaSeleccionada.Nombre, FallbackValue='Ninguna caja seleccionada'}"
+                               FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,0,0,12"/>
 
                     <!-- ── Selección de Turno ─────────────────────────── -->
                     <TextBlock Text="TURNO" FontSize="10" FontWeight="Bold"
@@ -83,7 +86,10 @@
                     <ComboBox Style="{StaticResource FilterComboBoxStyle}"
                               ItemsSource="{Binding Turnos}"
                               SelectedItem="{Binding TurnoSeleccionado}"
-                              Margin="0,0,0,20"/>
+                              Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding TurnoSeleccionado, FallbackValue='Ningún turno seleccionado'}"
+                               FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,0,0,16"/>
 
                     <!-- ── Monto inicial ──────────────────────────────────── -->
                     <TextBlock Text="MONTO INICIAL EN CAJA" FontSize="10" FontWeight="Bold"

@@ -25,6 +25,7 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Nuevo Turno:" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding Turnos}" SelectedItem="{Binding TurnoNuevo}" 
+                          Style="{StaticResource FilterComboBoxStyle}"
                           Width="120" Margin="12,0,0,0" FontSize="13"/>
                 <Button cal:Message.Attach="CrearCaja" Content="+ Crear Caja"
                         Background="{DynamicResource PrimaryBrush}"
@@ -58,6 +59,7 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Filtrar por Turno:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <ComboBox ItemsSource="{Binding FiltroTurnos}" SelectedItem="{Binding TurnoFiltro}" 
+                          Style="{StaticResource FilterComboBoxStyle}"
                           Width="150" FontSize="13"/>
             </StackPanel>
         </Border>

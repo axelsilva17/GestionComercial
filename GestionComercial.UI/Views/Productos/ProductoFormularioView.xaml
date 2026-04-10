@@ -267,9 +267,7 @@
                         <StackPanel Grid.Row="2" Grid.Column="2">
                             <TextBlock Text="CATEGORÍA *" Style="{StaticResource FieldLabel}"/>
                             <ComboBox x:Name="CategoriaIdField" Height="42" FontSize="14"
-                                      Background="{DynamicResource SurfaceBrush}"
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                      Style="{StaticResource FilterComboBoxStyle}"
                                       VerticalContentAlignment="Center"
                                       ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
                                       SelectedValuePath="Id"/>
@@ -279,9 +277,7 @@
                         <StackPanel Grid.Row="4" Grid.Column="0">
                             <TextBlock Text="UNIDAD DE MEDIDA *" Style="{StaticResource FieldLabel}"/>
                             <ComboBox x:Name="UnidadMedidaIdField" Height="42" FontSize="14"
-                                      Background="{DynamicResource SurfaceBrush}"
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                      Style="{StaticResource FilterComboBoxStyle}"
                                       VerticalContentAlignment="Center"
                                       ItemsSource="{Binding UnidadesMedida}" DisplayMemberPath="Nombre"
                                       SelectedValuePath="Id"/>
