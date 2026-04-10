@@ -1,5 +1,8 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Threading;
@@ -10,10 +13,14 @@ namespace GestionComercial.UI.ViewModels.Proveedores
     public class ProveedorFormularioViewModel : NavigableViewModel
     {
         private readonly ShellViewModel _shell;
+        private readonly IProveedorServicio _proveedorServicio;
+        private readonly SesionServicio _sesion;
 
-        public ProveedorFormularioViewModel(ShellViewModel shell)
+        public ProveedorFormularioViewModel(ShellViewModel shell, IProveedorServicio proveedorServicio, SesionServicio sesion)
         {
             _shell = shell;
+            _proveedorServicio = proveedorServicio;
+            _sesion = sesion;
         }
 
         // ── Modo ──────────────────────────────────────────────────────────────
@@ -54,7 +61,7 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         public string Email
         {
             get => _email;
-            set { _email = value; NotifyOfPropertyChange(() => Email); NotifyOfPropertyChange(() => CanGuardar); }
+            set { _email = value; NotifyOfPropertyChange(() => Email); ValidarEmail(); }
         }
 
         private bool _activo = true;
@@ -65,7 +72,24 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         }
 
         // ── Validación básica de email ────────────────────────────────────────
-        public bool EmailValido => string.IsNullOrWhiteSpace(Email) || Email.Contains("@");
+        private bool _emailInvalido;
+        public bool EmailInvalido
+        {
+            get => _emailInvalido;
+            set { _emailInvalido = value; NotifyOfPropertyChange(() => EmailInvalido); }
+        }
+
+        public bool EmailValido => string.IsNullOrWhiteSpace(Email) || (Email.Contains("@") && Email.Contains("."));
+        
+        private void ValidarEmail()
+        {
+            if (!string.IsNullOrWhiteSpace(Email) && !EmailValido)
+                EmailInvalido = true;
+            else
+                EmailInvalido = false;
+            NotifyOfPropertyChange(() => CanGuardar);
+        }
+
         public bool CanGuardar  => !string.IsNullOrWhiteSpace(Nombre) && EmailValido && !IsLoading;
 
         // ── Inicialización ────────────────────────────────────────────────────
@@ -77,6 +101,7 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             Telefono      = string.Empty;
             Email         = string.Empty;
             Activo        = true;
+            EmailInvalido = false;
             LimpiarError();
         }
 
@@ -93,11 +118,15 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             IsLoading = true;
             try
             {
-                await Task.Delay(150); // TODO: var dto = await _proveedorServicio.ObtenerAsync(idProveedor);
-                // Nombre   = dto.Nombre;
-                // Telefono = dto.Telefono;
-                // Email    = dto.Email;
-                // Activo   = dto.Activo;
+                var dto = await _proveedorServicio.ObtenerPorIdAsync(idProveedor);
+                if (dto != null)
+                {
+                    Nombre   = dto.Nombre;
+                    Telefono = dto.Telefono ?? string.Empty;
+                    Email    = dto.Email ?? string.Empty;
+                    Activo   = dto.Activo;
+                    EmailInvalido = false;
+                }
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
@@ -111,7 +140,32 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             LimpiarError();
             try
             {
-                await Task.Delay(400); // TODO: llamar al servicio
+                if (EsModoEdicion)
+                {
+                    // Actualizar proveedor existente
+                    var proveedor = await _proveedorServicio.ObtenerPorIdAsync(_idProveedor);
+                    if (proveedor != null)
+                    {
+                        proveedor.Nombre = Nombre;
+                        proveedor.Telefono = string.IsNullOrWhiteSpace(Telefono) ? null : Telefono;
+                        proveedor.Email = string.IsNullOrWhiteSpace(Email) ? null : Email;
+                        proveedor.Activo = Activo;
+                        await _proveedorServicio.ActualizarAsync(proveedor);
+                    }
+                }
+                else
+                {
+                    // Crear nuevo proveedor
+                    var nuevoProveedor = new Proveedor
+                    {
+                        Nombre = Nombre,
+                        Telefono = string.IsNullOrWhiteSpace(Telefono) ? null : Telefono,
+                        Email = string.IsNullOrWhiteSpace(Email) ? null : Email,
+                        Id_empresa = _sesion.IdEmpresa,
+                        Activo = true
+                    };
+                    await _proveedorServicio.CrearAsync(nuevoProveedor);
+                }
                 await Volver();
             }
             catch (System.Exception ex) { MostrarError($"Error al guardar: {ex.Message}"); }

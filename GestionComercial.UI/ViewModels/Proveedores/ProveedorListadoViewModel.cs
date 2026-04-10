@@ -1,8 +1,12 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,10 +15,14 @@ namespace GestionComercial.UI.ViewModels.Proveedores
     public class ProveedorListadoViewModel : NavigableViewModel
     {
         private readonly ShellViewModel _shell;
+        private readonly IProveedorServicio _proveedorServicio;
+        private readonly SesionServicio _sesion;
 
-        public ProveedorListadoViewModel(ShellViewModel shell)
+        public ProveedorListadoViewModel(ShellViewModel shell, IProveedorServicio proveedorServicio, SesionServicio sesion)
         {
-            _shell    = shell;
+            _shell = shell;
+            _proveedorServicio = proveedorServicio;
+            _sesion = sesion;
             Titulo    = "Proveedores";
             Subtitulo = "Gestión de proveedores";
         }
@@ -65,6 +73,21 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
         }
 
+        // Filtro de estado (0=Todos, 1=Activos, 2=Inactivos)
+        private int _filtroEstado = 0;
+        public int FiltroEstado
+        {
+            get => _filtroEstado;
+            set { _filtroEstado = value; NotifyOfPropertyChange(() => FiltroEstado); }
+        }
+
+        public string FiltroEstadoTexto => FiltroEstado switch
+        {
+            1 => "Activos",
+            2 => "Inactivos",
+            _ => "Todos"
+        };
+
         // ── Paginación ────────────────────────────────────────────────────────
         private int _proveedoresMostrados;
         public int ProveedoresMostrados
@@ -97,23 +120,37 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             LimpiarError();
             try
             {
-                await Task.Delay(200); // TODO: reemplazar con servicio real
-
-                // Datos mock para probar la UI
-                var mock = new System.Collections.Generic.List<ProveedorItemDto>
+                // Cargar proveedores desde el servicio
+                var todosProveedores = await _proveedorServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                
+                // Aplicar filtros
+                var filtered = todosProveedores.AsEnumerable();
+                
+                // Filtro por estado
+                if (FiltroEstado == 1)
+                    filtered = filtered.Where(p => p.Activo);
+                else if (FiltroEstado == 2)
+                    filtered = filtered.Where(p => !p.Activo);
+                
+                // Filtro por búsqueda de nombre
+                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+                    filtered = filtered.Where(p => p.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase));
+                
+                var lista = filtered.Select(p => new ProveedorItemDto
                 {
-                    new() { IdProveedor=1, Nombre="Distribuidora Norte S.A.",   Telefono="3794-421000", Email="ventas@dnorte.com",    Activo=true,  TotalCompras=12 },
-                    new() { IdProveedor=2, Nombre="Tech Supplies Argentina",     Telefono="11-4523-9900", Email="info@techsup.com.ar", Activo=true,  TotalCompras=8  },
-                    new() { IdProveedor=3, Nombre="Papelera del Litoral",        Telefono="3794-455600", Email="pedidos@papelitoral.com", Activo=true, TotalCompras=25 },
-                    new() { IdProveedor=4, Nombre="Electro Import SRL",          Telefono="11-4788-0011", Email="compras@electroimport.com", Activo=false, TotalCompras=3 },
-                    new() { IdProveedor=5, Nombre="Mayorista Central Corrientes", Telefono="3794-480200", Email="mayorista@central.com", Activo=true, TotalCompras=17 },
-                };
-
-                Proveedores           = new ObservableCollection<ProveedorItemDto>(mock);
-                TotalProveedores      = mock.Count;
-                ProveedoresActivos    = mock.Count(p => p.Activo);
-                ProveedoresInactivos  = mock.Count(p => !p.Activo);
-                ProveedoresMostrados  = mock.Count;
+                    IdProveedor = p.Id,
+                    Nombre = p.Nombre,
+                    Telefono = p.Telefono ?? string.Empty,
+                    Email = p.Email ?? string.Empty,
+                    Activo = p.Activo,
+                    TotalCompras = 0 // TODO: obtener el total de compras real
+                }).ToList();
+                
+                Proveedores           = new ObservableCollection<ProveedorItemDto>(lista);
+                TotalProveedores      = lista.Count;
+                ProveedoresActivos    = lista.Count(p => p.Activo);
+                ProveedoresInactivos  = lista.Count(p => !p.Activo);
+                ProveedoresMostrados  = lista.Count;
                 TotalPaginas          = 1;
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
@@ -147,8 +184,36 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         public async Task DesactivarProveedor()
         {
             if (ProveedorSeleccionado == null) return;
-            // TODO: await _proveedorServicio.DesactivarAsync(ProveedorSeleccionado.IdProveedor);
-            await CargarAsync();
+            try
+            {
+                await _proveedorServicio.DesactivarAsync(ProveedorSeleccionado.IdProveedor);
+                await CargarAsync();
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+        }
+
+        public async Task ActivarProveedor()
+        {
+            if (ProveedorSeleccionado == null) return;
+            try
+            {
+                var proveedor = await _proveedorServicio.ObtenerPorIdAsync(ProveedorSeleccionado.IdProveedor);
+                if (proveedor != null)
+                {
+                    proveedor.Activo = true;
+                    await _proveedorServicio.ActualizarAsync(proveedor);
+                    await CargarAsync();
+                }
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+        }
+
+        public async Task VerProveedor()
+        {
+            if (ProveedorSeleccionado == null) return;
+            var vm = IoC.Get<ProveedorDetalleViewModel>();
+            vm.Inicializar(ProveedorSeleccionado.IdProveedor);
+            await _shell.ActivateItemAsync(vm, CancellationToken.None);
         }
 
         // ── Paginación ────────────────────────────────────────────────────────

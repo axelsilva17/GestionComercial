@@ -214,10 +214,10 @@
 
                     <ComboBox Grid.Column="2" Height="38" FontSize="13"
                               Style="{StaticResource FilterComboBoxStyle}"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="Todos"/>
-                        <ComboBoxItem Content="Activos"/>
-                        <ComboBoxItem Content="Inactivos"/>
+                              SelectedIndex="{Binding FiltroEstado, Mode=TwoWay}">
+                        <ComboBoxItem Content="Todos" Tag="0"/>
+                        <ComboBoxItem Content="Activos" Tag="1"/>
+                        <ComboBoxItem Content="Inactivos" Tag="2"/>
                     </ComboBox>
 
                     <Button Grid.Column="4" Content="Buscar"
