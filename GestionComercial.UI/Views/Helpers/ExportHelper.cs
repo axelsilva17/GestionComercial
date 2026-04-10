@@ -869,50 +869,7 @@ namespace GestionComercial.UI.Helpers
                     AgregarMetadatos(wsProd, "Top Productos", desde, hasta);
                 }
 
-                // ── Hoja 4: Resumen de Cajas ─────────────────────────────────────
-                if (historialCajas != null && historialCajas.Any())
-                {
-                    var wsResumen = wb.Worksheets.Add("Resumen Cajas");
-                    var headersResumen = new[]
-                    {
-                        "Caja", "Fecha Apertura", "Fecha Cierre", "Monto Inicial", "Monto Final", "Diferencia", "Tipo Diferencia", "Usuario Apertura", "Usuario Cierre", "Estado"
-                    };
-                    AgregarHeaders(wsResumen, headersResumen);
-
-                    int filaR = 2;
-                    decimal totalDiferencia = 0;
-                    foreach (var c in historialCajas)
-                    {
-                        wsResumen.Cell(filaR, 1).Value = $"Caja {c.Id}";
-                        wsResumen.Cell(filaR, 2).Value = c.FechaApertura;
-                        wsResumen.Cell(filaR, 3).Value = c.FechaCierre ?? "—";
-                        wsResumen.Cell(filaR, 4).Value = (double)c.MontoInicial;
-                        wsResumen.Cell(filaR, 5).Value = c.MontoFinal.HasValue ? (double)c.MontoFinal.Value : 0;
-                        wsResumen.Cell(filaR, 6).Value = c.Diferencia.HasValue ? (double)c.Diferencia.Value : 0;
-                        wsResumen.Cell(filaR, 7).Value = c.TipoDiferencia;
-                        wsResumen.Cell(filaR, 8).Value = c.UsuarioApertura;
-                        wsResumen.Cell(filaR, 9).Value = c.UsuarioCierre ?? "—";
-                        wsResumen.Cell(filaR, 10).Value = c.Estado;
-
-                        wsResumen.Cell(filaR, 4).Style.NumberFormat.Format = "$ #,##0";
-                        wsResumen.Cell(filaR, 5).Style.NumberFormat.Format = "$ #,##0";
-                        wsResumen.Cell(filaR, 6).Style.NumberFormat.Format = "$ #,##0";
-
-                        if (c.Diferencia.HasValue) totalDiferencia += c.Diferencia.Value;
-                        filaR++;
-                    }
-
-                    wsResumen.Cell(filaR, 5).Value = "TOTALES:";
-                    wsResumen.Cell(filaR, 5).Style.Font.Bold = true;
-                    wsResumen.Cell(filaR, 6).Value = (double)totalDiferencia;
-                    wsResumen.Cell(filaR, 6).Style.NumberFormat.Format = "$ #,##0";
-                    wsResumen.Cell(filaR, 6).Style.Font.Bold = true;
-
-                    FormatearHoja(wsResumen, headersResumen.Length);
-                    AgregarMetadatos(wsResumen, "Resumen de Cajas", desde, hasta);
-                }
-
-                // ── Hoja 5: Auditoría de Cajas (MEJORADA) ─────────────────────────
+                // ── Hoja 4: Auditoría de Cajas (MEJORADA) ─────────────────────────
                 var wsAud = wb.Worksheets.Add("Auditoría Caja");
                 
                 // ═══ ENCABEZADO DEL REPORTE ═══
@@ -1090,8 +1047,9 @@ namespace GestionComercial.UI.Helpers
                             break;
                     }
 
-                    // Columna 10: Detalle
-                    wsAud.Cell(filaAud, 10).Value = d.DetalleCambios ?? "—";
+                    // Columna 10: Detalle - solo Monto Inicial y Final
+                    string detalle = $"Ini: ${montoInicial:N0} - Fin: ${montoFinal:N0}";
+                    wsAud.Cell(filaAud, 10).Value = detalle;
 
                     filaAud++;
                 }
