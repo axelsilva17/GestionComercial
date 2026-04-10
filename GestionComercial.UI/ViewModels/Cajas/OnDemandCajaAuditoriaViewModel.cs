@@ -1,6 +1,7 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
@@ -17,11 +18,13 @@ namespace GestionComercial.UI.ViewModels.Cajas
     {
         private readonly ICajaServicio _cajaServicio;
         private readonly IUnitOfWork  _uow;
+        private readonly SesionServicio _sesion;
 
-        public OnDemandCajaAuditoriaViewModel(ICajaServicio cajaServicio, IUnitOfWork uow)
+        public OnDemandCajaAuditoriaViewModel(ICajaServicio cajaServicio, IUnitOfWork uow, SesionServicio sesion)
         {
             _cajaServicio = cajaServicio;
             _uow = uow;
+            _sesion = sesion;
             Titulo = "Auditoría On-Demand";
             Subtitulo = "Consulta y exporta historial de cajas";
         }
@@ -121,7 +124,7 @@ namespace GestionComercial.UI.ViewModels.Cajas
             IsLoading = true;
             try
             {
-                var historial = await _cajaServicio.ObtenerHistorialAsync(0, StartDate, EndDate.AddDays(1));
+                var historial = await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, StartDate, EndDate.AddDays(1));
                 
                 var cajasDto = historial.Select(c => new CajaAuditoriaItemDto
                 {

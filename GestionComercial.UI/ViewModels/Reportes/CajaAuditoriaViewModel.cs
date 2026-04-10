@@ -1,5 +1,6 @@
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
@@ -26,6 +27,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
 {
         private readonly ICajaServicio _cajaServicio;
         private readonly IUnitOfWork   _uow;
+        private readonly SesionServicio _sesion;
         private CancellationTokenSource? _ctsCargarDatos;
 
         // Apertura Caja: selection of Caja and Turno for opening a new sesión
@@ -136,10 +138,11 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             set => SetProperty(ref _series, value);
         }
 
-    public CajaAuditoriaViewModel(ICajaServicio cajaServicio, IUnitOfWork uow)
+    public CajaAuditoriaViewModel(ICajaServicio cajaServicio, IUnitOfWork uow, SesionServicio sesion)
         {
             _cajaServicio = cajaServicio;
-            _uow = uow;
+            _uow          = uow;
+            _sesion       = sesion;
             Titulo = "Auditoría";
             Subtitulo = "Caja — historial y diferencias";
             // Initialize commands
@@ -162,7 +165,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
         IsLoading = true;
         try
         {
-            var historial = await _cajaServicio.ObtenerHistorialAsync(0, FechaDesde, FechaHasta.AddDays(1));
+            var historial = await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, FechaDesde, FechaHasta.AddDays(1));
             
             if (token.IsCancellationRequested) return;
 
