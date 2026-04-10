@@ -23,8 +23,15 @@ namespace GestionComercial.UI.Views.Proveedores
         private async void EditarProveedor_Click(object sender, RoutedEventArgs e)
             => await VM?.EditarProveedor();
 
-        private async void DesactivarProveedor_Click(object sender, RoutedEventArgs e)
-            => await VM?.DesactivarProveedor();
+        private async void CambiarEstadoProveedor_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.ProveedorSeleccionado == null) return;
+            
+            if (VM.ProveedorSeleccionado.Activo)
+                await VM.DesactivarProveedor();
+            else
+                await VM.ActivarProveedor();
+        }
 
         private void VerCompras_Click(object sender, RoutedEventArgs e)
         {

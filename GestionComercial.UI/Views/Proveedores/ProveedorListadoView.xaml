@@ -482,26 +482,44 @@
                                 Style="{StaticResource GhostBtn}" Margin="0,0,0,8"
                                 Click="VerCompras_Click"/>
 
-                        <Button Content="Desactivar" Height="40" FontSize="13"
-                                Background="Transparent"
-                                Foreground="{DynamicResource ErrorBrush}"
-                                BorderBrush="{DynamicResource ErrorBrush}"
-                                BorderThickness="1" Cursor="Hand"
-                                Click="DesactivarProveedor_Click">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="b" Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="b" Property="Background" Value="#1AEF4444"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
+                        <!-- Botón dinâmico: Activar o Desactivar según estado -->
+                        <Button Height="40" FontSize="13"
+                                Cursor="Hand" Margin="0,0,0,8"
+                                Click="CambiarEstadoProveedor_Click">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="b" Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="b" Property="Opacity" Value="0.8"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ProveedorSeleccionado.Activo}" Value="True">
+                                            <Setter Property="Content" Value="Desactivar"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ProveedorSeleccionado.Activo}" Value="False">
+                                            <Setter Property="Content" Value="Activar"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                         </Button>
 
                     </StackPanel>
