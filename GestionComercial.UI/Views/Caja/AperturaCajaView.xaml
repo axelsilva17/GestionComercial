@@ -72,18 +72,18 @@
                     <!-- Caja -->
                     <TextBlock Text="SELECCIONAR CAJA" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                    <ComboBox ItemsSource="{Binding CajasDisponibles}"
+                    <ComboBox Style="{StaticResource FilterComboBoxStyle}"
+                              ItemsSource="{Binding CajasDisponibles}"
                               SelectedItem="{Binding CajaSeleccionada}"
                               DisplayMemberPath="Nombre"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
                               Margin="0,0,0,16"/>
 
                     <!-- Turno -->
                     <TextBlock Text="TURNO" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                    <ComboBox ItemsSource="{Binding Turnos}"
+                    <ComboBox Style="{StaticResource FilterComboBoxStyle}"
+                              ItemsSource="{Binding Turnos}"
                               SelectedItem="{Binding TurnoSeleccionado}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
                               Margin="0,0,0,20"/>
 
                     <!-- ── Monto inicial ──────────────────────────────────── -->
