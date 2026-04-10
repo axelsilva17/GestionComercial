@@ -905,20 +905,32 @@ namespace GestionComercial.UI.Helpers
                         wsAud.Cell(filaAud, 5).Value = (double)d.MontoMostrar.Value;
                         wsAud.Cell(filaAud, 5).Style.NumberFormat.Format = "$ #,##0.00";
                     }
+                    else
+                    {
+                        wsAud.Cell(filaAud, 5).Value = "—";
+                    }
                     wsAud.Cell(filaAud, 6).Value = d.DetalleCambios ?? "—";
                     
                     // Usar ValorAnteriorMostrar y ValorNuevoMostrar
-                    wsAud.Cell(filaAud, 7).Value = d.ValorAnteriorMostrar.HasValue 
-                        ? (double)d.ValorAnteriorMostrar.Value 
-                        : null;
-                    wsAud.Cell(filaAud, 8).Value = d.ValorNuevoMostrar.HasValue 
-                        ? (double)d.ValorNuevoMostrar.Value 
-                        : null;
-                        
                     if (d.ValorAnteriorMostrar.HasValue)
+                    {
+                        wsAud.Cell(filaAud, 7).Value = (double)d.ValorAnteriorMostrar.Value;
                         wsAud.Cell(filaAud, 7).Style.NumberFormat.Format = "$ #,##0.00";
+                    }
+                    else
+                    {
+                        wsAud.Cell(filaAud, 7).Value = "—";
+                    }
+                    
                     if (d.ValorNuevoMostrar.HasValue)
+                    {
+                        wsAud.Cell(filaAud, 8).Value = (double)d.ValorNuevoMostrar.Value;
                         wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0.00";
+                    }
+                    else
+                    {
+                        wsAud.Cell(filaAud, 8).Value = "—";
+                    }
                         
                     filaAud++;
                 }
@@ -954,18 +966,31 @@ namespace GestionComercial.UI.Helpers
                             wsAudMov.Cell(filaAudMov, 5).Value = (double)d.MontoMostrar.Value;
                             wsAudMov.Cell(filaAudMov, 5).Style.NumberFormat.Format = "$ #,##0.00";
                         }
+                        else
+                        {
+                            wsAudMov.Cell(filaAudMov, 5).Value = "—";
+                        }
                         wsAudMov.Cell(filaAudMov, 6).Value = d.DetalleCambios ?? "—";
-                        wsAudMov.Cell(filaAudMov, 7).Value = d.ValorAnteriorMostrar.HasValue 
-                            ? (double)d.ValorAnteriorMostrar.Value 
-                            : null;
-                        wsAudMov.Cell(filaAudMov, 8).Value = d.ValorNuevoMostrar.HasValue 
-                            ? (double)d.ValorNuevoMostrar.Value 
-                            : null;
-                            
+                        
                         if (d.ValorAnteriorMostrar.HasValue)
+                        {
+                            wsAudMov.Cell(filaAudMov, 7).Value = (double)d.ValorAnteriorMostrar.Value;
                             wsAudMov.Cell(filaAudMov, 7).Style.NumberFormat.Format = "$ #,##0.00";
+                        }
+                        else
+                        {
+                            wsAudMov.Cell(filaAudMov, 7).Value = "—";
+                        }
+                        
                         if (d.ValorNuevoMostrar.HasValue)
+                        {
+                            wsAudMov.Cell(filaAudMov, 8).Value = (double)d.ValorNuevoMostrar.Value;
                             wsAudMov.Cell(filaAudMov, 8).Style.NumberFormat.Format = "$ #,##0.00";
+                        }
+                        else
+                        {
+                            wsAudMov.Cell(filaAudMov, 8).Value = "—";
+                        }
                             
                         filaAudMov++;
                     }
