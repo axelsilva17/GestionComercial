@@ -28,5 +28,12 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(c => c.Proveedor)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
+
+        public async Task<IEnumerable<Compra>> ObtenerPorPeriodoAsync(int idSucursal, DateTime desde, DateTime hasta)
+            => await _dbSet
+                .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta)
+                .Include(c => c.Proveedor)
+                .OrderByDescending(c => c.Fecha)
+                .ToListAsync();
     }
 }

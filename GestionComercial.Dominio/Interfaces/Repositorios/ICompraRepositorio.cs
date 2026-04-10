@@ -8,5 +8,6 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<Compra?> ObtenerConDetallesAsync(int idCompra);
         Task<IEnumerable<Compra>> ObtenerPorProveedorAsync(int idProveedor);
         Task<IEnumerable<Compra>> ObtenerPorSucursalAsync(int idSucursal);
+        Task<IEnumerable<Compra>> ObtenerPorPeriodoAsync(int idSucursal, DateTime desde, DateTime hasta);
     }
 }

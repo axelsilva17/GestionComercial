@@ -10,5 +10,6 @@ namespace GestionComercial.Aplicacion.DTOs.Compras
         public int     Cantidad       { get; set; }
         public decimal PrecioCosto    { get; set; }
         public decimal SubTotal       { get; set; }
+        public int     Id_proveedor   { get; set; } // Agregado para filtro
     }
 }

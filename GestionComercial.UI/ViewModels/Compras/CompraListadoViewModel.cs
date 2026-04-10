@@ -1,26 +1,40 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GestionComercial.Aplicacion.DTOs.Compras;
-using GestionComercial.Aplicacion.DTOs.Proveedores;
+
 namespace GestionComercial.UI.ViewModels.Compras
 {
-
     // ── ViewModel ─────────────────────────────────────────────────────────────
     public class CompraListadoViewModel : NavigableViewModel
     {
-        public CompraListadoViewModel()
+        private readonly IProveedorServicio _proveedorServicio;
+        private readonly ICompraServicio _compraServicio;
+        private readonly SesionServicio _sesion;
+
+        public CompraListadoViewModel(
+            IProveedorServicio proveedorServicio,
+            ICompraServicio compraServicio,
+            SesionServicio sesion)
         {
+            _proveedorServicio = proveedorServicio;
+            _compraServicio = compraServicio;
+            _sesion = sesion;
             Titulo    = "Compras";
             Subtitulo = "Historial de órdenes de compra";
         }
 
-        private ObservableCollection<CompraDetalleDto> _compras = new();
-        public ObservableCollection<CompraDetalleDto> Compras
+        // ── Listas ─────────────────────────────────────────────────────────────
+        private ObservableCollection<CompraDto> _compras = new();
+        public ObservableCollection<CompraDto> Compras
         {
             get => _compras;
             set { _compras = value; NotifyOfPropertyChange(() => Compras); }
@@ -33,14 +47,14 @@ namespace GestionComercial.UI.ViewModels.Compras
             set { _proveedores = value; NotifyOfPropertyChange(() => Proveedores); }
         }
 
-        private CompraDetalleDto _compraSeleccionada;
-        public CompraDetalleDto CompraSeleccionada
+        private CompraDto _compraSeleccionada;
+        public CompraDto CompraSeleccionada
         {
             get => _compraSeleccionada;
             set { _compraSeleccionada = value; NotifyOfPropertyChange(() => CompraSeleccionada); }
         }
 
-        // Métricas
+        // ── Métricas ──────────────────────────────────────────────────────────
         private decimal _totalComprasMes;
         public decimal TotalComprasMes
         {
@@ -60,13 +74,6 @@ namespace GestionComercial.UI.ViewModels.Compras
         {
             get => _promedioCompra;
             set { _promedioCompra = value; NotifyOfPropertyChange(() => PromedioCompra); }
-        }
-
-        private string _proveedorTop = "-";
-        public string ProveedorTop
-        {
-            get => _proveedorTop;
-            set { _proveedorTop = value; NotifyOfPropertyChange(() => ProveedorTop); }
         }
 
         private int _productosRepuestos;
@@ -143,10 +150,45 @@ namespace GestionComercial.UI.ViewModels.Compras
             LimpiarError();
             try
             {
-                await Task.Delay(200);
-                Compras           = new ObservableCollection<CompraDetalleDto>();
-                TotalCompras      = 0;
-                ComprasMostradas  = 0;
+                // Cargar proveedores para el filtro
+                var todosProveedores = await _proveedorServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var listaProveedores = todosProveedores.Select(p => new ProveedorItemDto
+                {
+                    IdProveedor = p.Id,
+                    Nombre = p.Nombre,
+                    Telefono = p.Telefono ?? string.Empty,
+                    Email = p.Email ?? string.Empty,
+                    Activo = p.Activo
+                }).ToList();
+                
+                Proveedores = new ObservableCollection<ProveedorItemDto>(listaProveedores);
+                
+                // Cargar compras con filtros
+                DateTime desde = FechaDesde ?? DateTime.Now.AddMonths(-1);
+                DateTime hasta = FechaHasta ?? DateTime.Now;
+                
+                var compras = await _compraServicio.ObtenerPorPeriodoAsync(
+                    _sesion.IdSucursal, desde, hasta.AddDays(1));
+                
+                // Aplicar filtros adicionales
+                var filtered = compras.AsEnumerable();
+                
+                if (ProveedorFiltro != null)
+                    filtered = filtered.Where(c => c.Id_proveedor == ProveedorFiltro.IdProveedor);
+                
+                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
+                    filtered = filtered.Where(c => c.ProveedorNombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase));
+                
+                var lista = filtered.ToList();
+                
+                Compras = new ObservableCollection<CompraDto>(lista);
+                TotalCompras = lista.Count;
+                ComprasMostradas = lista.Count;
+                
+                // Calcular métricas
+                TotalComprasMes = lista.Sum(c => c.Total);
+                CantidadComprasMes = lista.Count;
+                PromedioCompra = CantidadComprasMes > 0 ? TotalComprasMes / CantidadComprasMes : 0;
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }

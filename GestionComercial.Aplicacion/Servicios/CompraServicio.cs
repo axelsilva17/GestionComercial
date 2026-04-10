@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Compras;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using System;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -15,6 +16,12 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<IEnumerable<CompraDto>> ObtenerPorSucursalAsync(int idSucursal)
         {
             var compras = await _uow.Compras.ObtenerPorSucursalAsync(idSucursal);
+            return compras.Select(MapearDto);
+        }
+
+        public async Task<IEnumerable<CompraDto>> ObtenerPorPeriodoAsync(int idSucursal, DateTime desde, DateTime hasta)
+        {
+            var compras = await _uow.Compras.ObtenerPorPeriodoAsync(idSucursal, desde, hasta);
             return compras.Select(MapearDto);
         }
 
@@ -33,6 +40,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Id_sucursal  = dto.IdSucursal,
                 Id_usuario   = dto.IdUsuario,
                 Total        = 0,
+                Estado       = 1, // Pendiente
             };
 
             decimal total = 0;
@@ -70,10 +78,13 @@ namespace GestionComercial.Aplicacion.Servicios
             IdCompra        = c.Id,
             Fecha           = c.Fecha,
             Total           = c.Total,
+            Estado          = c.Estado,
+            Id_proveedor    = c.Id_proveedor,
             ProveedorNombre = c.Proveedor?.Nombre ?? string.Empty,
             Items           = c.Detalles.Select(d => new CompraDetalleDto
             {
                 IdProducto = d.Id_producto,
+                Id_proveedor = c.Id_proveedor,
                 Cantidad    = (int)d.Cantidad,
                 PrecioCosto = d.PrecioCosto,
                 SubTotal    = d.Subtotal,

@@ -8,7 +8,9 @@ namespace GestionComercial.Aplicacion.DTOs.Compras
         public int              IdCompra          { get; set; }
         public DateTime         Fecha             { get; set; }
         public decimal          Total             { get; set; }
-        public int              IdProveedor       { get; set; }
+        public int              Estado            { get; set; } // 1=Pendiente, 2=Recibida, 3=Pagada
+        public string           EstadoTexto       => Estado switch { 1 => "Pendiente", 2 => "Recibida", 3 => "Pagada", _ => "—" };
+        public int              Id_proveedor      { get; set; }
         public string           ProveedorNombre   { get; set; }
         public string           ProveedorTelefono { get; set; }
         public int              IdSucursal        { get; set; }
