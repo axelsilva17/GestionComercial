@@ -12,6 +12,8 @@ using GestionComercial.UI.ViewModels.Reportes;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Windows;
 
 namespace GestionComercial.UI.Helpers
@@ -26,6 +28,28 @@ namespace GestionComercial.UI.Helpers
     /// </summary>
     public static class ExportHelper
     {
+        // ═══ Helper para parsear valores decimal de JSON ═══
+        private static decimal ParseDecimalValue(object? valor)
+        {
+            if (valor == null) return 0;
+            try
+            {
+                if (valor is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Number)
+                        return je.GetDecimal();
+                    if (je.ValueKind == JsonValueKind.String && decimal.TryParse(je.GetString(), out var parsed))
+                        return parsed;
+                }
+                if (decimal.TryParse(valor.ToString(), out var result))
+                    return result;
+            }
+            catch { }
+            return 0;
+        }
+
+        // ═══ Fin helper ═══
+
         // ── Exportadores específicos por reporte ─────────────────────────────
 
         public static void ExportarVentasPorDia(IEnumerable<VentaPorDiaDto> datos, DateTime desde, DateTime hasta)
@@ -888,72 +912,262 @@ namespace GestionComercial.UI.Helpers
                     AgregarMetadatos(wsResumen, "Resumen de Cajas", desde, hasta);
                 }
 
-                // ── Hoja 5: Auditoría de Cajas (detallada) ─────────────────────────
+                // ── Hoja 5: Auditoría de Cajas (MEJORADA) ─────────────────────────
                 var wsAud = wb.Worksheets.Add("Auditoría Caja");
-                var headersAud = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Valor Anterior", "Valor Nuevo" };
-                AgregarHeaders(wsAud, headersAud);
+                
+                // ═══ ENCABEZADO DEL REPORTE ═══
+                wsAud.Cell(1, 1).Value = "AUDITORÍA DE CAJA";
+                wsAud.Cell(1, 1).Style.Font.Bold = true;
+                wsAud.Cell(1, 1).Style.Font.FontSize = 18;
+                wsAud.Range(1, 1, 1, 10).Merge();
+                wsAud.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                int filaAud = 2;
+                wsAud.Cell(2, 1).Value = $"Período: {desde:dd/MM/yyyy} - {hasta:dd/MM/yyyy}";
+                wsAud.Cell(2, 1).Style.Font.FontSize = 12;
+                wsAud.Range(2, 1, 2, 10).Merge();
+
+                wsAud.Cell(3, 1).Value = $"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}";
+                wsAud.Cell(3, 1).Style.Font.FontSize = 10;
+                wsAud.Cell(3, 1).Style.Font.FontColor = XLColor.Gray;
+                wsAud.Range(3, 1, 3, 10).Merge();
+
+                // ═══ HEADERS ═══
+                var headersAud = new[] { "Fecha", "Turno", "Usuario", "Operación", "N° Caja", "Monto Inicial", "Monto Final", "Diferencia", "Tipo Diferencia", "Detalle" };
+                int headerRow = 5;
+                for (int i = 0; i < headersAud.Length; i++)
+                {
+                    wsAud.Cell(headerRow, i + 1).Value = headersAud[i];
+                    wsAud.Cell(headerRow, i + 1).Style.Font.Bold = true;
+                    wsAud.Cell(headerRow, i + 1).Style.Font.FontColor = XLColor.White;
+                    wsAud.Cell(headerRow, i + 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
+                    wsAud.Cell(headerRow, i + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // ═══ PROCESAR DATOS CON AGRUPAMIENTO POR TURNO ═══
+                int filaAud = headerRow + 1;
+                string? turnoActual = null;
+                int contadorTurno = 0;
+                decimal sumaDiferenciaTurno = 0;
+                bool filaGris = false;
+
                 foreach (var d in auditoriaCajas.Take(1000))
                 {
-                    wsAud.Cell(filaAud, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
-                    wsAud.Cell(filaAud, 2).Value = d.Usuario ?? "—";
-                    wsAud.Cell(filaAud, 3).Value = d.TipoOperacionCaja ?? "—";
-                    wsAud.Cell(filaAud, 4).Value = d.NumeroCaja ?? "—";
-                    if (d.MontoMostrar.HasValue)
-                    {
-                        wsAud.Cell(filaAud, 5).Value = (double)d.MontoMostrar.Value;
-                        wsAud.Cell(filaAud, 5).Style.NumberFormat.Format = "$ #,##0.00";
-                    }
-                    else
-                    {
-                        wsAud.Cell(filaAud, 5).Value = "—";
-                    }
-                    wsAud.Cell(filaAud, 6).Value = d.DetalleCambios ?? "—";
+                    // Extraer Turno del JSON
+                    string turno = "—";
+                    decimal montoInicial = 0;
+                    decimal montoFinal = 0;
                     
-                    // Usar ValorAnteriorMostrar y ValorNuevoMostrar
-                    if (d.ValorAnteriorMostrar.HasValue)
+                    if (d.ValoresNuevosDeserializados != null)
                     {
-                        wsAud.Cell(filaAud, 7).Value = (double)d.ValorAnteriorMostrar.Value;
-                        wsAud.Cell(filaAud, 7).Style.NumberFormat.Format = "$ #,##0.00";
-                    }
-                    else
-                    {
-                        wsAud.Cell(filaAud, 7).Value = "—";
+                        if (d.ValoresNuevosDeserializados.TryGetValue("Turno", out var t) && t != null)
+                            turno = t.ToString() ?? "—";
+                        if (d.ValoresNuevosDeserializados.TryGetValue("MontoInicial", out var mi))
+                            montoInicial = ParseDecimalValue(mi);
+                        if (d.ValoresNuevosDeserializados.TryGetValue("MontoFinal", out var mf))
+                            montoFinal = ParseDecimalValue(mf);
                     }
                     
-                    if (d.ValorNuevoMostrar.HasValue)
+                    // Calcular diferencia
+                    decimal diferencia = montoFinal - montoInicial;
+                    string tipoDiferencia = diferencia > 0 ? "Positivo" : diferencia < 0 ? "Negativo" : "Cero";
+
+                    // Detectar cambio de turno para agregar subtotal
+                    if (turnoActual != null && turnoActual != turno && contadorTurno > 0)
                     {
-                        wsAud.Cell(filaAud, 8).Value = (double)d.ValorNuevoMostrar.Value;
-                        wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0.00";
-                    }
-                    else
-                    {
-                        wsAud.Cell(filaAud, 8).Value = "—";
-                    }
+                        // Agregar fila de subtotal del turno anterior
+                        wsAud.Cell(filaAud, 1).Value = "SUBTOTAL";
+                        wsAud.Cell(filaAud, 1).Style.Font.Bold = true;
+                        wsAud.Cell(filaAud, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#E0E0E0");
+                        wsAud.Range(filaAud, 1, filaAud, 8).Merge();
                         
+                        wsAud.Cell(filaAud, 9).Value = $"Cnt: {contadorTurno}";
+                        wsAud.Cell(filaAud, 9).Style.Font.Bold = true;
+                        wsAud.Cell(filaAud, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#E0E0E0");
+                        
+                        wsAud.Cell(filaAud, 8).Value = (double)sumaDiferenciaTurno;
+                        wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0";
+                        wsAud.Cell(filaAud, 8).Style.Font.Bold = true;
+                        wsAud.Cell(filaAud, 8).Style.Fill.BackgroundColor = XLColor.FromHtml("#E0E0E0");
+                        
+                        // Color según signo de diferencia del turno
+                        if (sumaDiferenciaTurno > 0)
+                            wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.FromHtml("#2E7D32");
+                        else if (sumaDiferenciaTurno < 0)
+                            wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.FromHtml("#C62828");
+                        
+                        filaAud++;
+                        
+                        // Resetear contadores
+                        contadorTurno = 0;
+                        sumaDiferenciaTurno = 0;
+                        filaGris = false;
+                    }
+                    
+                    turnoActual = turno;
+                    contadorTurno++;
+                    sumaDiferenciaTurno += diferencia;
+
+                    // Alternar color de fila
+                    var colorFila = filaGris ? XLColor.FromHtml("#F5F5F5") : XLColor.White;
+                    for (int c = 1; c <= 10; c++)
+                        wsAud.Cell(filaAud, c).Style.Fill.BackgroundColor = colorFila;
+                    filaGris = !filaGris;
+
+                    // Columna 1: Fecha
+                    wsAud.Cell(filaAud, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
+                    wsAud.Cell(filaAud, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Columna 2: Turno con color
+                    wsAud.Cell(filaAud, 2).Value = turno;
+                    wsAud.Cell(filaAud, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    wsAud.Cell(filaAud, 2).Style.Font.Bold = true;
+                    switch (turno)
+                    {
+                        case "Mañana":
+                            wsAud.Cell(filaAud, 2).Style.Fill.BackgroundColor = XLColor.FromHtml("#FFF9C4");
+                            break;
+                        case "Tarde":
+                            wsAud.Cell(filaAud, 2).Style.Fill.BackgroundColor = XLColor.FromHtml("#FFE0B2");
+                            break;
+                        case "Noche":
+                            wsAud.Cell(filaAud, 2).Style.Fill.BackgroundColor = XLColor.FromHtml("#C5CAE9");
+                            break;
+                    }
+
+                    // Columna 3: Usuario
+                    wsAud.Cell(filaAud, 3).Value = d.Usuario ?? "—";
+
+                    // Columna 4: Operación
+                    wsAud.Cell(filaAud, 4).Value = d.TipoOperacionCaja ?? "—";
+                    wsAud.Cell(filaAud, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Columna 5: N° Caja
+                    wsAud.Cell(filaAud, 5).Value = d.NumeroCaja ?? "—";
+                    wsAud.Cell(filaAud, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Columna 6: Monto Inicial
+                    wsAud.Cell(filaAud, 6).Value = (double)montoInicial;
+                    wsAud.Cell(filaAud, 6).Style.NumberFormat.Format = "$ #,##0";
+
+                    // Columna 7: Monto Final
+                    wsAud.Cell(filaAud, 7).Value = (double)montoFinal;
+                    wsAud.Cell(filaAud, 7).Style.NumberFormat.Format = "$ #,##0";
+
+                    // Columna 8: Diferencia (formato con paréntesis para negativo)
+                    if (diferencia != 0)
+                    {
+                        wsAud.Cell(filaAud, 8).Value = (double)Math.Abs(diferencia);
+                        wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0";
+                        if (diferencia < 0)
+                        {
+                            wsAud.Cell(filaAud, 8).Value = $"({Math.Abs(diferencia):N0})";
+                            wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.FromHtml("#C62828");
+                        }
+                        else
+                        {
+                            wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.FromHtml("#2E7D32");
+                        }
+                    }
+                    else
+                    {
+                        wsAud.Cell(filaAud, 8).Value = "0";
+                    }
+
+                    // Columna 9: Tipo Diferencia con color
+                    wsAud.Cell(filaAud, 9).Value = tipoDiferencia;
+                    wsAud.Cell(filaAud, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    wsAud.Cell(filaAud, 9).Style.Font.Bold = true;
+                    switch (tipoDiferencia)
+                    {
+                        case "Positivo":
+                            wsAud.Cell(filaAud, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#C8E6C9");
+                            break;
+                        case "Negativo":
+                            wsAud.Cell(filaAud, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#FFCDD2");
+                            break;
+                        case "Cero":
+                            wsAud.Cell(filaAud, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEEEEE");
+                            break;
+                    }
+
+                    // Columna 10: Detalle
+                    wsAud.Cell(filaAud, 10).Value = d.DetalleCambios ?? "—";
+
                     filaAud++;
                 }
 
-                // Aplicar formato y tamaño de columnas
-                wsAud.Column(1).Width = 18;
-                wsAud.Column(2).Width = 15;
-                wsAud.Column(3).Width = 20;
-                wsAud.Column(4).Width = 10;
-                wsAud.Column(5).Width = 14;
-                wsAud.Column(6).Width = 45;
-                wsAud.Column(7).Width = 16;
-                wsAud.Column(8).Width = 16;
-                FormatearHoja(wsAud, headersAud.Length);
+                // ═══ ULTIMO SUBTOTAL DE TURNO ═══
+                if (contadorTurno > 0)
+                {
+                    wsAud.Cell(filaAud, 1).Value = "SUBTOTAL";
+                    wsAud.Cell(filaAud, 1).Style.Font.Bold = true;
+                    wsAud.Cell(filaAud, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#E0E0E0");
+                    wsAud.Range(filaAud, 1, filaAud, 8).Merge();
+                    
+                    wsAud.Cell(filaAud, 9).Value = $"Cnt: {contadorTurno}";
+                    wsAud.Cell(filaAud, 9).Style.Font.Bold = true;
+                    wsAud.Cell(filaAud, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#E0E0E0");
+                    
+                    wsAud.Cell(filaAud, 8).Value = (double)sumaDiferenciaTurno;
+                    if (sumaDiferenciaTurno < 0)
+                        wsAud.Cell(filaAud, 8).Value = $"({Math.Abs(sumaDiferenciaTurno):N0})";
+                    wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0";
+                    wsAud.Cell(filaAud, 8).Style.Font.Bold = true;
+                    wsAud.Cell(filaAud, 8).Style.Fill.BackgroundColor = XLColor.FromHtml("#E0E0E0");
+                    
+                    if (sumaDiferenciaTurno > 0)
+                        wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.FromHtml("#2E7D32");
+                    else if (sumaDiferenciaTurno < 0)
+                        wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.FromHtml("#C62828");
+                    
+                    filaAud++;
+                }
+
+                // ═══ TOTAL GENERAL ═══
+                var totalRegistros = auditoriaCajas.Count();
+                var diferenciaTotal = auditoriaCajas.Sum(d =>
+                {
+                    decimal mf = 0, mi = 0;
+                    if (d.ValoresNuevosDeserializados != null)
+                    {
+                        if (d.ValoresNuevosDeserializados.TryGetValue("MontoFinal", out var mfVal))
+                            mf = ParseDecimalValue(mfVal);
+                        if (d.ValoresNuevosDeserializados.TryGetValue("MontoInicial", out var miVal))
+                            mi = ParseDecimalValue(miVal);
+                    }
+                    return mf - mi;
+                });
+
+                wsAud.Cell(filaAud, 1).Value = $"TOTAL: {totalRegistros} registros";
+                wsAud.Cell(filaAud, 1).Style.Font.Bold = true;
+                wsAud.Cell(filaAud, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
+                wsAud.Cell(filaAud, 1).Style.Font.FontColor = XLColor.White;
+                wsAud.Range(filaAud, 1, filaAud, 7).Merge();
+                wsAud.Cell(filaAud, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                wsAud.Cell(filaAud, 8).Value = diferenciaTotal < 0 
+                    ? $"({Math.Abs(diferenciaTotal):N0})" 
+                    : diferenciaTotal.ToString("N0");
+                wsAud.Cell(filaAud, 8).Style.Font.Bold = true;
+                wsAud.Cell(filaAud, 8).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
+                wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.White;
+                wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0";
                 
-                // Agregar fila de totales al final
-                int totalFila = filaAud;
-                wsAud.Cell(totalFila, 1).Value = $"Total: {auditoriaCajas.Count()} registros";
-                wsAud.Cell(totalFila, 1).Style.Font.Bold = true;
-                wsAud.Cell(totalFila, 5).Style.Font.Bold = true;
-                wsAud.Cell(totalFila, 7).Style.Font.Bold = true;
-                wsAud.Cell(totalFila, 8).Style.Font.Bold = true;
-                
+                wsAud.Cell(filaAud, 9).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
+                wsAud.Cell(filaAud, 9).Style.Font.FontColor = XLColor.White;
+
+                // ═══ ANCHOS DE COLUMNA ═══
+                wsAud.Column(1).Width = 16;  // Fecha
+                wsAud.Column(2).Width = 10; // Turno
+                wsAud.Column(3).Width = 18; // Usuario
+                wsAud.Column(4).Width = 12; // Operación
+                wsAud.Column(5).Width = 8;  // N° Caja
+                wsAud.Column(6).Width = 14; // Monto Inicial
+                wsAud.Column(7).Width = 14; // Monto Final
+                wsAud.Column(8).Width = 14; // Diferencia
+                wsAud.Column(9).Width = 14; // Tipo Diferencia
+                wsAud.Column(10).Width = 35; // Detalle
+
                 AgregarMetadatos(wsAud, "Auditoría de Cajas", desde, hasta);
 
             }, shouldOpenAfterDownload);
