@@ -890,7 +890,7 @@ namespace GestionComercial.UI.Helpers
 
                 // ── Hoja 5: Auditoría de Cajas (detallada) ─────────────────────────
                 var wsAud = wb.Worksheets.Add("Auditoría Caja");
-                var headersAud = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Antes", "Después" };
+                var headersAud = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Valor Anterior", "Valor Nuevo" };
                 AgregarHeaders(wsAud, headersAud);
 
                 int filaAud = 2;
@@ -906,8 +906,20 @@ namespace GestionComercial.UI.Helpers
                         wsAud.Cell(filaAud, 5).Style.NumberFormat.Format = "$ #,##0.00";
                     }
                     wsAud.Cell(filaAud, 6).Value = d.DetalleCambios ?? "—";
-                    wsAud.Cell(filaAud, 7).Value = d.ValorAnterior ?? "—";
-                    wsAud.Cell(filaAud, 8).Value = d.ValorNuevo ?? "—";
+                    
+                    // Usar ValorAnteriorMostrar y ValorNuevoMostrar
+                    wsAud.Cell(filaAud, 7).Value = d.ValorAnteriorMostrar.HasValue 
+                        ? (double)d.ValorAnteriorMostrar.Value 
+                        : null;
+                    wsAud.Cell(filaAud, 8).Value = d.ValorNuevoMostrar.HasValue 
+                        ? (double)d.ValorNuevoMostrar.Value 
+                        : null;
+                        
+                    if (d.ValorAnteriorMostrar.HasValue)
+                        wsAud.Cell(filaAud, 7).Style.NumberFormat.Format = "$ #,##0.00";
+                    if (d.ValorNuevoMostrar.HasValue)
+                        wsAud.Cell(filaAud, 8).Style.NumberFormat.Format = "$ #,##0.00";
+                        
                     filaAud++;
                 }
 
@@ -918,8 +930,8 @@ namespace GestionComercial.UI.Helpers
                 wsAud.Column(4).Width = 10;
                 wsAud.Column(5).Width = 12;
                 wsAud.Column(6).Width = 40;
-                wsAud.Column(7).Width = 30;
-                wsAud.Column(8).Width = 30;
+                wsAud.Column(7).Width = 15;
+                wsAud.Column(8).Width = 15;
                 FormatearHoja(wsAud, headersAud.Length);
                 AgregarMetadatos(wsAud, "Auditoría de Cajas", desde, hasta);
 
@@ -927,7 +939,7 @@ namespace GestionComercial.UI.Helpers
                 if (auditoriaMovimientos != null && auditoriaMovimientos.Any())
                 {
                     var wsAudMov = wb.Worksheets.Add("Auditoría Movimientos");
-                    var headersAudMov = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Antes", "Después" };
+                    var headersAudMov = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Valor Anterior", "Valor Nuevo" };
                     AgregarHeaders(wsAudMov, headersAudMov);
 
                     int filaAudMov = 2;
@@ -943,8 +955,18 @@ namespace GestionComercial.UI.Helpers
                             wsAudMov.Cell(filaAudMov, 5).Style.NumberFormat.Format = "$ #,##0.00";
                         }
                         wsAudMov.Cell(filaAudMov, 6).Value = d.DetalleCambios ?? "—";
-                        wsAudMov.Cell(filaAudMov, 7).Value = d.ValorAnterior ?? "—";
-                        wsAudMov.Cell(filaAudMov, 8).Value = d.ValorNuevo ?? "—";
+                        wsAudMov.Cell(filaAudMov, 7).Value = d.ValorAnteriorMostrar.HasValue 
+                            ? (double)d.ValorAnteriorMostrar.Value 
+                            : null;
+                        wsAudMov.Cell(filaAudMov, 8).Value = d.ValorNuevoMostrar.HasValue 
+                            ? (double)d.ValorNuevoMostrar.Value 
+                            : null;
+                            
+                        if (d.ValorAnteriorMostrar.HasValue)
+                            wsAudMov.Cell(filaAudMov, 7).Style.NumberFormat.Format = "$ #,##0.00";
+                        if (d.ValorNuevoMostrar.HasValue)
+                            wsAudMov.Cell(filaAudMov, 8).Style.NumberFormat.Format = "$ #,##0.00";
+                            
                         filaAudMov++;
                     }
 
@@ -954,8 +976,8 @@ namespace GestionComercial.UI.Helpers
                     wsAudMov.Column(4).Width = 10;
                     wsAudMov.Column(5).Width = 12;
                     wsAudMov.Column(6).Width = 40;
-                    wsAudMov.Column(7).Width = 30;
-                    wsAudMov.Column(8).Width = 30;
+                    wsAudMov.Column(7).Width = 15;
+                    wsAudMov.Column(8).Width = 15;
                     FormatearHoja(wsAudMov, headersAudMov.Length);
                     AgregarMetadatos(wsAudMov, "Auditoría de Movimientos", desde, hasta);
                 }
