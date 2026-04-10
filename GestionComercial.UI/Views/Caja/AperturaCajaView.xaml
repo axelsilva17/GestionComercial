@@ -68,8 +68,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- ── Selección de Caja y Turno ─────────────────────────── -->
-                    <!-- Caja -->
+                    <!-- ── Selección de Caja ─────────────────────────── -->
                     <TextBlock Text="SELECCIONAR CAJA" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                     <ComboBox Style="{StaticResource FilterComboBoxStyle}"
@@ -78,7 +77,7 @@
                               DisplayMemberPath="Nombre"
                               Margin="0,0,0,16"/>
 
-                    <!-- Turno -->
+                    <!-- ── Selección de Turno ─────────────────────────── -->
                     <TextBlock Text="TURNO" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                     <ComboBox Style="{StaticResource FilterComboBoxStyle}"
@@ -100,7 +99,7 @@
                             <TextBlock Text="$" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource SuccessBrush}"
                                        VerticalAlignment="Center" Margin="16,0,8,0"/>
-                             <TextBox x:Name="MontoInicial" Grid.Column="1"
+                            <TextBox x:Name="MontoInicial" Grid.Column="1"
                                      Text="{Binding MontoInicial, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
@@ -112,8 +111,6 @@
                     <TextBlock Text="Ingresá el efectivo físico con el que abrís el turno"
                                FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
                                Margin="0,0,0,24"/>
-
-
 
                     <!-- ── Botones ────────────────────────────────────────── -->
                     <Grid>
