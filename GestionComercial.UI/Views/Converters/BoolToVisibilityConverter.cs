@@ -16,13 +16,26 @@ namespace GestionComercial.UI.Views.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            bool visible = value is bool b && b;
+            bool visible;
+            
+            // Si es bool, usar el valor directo
+            if (value is bool b)
+            {
+                visible = b;
+            }
+            // Si es cualquier otro objeto (no-bool), es visible si no es null
+            else
+            {
+                visible = value != null;
+            }
+            
             // Leer ConverterParameter="Inverse" desde XAML para invertir el valor
             if (parameter is string paramStr && paramStr.Equals("Inverse", StringComparison.OrdinalIgnoreCase))
                 visible = !visible;
             // Si no hay parameter, usar la propiedad InvertirValor (backwards compatible)
             else if (InvertirValor)
                 visible = !visible;
+                
             return visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
