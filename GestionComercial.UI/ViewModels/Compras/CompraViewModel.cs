@@ -1,9 +1,13 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Compras;
+using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
-using GestionComercial.Aplicacion.DTOs.Compras;
-using GestionComercial.Aplicacion.DTOs.Proveedores;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,6 +18,12 @@ namespace GestionComercial.UI.ViewModels.Compras
 {
     public class CompraViewModel : NavigableViewModel
     {
+        private readonly IProveedorServicio _proveedorServicio;
+        private readonly ICompraServicio _compraServicio;
+        private readonly IProductoServicio _productoServicio;
+        private readonly SesionServicio _sesion;
+        private readonly ShellViewModel _shell;
+
         // ── Proveedores ───────────────────────────────────────────────
         private ObservableCollection<ProveedorItemDto> _proveedores = new();
         public ObservableCollection<ProveedorItemDto> Proveedores
@@ -31,6 +41,7 @@ namespace GestionComercial.UI.ViewModels.Compras
                 _proveedorSeleccionado = value;
                 NotifyOfPropertyChange(() => ProveedorSeleccionado);
                 NotifyOfPropertyChange(() => ProveedorNombre);
+                NotifyOfPropertyChange(() => CanGuardar);
             }
         }
 
@@ -44,8 +55,22 @@ namespace GestionComercial.UI.ViewModels.Compras
             set { _busquedaProducto = value; NotifyOfPropertyChange(() => BusquedaProducto); }
         }
 
+        // ── Productos para agregar ───────────────────────────────────
+        private ObservableCollection<ProductoItemDto> _productosEncontrados = new();
+        public ObservableCollection<ProductoItemDto> ProductosEncontrados
+        {
+            get => _productosEncontrados;
+            set { _productosEncontrados = value; NotifyOfPropertyChange(() => ProductosEncontrados); }
+        }
+
+        private ProductoItemDto _productoSeleccionado;
+        public ProductoItemDto ProductoSeleccionado
+        {
+            get => _productoSeleccionado;
+            set { _productoSeleccionado = value; NotifyOfPropertyChange(() => ProductoSeleccionado); }
+        }
+
         // ── Carrito — usa CompraItemDto (temporal, en memoria) ────────
-        // NO usar CompraDetalleDto acá — ese es para mostrar compras ya guardadas
         private ObservableCollection<CompraItemDto> _items = new();
         public ObservableCollection<CompraItemDto> Items
         {
@@ -83,15 +108,24 @@ namespace GestionComercial.UI.ViewModels.Compras
             set { _fecha = value; NotifyOfPropertyChange(() => Fecha); }
         }
 
-        // ── Commands para botones dentro del DataGrid ─────────────────
-        // Caliburn no puede bindear métodos del VM dentro de un DataTemplate,
-        // por eso usamos RelayCommand con el ítem como parámetro via Tag+CommandParameter
+        // ── Commands ──────────────────────────────────────────────────
         public RelayCommand<CompraItemDto> SumarCantidadCommand  { get; }
         public RelayCommand<CompraItemDto> RestarCantidadCommand { get; }
         public RelayCommand<CompraItemDto> QuitarItemCommand     { get; }
 
-        public CompraViewModel()
+        public CompraViewModel(
+            IProveedorServicio proveedorServicio,
+            ICompraServicio compraServicio,
+            IProductoServicio productoServicio,
+            SesionServicio sesion,
+            ShellViewModel shell)
         {
+            _proveedorServicio = proveedorServicio;
+            _compraServicio = compraServicio;
+            _productoServicio = productoServicio;
+            _sesion = sesion;
+            _shell = shell;
+
             Titulo    = "Nueva Compra";
             Subtitulo = "Registrar ingreso de mercadería";
 
@@ -105,133 +139,151 @@ namespace GestionComercial.UI.ViewModels.Compras
             IsLoading = true;
             try
             {
-                // TODO: Proveedores = await _proveedorServicio.ObtenerItemsAsync(empresaId);
-                await Task.Delay(100);
-                Proveedores = new ObservableCollection<ProveedorItemDto>();
+                var todosProveedores = await _proveedorServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var listaProveedores = todosProveedores
+                    .Where(p => p.Activo)
+                    .Select(p => new ProveedorItemDto
+                    {
+                        IdProveedor = p.Id,
+                        Nombre = p.Nombre,
+                        Telefono = p.Telefono ?? string.Empty,
+                        Email = p.Email ?? string.Empty,
+                        Activo = p.Activo
+                    }).ToList();
+                
+                Proveedores = new ObservableCollection<ProveedorItemDto>(listaProveedores);
             }
             finally { IsLoading = false; }
+        }
+
+        // ── Buscar productos ───────────────────────────────────────────
+        public async Task BuscarProducto()
+        {
+            if (string.IsNullOrWhiteSpace(BusquedaProducto)) return;
+            
+            var productos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+            var filtered = productos.Where(p => 
+                p.Nombre.Contains(BusquedaProducto, StringComparison.OrdinalIgnoreCase) ||
+                (p.CodigoBarra?.Contains(BusquedaProducto) ?? false))
+                .Take(10)
+                .Select(p => new ProductoItemDto
+                {
+                    IdProducto = p.IdProducto,
+                    Nombre = p.Nombre,
+                    CodigoBarra = p.CodigoBarra ?? string.Empty,
+                    PrecioCostoActual = p.PrecioCostoActual,
+                    StockActual = p.StockActual
+                }).ToList();
+
+            ProductosEncontrados = new ObservableCollection<ProductoItemDto>(filtered);
         }
 
         // ── Agregar producto al carrito ───────────────────────────────
-        public async Task AgregarProducto()
+        public void AgregarProducto()
         {
-            if (string.IsNullOrWhiteSpace(BusquedaProducto)) return;
+            if (ProductoSeleccionado == null) return;
 
-            // Si ya está, suma cantidad en vez de duplicar
-            var existente = Items.FirstOrDefault(i =>
-                i.CodigoBarra.Equals(BusquedaProducto, StringComparison.OrdinalIgnoreCase) ||
-                i.ProductoNombre.Contains(BusquedaProducto, StringComparison.OrdinalIgnoreCase));
-
-            if (existente != null)
+            var itemExistente = Items.FirstOrDefault(i => i.ProductoId == ProductoSeleccionado.IdProducto);
+            if (itemExistente != null)
             {
-                SumarCantidad(existente);
+                itemExistente.Cantidad++;
+                itemExistente.SubTotal = itemExistente.Cantidad * itemExistente.PrecioCosto;
             }
             else
             {
-                // TODO: reemplazar con resultado de _productoServicio.BuscarAsync(BusquedaProducto)
                 Items.Add(new CompraItemDto
                 {
-                    ProductoId     = 0,
-                    ProductoNombre = BusquedaProducto,
-                    CodigoBarra    = BusquedaProducto,
-                    Cantidad       = 1,
-                    PrecioCosto    = 0,
-                    SubTotal       = 0
+                    ProductoId = ProductoSeleccionado.IdProducto,
+                    ProductoNombre = ProductoSeleccionado.Nombre,
+                    Cantidad = 1,
+                    PrecioCosto = ProductoSeleccionado.PrecioCostoActual,
+                    SubTotal = ProductoSeleccionado.PrecioCostoActual
                 });
             }
 
+            RecalcularTotales();
             BusquedaProducto = string.Empty;
-            RecalcularTotal();
+            ProductosEncontrados.Clear();
+            NotifyOfPropertyChange(() => Items);
         }
 
-        // ── Confirmar y guardar ───────────────────────────────────────
-        public async Task ConfirmarCompra()
-        {
-            LimpiarError();
-
-            if (ProveedorSeleccionado == null)
-            {
-                MostrarError("Seleccioná un proveedor antes de confirmar.");
-                return;
-            }
-            if (!Items.Any())
-            {
-                MostrarError("Agregá al menos un producto.");
-                return;
-            }
-            if (Items.Any(i => i.PrecioCosto <= 0))
-            {
-                MostrarError("Todos los productos deben tener precio de costo mayor a cero.");
-                return;
-            }
-
-            IsLoading = true;
-            try
-            {
-                // Mapear CompraItemDto → CompraDetalleCrearDto para la capa de Aplicación
-                var dto = new CompraCrearDto
-                {
-                    IdProveedor = ProveedorSeleccionado.IdProveedor,
-                    IdSucursal  = 1, // TODO: obtener de sesión
-                    IdUsuario   = 1, // TODO: obtener de sesión
-                    Fecha       = Fecha,
-                    Observacion = Observacion,
-                    Items       = Items.Select(i => new CompraDetalleCrearDto
-                    {
-                        IdProducto  = i.ProductoId,
-                        Cantidad    = i.Cantidad,
-                        PrecioCosto = i.PrecioCosto
-                    }).ToList()
-                };
-
-                // TODO: await _compraServicio.CrearAsync(dto);
-                await Task.Delay(400);
-
-                await Volver();
-            }
-            catch (Exception ex)
-            {
-                MostrarError($"Error al confirmar: {ex.Message}");
-            }
-            finally { IsLoading = false; }
-        }
-
-        public async Task Volver()
-        {
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(IoC.Get<CompraListadoViewModel>(), CancellationToken.None);
-        }
-
-        // ── Lógica carrito ────────────────────────────────────────────
         private void SumarCantidad(CompraItemDto item)
         {
             if (item == null) return;
             item.Cantidad++;
             item.SubTotal = item.Cantidad * item.PrecioCosto;
-            RecalcularTotal();
-            // INotifyPropertyChanged en CompraItemDto actualiza el DataGrid automáticamente
+            RecalcularTotales();
+            NotifyOfPropertyChange(() => Items);
         }
 
         private void RestarCantidad(CompraItemDto item)
         {
             if (item == null) return;
-            if (item.Cantidad <= 1) { QuitarItem(item); return; }
-            item.Cantidad--;
-            item.SubTotal = item.Cantidad * item.PrecioCosto;
-            RecalcularTotal();
+            if (item.Cantidad > 1)
+            {
+                item.Cantidad--;
+                item.SubTotal = item.Cantidad * item.PrecioCosto;
+            }
+            RecalcularTotales();
+            NotifyOfPropertyChange(() => Items);
         }
 
         private void QuitarItem(CompraItemDto item)
         {
             if (item == null) return;
             Items.Remove(item);
-            RecalcularTotal();
+            RecalcularTotales();
         }
 
-        private void RecalcularTotal()
+        private void RecalcularTotales()
         {
-            Total         = Items.Sum(i => i.SubTotal);
+            Total = Items.Sum(i => i.SubTotal);
             CantidadItems = Items.Sum(i => i.Cantidad);
+        }
+
+        // ── Guardar compra ───────────────────────────────────────────
+        public bool CanGuardar => ProveedorSeleccionado != null && Items.Count > 0 && !IsLoading;
+
+        public async Task Guardar()
+        {
+            if (!CanGuardar) return;
+
+            IsLoading = true;
+            try
+            {
+                var dto = new CompraCrearDto
+                {
+                    IdProveedor = ProveedorSeleccionado.IdProveedor,
+                    IdSucursal = _sesion.IdSucursal,
+                    IdUsuario = _sesion.IdUsuario,
+                    Observacion = Observacion,
+                    Items = Items.Select(i => new CompraDetalleCrearDto
+                    {
+                        IdProducto = i.ProductoId,
+                        Cantidad = i.Cantidad,
+                        PrecioCosto = i.PrecioCosto
+                    }).ToList()
+                };
+
+                await _compraServicio.CrearAsync(dto);
+                
+                var listado = IoC.Get<CompraListadoViewModel>();
+                await _shell.ActivateItemAsync(listado, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                MostrarError($"Error al guardar: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        public async Task Cancelar()
+        {
+            var listado = IoC.Get<CompraListadoViewModel>();
+            await _shell.ActivateItemAsync(listado, CancellationToken.None);
         }
     }
 }
