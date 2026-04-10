@@ -940,72 +940,21 @@ namespace GestionComercial.UI.Helpers
                 wsAud.Column(2).Width = 15;
                 wsAud.Column(3).Width = 20;
                 wsAud.Column(4).Width = 10;
-                wsAud.Column(5).Width = 12;
-                wsAud.Column(6).Width = 40;
-                wsAud.Column(7).Width = 15;
-                wsAud.Column(8).Width = 15;
+                wsAud.Column(5).Width = 14;
+                wsAud.Column(6).Width = 45;
+                wsAud.Column(7).Width = 16;
+                wsAud.Column(8).Width = 16;
                 FormatearHoja(wsAud, headersAud.Length);
+                
+                // Agregar fila de totales al final
+                int totalFila = filaAud;
+                wsAud.Cell(totalFila, 1).Value = $"Total: {auditoriaCajas.Count()} registros";
+                wsAud.Cell(totalFila, 1).Style.Font.Bold = true;
+                wsAud.Cell(totalFila, 5).Style.Font.Bold = true;
+                wsAud.Cell(totalFila, 7).Style.Font.Bold = true;
+                wsAud.Cell(totalFila, 8).Style.Font.Bold = true;
+                
                 AgregarMetadatos(wsAud, "Auditoría de Cajas", desde, hasta);
-
-                // ── Hoja 6: Auditoría de Movimientos ────────────────────────────────
-                if (auditoriaMovimientos != null && auditoriaMovimientos.Any())
-                {
-                    var wsAudMov = wb.Worksheets.Add("Auditoría Movimientos");
-                    var headersAudMov = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Valor Anterior", "Valor Nuevo" };
-                    AgregarHeaders(wsAudMov, headersAudMov);
-
-                    int filaAudMov = 2;
-                    foreach (var d in auditoriaMovimientos.Take(1000))
-                    {
-                        wsAudMov.Cell(filaAudMov, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
-                        wsAudMov.Cell(filaAudMov, 2).Value = d.Usuario ?? "—";
-                        wsAudMov.Cell(filaAudMov, 3).Value = d.TipoOperacionCaja ?? "—";
-                        wsAudMov.Cell(filaAudMov, 4).Value = d.NumeroCaja ?? "—";
-                        if (d.MontoMostrar.HasValue)
-                        {
-                            wsAudMov.Cell(filaAudMov, 5).Value = (double)d.MontoMostrar.Value;
-                            wsAudMov.Cell(filaAudMov, 5).Style.NumberFormat.Format = "$ #,##0.00";
-                        }
-                        else
-                        {
-                            wsAudMov.Cell(filaAudMov, 5).Value = "—";
-                        }
-                        wsAudMov.Cell(filaAudMov, 6).Value = d.DetalleCambios ?? "—";
-                        
-                        if (d.ValorAnteriorMostrar.HasValue)
-                        {
-                            wsAudMov.Cell(filaAudMov, 7).Value = (double)d.ValorAnteriorMostrar.Value;
-                            wsAudMov.Cell(filaAudMov, 7).Style.NumberFormat.Format = "$ #,##0.00";
-                        }
-                        else
-                        {
-                            wsAudMov.Cell(filaAudMov, 7).Value = "—";
-                        }
-                        
-                        if (d.ValorNuevoMostrar.HasValue)
-                        {
-                            wsAudMov.Cell(filaAudMov, 8).Value = (double)d.ValorNuevoMostrar.Value;
-                            wsAudMov.Cell(filaAudMov, 8).Style.NumberFormat.Format = "$ #,##0.00";
-                        }
-                        else
-                        {
-                            wsAudMov.Cell(filaAudMov, 8).Value = "—";
-                        }
-                            
-                        filaAudMov++;
-                    }
-
-                    wsAudMov.Column(1).Width = 18;
-                    wsAudMov.Column(2).Width = 15;
-                    wsAudMov.Column(3).Width = 20;
-                    wsAudMov.Column(4).Width = 10;
-                    wsAudMov.Column(5).Width = 12;
-                    wsAudMov.Column(6).Width = 40;
-                    wsAudMov.Column(7).Width = 15;
-                    wsAudMov.Column(8).Width = 15;
-                    FormatearHoja(wsAudMov, headersAudMov.Length);
-                    AgregarMetadatos(wsAudMov, "Auditoría de Movimientos", desde, hasta);
-                }
 
             }, shouldOpenAfterDownload);
         }

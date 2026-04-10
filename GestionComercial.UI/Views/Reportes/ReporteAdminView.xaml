@@ -221,8 +221,8 @@
                             <RowDefinition Height="200"/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="20,16,20,10">
-                            <TextBlock Text="STOCK ACTUAL VS MÍNIMO" Style="{StaticResource ColHeader}"/>
-                            <TextBlock Text="Productos con reposición urgente" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="VENTAS POR DÍA" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Total de ventas diarias en el período" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                         <lvc:CartesianChart Grid.Row="1" Margin="12,0,12,12"
