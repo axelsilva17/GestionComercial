@@ -888,26 +888,77 @@ namespace GestionComercial.UI.Helpers
                     AgregarMetadatos(wsResumen, "Resumen de Cajas", desde, hasta);
                 }
 
-                // ── Hoja 5: Auditoría de Cajas (reducida) ─────────────────────────
-                var wsAud = wb.Worksheets.Add("Auditoría");
-                var headersAud = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Cambios" };
+                // ── Hoja 5: Auditoría de Cajas (detallada) ─────────────────────────
+                var wsAud = wb.Worksheets.Add("Auditoría Caja");
+                var headersAud = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Antes", "Después" };
                 AgregarHeaders(wsAud, headersAud);
 
                 int filaAud = 2;
-                foreach (var d in auditoriaCajas.Take(500)) // Limitar a 500 registros
+                foreach (var d in auditoriaCajas.Take(1000))
                 {
                     wsAud.Cell(filaAud, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
-                    wsAud.Cell(filaAud, 2).Value = d.Usuario;
-                    wsAud.Cell(filaAud, 3).Value = d.TipoOperacionCaja;
+                    wsAud.Cell(filaAud, 2).Value = d.Usuario ?? "—";
+                    wsAud.Cell(filaAud, 3).Value = d.TipoOperacionCaja ?? "—";
                     wsAud.Cell(filaAud, 4).Value = d.NumeroCaja ?? "—";
-                    if (d.MontoMostrar.HasValue) wsAud.Cell(filaAud, 5).Value = (double)d.MontoMostrar.Value;
-                    wsAud.Cell(filaAud, 6).Value = d.DetalleCambios;
-                    if (d.MontoMostrar.HasValue) wsAud.Cell(filaAud, 5).Style.NumberFormat.Format = "$ #,##0";
+                    if (d.MontoMostrar.HasValue)
+                    {
+                        wsAud.Cell(filaAud, 5).Value = (double)d.MontoMostrar.Value;
+                        wsAud.Cell(filaAud, 5).Style.NumberFormat.Format = "$ #,##0.00";
+                    }
+                    wsAud.Cell(filaAud, 6).Value = d.DetalleCambios ?? "—";
+                    wsAud.Cell(filaAud, 7).Value = d.ValorAnterior ?? "—";
+                    wsAud.Cell(filaAud, 8).Value = d.ValorNuevo ?? "—";
                     filaAud++;
                 }
 
+                // Aplicar formato y tamaño de columnas
+                wsAud.Column(1).Width = 18;
+                wsAud.Column(2).Width = 15;
+                wsAud.Column(3).Width = 20;
+                wsAud.Column(4).Width = 10;
+                wsAud.Column(5).Width = 12;
+                wsAud.Column(6).Width = 40;
+                wsAud.Column(7).Width = 30;
+                wsAud.Column(8).Width = 30;
                 FormatearHoja(wsAud, headersAud.Length);
                 AgregarMetadatos(wsAud, "Auditoría de Cajas", desde, hasta);
+
+                // ── Hoja 6: Auditoría de Movimientos ────────────────────────────────
+                if (auditoriaMovimientos != null && auditoriaMovimientos.Any())
+                {
+                    var wsAudMov = wb.Worksheets.Add("Auditoría Movimientos");
+                    var headersAudMov = new[] { "Fecha", "Usuario", "Operación", "Caja", "Monto", "Detalle", "Antes", "Después" };
+                    AgregarHeaders(wsAudMov, headersAudMov);
+
+                    int filaAudMov = 2;
+                    foreach (var d in auditoriaMovimientos.Take(1000))
+                    {
+                        wsAudMov.Cell(filaAudMov, 1).Value = d.FechaOperacion.ToString("dd/MM/yyyy HH:mm");
+                        wsAudMov.Cell(filaAudMov, 2).Value = d.Usuario ?? "—";
+                        wsAudMov.Cell(filaAudMov, 3).Value = d.TipoOperacionCaja ?? "—";
+                        wsAudMov.Cell(filaAudMov, 4).Value = d.NumeroCaja ?? "—";
+                        if (d.MontoMostrar.HasValue)
+                        {
+                            wsAudMov.Cell(filaAudMov, 5).Value = (double)d.MontoMostrar.Value;
+                            wsAudMov.Cell(filaAudMov, 5).Style.NumberFormat.Format = "$ #,##0.00";
+                        }
+                        wsAudMov.Cell(filaAudMov, 6).Value = d.DetalleCambios ?? "—";
+                        wsAudMov.Cell(filaAudMov, 7).Value = d.ValorAnterior ?? "—";
+                        wsAudMov.Cell(filaAudMov, 8).Value = d.ValorNuevo ?? "—";
+                        filaAudMov++;
+                    }
+
+                    wsAudMov.Column(1).Width = 18;
+                    wsAudMov.Column(2).Width = 15;
+                    wsAudMov.Column(3).Width = 20;
+                    wsAudMov.Column(4).Width = 10;
+                    wsAudMov.Column(5).Width = 12;
+                    wsAudMov.Column(6).Width = 40;
+                    wsAudMov.Column(7).Width = 30;
+                    wsAudMov.Column(8).Width = 30;
+                    FormatearHoja(wsAudMov, headersAudMov.Length);
+                    AgregarMetadatos(wsAudMov, "Auditoría de Movimientos", desde, hasta);
+                }
 
             }, shouldOpenAfterDownload);
         }

@@ -283,84 +283,19 @@
                     </Border>
                 </Grid>
 
-                <!-- Stock crítico + Compras recientes -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Stock crítico -->
-                    <Border Grid.Column="0" Style="{StaticResource CardNoPad}" Margin="0,0,0,12">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <StackPanel Margin="16,14,16,10">
-                                    <TextBlock Text="STOCK CRÍTICO" Style="{StaticResource ColHeader}"/>
-                                    <TextBlock Text="Requieren reposición" FontSize="12" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                                <ItemsControl Grid.Row="1" ItemsSource="{Binding StockCritico}" Margin="8,0,8,10">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="6" Padding="10,8" Margin="0,2">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Nombre}" FontSize="12" FontWeight="Medium"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
-                                                            <Run Text="Mínimo: "/>
-                                                            <Run Text="{Binding StockMinimo, Mode=OneWay}"/>
-                                                        </TextBlock>
-                                                    </StackPanel>
-                                                    <Border Grid.Column="1" CornerRadius="6" Padding="10,4"
-                                                            MinWidth="48" VerticalAlignment="Center">
-                                                        <Border.Style>
-                                                            <Style TargetType="Border">
-                                                                <Setter Property="Background" Value="{DynamicResource WarningBrush}"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding StockActual}" Value="0">
-                                                                        <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Border.Style>
-                                                        <StackPanel HorizontalAlignment="Center">
-                                                            <TextBlock Text="{Binding StockActual}" FontSize="14" FontWeight="Bold"
-                                                                       Foreground="White" HorizontalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Estado}" FontSize="9" Foreground="White"
-                                                                       HorizontalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
-                        </Border>
-
-                    <!-- Compras recientes -->
-                    <Border Grid.Column="2" Style="{StaticResource CardNoPad}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <StackPanel Margin="16,14,16,10">
-                                    <TextBlock Text="COMPRAS RECIENTES" Style="{StaticResource ColHeader}"/>
-                                    <TextBlock Text="Últimas órdenes" FontSize="12" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                                <ItemsControl Grid.Row="1" ItemsSource="{Binding ComprasRecientes}" Margin="8,0,8,10">
+                <!-- Compras recientes -->
+                <Border Style="{StaticResource CardNoPad}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Margin="16,14,16,10">
+                                <TextBlock Text="COMPRAS RECIENTES" Style="{StaticResource ColHeader}"/>
+                                <TextBlock Text="Últimas órdenes" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ComprasRecientes}" Margin="8,0,8,10">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border CornerRadius="6" Padding="10,10" Margin="0,2">
@@ -372,7 +307,7 @@
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding Proveedor}" FontSize="12" FontWeight="Medium"
                                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                    TextTrimming="CharacterEllipsis"/>
                                                         <TextBlock Text="{Binding Fecha}" FontSize="10"
                                                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                                     </StackPanel>
@@ -388,8 +323,6 @@
                                 </ItemsControl>
                             </Grid>
                         </Border>
-                </Grid>
-
 
 
             </StackPanel>
