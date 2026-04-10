@@ -184,7 +184,8 @@
                                          Text="{Binding BusquedaProducto, UpdateSourceTrigger=PropertyChanged}"
                                          Background="Transparent" BorderThickness="0"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
-                                         FontSize="14" VerticalContentAlignment="Center" Padding="0,0,12,0"/>
+                                         FontSize="14" VerticalContentAlignment="Center" Padding="0,0,12,0"
+                                         KeyDown="BusquedaProducto_KeyDown"/>
                             </Grid>
                         </Border>
 
