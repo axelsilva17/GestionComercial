@@ -9,14 +9,26 @@ namespace GestionComercial.Persistencia.Repositorio
     {
         public PagoRepositorio(GestionComercialContext context) : base(context) { }
 
+        /// <summary>
+        /// Obtiene totales por método de pago filtrando por CAJA específica.
+        /// IMPORTANTE: Filtra por Venta.Id_caja para solo incluir pagos de esta caja.
+        /// </summary>
         public async Task<IEnumerable<(string Metodo, decimal Total)>> ObtenerTotalesPorMetodoAsync(
-            int idSucursal, DateTime desde, DateTime hasta)
+            int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null)
         {
-            var resultado = await _dbSet
+            var query = _dbSet
                 .Where(p => p.Venta.Id_sucursal == idSucursal
                          && p.Venta.Fecha >= desde
                          && p.Venta.Fecha <= hasta
-                         && p.Venta.Estado == 2) // solo ventas pagadas
+                         && p.Venta.Estado == 2); // solo ventas pagadas
+
+            // Agregar filtro de caja si se especifica
+            if (idCaja.HasValue)
+            {
+                query = query.Where(p => p.Venta.Id_caja == idCaja.Value);
+            }
+
+            var resultado = await query
                 .Include(p => p.MetodoPago)
                 .GroupBy(p => p.MetodoPago.Nombre)
                 .Select(g => new

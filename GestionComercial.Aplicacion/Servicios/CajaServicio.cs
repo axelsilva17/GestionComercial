@@ -362,11 +362,12 @@ namespace GestionComercial.Aplicacion.Servicios
             };
 
             // ── Ventas del turno agrupadas por método de pago ─────────────────
-            // Obtenemos todos los pagos de ventas de esta caja/sucursal en el turno
+            // Obtenemos todos los pagos de ventas de esta caja en el turno
             var pagosDelTurno = await _uow.Pagos.ObtenerTotalesPorMetodoAsync(
                 caja.Id_sucursal,
                 caja.FechaApertura,
-                DateTime.Now);
+                DateTime.Now,
+                idCaja); // Filtro por caja específica
 
             // Necesitamos saber cuáles métodos son efectivo.
             // Usamos el repositorio de MetodosPago para obtener los detalles.
