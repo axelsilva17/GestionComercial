@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using GestionComercial.UI.ViewModels.Productos;
 
 namespace GestionComercial.UI.Views.Productos
@@ -20,7 +21,14 @@ namespace GestionComercial.UI.Views.Productos
                 await ViewModel.NuevoProducto();
         }
 
-        // Buscar
+        // Buscar al presionar Enter
+        private async void TextoBusqueda_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && ViewModel != null)
+                await ViewModel.Buscar();
+        }
+
+        // Buscar con botón
         private async void Buscar_Click(object sender, RoutedEventArgs e)
         {
             if (ViewModel != null)
@@ -72,6 +80,47 @@ namespace GestionComercial.UI.Views.Productos
             if (ViewModel == null) return;
             var grid = sender as DataGrid;
             ViewModel.ProductoSeleccionado = grid?.SelectedItem as GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto;
+        }
+
+        // ── Ajuste Masivo de Precios ───────────────────────────────
+        private void AbrirAjusteMasivo_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.AbrirAjusteMasivo();
+        }
+
+        private void GenerarPreview_Click(object sender, RoutedEventArgs e)
+        {
+            // Determine tipo de ajuste según radio buttons seleccionados
+            if (TipoPorcentaje.IsChecked == true)
+            {
+                ViewModel.TipoAjuste = "porcentaje";
+                PorcentajeInput.Visibility = Visibility.Visible;
+                SignoLabel.Visibility = Visibility.Visible;
+                MontoFijoInput.Visibility = Visibility.Collapsed;
+                SignoPesos.Visibility = Visibility.Collapsed;
+                SignoLabel.Text = "%";
+            }
+            else if (TipoFijo.IsChecked == true)
+            {
+                ViewModel.TipoAjuste = "fijo";
+                PorcentajeInput.Visibility = Visibility.Collapsed;
+                SignoLabel.Visibility = Visibility.Collapsed;
+                MontoFijoInput.Visibility = Visibility.Visible;
+                SignoPesos.Visibility = Visibility.Visible;
+            }
+            
+            ViewModel?.GenerarPreviewAjuste();
+        }
+
+        private async void CancelarAjuste_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.CancelarAjusteMasivo();
+        }
+
+        private async void ConfirmarAjuste_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel != null)
+                await ViewModel.ConfirmarAjusteMasivo();
         }
     }
 }

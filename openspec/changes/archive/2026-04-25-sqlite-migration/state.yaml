@@ -1,0 +1,26 @@
+change: sqlite-migration
+phase: archive
+artifact_store: openspec
+artifacts:
+  proposal: false
+  specs: true
+  design: true
+  tasks: true
+  verify: true
+  archive: true
+specs:
+  persistencia: true
+tasks_progress:
+  completed:
+    - 1.1 Remove HasFilter from Producto.CodigoBarra index
+    - 1.2 Verify index configuration compiles
+    - 2.1 Remove SqlServer package from UI csproj
+    - 2.2 Verify no other SqlServer references
+    - 3.1 Run dotnet build
+    - 3.2 Verify no SqlServer warnings
+    - 4.1 Launch GestionComercial.UI
+    - 4.2 Verify SQLite database created
+    - 4.3 Verify app starts without errors
+  pending: []
+last_updated: 2026-04-25
+archived_to: openspec/changes/archive/2026-04-25-sqlite-migration

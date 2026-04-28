@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Compras;
 using GestionComercial.UI.ViewModels.Main;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -214,6 +215,31 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             var vm = IoC.Get<ProveedorDetalleViewModel>();
             vm.Inicializar(ProveedorSeleccionado.IdProveedor);
             await _shell.ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public async Task VerCompras()
+        {
+            if (ProveedorSeleccionado == null) return;
+            
+            // Navegar a compras filtrado por el proveedor seleccionado
+            var compraListado = IoC.Get<GestionComercial.UI.ViewModels.Compras.CompraListadoViewModel>();
+            
+            // Necesitamos cargar la lista de proveedores primero para poder aplicar el filtro
+            var todosProveedores = await compraListado.CargarProveedoresAsync();
+            
+            // Buscar el proveedor en la lista del listado de compras
+            var proveedorEnCompras = todosProveedores.FirstOrDefault(p => p.IdProveedor == ProveedorSeleccionado.IdProveedor);
+            
+            if (proveedorEnCompras != null)
+            {
+                // Aplicar el filtro directamente (sin await para evitar deadlock)
+                _ = Task.Run(async () => 
+                {
+                    compraListado.ProveedorFiltro = proveedorEnCompras;
+                });
+            }
+            
+            await _shell.ActivateItemAsync(compraListado, CancellationToken.None);
         }
 
         // ── Paginación ────────────────────────────────────────────────────────

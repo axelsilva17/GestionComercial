@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
+using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
@@ -70,76 +71,68 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<VentaDto> CrearAsync(VentaCrearDto dto)
         {
-            // ── Validar stock antes de tocar nada ─────────────────────────────
-            foreach (var item in dto.Items)
+            // ── Validar stock y crear venta en una TRANSACCIÓN ───────────────
+            await _uow.EjecutarEnTransaccionAsync(async () =>
             {
-                var p = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
-                    ?? throw new ProductoNoEncontradoException(item.IdProducto);
-                if (p.StockActual < item.Cantidad)
-                    throw new StockInsuficienteException(p.Nombre, (int)p.StockActual, item.Cantidad);
-            }
-
-            // ── Crear venta PENDIENTE (Estado=1) ──────────────────────────────
-            var venta = new Venta
-            {
-                Fecha          = DateTime.Now,
-                Estado         = (int)EstadoVentaEnum.Pendiente,
-                Id_sucursal    = dto.IdSucursal,
-                Id_cliente     = dto.IdCliente,
-                Id_usuario     = dto.IdUsuario,
-                Id_caja        = dto.IdCaja,
-                TotalBruto     = 0,
-                TotalDescuento = 0, // Se calcula acumulando descuentos por ítem
-                TotalFinal     = 0,
-            };
-
-            decimal totalBruto = 0;
-            decimal totalDescuentos = 0;
-
-            foreach (var item in dto.Items)
-            {
-                var producto  = (await _uow.Productos.ObtenerPorIdAsync(item.IdProducto))!;
-                var subtotal  = producto.PrecioVentaActual * item.Cantidad;
-                totalBruto   += subtotal;
-
-                var detalle = new VentaDetalle
+                // Validar stock antes de tocar nada
+                foreach (var item in dto.Items)
                 {
-                    Id_producto    = item.IdProducto,
-                    Cantidad       = item.Cantidad,
-                    PrecioUnitario = producto.PrecioVentaActual,
-                    CostoUnitario  = producto.PrecioCostoActual,
-                    Subtotal       = subtotal,
-                    MargenUnitario = producto.PrecioVentaActual - producto.PrecioCostoActual,
-                };
-
-                // ── Aplicar descuentos por ítem ────────────────────────────────
-                foreach (var dtoDesc in item.Descuentos)
-                {
-                    var descuento = new VentaDetalleDescuento
-                    {
-                        Porcentaje  = dtoDesc.Porcentaje,
-                        Monto       = dtoDesc.Monto,
-                        Descripcion = dtoDesc.Descripcion,
-                    };
-                    detalle.Descuentos.Add(descuento);
-                    totalDescuentos += dtoDesc.Monto;
+                    var p = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
+                        ?? throw new ProductoNoEncontradoException(item.IdProducto);
+                    if (p.StockActual < item.Cantidad)
+                        throw new StockInsuficienteException(p.Nombre, (int)p.StockActual, item.Cantidad);
                 }
 
-                venta.Detalles.Add(detalle);
+                // Crear venta PENDIENTE usando factory method DDD
+                var venta = Venta.Crear(dto.IdSucursal, dto.IdCliente, dto.IdUsuario, dto.IdCaja);
 
-                producto.StockActual -= item.Cantidad;
-                _uow.Productos.Actualizar(producto);
-            }
+                foreach (var item in dto.Items)
+                {
+                    var producto = (await _uow.Productos.ObtenerPorIdAsync(item.IdProducto))!;
+                    var descuentoPorItem = item.Descuentos.Sum(d => d.Monto);
 
-            venta.TotalBruto = totalBruto;
-            venta.TotalDescuento = totalDescuentos;
-            venta.TotalFinal = totalBruto - totalDescuentos;
+                    // Crear detalle usando factory method DDD
+                    var detalle = VentaDetalle.Crear(
+                        producto,
+                        item.Cantidad,
+                        producto.PrecioVentaActual,
+                        producto.PrecioCostoActual,
+                        descuentoPorItem);
 
-            await _uow.Ventas.AgregarAsync(venta);
-            await _uow.GuardarCambiosAsync();
+                    // Aplicar descuentos por item usando factory methods
+                    foreach (var dtoDesc in item.Descuentos)
+                    {
+                        var descuento = VentaDetalleDescuento.PorMonto(
+                            dtoDesc.Monto,
+                            0,  // idDetalle se asigna al persistir
+                            dtoDesc.Descripcion);
+                        detalle.AgregarDescuento(descuento);
+                    }
 
-            return await ObtenerPorIdAsync(venta.Id)
-                ?? throw new NegocioException("Error al crear venta.");
+                    // Agregar detalle a la venta (recalcula totales internamente)
+                    venta.AgregarDetalle(detalle);
+
+                    // Restar stock dentro de la transaccion
+                    producto.StockActual -= item.Cantidad;
+                    _uow.Productos.Actualizar(producto);
+                }
+
+                await _uow.Ventas.AgregarAsync(venta);
+            });
+
+            // Recargar para devolver
+            var ventaCreada = await _uow.Ventas.ObtenerConDetallesAsync(dto.Items.First().IdProducto);
+            // Obtener la venta recien creada por ID si es posible, si no buscar por recent
+            var ventasRecientes = await _uow.Ventas.ObtenerPorFechaAsync(DateTime.Now.AddDays(-1), DateTime.Now, dto.IdSucursal);
+            var ventaResult = ventasRecientes
+                .Where(v => v.Estado == (int)EstadoVentaEnum.Pendiente && v.Id_usuario == dto.IdUsuario)
+                .OrderByDescending(v => v.Fecha)
+                .FirstOrDefault();
+
+            if (ventaResult == null)
+                throw new NegocioException("Error al crear venta.");
+
+            return MapearDto(ventaResult);
         }
 
         /// <summary>
@@ -168,12 +161,8 @@ namespace GestionComercial.Aplicacion.Servicios
 
             foreach (var pago in pagos.Where(p => p.Monto > 0))
             {
-                var pagoEntity = new GestionComercial.Dominio.Entidades.Pagos.Pago
-                {
-                    Id_venta      = idVenta,
-                    Id_metodoPago = pago.IdMetodoPago,
-                    Monto         = pago.Monto,
-                };
+                // ── Crear pago usando factory method DDD ──────────────────────
+                var pagoEntity = Pago.Crear(pago.Monto, idVenta, pago.IdMetodoPago);
 
                 // ── Crear movimiento de caja SOLO para pagos en efectivo ─────────
                 if (pago.EsEfectivo && venta.Id_caja.HasValue)
@@ -223,7 +212,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.Pagos.AgregarAsync(pagoEntity);
             }
 
-            venta.Estado = (int)EstadoVentaEnum.Pagada;
+            // ── Marcar venta como pagada usando método de dominio ──────────────────────
+            venta.MarcarPagada();
             _uow.Ventas.Actualizar(venta);
             await _uow.GuardarCambiosAsync();
 
@@ -292,12 +282,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 }
             }
 
-            // ── Registrar datos de anulación ──────────────────────────────────
-            venta.Estado           = (int)EstadoVentaEnum.Anulada;
-            venta.MotivoAnulacion  = motivo;
-            venta.FechaAnulacion   = DateTime.Now;
-            venta.UsuarioAnulacionId = venta.Id_usuario; // Usuario que realiza la anulación
-
+            // ── Anular usando método de dominio ────────────────────────────────
+            venta.Anular(motivo, venta.Id_usuario);
             _uow.Ventas.Actualizar(venta);
             await _uow.GuardarCambiosAsync();
         }

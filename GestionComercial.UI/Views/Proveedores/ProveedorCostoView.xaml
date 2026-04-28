@@ -1,0 +1,58 @@
+<UserControl x:Class="GestionComercial.UI.Views.Proveedores.ProveedorCostoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d">
+  <Grid Margin="15">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="160"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <TextBlock Text="Costo por Proveedor" FontWeight="Bold" FontSize="16" Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12"/>
+
+    <TextBlock Text="Proveedor:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,0,8"/>
+    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Proveedores}" 
+              SelectedItem="{Binding ProveedorSeleccionado}" DisplayMemberPath="Nombre" 
+              Margin="0,0,0,8"/>
+
+    <TextBlock Text="Porcentaje (%):" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,0,8"/>
+    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBox Text="{Binding Porcentaje, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
+      <Button x:Name="GenerarPreview" Content="Vista Previa" Margin="10,0,0,0" Padding="8,2"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
+      <TextBlock Text="Rango permitido: -99% a 999%" Foreground="#888" FontSize="11" VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <TextBlock Text="Preview de Costos" FontWeight="SemiBold" Grid.Row="4" Grid.ColumnSpan="2" 
+               Margin="0,0,0,5"
+               Visibility="{Binding MostrarPreview, Converter={StaticResource BoolToVisibilityConverter}}"/>
+    <DataGrid Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding CostosPreview}" 
+              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+              Visibility="{Binding MostrarPreview, Converter={StaticResource BoolToVisibilityConverter}}"
+              Margin="0,20,0,0" MaxHeight="300">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Producto" Binding="{Binding NombreProducto}" Width="*"/>
+        <DataGridTextColumn Header="Costo Anterior" Binding="{Binding CostoAnterior, StringFormat=N2}" Width="120"/>
+        <DataGridTextColumn Header="Costo Nuevo" Binding="{Binding CostoNuevo, StringFormat=N2}" Width="120"/>
+        <DataGridTextColumn Header="Diferencia" Binding="{Binding Diferencia, StringFormat=N2}" Width="100"/>
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
+      <Button x:Name="Aplicar" Content="Aplicar Ajuste" Width="120" Margin="0,0,10,0"/>
+      <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Foreground="#555"/>
+    </StackPanel>
+  </Grid>
+</UserControl>

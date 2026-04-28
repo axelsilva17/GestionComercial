@@ -4,7 +4,6 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Compras;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
-using System;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -25,6 +24,12 @@ namespace GestionComercial.Aplicacion.Servicios
             return compras.Select(MapearDto);
         }
 
+        public async Task<IEnumerable<CompraDto>> ObtenerPorProveedorAsync(int idProveedor)
+        {
+            var compras = await _uow.Compras.ObtenerPorProveedorAsync(idProveedor);
+            return compras.Select(MapearDto);
+        }
+
         public async Task<CompraDto?> ObtenerPorIdAsync(int id)
         {
             var c = await _uow.Compras.ObtenerConDetallesAsync(id);
@@ -33,44 +38,38 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<CompraDto> CrearAsync(CompraCrearDto dto)
         {
-            var compra = new Compra
-            {
-                Fecha        = DateTime.Now,
-                Id_proveedor = dto.IdProveedor,
-                Id_sucursal  = dto.IdSucursal,
-                Id_usuario   = dto.IdUsuario,
-                Total        = 0,
-                Estado       = 1, // Pendiente
-            };
+            // ── Crear la compra con factory method (DDD) ──
+            var compra = Compra.Crear(
+                idProveedor: dto.IdProveedor,
+                idSucursal: dto.IdSucursal,
+                idUsuario: dto.IdUsuario,
+                observacion: dto.Observacion
+            );
 
-            decimal total = 0;
+            // ── Agregar detalles con factory methods (DDD) ──
             foreach (var item in dto.Items)
             {
                 var producto = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
                     ?? throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
 
-                var subtotal = item.PrecioCosto * item.Cantidad;
-                total += subtotal;
+                // Factory method: CompraDetalle.Crear() calcula el subtotal SOLO
+                var detalle = CompraDetalle.Crear(producto, item.Cantidad, item.PrecioCosto);
+                
+                // Agregar a la compra — Compra recalcula el total automáticamente
+                compra.AgregarDetalle(detalle);
 
-                compra.Detalles.Add(new CompraDetalle
-                {
-                    Id_producto  = item.IdProducto,
-                    Cantidad     = item.Cantidad,
-                    PrecioCosto  = item.PrecioCosto,
-                    Subtotal     = subtotal,
-                });
-
-                // Actualizar stock y precio costo
-                producto.StockActual      += item.Cantidad;
+                // Actualizar producto: precio de costo y stock
                 producto.PrecioCostoActual = item.PrecioCosto;
+                producto.AgregarStock(item.Cantidad);
                 _uow.Productos.Actualizar(producto);
             }
 
-            compra.Total = total;
+            // ── Persistir ──
             await _uow.Compras.AgregarAsync(compra);
             await _uow.GuardarCambiosAsync();
 
-            return await ObtenerPorIdAsync(compra.Id) ?? throw new Exception("Error al crear compra");
+            return await ObtenerPorIdAsync(compra.Id) 
+                ?? throw new InvalidOperationException("Error al crear la compra");
         }
 
         private static CompraDto MapearDto(Compra c) => new()

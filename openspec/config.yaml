@@ -1,0 +1,52 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Tech stack: WPF .NET 8, EF Core 8, Caliburn.Micro, ClosedXML, LiveCharts
+  Architecture: Clean Architecture (Dominio/Aplicacion/Persistencia/Infraestructura/UI)
+  Testing: xUnit 2.9.2, FluentAssertions, Moq, Coverlet
+  DB: Migrating from SQL Server to SQLite
+  Project type: Desktop POS/Retail (ventas)
+
+strict_tdd: false
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - For SQLite migration: document provider differences (SQL Server vs SQLite)
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Load relevant coding skills for the project stack
+  verify:
+    - Run tests if test infrastructure exists
+    - Compare implementation against every spec scenario
+  archive:
+    - Warn before merging destructive deltas (large removals)
+
+testing:
+  strict_tdd: false
+  runner:
+    command: dotnet test
+    framework: xUnit
+  layers:
+    unit: true
+    integration: false
+    e2e: false
+  coverage:
+    available: true
+    command: dotnet test --collect:"XPlat Code Coverage"
+  quality:
+    linter: false
+    type_checker: false
+    formatter: false

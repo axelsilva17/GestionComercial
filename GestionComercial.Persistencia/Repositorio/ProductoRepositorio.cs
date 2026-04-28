@@ -36,7 +36,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa)
             => await _dbSet
-                .Where(p => p.Id_empresa == idEmpresa && p.Activo)
+                .Where(p => p.Id_empresa == idEmpresa)
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .OrderBy(p => p.Nombre)
@@ -54,5 +54,25 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .FirstOrDefaultAsync(p => p.Id == id);
+
+        /// <summary>
+        /// Agrega muchos productos en una sola operación, optimizado para importación masiva.
+        /// </summary>
+        public async Task AgregarRangoMasivoAsync(IEnumerable<Producto> productos, bool disableTracking = true)
+        {
+            if (disableTracking)
+            {
+                // Desactivar change tracking para bulk insert (ahorra memoria y CPU)
+                _context.ChangeTracker.AutoDetectChangesEnabled = false;
+            }
+
+            await _dbSet.AddRangeAsync(productos);
+            await _context.SaveChangesAsync();
+
+            if (disableTracking)
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = true;
+            }
+        }
     }
 }

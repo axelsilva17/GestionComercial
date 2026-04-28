@@ -1,7 +1,9 @@
 using Caliburn.Micro;
+using GestionComercial.Dominio.Entidades.Proveedores;
+using ClosedXML.Excel;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
-using GestionComercial.Aplicacion.DTOs.Productos;  // ProductoItemDto + CategoriaItemDto
+using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -16,9 +18,11 @@ namespace GestionComercial.UI.ViewModels.Productos
     {
         private readonly IProductoServicio _productoServicio;
         private readonly ShellViewModel _shell;
-        private readonly ILogger<ProductoListadoViewModel> _logger;
+        private readonly ILogger<ProductoListadoViewModel>? _logger;
+        private readonly SemaphoreSlim _lock = new(1, 1);
+        private bool _isInitializing = true;
 
-        public ProductoListadoViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoListadoViewModel> logger)
+        public ProductoListadoViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoListadoViewModel>? logger = null)
         {
             _productoServicio = productoServicio;
             _shell = shell;
@@ -124,11 +128,69 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _totalPaginas = value; NotifyOfPropertyChange(() => TotalPaginas); }
         }
 
+        // ── Ajuste Masivo de Precios ───────────────────────────────────────────
+        private bool _mostrarPopupAjuste;
+        public bool MostrarPopupAjuste
+        {
+            get => _mostrarPopupAjuste;
+            set { _mostrarPopupAjuste = value; NotifyOfPropertyChange(() => MostrarPopupAjuste); }
+        }
+
+        private string _tipoAjuste = "porcentaje"; // "porcentaje" | "ganancia" | "fijo"
+        public string TipoAjuste
+        {
+            get => _tipoAjuste;
+            set { _tipoAjuste = value; NotifyOfPropertyChange(() => TipoAjuste); }
+        }
+
+        private decimal _porcentajeAjuste = 0;
+        public decimal PorcentajeAjuste
+        {
+            get => _porcentajeAjuste;
+            set { _porcentajeAjuste = value; NotifyOfPropertyChange(() => PorcentajeAjuste); }
+        }
+
+        private decimal _montoFijo = 0;
+        public decimal MontoFijo
+        {
+            get => _montoFijo;
+            set { _montoFijo = value; NotifyOfPropertyChange(() => MontoFijo); }
+        }
+
+        private ObservableCollection<ProductoListadoDto> _productosPreview = new();
+        public ObservableCollection<ProductoListadoDto> ProductosPreview
+        {
+            get => _productosPreview;
+            set { _productosPreview = value; NotifyOfPropertyChange(() => ProductosPreview); }
+        }
+
+        private bool _aplicarAPrecioVenta = true;
+        public bool AplicarAPrecioVenta
+        {
+            get => _aplicarAPrecioVenta;
+            set { _aplicarAPrecioVenta = value; NotifyOfPropertyChange(() => AplicarAPrecioVenta); }
+        }
+
+        private bool _aplicarAPrecioCosto = false;
+        public bool AplicarAPrecioCosto
+        {
+            get => _aplicarAPrecioCosto;
+            set { _aplicarAPrecioCosto = value; NotifyOfPropertyChange(() => AplicarAPrecioCosto); }
+        }
+
+        private int _productosActualizados;
+        public int ProductosActualizados
+        {
+            get => _productosActualizados;
+            set { _productosActualizados = value; NotifyOfPropertyChange(() => ProductosActualizados); }
+        }
+
         // ── Lifecycle ─────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             await CargarCategoriasAsync();
             await CargarAsync();
+            await CargarProveedoresAjusteAsync();
         }
 
         private async Task CargarCategoriasAsync()
@@ -140,7 +202,8 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error cargando categorías");
+                _logger?.LogError(ex, "Error cargando categorías");
+                MessageBox.Show("Error al cargar categorías: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -187,7 +250,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error cargando productos");
+                _logger?.LogError(ex, "Error cargando productos");
                 MessageBox.Show("Error al cargar productos: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -199,8 +262,17 @@ namespace GestionComercial.UI.ViewModels.Productos
         // ── Acciones ──────────────────────────────────────────────────
         public async Task Buscar()
         {
-            PaginaActual = 1;
-            await CargarAsync();
+            if (!await _lock.WaitAsync(0)) return;
+            try
+            {
+                PaginaActual = 1;
+                await CargarAsync();
+            }
+            finally
+            {
+                _lock.Release();
+                _isInitializing = false;
+            }
         }
 
         public async Task NuevoProducto()
@@ -209,6 +281,191 @@ namespace GestionComercial.UI.ViewModels.Productos
             var vm = IoC.Get<ProductoFormularioViewModel>();
             vm.InicializarParaCrear();
             await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        // ── Ajuste Masivo de Precios ─────────────────────────────────
+        public void AbrirAjusteMasivo()
+        {
+            MostrarPopupAjuste = true;
+            PorcentajeAjuste = 0;
+            MontoFijo = 0;
+            TipoAjuste = "porcentaje";
+            // Pre-cargar preview con todos los productos visibles
+            _productosPreview = new ObservableCollection<ProductoListadoDto>(Productos);
+            NotifyOfPropertyChange(() => ProductosPreview);
+        }
+
+        // Nueva: Ajuste por Proveedor (aplicación en modal de precios)
+        public ObservableCollection<Proveedor> ProveedoresAjuste { get; set; } = new ObservableCollection<Proveedor>();
+        public int? ProveedorAjusteId { get; set; }
+        public decimal PorcentajeAjusteProveedor { get; set; }
+
+        public async Task CargarProveedoresAjusteAsync()
+        {
+            var proveedores = await _productoServicio.ObtenerProveedoresAsync();
+            ProveedoresAjuste = new ObservableCollection<Proveedor>(proveedores);
+            NotifyOfPropertyChange(() => ProveedoresAjuste);
+        }
+
+        public async Task AplicarAjusteProveedorAsync()
+        {
+            if (ProveedorAjusteId == null || ProveedorAjusteId <= 0)
+            {
+                MessageBox.Show("Seleccione un proveedor para el ajuste", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (PorcentajeAjusteProveedor == 0)
+            {
+                MessageBox.Show("Indique un porcentaje distinto de 0 para el ajuste", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            // Confirmación simple para el usuario final
+            var confirm = MessageBox.Show($"¿Está seguro de aplicar el ajuste de {PorcentajeAjusteProveedor}% para el proveedor seleccionado?", "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            var (nuevos, actualizados) = await _productoServicio.AjustePreciosPorProveedorAsync(ProveedorAjusteId.Value, PorcentajeAjusteProveedor);
+            ProductosActualizados = actualizados;
+            Status = $"Ajuste aplicado: {actualizados} productos actualizados";
+            NotifyOfPropertyChange(() => Status);
+            await CargarAsync();
+        }
+
+        public void CancelarAjusteMasivo()
+        {
+            MostrarPopupAjuste = false;
+            ProductosPreview.Clear();
+        }
+
+        public void GenerarPreviewAjuste()
+        {
+            // Generar preview sin modificar la base de datos
+            var preview = new ObservableCollection<ProductoListadoDto>();
+            
+            // Si no hay valor, mostrar todos los productos actuales
+            if (PorcentajeAjuste == 0 && MontoFijo == 0)
+            {
+                foreach (var p in Productos)
+                {
+                    var copia = new ProductoListadoDto
+                    {
+                        IdProducto = p.IdProducto,
+                        Nombre = p.Nombre,
+                        CodigoBarra = p.CodigoBarra,
+                        PrecioVentaActual = p.PrecioVentaActual,
+                        PrecioCostoActual = p.PrecioCostoActual,
+                        PrecioVentaNuevo = p.PrecioVentaActual,
+                        PrecioCostoNuevo = p.PrecioCostoActual,
+                    };
+                    preview.Add(copia);
+                }
+                ProductosPreview = preview;
+                ProductosActualizados = preview.Count;
+                return;
+            }
+            
+            foreach (var p in Productos)
+            {
+                decimal nuevoVenta = p.PrecioVentaActual;
+                decimal nuevoCosto = p.PrecioCostoActual;
+
+                if (TipoAjuste == "porcentaje")
+                {
+                    if (AplicarAPrecioVenta)
+                        nuevoVenta = Math.Round(p.PrecioVentaActual * (1 + PorcentajeAjuste / 100m), 2);
+                    if (AplicarAPrecioCosto)
+                        nuevoCosto = Math.Round(p.PrecioCostoActual * (1 + PorcentajeAjuste / 100m), 2);
+                }
+                else if (TipoAjuste == "fijo")
+                {
+                    if (AplicarAPrecioVenta)
+                        nuevoVenta = p.PrecioVentaActual + MontoFijo;
+                    if (AplicarAPrecioCosto)
+                        nuevoCosto = p.PrecioCostoActual + MontoFijo;
+                }
+
+                // Siempre agregar paraver el cambio
+                var copia = new ProductoListadoDto
+                {
+                    IdProducto = p.IdProducto,
+                    Nombre = p.Nombre,
+                    CodigoBarra = p.CodigoBarra,
+                    PrecioVentaActual = p.PrecioVentaActual,
+                    PrecioCostoActual = p.PrecioCostoActual,
+                    PrecioVentaNuevo = nuevoVenta,
+                    PrecioCostoNuevo = nuevoCosto,
+                };
+                preview.Add(copia);
+            }
+
+            ProductosPreview = preview;
+            ProductosActualizados = preview.Count;
+        }
+
+        public async Task ConfirmarAjusteMasivo()
+        {
+            if (ProductosPreview.Count == 0)
+            {
+                MessageBox.Show("No hay productos para actualizar.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Se actualizarán {ProductosActualizados} productos.\n\nPrecio de venta: {(AplicarAPrecioVenta ? "✓ SÍ" : "✗ NO")}\nPorcentaje: {PorcentajeAjuste}%\n\n¿Continuar?",
+                "Confirmar Ajuste Masivo",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                IsLoading = true;
+                int actualizada = 0;
+
+                foreach (var p in ProductosPreview)
+                {
+                    // Obtener producto actual de la DB para actualizar
+                    var producto = await _productoServicio.ObtenerPorIdAsync(p.IdProducto);
+                    if (producto != null)
+                    {
+                        if (AplicarAPrecioVenta)
+                            producto.PrecioVentaActual = p.PrecioVentaNuevo ?? producto.PrecioVentaActual;
+                        else
+                            producto.PrecioCostoActual = p.PrecioVentaNuevo ?? producto.PrecioCostoActual;
+
+                        // Map to DTO
+                        var dto = new ProductoActualizarDto
+                        {
+                            IdProducto = producto.IdProducto,
+                            Nombre = producto.Nombre,
+                            CodigoBarra = producto.CodigoBarra,
+                            PrecioVentaActual = producto.PrecioVentaActual,
+                            PrecioCostoActual = producto.PrecioCostoActual,
+                            StockMinimo = producto.StockMinimo,
+                            Activo = producto.Activo,
+                            IdCategoria = producto.IdCategoria,
+                            IdUnidadMedida = producto.IdUnidadMedida
+                        };
+                        
+                        await _productoServicio.ActualizarAsync(dto);
+                        actualizada++;
+                    }
+                }
+
+                MessageBox.Show($"Se actualizaron {actualizada} productos correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                
+                MostrarPopupAjuste = false;
+                await CargarAsync(); // Recargar lista
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error en ajuste masivo");
+                MessageBox.Show("Error al aplicar ajuste: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         public async Task EditarProducto()
@@ -240,7 +497,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error desactivando producto");
+                _logger?.LogError(ex, "Error desactivando producto");
                 MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

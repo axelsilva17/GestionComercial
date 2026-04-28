@@ -13,5 +13,6 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<bool> ExisteCodigoBarraAsync(string codigo, int idEmpresa);
         Task<bool> ExisteNombreEnCategoriaAsync(string nombre, int idCategoria, int idEmpresa);
         Task<int> ObtenerStockAsync(int idProducto);
+        Task AgregarRangoMasivoAsync(IEnumerable<Producto> productos, bool disableTracking = true);
     }
 }

@@ -200,26 +200,26 @@
                 </Border>
             </Grid>
 
-            <!-- FILTROS -->
+<!-- FILTROS -->
             <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="12" Padding="14,10">
+                    CornerRadius="12" Padding="12,10"
+                    xmlns:behaviors="clr-namespace:GestionComercial.UI.Views.Behaviors"
+                    behaviors:ToolbarResponsiveBehavior.Enable="True">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="130"/>
-                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="8" Height="38">
+                    <!-- Barra de búsqueda - responsive -->
+                    <Border Grid.Column="0" x:Name="SearchBorder" 
+                            behaviors:SearchBarResponsiveBehavior.Enable="True"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" 
+                            BorderThickness="1" CornerRadius="6" 
+                            Height="38" Width="450">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -232,40 +232,42 @@
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="13" VerticalContentAlignment="Center"
-                                     Padding="0,0,10,0"/>
+                                     Padding="0,0,10,0"
+                                     KeyDown="TextoBusqueda_KeyDown"/>
                         </Grid>
                     </Border>
 
-                    <ComboBox x:Name="CategoriaSeleccionada" Grid.Column="2"
-                              Style="{StaticResource FilterComboBoxStyle}"
-                              ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
-                              SelectedItem="{Binding CategoriaSeleccionada}"/>
+                    <!-- Resto de filtros y botones con espaciado -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <ComboBox x:Name="CategoriaSeleccionada" Width="130" Height="38"
+                                  Style="{StaticResource FilterComboBoxStyle}"
+                                  ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
+                                  SelectedItem="{Binding CategoriaSeleccionada}"/>
 
-                    <ComboBox x:Name="FiltroActivo" Grid.Column="4"
-                              Style="{StaticResource FilterComboBoxStyle}"
-                              SelectedIndex="{Binding FiltroActivo, Mode=TwoWay}">
-                        <ComboBoxItem Content="Todos"/>
-                        <ComboBoxItem Content="Activos"/>
-                        <ComboBoxItem Content="Inactivos"/>
-                    </ComboBox>
+                        <Border Width="10" MinWidth="0"/>
 
-                    <!-- ── Buscar ── -->
-                    <Button x:Name="BuscarBtn" Grid.Column="6"
-                            Content="Buscar" Height="38" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}"
-                            Click="Buscar_Click"/>
+                        <ComboBox x:Name="FiltroActivo" Width="90" Height="38"
+                                  Style="{StaticResource FilterComboBoxStyle}"
+                                  SelectedIndex="{Binding FiltroActivo}">
+                            <ComboBoxItem Content="Todos"/>
+                            <ComboBoxItem Content="Activos"/>
+                            <ComboBoxItem Content="Inactivos"/>
+                        </ComboBox>
 
-                    <!-- ── Nuevo Producto → navega a ProductoFormularioView ── -->
-                    <Button x:Name="NuevoProductoBtn" Grid.Column="8"
-                            Height="38" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}"
-                            Click="NuevoProducto_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="+" FontSize="18" FontWeight="Bold"
-                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Nuevo Producto" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                        <Border Width="12" MinWidth="0"/>
+
+                        <Button Content="Buscar" Height="38" Padding="16,0"
+                               Style="{StaticResource SecondaryButton}"
+                               Click="Buscar_Click"/>
+                        <Border Width="8" MinWidth="0"/>
+                        <Button Content="⚡ Ajuste" Height="38" Padding="16,0"
+                               Style="{StaticResource SecondaryButton}"
+                               Click="AbrirAjusteMasivo_Click"/>
+                        <Border Width="8" MinWidth="0"/>
+                        <Button Content="+ Nuevo" Height="38" Padding="14,0"
+                               Style="{StaticResource SecondaryButton}"
+                               Click="NuevoProducto_Click"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -611,5 +613,184 @@
                 </ScrollViewer>
             </Grid>
         </Border>
+
+<!-- POPUP: Ajuste Masivo de Precios -->
+        <Border Grid.Row="0" Grid.RowSpan="10"
+                Background="#CC000000"
+                Visibility="{Binding MostrarPopupAjuste, Converter={StaticResource BoolToVisibility}}">
+            <Border Background="{DynamicResource CardBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Width="900"
+                    MaxHeight="700"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Margin="40">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource PrimaryBrush}"
+                            CornerRadius="12,12,0,0" Padding="24,16">
+                        <StackPanel>
+                            <TextBlock Text="⚡ Ajuste Masivo de Precios" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
+                            <TextBlock Text="Seleccioná el tipo de ajuste y el valor para pré-actualizar los precios de tus productos"
+                                   FontSize="12" Foreground="#BFFFFFFF" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Opciones -->
+                    <Grid Grid.Row="1" Margin="24,20,24,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Tipo -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tipo de Ajuste:"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0">
+                            <RadioButton x:Name="TipoPorcentaje" Content="Porcentaje (%)" GroupName="TipoAjuste"
+                                       IsChecked="True" Foreground="White" Margin="0,0,20,0"/>
+                            <RadioButton x:Name="TipoFijo" Content="Monto Fijo ($)" GroupName="TipoAjuste"
+                                       Foreground="White"/>
+                        </StackPanel>
+
+                        <!-- Valor -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Valor (% o $):"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0">
+                            <TextBox x:Name="PorcentajeInput"
+                                     Text="{Binding PorcentajeAjuste, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="100" Height="36" FontSize="14"
+                                     Background="{DynamicResource SurfaceBrush}"
+                                     Foreground="White"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1" Padding="10,0"/>
+                            <TextBlock x:Name="SignoLabel" Text="%" FontSize="14"
+                                       VerticalAlignment="Center" Margin="8,0,24,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox x:Name="MontoFijoInput"
+                                     Text="{Binding MontoFijo, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="100" Height="36" FontSize="14"
+                                     Background="{DynamicResource SurfaceBrush}"
+                                     Foreground="White"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1" Padding="10,0"
+                                     Visibility="Collapsed"/>
+                            <TextBlock x:Name="SignoPesos" Text="$" FontSize="14"
+                                       VerticalAlignment="Center" Margin="8,0,24,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Visibility="Collapsed"/>
+                            <CheckBox x:Name="AplicarVentaCheck" Content="Precio Venta"
+                                     IsChecked="{Binding AplicarAPrecioVenta}"
+                                     Foreground="White" VerticalAlignment="Center"/>
+                            <CheckBox x:Name="AplicarCostoCheck" Content="Precio Costo"
+                                     IsChecked="{Binding AplicarAPrecioCosto}"
+                                     Foreground="White" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        </StackPanel>
+
+                        <!-- Botón -->
+                        <Button Grid.Row="4" Grid.Column="1" x:Name="GenerarPreviewBtn"
+                                Content="Vista Previa" Height="36" Padding="20,0"
+                                HorizontalAlignment="Left" Margin="16,8,0,0"
+                                Style="{StaticResource SecondaryButton}"
+                                Click="GenerarPreview_Click"/>
+                    </Grid>
+
+                    <!-- Preview Table -->
+                    <Border Grid.Row="2" Margin="24,0,24,20"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8">
+                        <DataGrid ItemsSource="{Binding ProductosPreview}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="Horizontal"
+                                  RowBackground="Transparent"
+                                  AlternatingRowBackground="#08FFFFFF"
+                                  Foreground="White"
+                                  HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Producto" Binding="{Binding Nombre}" Width="*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Precio Venta" Binding="{Binding PrecioVentaActual, StringFormat=C0}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Nuevo Venta" Binding="{Binding PrecioVentaNuevo, StringFormat=C0}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#4ADE80"/>
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Var %" Binding="{Binding VariacionPorcentaje}" Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#60A5FA"/>
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Footer -->
+                    <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}"
+                            CornerRadius="0,0,12,12" Padding="24,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding ProductosActualizados, StringFormat='{}{0} productos a actualizar'}"
+                                       FontSize="13" VerticalAlignment="Center" Foreground="White"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button x:Name="CancelarAjusteBtn" Content="Cancelar"
+                                        Height="40" Padding="24,0"
+                                        Background="{DynamicResource CardBrush}"
+                                        Foreground="White"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        Click="CancelarAjuste_Click"/>
+                                <Button x:Name="ConfirmarAjusteBtn" Content="Confirmar Cambios"
+                                        Height="40" Padding="24,0" Margin="12,0,0,0"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Click="ConfirmarAjuste_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+</Border>
+        </Border>
+
     </Grid>
 </UserControl>

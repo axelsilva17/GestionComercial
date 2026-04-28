@@ -183,7 +183,7 @@
                 <Border Grid.Column="6" Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="18,14">
                     <StackPanel>
-                        <TextBlock Text="PRODUCTOS REPUESTOS" FontSize="10" FontWeight="Bold"
+                        <TextBlock Text="TOTAL UNIDADES" FontSize="10" FontWeight="Bold"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Text="{Binding ProductosRepuestos}"
                                    FontSize="22" FontWeight="Bold"
@@ -220,18 +220,26 @@
                             <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center"
                                        Margin="10,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBox x:Name="TextoBusqueda" Grid.Column="1"
+                                     Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" BorderThickness="0"
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      FontSize="13" VerticalContentAlignment="Center" Padding="0,0,10,0"/>
                         </Grid>
                     </Border>
 
-                    <DatePicker x:Name="FechaDesde" Style="{StaticResource FilterDatePickerStyle}"/>
+                    <DatePicker x:Name="FechaDesde" 
+                              Height="38"
+                              SelectedDate="{Binding FechaDesde, Mode=TwoWay}"
+                              Style="{StaticResource FilterDatePickerStyle}"/>
 
-                    <DatePicker x:Name="FechaHasta" Style="{StaticResource FilterDatePickerStyle}"/>
+                    <DatePicker x:Name="FechaHasta" 
+                              Height="38"
+                              SelectedDate="{Binding FechaHasta, Mode=TwoWay}"
+                              Style="{StaticResource FilterDatePickerStyle}"/>
 
                     <ComboBox x:Name="ProveedorFiltro" Style="{StaticResource FilterComboBoxStyle}"
                               ItemsSource="{Binding Proveedores}"
+                              SelectedItem="{Binding ProveedorFiltro, Mode=TwoWay}"
                               DisplayMemberPath="Nombre"/>
 
                     <Button x:Name="Buscar" Grid.Column="8"
@@ -301,8 +309,8 @@
                                     <DataTemplate>
                                         <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                                    VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Run Text="{Binding CantidadProductos}"/>
-                                            <Run Text=" ítem(s)"/>
+                                            <Run Text="{Binding CantidadProductos, Mode=OneWay}"/>
+                                            <Run Text=" ítem(s)" />
                                         </TextBlock>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

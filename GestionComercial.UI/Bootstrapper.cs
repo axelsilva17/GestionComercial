@@ -48,7 +48,7 @@ namespace GestionComercial.UI
             _container.Handler<GestionComercialContext>(
                 _ => new GestionComercialContext(
                     new DbContextOptionsBuilder<GestionComercialContext>()
-                        .UseSqlServer(connectionString)
+                        .UseSqlite(connectionString)
                         .Options));
 
             _container.Handler<IUnitOfWork>(
@@ -152,37 +152,65 @@ namespace GestionComercial.UI
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
         {
-            // ── Asegurar base de datos y migraciones ───────────────────────────
+            // ── Asegurar base de datos ─────────────────────────────
             try
             {
                 var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
                 
-                // Aplicar migraciones pendientes
-                await context.Database.MigrateAsync();
-                System.Diagnostics.Debug.WriteLine("[Bootstrapper] Migraciones aplicadas OK");
+                // Try migrate, otherwise create
+                try { await context.Database.MigrateAsync(); }
+                catch { await context.Database.EnsureCreatedAsync(); }
+                
+                // Check if we need to create users
+                var tieneUsuarios = await context.Usuarios.AnyAsync();
+                if (!tieneUsuarios)
+                {
+                    var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    
+                    // Empresa
+                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Empresa VALUES (1, 'Mi Empresa', '20-12345678-9', 'Direccion 123', 'admin@miempresa.com', '3794000000', 1, '{now}', '{now}')");
+                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Empresa created");
+                    
+                    // Rol
+                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Rol VALUES (1, 'Administrador', 'Acceso total', 1, '{now}')");
+                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Rol created");
+                    
+                    // Usuario - using known BCrypt hash for "admin123"
+                    // This hash was generated from "admin123"
+                    var hash = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy";
+                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Usuario VALUES (1, 'Admin', 'Sistema', 'admin@miempresa.com', 1, 1, '{hash}', 1, '{now}')");
+                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuario created with hash for admin123");
+                }
+                
+                // Verify
+                var count = await context.Usuarios.CountAsync();
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Total usuarios: {count}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error: {ex.Message}");
+            }
 
-                // ── Check for orphaned open cajas (app was closed without closing) ─
-                // This ensures cajas don't stay open across sessions
+            // ── Cerrar cajas huérfanas ───────────────────────────
+            try
+            {
+                var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
                 var cajasAbiertas = await context.Cajas
-                    .Where(c => c.Estado == 1) // 1 = Abierta
+                    .Where(c => c.Estado == 1)
                     .ToListAsync();
                 
                 foreach (var caja in cajasAbiertas)
                 {
-                    caja.Estado = 2; // 2 = Cerrada
+                    caja.Estado = 2;
                     caja.FechaCierre = DateTime.Now;
                 }
                 
                 if (cajasAbiertas.Count > 0)
                 {
                     await context.SaveChangesAsync();
-                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Cerradas {cajasAbiertas.Count} cajas huérfanas");
                 }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error: {ex.Message}");
-            }
+            catch { }
             
             (Application.Current as App)?.ApplyTheme();
             await DisplayRootViewForAsync<LoginViewModel>();

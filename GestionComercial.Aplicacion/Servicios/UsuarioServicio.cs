@@ -30,16 +30,9 @@ namespace GestionComercial.Aplicacion.Servicios
             if (await _uow.Usuarios.ExisteAsync(u => u.Email == email))
                 throw new InvalidOperationException($"El email {email} ya está en uso");
 
-            var usuario = new Usuario
-            {
-                Nombre       = nombre,
-                Apellido     = apellido,
-                Email        = email,
-                PasswordHash = BC.HashPassword(password, workFactor: 12),
-                Activo       = true,
-                Id_rol       = idRol,
-                Id_sucursal  = idSucursal,
-            };
+            // ── Crear usuario usando factory method DDD ────────────────────────
+            var passwordHash = BC.HashPassword(password, workFactor: 12);
+            var usuario = Usuario.Crear(nombre, apellido, email, passwordHash, idSucursal, idRol);
 
             await _uow.Usuarios.AgregarAsync(usuario);
             await _uow.GuardarCambiosAsync();
@@ -54,7 +47,9 @@ namespace GestionComercial.Aplicacion.Servicios
             if (!BC.Verify(passwordActual, usuario.PasswordHash))
                 throw new UnauthorizedAccessException("Contraseña actual incorrecta");
 
-            usuario.PasswordHash = BC.HashPassword(passwordNuevo, workFactor: 12);
+            // ── Usar método de dominio para actualizar password ─────────────────
+            var nuevoHash = BC.HashPassword(passwordNuevo, workFactor: 12);
+            usuario.ActualizarPassword(nuevoHash);
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
         }
@@ -63,7 +58,9 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var usuario = await _uow.Usuarios.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Usuario {id} no encontrado");
-            usuario.Activo = false;
+
+            // ── Usar método de dominio para inactivar ────────────────────────
+            usuario.Inactivar();
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
         }

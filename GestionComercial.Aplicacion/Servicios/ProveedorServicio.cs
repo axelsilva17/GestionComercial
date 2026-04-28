@@ -19,13 +19,29 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<Proveedor> CrearAsync(Proveedor proveedor)
         {
-            await _uow.Proveedores.AgregarAsync(proveedor);
+            // ── Crear con factory method (DDD) ──
+            var nuevo = Proveedor.Crear(
+                nombre: proveedor.Nombre,
+                idEmpresa: proveedor.Id_empresa,
+                telefono: proveedor.Telefono,
+                email: proveedor.Email,
+                cuit: proveedor.CUIT
+            );
+
+            await _uow.Proveedores.AgregarAsync(nuevo);
             await _uow.GuardarCambiosAsync();
-            return proveedor;
+            return nuevo;
         }
 
         public async Task ActualizarAsync(Proveedor proveedor)
         {
+            // ── Usar método de dominio (DDD) ──
+            proveedor.Actualizar(
+                nombre: proveedor.Nombre,
+                telefono: proveedor.Telefono,
+                email: proveedor.Email,
+                cuit: proveedor.CUIT
+            );
             _uow.Proveedores.Actualizar(proveedor);
             await _uow.GuardarCambiosAsync();
         }
@@ -34,7 +50,9 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var proveedor = await _uow.Proveedores.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Proveedor {id} no encontrado");
-            proveedor.Activo = false;
+            
+            // ── Usar método de dominio (DDD) ──
+            proveedor.Inactivar();
             _uow.Proveedores.Actualizar(proveedor);
             await _uow.GuardarCambiosAsync();
         }

@@ -7,9 +7,9 @@ namespace GestionComercial.Persistencia.Semillas
     public static class SemillaInicial
     {
         // Hashes generados con BCrypt.Net-Next workFactor 12
-        private const string AdminHash    = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy"; // admin12345
-        private const string GerenteHash  = "$2a$12$NKA/6TaLtSB80UsdZUsZN.uO0IhAMH03WPDNeRQMOHrN/XRTECI9a"; // Gerente2024!
-        private const string VendedorHash = "$2a$12$v4qlp9oXiSIn8kCyfNdmU.fQJMAETzMpXvXVF9h5U.TnxOvq1yolu"; // Vendedor2024!
+        private const string AdminHash    = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy";
+        private const string GerenteHash  = "$2a$12$NKA/6TaLtSB80UsdZUsZN.uO0IhAMH03WPDNeRQMOHrN/XRTECI9a";
+        private const string VendedorHash = "$2a$12$v4qlp9oXiSIn8kCyfNdmU.fQJMAETzMpXvXVF9h5U.TnxOvq1yolu";
 
         public static void Sembrar(ModelBuilder builder)
         {

@@ -12,24 +12,14 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly IUnitOfWork _uow;
         public AutenticacionServicio(IUnitOfWork uow) => _uow = uow;
 
-        public async Task<UsuarioSesionDto?> LoginAsync(string email, string password)
+public async Task<UsuarioSesionDto?> LoginAsync(string email, string password)
         {
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Buscando email: '{email}'");
-         
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email);
-
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Usuario encontrado: {usuario?.Email ?? "NULL"}");
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Hash en BD: {usuario?.PasswordHash ?? "NULL"}");
 
             if (usuario == null)
                 return null;
 
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Password recibido: '{password}'");
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Hash largo: {usuario.PasswordHash?.Length}");
-            var testHash = BC.HashPassword(password, 12);
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Hash generado ahora: '{testHash}'");
             bool passwordValido = BC.Verify(password, usuario.PasswordHash);
-            System.Diagnostics.Debug.WriteLine($"[LOGIN] Password valido: {passwordValido}");
 
             if (!passwordValido)
                 return null;

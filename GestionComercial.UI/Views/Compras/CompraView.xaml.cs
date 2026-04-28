@@ -10,16 +10,38 @@ namespace GestionComercial.UI.Views.Compras
 
         public CompraView() => InitializeComponent();
 
-        private void BuscarProducto_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void BuscarProducto_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            VM?.BuscarProducto();
+            await VM?.BuscarProductoAsync();
+            
+            // Si hay exactamente 1 producto, agregarlo automáticamente
+            if (VM?.ProductosEncontrados.Count == 1)
+            {
+                VM.ProductoSeleccionado = VM.ProductosEncontrados[0];
+                VM.AgregarProducto();
+            }
         }
 
-        private void BusquedaProducto_KeyDown(object sender, KeyEventArgs e)
+        private async void BusquedaProducto_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                VM?.BuscarProducto();
+                await VM?.BuscarProductoAsync();
+                
+                // Si hay exactamente 1 producto, agregarlo automáticamente
+                if (VM?.ProductosEncontrados.Count == 1)
+                {
+                    VM.ProductoSeleccionado = VM.ProductosEncontrados[0];
+                    VM.AgregarProducto();
+                }
+            }
+        }
+
+        private void ResultadosBusqueda_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (VM?.ProductoSeleccionado != null)
+            {
+                VM.AgregarProducto();
             }
         }
     }
