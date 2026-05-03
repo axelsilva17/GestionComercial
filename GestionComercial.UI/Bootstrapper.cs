@@ -67,6 +67,7 @@ namespace GestionComercial.UI
             _container.PerRequest<IAuditoriaAppService, AuditoriaAppService>();
             _container.PerRequest<IProveedorServicio, ProveedorServicio>();
             _container.PerRequest<IStockServicio, StockServicio>();
+            _container.PerRequest<IInventarioServicio, InventarioServicio>();
             _container.PerRequest<IReporteServicio, ReporteServicio>();
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();

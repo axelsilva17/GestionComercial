@@ -15,12 +15,18 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly IUnitOfWork _uow;
         private readonly IServicioImpresion _servicioImpresion;
         private readonly SesionServicio _sesion;
+        private readonly IInventarioServicio _inventarioServicio;
 
-        public VentaServicio(IUnitOfWork uow, IServicioImpresion servicioImpresion, SesionServicio sesion)
+        public VentaServicio(
+            IUnitOfWork uow,
+            IServicioImpresion servicioImpresion,
+            SesionServicio sesion,
+            IInventarioServicio inventarioServicio)
         {
             _uow = uow;
             _servicioImpresion = servicioImpresion;
             _sesion = sesion;
+            _inventarioServicio = inventarioServicio;
         }
 
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
@@ -115,6 +121,16 @@ namespace GestionComercial.Aplicacion.Servicios
                     // Restar stock dentro de la transaccion
                     producto.StockActual -= item.Cantidad;
                     _uow.Productos.Actualizar(producto);
+
+                    // Registrar movimiento de stock (Salida por venta)
+                    await _inventarioServicio.RegistrarMovimientoAsync(
+                        item.IdProducto,
+                        "Salida",
+                        item.Cantidad,
+                        $"Venta #{venta.Id} - {producto.Nombre}",
+                        dto.IdSucursal,
+                        dto.IdUsuario
+                    );
                 }
 
                 await _uow.Ventas.AgregarAsync(venta);

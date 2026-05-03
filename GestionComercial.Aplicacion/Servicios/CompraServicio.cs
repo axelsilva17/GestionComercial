@@ -10,7 +10,13 @@ namespace GestionComercial.Aplicacion.Servicios
     public class CompraServicio : ICompraServicio
     {
         private readonly IUnitOfWork _uow;
-        public CompraServicio(IUnitOfWork uow) => _uow = uow;
+        private readonly IInventarioServicio _inventarioServicio;
+
+        public CompraServicio(IUnitOfWork uow, IInventarioServicio inventarioServicio)
+        {
+            _uow = uow;
+            _inventarioServicio = inventarioServicio;
+        }
 
         public async Task<IEnumerable<CompraDto>> ObtenerPorSucursalAsync(int idSucursal)
         {
@@ -62,6 +68,16 @@ namespace GestionComercial.Aplicacion.Servicios
                 producto.PrecioCostoActual = item.PrecioCosto;
                 producto.AgregarStock(item.Cantidad);
                 _uow.Productos.Actualizar(producto);
+
+                // Registrar movimiento de stock (Entrada por compra)
+                await _inventarioServicio.RegistrarMovimientoAsync(
+                    item.IdProducto,
+                    "Entrada",
+                    item.Cantidad,
+                    $"Compra #{compra.Id} - {producto.Nombre}",
+                    dto.IdSucursal,
+                    dto.IdUsuario
+                );
             }
 
             // ── Persistir ──

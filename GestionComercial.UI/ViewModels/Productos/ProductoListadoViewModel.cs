@@ -4,6 +4,7 @@ using ClosedXML.Excel;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -17,14 +18,20 @@ namespace GestionComercial.UI.ViewModels.Productos
     public class ProductoListadoViewModel : NavigableViewModel
     {
         private readonly IProductoServicio _productoServicio;
+        private readonly IInventarioServicio _inventarioServicio;
         private readonly ShellViewModel _shell;
         private readonly ILogger<ProductoListadoViewModel>? _logger;
         private readonly SemaphoreSlim _lock = new(1, 1);
         private bool _isInitializing = true;
 
-        public ProductoListadoViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoListadoViewModel>? logger = null)
+        public ProductoListadoViewModel(
+            IProductoServicio productoServicio,
+            IInventarioServicio inventarioServicio,
+            ShellViewModel shell,
+            ILogger<ProductoListadoViewModel>? logger = null)
         {
             _productoServicio = productoServicio;
+            _inventarioServicio = inventarioServicio;
             _shell = shell;
             _logger = logger;
             Titulo    = "Productos";
@@ -38,6 +45,13 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             get => _totalProductos;
             set { _totalProductos = value; NotifyOfPropertyChange(() => TotalProductos); }
+        }
+
+        private string _status = string.Empty;
+        public string Status
+        {
+            get => _status;
+            set { _status = value; NotifyOfPropertyChange(() => Status); }
         }
 
         private int _productosActivos;
@@ -480,8 +494,38 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         public async Task VerMovimientos()
         {
-            // TODO: navegar a movimientos filtrado por ProductoSeleccionado
-            await Task.CompletedTask;
+            if (ProductoSeleccionado == null) return;
+
+            try
+            {
+                var movimientos = await _inventarioServicio.ObtenerMovimientosPorProductoAsync(ProductoSeleccionado.IdProducto);
+                var lista = movimientos.ToList();
+
+                if (lista.Count == 0)
+                {
+                    MessageBox.Show("No hay movimientos registrados para este producto.", 
+                        "Sin movimientos", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // Mostrar resumen
+                var entradas = lista.Count(m => m.TipoMovimiento == "Entrada");
+                var salidas = lista.Count(m => m.TipoMovimiento == "Salida");
+                var ajustes = lista.Count(m => m.TipoMovimiento == "Ajuste");
+
+                var mensaje = $"Movimientos de '{ProductoSeleccionado.Nombre}':\n\n";
+                mensaje += $"Entradas: {entradas}\n";
+                mensaje += $"Salidas: {salidas}\n";
+                mensaje += $"Ajustes: {ajustes}\n\n";
+                mensaje += $"Total: {lista.Count} movimientos";
+
+                MessageBox.Show(mensaje, "Historial de Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error obteniendo movimientos");
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public async void DesactivarProducto()

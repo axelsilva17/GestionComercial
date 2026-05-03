@@ -1,7 +1,10 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Main;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,10 +15,20 @@ namespace GestionComercial.UI.ViewModels.Inventario
 {
     public class InventarioViewModel : NavigableViewModel
     {
+        private readonly IInventarioServicio _inventarioServicio;
+        private readonly ShellViewModel _shell;
+        private readonly ILogger<InventarioViewModel>? _logger;
         private const int ItemsPorPagina = 15;
 
-        public InventarioViewModel()
+        public InventarioViewModel(
+            IInventarioServicio inventarioServicio,
+            ShellViewModel shell,
+            ILogger<InventarioViewModel>? logger = null)
         {
+            _inventarioServicio = inventarioServicio;
+            _shell = shell;
+            _logger = logger;
+
             Titulo    = "Inventario";
             Subtitulo = "Movimientos de stock";
         }
@@ -41,6 +54,21 @@ namespace GestionComercial.UI.ViewModels.Inventario
         {
             get => _filtroTipo;
             set { _filtroTipo = value; NotifyOfPropertyChange(() => FiltroTipo); }
+        }
+
+        // ── Filtro usuario ───────────────────────────────────────────────────
+        private string _filtroUsuario = "Todos";
+        public string FiltroUsuario
+        {
+            get => _filtroUsuario;
+            set { _filtroUsuario = value; NotifyOfPropertyChange(() => FiltroUsuario); }
+        }
+
+        private ObservableCollection<string> _usuarios = new() { "Todos" };
+        public ObservableCollection<string> Usuarios
+        {
+            get => _usuarios;
+            set { _usuarios = value; NotifyOfPropertyChange(() => Usuarios); }
         }
 
         private DateTime _fechaDesde = DateTime.Today.AddDays(-30);
@@ -77,7 +105,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
             set { _sucursales = value; NotifyOfPropertyChange(() => Sucursales); }
         }
 
-        // ── Paginación ───────────────────────────────────────────────────────
+        // ── Paginación ───────────────���───────────────────────────────────────
         private int _paginaActual = 1;
         public int PaginaActual
         {
@@ -160,7 +188,10 @@ namespace GestionComercial.UI.ViewModels.Inventario
             set { _unidadesEgresadas = value; NotifyOfPropertyChange(() => UnidadesEgresadas); }
         }
 
-        // ── Panel nuevo movimiento ────────────────────────────────────────────
+        // ── Balance neto (Ingresadas - Egresadas) ───────────────────────────
+        public int BalanceNeto => UnidadesIngresadas - UnidadesEgresadas;
+
+        // ── Panel nuevo movimiento ───────────────────────────────────────────
         private bool _panelVisible;
         public bool PanelVisible
         {
@@ -224,59 +255,62 @@ namespace GestionComercial.UI.ViewModels.Inventario
             LimpiarError();
             try
             {
-                await Task.Delay(200); // TODO: reemplazar con servicio real
+                // Obtener movimientos desde el servicio real
+                var (movimientos, total) = await _inventarioServicio.ObtenerMovimientosAsync(
+                    TextoBusqueda,
+                    FiltroTipo,
+                    FiltroUsuario,
+                    FiltroSucursal,
+                    FechaDesde,
+                    FechaHasta,
+                    PaginaActual,
+                    ItemsPorPagina,
+                    IdEmpresa);
 
-                var todos = GenerarMock();
+                Movimientos = new ObservableCollection<MovimientoStockDto>(movimientos);
+                TotalMovimientos = total;
+                TotalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)ItemsPorPagina));
+                PaginaActual = Math.Min(PaginaActual, TotalPaginas);
 
-                // Poblar lista de sucursales disponibles para el filtro
-                var sucursalesDisponibles = todos
-                    .Select(m => m.SucursalNombre)
-                    .Distinct()
-                    .OrderBy(s => s)
-                    .ToList();
-                sucursalesDisponibles.Insert(0, "Todas");
-                Sucursales = new ObservableCollection<string>(sucursalesDisponibles);
+                MovimientosMostrados = Movimientos.Count;
 
-                var filtrados = todos.AsEnumerable();
-
-                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
-                    filtrados = filtrados.Where(m =>
-                        m.ProductoNombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-                        m.CodigoBarra.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase));
-
-                if (FiltroTipo != "Todos")
-                    filtrados = filtrados.Where(m => m.TipoMovimiento == FiltroTipo);
-
-                if (FiltroSucursal != "Todas")
-                    filtrados = filtrados.Where(m => m.SucursalNombre == FiltroSucursal);
-
-                filtrados = filtrados.Where(m =>
-                    m.Fecha.Date >= FechaDesde.Date &&
-                    m.Fecha.Date <= FechaHasta.Date);
-
-                var lista = filtrados.OrderByDescending(m => m.Fecha).ToList();
-
-                // Resumen
-                TotalEntradas      = lista.Count(m => m.TipoMovimiento == "Entrada");
-                TotalSalidas       = lista.Count(m => m.TipoMovimiento == "Salida");
-                TotalAjustes       = lista.Count(m => m.TipoMovimiento == "Ajuste");
-                UnidadesIngresadas = lista.Where(m => m.TipoMovimiento == "Entrada").Sum(m => m.Cantidad);
-                UnidadesEgresadas  = lista.Where(m => m.TipoMovimiento == "Salida").Sum(m => m.Cantidad);
-
-                // Paginación
-                TotalMovimientos     = lista.Count;
-                TotalPaginas         = Math.Max(1, (int)Math.Ceiling(lista.Count / (double)ItemsPorPagina));
-                PaginaActual         = Math.Min(PaginaActual, TotalPaginas);
-
-                var pagina           = lista.Skip((PaginaActual - 1) * ItemsPorPagina).Take(ItemsPorPagina).ToList();
-                MovimientosMostrados = pagina.Count;
-                Movimientos          = new ObservableCollection<MovimientoStockDto>(pagina);
+                // Calcular resumen del período (sin paginación)
+                await CalcularResumenPeriodoAsync();
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al cargar inventario");
+                MostrarError(ex.Message);
+            }
             finally { IsLoading = false; }
         }
 
-        // ── Acciones ──────────────────────────────────────────────────────────
+        private async Task CalcularResumenPeriodoAsync()
+        {
+            // Obtener todos los movimientos del período para el resumen (sin paginación)
+            var (todosMovimientos, _) = await _inventarioServicio.ObtenerMovimientosAsync(
+                null,  // sin filtro búsqueda
+                null,  // sin filtro tipo
+                null,  // sin filtro usuario
+                null,  // sin filtro sucursal
+                FechaDesde,
+                FechaHasta,
+                1,     // página 1
+                int.MaxValue, // todos los registros
+                IdEmpresa);
+
+            var lista = todosMovimientos.ToList();
+
+            TotalEntradas      = lista.Count(m => m.TipoMovimiento == "Entrada");
+            TotalSalidas       = lista.Count(m => m.TipoMovimiento == "Salida");
+            TotalAjustes       = lista.Count(m => m.TipoMovimiento == "Ajuste");
+            UnidadesIngresadas = lista.Where(m => m.TipoMovimiento == "Entrada").Sum(m => m.Cantidad);
+            UnidadesEgresadas  = lista.Where(m => m.TipoMovimiento == "Salida").Sum(m => m.Cantidad);
+
+            NotifyOfPropertyChange(() => BalanceNeto);
+        }
+
+        // ── Acciones ─────────────────────────────────────────────────────────
         public async Task Buscar()        { PaginaActual = 1; await CargarAsync(); }
         public async Task AplicarFiltros(){ PaginaActual = 1; await CargarAsync(); }
 
@@ -284,11 +318,47 @@ namespace GestionComercial.UI.ViewModels.Inventario
         {
             TextoBusqueda = string.Empty;
             FiltroTipo    = "Todos";
+            FiltroUsuario = "Todos";
             FechaDesde      = DateTime.Today.AddDays(-30);
             FechaHasta      = DateTime.Today;
             FiltroSucursal  = "Todas";
             PaginaActual    = 1;
             await CargarAsync();
+        }
+
+        public async Task ExportarExcel()
+        {
+            try
+            {
+                IsLoading = true;
+                var excel = await _inventarioServicio.ExportarAExcelAsync(
+                    TextoBusqueda,
+                    FiltroTipo,
+                    FiltroUsuario,
+                    FiltroSucursal,
+                    FechaDesde,
+                    FechaHasta,
+                    IdEmpresa);
+
+                // Guardar archivo
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "Excel Files|*.xlsx",
+                    FileName = $"Inventario_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await System.IO.File.WriteAllBytesAsync(dialog.FileName, excel);
+                    MostrarError("Exportación completada exitosamente.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al exportar inventario");
+                MostrarError($"Error al exportar: {ex.Message}");
+            }
+            finally { IsLoading = false; }
         }
 
         public async Task PaginaAnterior()
@@ -322,54 +392,32 @@ namespace GestionComercial.UI.ViewModels.Inventario
             LimpiarError();
             try
             {
-                await Task.Delay(300); // TODO: await _inventarioServicio.RegistrarMovimiento(...)
+                // Obtener el ID de la sucursal del contexto
+                int idSucursal = IdSucursal;
+                int idUsuario = IdUsuario;
+
+                await _inventarioServicio.RegistrarMovimientoAsync(
+                    ProductoSeleccionado.IdProducto,
+                    NuevoTipo,
+                    NuevaCantidad,
+                    string.IsNullOrWhiteSpace(NuevaObservacion) ? null : NuevaObservacion,
+                    idSucursal,
+                    idUsuario);
+
                 PanelVisible = false;
                 await CargarAsync();
             }
-            catch (Exception ex) { MostrarError(ex.Message); }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al guardar movimiento de stock");
+                MostrarError(ex.Message);
+            }
             finally { IsLoading = false; }
         }
 
-        // ── Mock ──────────────────────────────────────────────────────────────
-        private static System.Collections.Generic.List<MovimientoStockDto> GenerarMock()
-        {
-            var rand       = new Random(42);
-            var productos  = new[] {
-                ("Auriculares Pro X", "7890001", "Electrónica"),
-                ("Mouse Inalámbrico", "7890002", "Periféricos"),
-                ("Teclado Mecánico",  "7890003", "Periféricos"),
-                ("Monitor 24\"",      "7890004", "Monitores"),
-                ("Webcam HD 1080p",   "7890005", "Periféricos"),
-                ("Cable HDMI 2m",     "7890006", "Accesorios"),
-                ("Hub USB 4 puertos", "7890007", "Accesorios"),
-            };
-            var tipos      = new[] { "Entrada", "Salida", "Ajuste" };
-            var sucursales = new[] { "Casa Central", "Sucursal Norte", "Sucursal Sur" };
-            var usuarios   = new[] { "Juan García", "María López", "Carlos Martínez" };
-
-            var lista = new System.Collections.Generic.List<MovimientoStockDto>();
-            for (int i = 1; i <= 60; i++)
-            {
-                var prod = productos[rand.Next(productos.Length)];
-                var tipo = tipos[rand.Next(tipos.Length)];
-                lista.Add(new MovimientoStockDto
-                {
-                    IdMovimiento    = i,
-                    TipoMovimiento  = tipo,
-                    Cantidad        = rand.Next(1, 50),
-                    Observacion     = tipo == "Entrada" ? "Compra proveedor"
-                                    : tipo == "Salida"  ? "Venta"
-                                    : "Corrección manual",
-                    Fecha           = DateTime.Today.AddDays(-rand.Next(0, 30)).AddHours(rand.Next(8, 20)),
-                    IdProducto      = i,
-                    ProductoNombre  = prod.Item1,
-                    CodigoBarra     = prod.Item2,
-                    CategoriaNombre = prod.Item3,
-                    SucursalNombre  = sucursales[rand.Next(sucursales.Length)],
-                    UsuarioNombre   = usuarios[rand.Next(usuarios.Length)],
-                });
-            }
-            return lista;
-        }
+        // ── Propiedades auxiliares para el ViewModel ─────────────────────────
+        private int IdEmpresa => _shell.IdEmpresaActual;
+        private int IdSucursal => _shell.IdSucursalActual;
+        private int IdUsuario => _shell.SesionActual?.IdUsuario ?? 0;
     }
 }

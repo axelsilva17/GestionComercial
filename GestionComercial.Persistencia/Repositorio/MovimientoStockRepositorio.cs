@@ -20,11 +20,20 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
 
-    public async Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal)
-        => await _dbSet
-            .Where(m => m.Fecha >= desde && m.Fecha <= hasta && m.Id_sucursal == idSucursal)
-            .Include(m => m.Producto)
-            .Include(m => m.Usuario)
-            .OrderByDescending(m => m.Fecha)
-            .ToListAsync();
+    public async Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int? idSucursal = null)
+        {
+            var query = _dbSet
+                .Include(m => m.Producto)
+                    .ThenInclude(p => p!.Categoria)
+                .Include(m => m.Usuario)
+                .Include(m => m.Sucursal)
+                .Where(m => m.Fecha >= desde && m.Fecha <= hasta);
+
+            if (idSucursal.HasValue)
+                query = query.Where(m => m.Id_sucursal == idSucursal.Value);
+
+            return await query
+                .OrderByDescending(m => m.Fecha)
+                .ToListAsync();
+        }
 }
