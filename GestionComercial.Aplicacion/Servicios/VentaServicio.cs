@@ -7,6 +7,7 @@ using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -16,17 +17,20 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly IServicioImpresion _servicioImpresion;
         private readonly SesionServicio _sesion;
         private readonly IInventarioServicio _inventarioServicio;
+        private readonly ILogger<VentaServicio>? _logger;
 
         public VentaServicio(
             IUnitOfWork uow,
             IServicioImpresion servicioImpresion,
             SesionServicio sesion,
-            IInventarioServicio inventarioServicio)
+            IInventarioServicio inventarioServicio,
+            ILogger<VentaServicio>? logger = null)
         {
             _uow = uow;
             _servicioImpresion = servicioImpresion;
             _sesion = sesion;
             _inventarioServicio = inventarioServicio;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
@@ -120,6 +124,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
                     // Registrar movimiento de stock (Salida por venta)
                     // Esto también reduce el stock del producto
+                    _logger?.LogInformation("[VentaVM] LLAMANDO a RegistrarMovimientoAsync para producto {ProductoId}, cantidad {Cantidad}", item.IdProducto, item.Cantidad);
                     await _inventarioServicio.RegistrarMovimientoAsync(
                         item.IdProducto,
                         "Salida",
@@ -127,8 +132,9 @@ namespace GestionComercial.Aplicacion.Servicios
                         $"Venta #{venta.Id} - {producto.Nombre}",
                         dto.IdSucursal,
                         dto.IdUsuario,
-                        guardarCambios: false // No guardar - la transacción lo maneja
+                        guardarCambios: false // No guardar ahora, la transacción lo manejará al final
                     );
+                    _logger?.LogInformation("[VentaVM] RegistrarMovimientoAsync completado");
                 }
 
                 await _uow.Ventas.AgregarAsync(venta);

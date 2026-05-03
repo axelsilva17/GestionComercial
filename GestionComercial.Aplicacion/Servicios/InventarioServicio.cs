@@ -186,6 +186,9 @@ namespace GestionComercial.Aplicacion.Servicios
             int idUsuario,
             bool guardarCambios = true)
         {
+            _logger?.LogDebug("[Inventario] Iniciando RegistrarMovimientoAsync - Producto: {IdProducto}, Tipo: {Tipo}, Cantidad: {Cantidad}, guardarCambios: {Guardar}",
+                idProducto, tipoMovimiento, cantidad, guardarCambios);
+
             if (cantidad <= 0)
                 throw new ArgumentException("La cantidad debe ser mayor a 0", nameof(cantidad));
 
@@ -235,13 +238,16 @@ namespace GestionComercial.Aplicacion.Servicios
             // Guardar cambios solo si se solicita (para evitar transacciones anidadas)
             if (guardarCambios)
             {
+                _logger?.LogDebug("[Inventario] Antes de GuardarCambiosAsync");
                 await _uow.GuardarCambiosAsync();
-                _logger?.LogInformation("GuardarCambios completado para movimiento de stock");
+                _logger?.LogInformation("[Inventario] GuardarCambios completado para movimiento de stock - Producto: {IdProducto}", idProducto);
             }
             else
             {
-                _logger?.LogInformation("GuardarCambios omitido (dentro de transacción), se guardará al final");
+                _logger?.LogInformation("[Inventario] GuardarCambios omitido (dentro de transacción), se guardará al final - Producto: {IdProducto}", idProducto);
             }
+
+            _logger?.LogDebug("[Inventario] Fin RegistrarMovimientoAsync - Producto: {IdProducto}", idProducto);
         }
 
         public async Task<IEnumerable<MovimientoStockDto>> ObtenerMovimientosPorProductoAsync(int idProducto)
