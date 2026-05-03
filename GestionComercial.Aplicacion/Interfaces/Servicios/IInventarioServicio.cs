@@ -50,6 +50,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
             decimal cantidad,
             string? observacion,
             int idSucursal,
-            int idUsuario);
+            int idUsuario,
+            bool guardarCambios = true);
     }
 }

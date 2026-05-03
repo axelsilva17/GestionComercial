@@ -727,6 +727,7 @@
                     <controles:BuscadorProducto
                         x:Name="BuscadorProducto"
                         Margin="0,0,0,4"
+                        BuscarFunc="{Binding BuscarProductosFunc}"
                         ProductoElegido="BuscadorProducto_ProductoElegido"/>
 
                     <!-- Info stock actual -->

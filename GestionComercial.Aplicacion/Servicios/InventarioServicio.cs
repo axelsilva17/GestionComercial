@@ -183,7 +183,8 @@ namespace GestionComercial.Aplicacion.Servicios
             decimal cantidad,
             string? observacion,
             int idSucursal,
-            int idUsuario)
+            int idUsuario,
+            bool guardarCambios = true)
         {
             if (cantidad <= 0)
                 throw new ArgumentException("La cantidad debe ser mayor a 0", nameof(cantidad));
@@ -193,7 +194,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 ?? throw new KeyNotFoundException($"Producto {idProducto} no encontrado");
 
             var stockAnterior = producto.StockActual;
-            var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>(tipoMovimiento, ignoreCase: true);
+            var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>( tipoMovimiento, ignoreCase: true);
 
             // Crear movimiento usando factory method DDD
             MovimientoStock movimiento = tipoEnum switch
@@ -216,7 +217,10 @@ namespace GestionComercial.Aplicacion.Servicios
 
             // Guardar movimiento
             await _uow.MovimientosStock.AgregarAsync(movimiento);
-            await _uow.GuardarCambiosAsync();
+
+            // Guardar cambios solo si se solicita (para evitar transacciones anidadas)
+            if (guardarCambios)
+                await _uow.GuardarCambiosAsync();
 
             _logger?.LogInformation(
                 "Movimiento {Tipo} registrado: Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",

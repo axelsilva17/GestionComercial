@@ -64,12 +64,12 @@ namespace GestionComercial.Aplicacion.Servicios
                 // Agregar a la compra — Compra recalcula el total automáticamente
                 compra.AgregarDetalle(detalle);
 
-                // Actualizar producto: precio de costo y stock
+                // Actualizar precio de costo del producto
                 producto.PrecioCostoActual = item.PrecioCosto;
-                producto.AgregarStock(item.Cantidad);
                 _uow.Productos.Actualizar(producto);
 
                 // Registrar movimiento de stock (Entrada por compra)
+                // Esto también actualiza el stock del producto
                 await _inventarioServicio.RegistrarMovimientoAsync(
                     item.IdProducto,
                     "Entrada",

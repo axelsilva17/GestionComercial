@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using Microsoft.Extensions.Logging;
@@ -16,21 +17,71 @@ namespace GestionComercial.UI.ViewModels.Inventario
     public class InventarioViewModel : NavigableViewModel
     {
         private readonly IInventarioServicio _inventarioServicio;
+        private readonly IProductoServicio _productoServicio;
         private readonly ShellViewModel _shell;
         private readonly ILogger<InventarioViewModel>? _logger;
         private const int ItemsPorPagina = 15;
 
+        // Cache de productos para búsqueda
+        private List<ProductoListadoDto> _productosCache = new();
+
         public InventarioViewModel(
             IInventarioServicio inventarioServicio,
+            IProductoServicio productoServicio,
             ShellViewModel shell,
             ILogger<InventarioViewModel>? logger = null)
         {
             _inventarioServicio = inventarioServicio;
+            _productoServicio = productoServicio;
             _shell = shell;
             _logger = logger;
 
             Titulo    = "Inventario";
             Subtitulo = "Movimientos de stock";
+
+            // Inicializar función de búsqueda para el BuscadorProducto
+            BuscarProductosFunc = BuscarProductosInternoAsync;
+        }
+
+        // ── Propiedad para BuscadorProducto (WPF no puede bindear métodos directamente) ─
+        public Func<string, Task<IEnumerable<ProductoDto>>> BuscarProductosFunc { get; }
+
+        // ── Método interno para búsqueda de productos ───────────────────────────────
+        private async Task<IEnumerable<ProductoDto>> BuscarProductosInternoAsync(string texto)
+        {
+            // Cargar cache si está vacío
+            if (_productosCache.Count == 0)
+            {
+                try
+                {
+                    var todos = await _productoServicio.ObtenerTodosAsync(IdEmpresa);
+                    _productosCache = todos.ToList();
+                }
+                catch
+                {
+                    return Enumerable.Empty<ProductoDto>();
+                }
+            }
+
+            // Filtrar por nombre o código
+            if (string.IsNullOrWhiteSpace(texto))
+                return Enumerable.Empty<ProductoDto>();
+
+            var busqueda = texto.Trim().ToLowerInvariant();
+            return _productosCache
+                .Where(p => (p.Nombre?.ToLowerInvariant().Contains(busqueda) ?? false) ||
+                           (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
+                .Take(10)
+                .Select(p => new ProductoDto
+                {
+                    IdProducto = p.IdProducto,
+                    Nombre = p.Nombre,
+                    CodigoBarra = p.CodigoBarra,
+                    PrecioVentaActual = p.PrecioVentaActual,
+                    StockActual = p.StockActual,
+                    IdCategoria = p.IdCategoria,
+                    CategoriaNombre = p.CategoriaNombre
+                });
         }
 
         // ── Lista principal ──────────────────────────────────────────────────

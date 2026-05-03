@@ -36,7 +36,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa)
             => await _dbSet
-                .Where(p => p.Id_empresa == idEmpresa)
+                .Where(p => p.Id_empresa == idEmpresa && p.Activo)
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .OrderBy(p => p.Nombre)

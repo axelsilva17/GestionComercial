@@ -118,18 +118,16 @@ namespace GestionComercial.Aplicacion.Servicios
                     // Agregar detalle a la venta (recalcula totales internamente)
                     venta.AgregarDetalle(detalle);
 
-                    // Restar stock dentro de la transaccion
-                    producto.StockActual -= item.Cantidad;
-                    _uow.Productos.Actualizar(producto);
-
                     // Registrar movimiento de stock (Salida por venta)
+                    // Esto también reduce el stock del producto
                     await _inventarioServicio.RegistrarMovimientoAsync(
                         item.IdProducto,
                         "Salida",
                         item.Cantidad,
                         $"Venta #{venta.Id} - {producto.Nombre}",
                         dto.IdSucursal,
-                        dto.IdUsuario
+                        dto.IdUsuario,
+                        guardarCambios: false // No guardar - la transacción lo maneja
                     );
                 }
 

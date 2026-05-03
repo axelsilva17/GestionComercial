@@ -16,6 +16,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<IEnumerable<(string Metodo, decimal Total)>> ObtenerTotalesPorMetodoAsync(
             int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null)
         {
+            // Traer todos los pagos y agrupar en memoria (SQLite no soporta Sum en decimal)
             var query = _dbSet
                 .Where(p => p.Venta.Id_sucursal == idSucursal
                          && p.Venta.Fecha >= desde
@@ -28,16 +29,20 @@ namespace GestionComercial.Persistencia.Repositorio
                 query = query.Where(p => p.Venta.Id_caja == idCaja.Value);
             }
 
-            var resultado = await query
+            var pagos = await query
                 .Include(p => p.MetodoPago)
-                .GroupBy(p => p.MetodoPago.Nombre)
+                .ToListAsync();
+
+            // Agrupar en memoria (funciona con decimal)
+            var resultado = pagos
+                .GroupBy(p => p.MetodoPago?.Nombre ?? "Sin método")
                 .Select(g => new
                 {
                     Metodo = g.Key,
-                    Total  = g.Sum(p => p.Monto),
+                    Total = g.Sum(p => p.Monto)
                 })
                 .OrderByDescending(x => x.Total)
-                .ToListAsync();
+                .ToList();
 
             return resultado.Select(x => (x.Metodo, x.Total));
         }
