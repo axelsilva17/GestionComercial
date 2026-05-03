@@ -215,16 +215,33 @@ namespace GestionComercial.Aplicacion.Servicios
             producto.StockActual = movimiento.StockNuevo;
             _uow.Productos.Actualizar(producto);
 
+            // Adjuntar las entidades relacionadas al contexto si no están ya adjuntadas
+            // Esto es necesario para que EF Core pueda guardar las foreign keys
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal);
+            var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario);
+            
+            // Asignar las entidades al movimiento
+            movimiento.Sucursal = sucursal!;
+            movimiento.Usuario = usuario!;
+            movimiento.Producto = producto;
+
             // Guardar movimiento
             await _uow.MovimientosStock.AgregarAsync(movimiento);
 
+            _logger?.LogInformation(
+                "Movimiento agregado al DBSet: {Tipo}, Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",
+                tipoMovimiento, idProducto, cantidad, stockAnterior, movimiento.StockNuevo);
+
             // Guardar cambios solo si se solicita (para evitar transacciones anidadas)
             if (guardarCambios)
+            {
                 await _uow.GuardarCambiosAsync();
-
-            _logger?.LogInformation(
-                "Movimiento {Tipo} registrado: Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",
-                tipoMovimiento, idProducto, cantidad, stockAnterior, movimiento.StockNuevo);
+                _logger?.LogInformation("GuardarCambios completado para movimiento de stock");
+            }
+            else
+            {
+                _logger?.LogInformation("GuardarCambios omitido (dentro de transacción), se guardará al final");
+            }
         }
 
         public async Task<IEnumerable<MovimientoStockDto>> ObtenerMovimientosPorProductoAsync(int idProducto)
