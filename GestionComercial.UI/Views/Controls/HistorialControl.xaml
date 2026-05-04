@@ -104,10 +104,10 @@
         </Border>
         
         <!-- DataGrid con estilo mejorado -->
-        <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialVentas}" AutoGenerateColumns="False"
+        <DataGrid Grid.Row="1" ItemsSource="{Binding HistorialVentas}" 
+                  Style="{StaticResource DataGridModerno}"
+                  AutoGenerateColumns="False"
                   IsReadOnly="True" CanUserAddRows="False"
-                  Background="Transparent" BorderThickness="0"
-                  Foreground="{DynamicResource TextPrimaryBrush}"
                   GridLinesVisibility="None"
                   AlternationCount="2"
                   RowBackground="{DynamicResource CardBrush}"
@@ -115,7 +115,10 @@
                   HeadersVisibility="Column"
                   CanUserReorderColumns="False"
                   SelectionMode="Single"
-                  FontSize="13" Margin="0,70,0,0">
+                  FontSize="13" Margin="0,70,0,0"
+                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderModerno}"
+                  CellStyle="{StaticResource DataGridCellModerno}"
+                  RowStyle="{StaticResource DataGridRowModerno}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd/MM/yyyy HH:mm'}" Width="140">
                     <DataGridTextColumn.ElementStyle>

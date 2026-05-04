@@ -426,8 +426,12 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     var historialList = new List<CajaHistorialDto>();
                     foreach (var caja in cajas.Take(5))
                     {
+                        // Materializar Ventas para evitar problemas con IQueryable o proxies de EF
+                        var ventasCaja = caja.Ventas?.ToList();
+                        var totalVentas = ventasCaja?.Sum(v => (decimal?)v.TotalFinal) ?? 0;
+                        
                         var diff = caja.MontoFinal.HasValue
-                            ? caja.MontoFinal.Value - (caja.MontoInicial + caja.Ventas.Sum(v => v.TotalFinal))
+                            ? caja.MontoFinal.Value - (caja.MontoInicial + totalVentas)
                             : (decimal?)null;
 
                         historialList.Add(new CajaHistorialDto
@@ -653,7 +657,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     HoraApertura = c.FechaApertura.ToString("HH:mm"),
                     UsuarioApertura = c.UsuarioApertura?.Nombre ?? "—",
                     MontoInicial = c.MontoInicial,
-                    VentasEfectivo = c.Ventas.Sum(v => v.TotalFinal),
+                    // Materializar Ventas para evitar problemas con IQueryable
+                    VentasEfectivo = c.Ventas == null ? 0 : c.Ventas.ToList().Sum(v => v.TotalFinal),
                     MontoFinal = c.MontoFinal,
                     FechaCierre = c.FechaCierre?.ToString("dd/MM/yyyy"),
                     UsuarioCierre = c.UsuarioCierre?.Nombre,

@@ -238,11 +238,15 @@
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                         <DataGrid Grid.Row="1" ItemsSource="{Binding VentasMensuales}"
+                                  Style="{StaticResource DataGridModerno}"
                                   AutoGenerateColumns="False" CanUserAddRows="False"
                                   GridLinesVisibility="None" HeadersVisibility="Column"
                                   Background="Transparent" BorderThickness="0"
                                   RowHeight="36" ColumnHeaderHeight="28" Margin="8,0,8,8"
-                                  FontSize="12">
+                                  FontSize="12"
+                                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderModerno}"
+                                  CellStyle="{StaticResource DataGridCellModerno}"
+                                  RowStyle="{StaticResource DataGridRowModerno}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70"/>
                                 <DataGridTemplateColumn Header="VENTAS" Width="*">
