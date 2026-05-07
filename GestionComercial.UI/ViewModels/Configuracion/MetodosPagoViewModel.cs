@@ -1,13 +1,18 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
+using GestionComercial.Dominio.Entidades.Pagos;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Configuracion
 {
     public class MetodosPagoViewModel : NavigableViewModel
     {
+        private readonly IUnitOfWork _uow;
+
         private ObservableCollection<MetodoPagoDto> _items = new();
         public ObservableCollection<MetodoPagoDto> Items
         {
@@ -50,16 +55,30 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _tituloPanel = value; NotifyOfPropertyChange(() => TituloPanel); }
         }
 
+        public MetodosPagoViewModel(IUnitOfWork uow)
+        {
+            _uow = uow;
+        }
+
         public async Task CargarAsync()
         {
-            await Task.Delay(100);
-            Items = new ObservableCollection<MetodoPagoDto>
+            IsLoading = true;
+            LimpiarError();
+            try
             {
-                new() { IdMetodoPago = 1, Nombre = "Efectivo",      EsEfectivo = true  },
-                new() { IdMetodoPago = 2, Nombre = "Débito",        EsEfectivo = false },
-                new() { IdMetodoPago = 3, Nombre = "Crédito",       EsEfectivo = false },
-                new() { IdMetodoPago = 4, Nombre = "Transferencia", EsEfectivo = false },
-            };
+                var metodos = await _uow.MetodosPago.ObtenerTodasAsync();
+                Items = new ObservableCollection<MetodoPagoDto>(
+                    metodos.Select(m => new MetodoPagoDto
+                    {
+                        IdMetodoPago = m.Id,
+                        Nombre       = m.Nombre,
+                        EsEfectivo   = m.EsEfectivo,
+                        IdEmpresa    = m.Id_empresa
+                    })
+                );
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
 
         public void NuevoMetodo()
@@ -90,23 +109,50 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                await Task.Delay(300);
                 if (_esNuevo)
                 {
+                    var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Activo);
+                    if (empresa == null)
+                    {
+                        MostrarError("No hay una empresa activa. Cree la empresa primero.");
+                        return;
+                    }
+
+                    var metodo = new MetodoPago
+                    {
+                        Nombre     = EditNombre,
+                        EsEfectivo = EditEfectivo,
+                        Activo     = true,
+                        Id_empresa = empresa.Id
+                    };
+
+                    await _uow.MetodosPago.AgregarAsync(metodo);
+                    await _uow.GuardarCambiosAsync();
+
                     Items.Add(new MetodoPagoDto
                     {
-                        IdMetodoPago = Items.Count + 1,
-                        Nombre       = EditNombre,
-                        EsEfectivo   = EditEfectivo
+                        IdMetodoPago = metodo.Id,
+                        Nombre       = metodo.Nombre,
+                        EsEfectivo   = metodo.EsEfectivo,
+                        IdEmpresa    = metodo.Id_empresa
                     });
                 }
                 else if (Seleccionado != null)
                 {
-                    Seleccionado.Nombre     = EditNombre;
-                    Seleccionado.EsEfectivo = EditEfectivo;
-                    var idx = Items.IndexOf(Seleccionado);
-                    Items.RemoveAt(idx);
-                    Items.Insert(idx, Seleccionado);
+                    var metodo = await _uow.MetodosPago.ObtenerPorIdAsync(Seleccionado.IdMetodoPago);
+                    if (metodo != null)
+                    {
+                        metodo.Nombre     = EditNombre;
+                        metodo.EsEfectivo = EditEfectivo;
+                        _uow.MetodosPago.Actualizar(metodo);
+                        await _uow.GuardarCambiosAsync();
+
+                        Seleccionado.Nombre     = metodo.Nombre;
+                        Seleccionado.EsEfectivo = metodo.EsEfectivo;
+                        var idx = Items.IndexOf(Seleccionado);
+                        Items.RemoveAt(idx);
+                        Items.Insert(idx, Seleccionado);
+                    }
                 }
                 PanelVisible = false;
             }
@@ -119,9 +165,15 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             IsLoading = true;
             try
             {
-                await Task.Delay(200);
-                Items.Remove(item);
+                var metodo = await _uow.MetodosPago.ObtenerPorIdAsync(item.IdMetodoPago);
+                if (metodo != null)
+                {
+                    _uow.MetodosPago.Eliminar(metodo);
+                    await _uow.GuardarCambiosAsync();
+                    Items.Remove(item);
+                }
             }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
         }
     }

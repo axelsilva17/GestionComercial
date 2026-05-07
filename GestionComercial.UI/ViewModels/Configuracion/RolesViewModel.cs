@@ -1,13 +1,18 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
+using GestionComercial.Dominio.Entidades.Seguridad;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Configuracion
 {
     public class RolesViewModel : NavigableViewModel
     {
+        private readonly IUnitOfWork _uow;
+
         private ObservableCollection<RolDto> _items = new();
         public ObservableCollection<RolDto> Items
         {
@@ -44,15 +49,28 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _tituloPanel = value; NotifyOfPropertyChange(() => TituloPanel); }
         }
 
+        public RolesViewModel(IUnitOfWork uow)
+        {
+            _uow = uow;
+        }
+
         public async Task CargarAsync()
         {
-            await Task.Delay(100);
-            Items = new ObservableCollection<RolDto>
+            IsLoading = true;
+            LimpiarError();
+            try
             {
-                new() { IdRol = 1, Nombre = "Gerente" },
-                new() { IdRol = 2, Nombre = "Administrador"      },
-                new() { IdRol = 3, Nombre = "Vendedor"        },
-            };
+                var roles = await _uow.Roles.ObtenerTodasAsync();
+                Items = new ObservableCollection<RolDto>(
+                    roles.Select(r => new RolDto
+                    {
+                        IdRol  = r.Id,
+                        Nombre = r.Nombre
+                    })
+                );
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
 
         public void NuevoRol()
@@ -81,17 +99,28 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                await Task.Delay(300);
                 if (_esNuevo)
                 {
-                    Items.Add(new RolDto { IdRol = Items.Count + 1, Nombre = EditNombre });
+                    var rol = new Rol { Nombre = EditNombre };
+                    await _uow.Roles.AgregarAsync(rol);
+                    await _uow.GuardarCambiosAsync();
+
+                    Items.Add(new RolDto { IdRol = rol.Id, Nombre = rol.Nombre });
                 }
                 else if (Seleccionado != null)
                 {
-                    Seleccionado.Nombre = EditNombre;
-                    var idx = Items.IndexOf(Seleccionado);
-                    Items.RemoveAt(idx);
-                    Items.Insert(idx, Seleccionado);
+                    var rol = await _uow.Roles.ObtenerPorIdAsync(Seleccionado.IdRol);
+                    if (rol != null)
+                    {
+                        rol.Nombre = EditNombre;
+                        _uow.Roles.Actualizar(rol);
+                        await _uow.GuardarCambiosAsync();
+
+                        Seleccionado.Nombre = rol.Nombre;
+                        var idx = Items.IndexOf(Seleccionado);
+                        Items.RemoveAt(idx);
+                        Items.Insert(idx, Seleccionado);
+                    }
                 }
                 PanelVisible = false;
             }
@@ -104,9 +133,15 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             IsLoading = true;
             try
             {
-                await Task.Delay(200); // TODO: await servicio
-                Items.Remove(item);
+                var rol = await _uow.Roles.ObtenerPorIdAsync(item.IdRol);
+                if (rol != null)
+                {
+                    _uow.Roles.Eliminar(rol);
+                    await _uow.GuardarCambiosAsync();
+                    Items.Remove(item);
+                }
             }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
         }
     }
