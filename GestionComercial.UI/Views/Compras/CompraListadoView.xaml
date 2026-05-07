@@ -301,7 +301,7 @@
                                     <DataTemplate>
                                         <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                                    VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Run Text="{Binding CantidadProductos}"/>
+                                            <Run Text="{Binding CantidadProductos, Mode=OneWay}"/>
                                             <Run Text=" ítem(s)"/>
                                         </TextBlock>
                                     </DataTemplate>

@@ -54,6 +54,69 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Estilos locales para DataGrid -->
+        <Style x:Key="DataGridLocal" TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="ColumnHeaderHeight" Value="44"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style x:Key="ColumnHeaderLocal" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border x:Name="headerBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CellLocal" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RowLocal" TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -238,15 +301,13 @@
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                         <DataGrid Grid.Row="1" ItemsSource="{Binding VentasMensuales}"
-                                  Style="{StaticResource DataGridModerno}"
+                                  Style="{StaticResource DataGridLocal}"
                                   AutoGenerateColumns="False" CanUserAddRows="False"
                                   GridLinesVisibility="None" HeadersVisibility="Column"
-                                  Background="Transparent" BorderThickness="0"
-                                  RowHeight="36" ColumnHeaderHeight="28" Margin="8,0,8,8"
-                                  FontSize="12"
-                                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderModerno}"
-                                  CellStyle="{StaticResource DataGridCellModerno}"
-                                  RowStyle="{StaticResource DataGridRowModerno}">
+                                  Margin="8,0,8,8"
+                                  ColumnHeaderStyle="{StaticResource ColumnHeaderLocal}"
+                                  CellStyle="{StaticResource CellLocal}"
+                                  RowStyle="{StaticResource RowLocal}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70"/>
                                 <DataGridTemplateColumn Header="VENTAS" Width="*">
