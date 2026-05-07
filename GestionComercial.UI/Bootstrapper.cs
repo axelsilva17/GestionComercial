@@ -14,7 +14,7 @@ using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
-using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.Views.Servicios;
 using Microsoft.EntityFrameworkCore;
@@ -213,7 +213,6 @@ namespace GestionComercial.UI
             }
             catch { }
             
-            (Application.Current as App)?.ApplyTheme();
             await DisplayRootViewForAsync<LoginViewModel>();
         }
     }

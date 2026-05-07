@@ -4,7 +4,7 @@
     <ResourceDictionary.MergedDictionaries>
 
         <!-- Diccionarios base -->
-        <ResourceDictionary Source="Diccionarios/Colores.xaml"/>
+        <ResourceDictionary Source="Diccionarios/Colors.xaml"/>
         <ResourceDictionary Source="Diccionarios/Fuentes.xaml"/>
         <ResourceDictionary Source="Diccionarios/Espaciado.xaml"/>
         <ResourceDictionary Source="Diccionarios/Elevaciones.xaml"/>

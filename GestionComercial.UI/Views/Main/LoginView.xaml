@@ -209,7 +209,8 @@
                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                      CaretBrush="{DynamicResource TextPrimaryBrush}"
                                      BorderThickness="1" VerticalContentAlignment="Center"
-                                     Visibility="Collapsed" IsReadOnly="True">
+                                     Visibility="Collapsed" IsReadOnly="False"
+                                     TextChanged="PasswordVisible_TextChanged">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Template">

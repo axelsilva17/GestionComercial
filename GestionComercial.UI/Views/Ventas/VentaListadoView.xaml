@@ -160,27 +160,27 @@
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background"      Value="Transparent"/>
                         <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
-                        <Setter Property="FontSize"        Value="10"/>
-                        <Setter Property="FontWeight"      Value="Bold"/>
-                        <Setter Property="Padding"         Value="16,0"/>
+                        <Setter Property="FontSize"        Value="11"/>
+                        <Setter Property="FontWeight"      Value="SemiBold"/>
+                        <Setter Property="Padding"         Value="12,0"/>
                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
                         <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
                     </Style>
                 </DataGrid.ColumnHeaderStyle>
 
                 <DataGrid.CellStyle>
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="16,0"/>
                         <Setter Property="Background"      Value="Transparent"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="DataGridCell">
-                                    <Border Padding="16,0" Background="Transparent">
-                                        <ContentPresenter VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </DataGrid.CellStyle>
 
@@ -238,10 +238,10 @@
                     </DataGridTemplateColumn>
 
                     <!-- Badge de estado con color dinámico -->
-                    <DataGridTemplateColumn Header="ESTADO" Width="120">
+                    <DataGridTemplateColumn Header="ESTADO" Width="130">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <Border VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0">
                                     <Border.Style>
                                         <Style TargetType="Border" BasedOn="{StaticResource BadgePagada}">
                                             <Style.Triggers>
