@@ -74,7 +74,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                var sucursales = await _uow.Sucursales.ObtenerTodasAsync();
+                var sucursales = await _uow.Sucursales.ObtenerTodosAsync();
                 Items = new ObservableCollection<SucursalDto>(
                     sucursales.Select(s => new SucursalDto
                     {

@@ -60,7 +60,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                var roles = await _uow.Roles.ObtenerTodasAsync();
+                var roles = await _uow.Roles.ObtenerTodosAsync();
                 Items = new ObservableCollection<RolDto>(
                     roles.Select(r => new RolDto
                     {

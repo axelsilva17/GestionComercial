@@ -66,7 +66,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                var metodos = await _uow.MetodosPago.ObtenerTodasAsync();
+                var metodos = await _uow.MetodosPago.ObtenerTodosAsync();
                 Items = new ObservableCollection<MetodoPagoDto>(
                     metodos.Select(m => new MetodoPagoDto
                     {

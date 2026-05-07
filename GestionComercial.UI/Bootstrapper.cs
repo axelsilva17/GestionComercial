@@ -10,6 +10,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Aplicacion.DTOs.Auditoria;
 using GestionComercial.Aplicacion.Validators;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Persistencia.Contexto;
@@ -53,6 +54,8 @@ namespace GestionComercial.UI
 
             _container.Handler<IUnitOfWork>(
                 c => new UnitOfWork(c.GetInstance<GestionComercialContext>()));
+
+            _container.Handler<IRolRepositorio>(c => new RolRepositorio(c.GetInstance<GestionComercialContext>()));
 
             // ── Servicios ─────────────────────────────────────────────────────
             _container.Singleton<SesionServicio>();

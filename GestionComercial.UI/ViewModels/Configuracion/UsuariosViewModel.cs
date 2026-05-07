@@ -135,7 +135,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 );
 
                 // Cargar sucursales para el combo
-                var sucursales = await _uow.Sucursales.ObtenerTodasAsync();
+                var sucursales = await _uow.Sucursales.ObtenerTodosAsync();
                 Sucursales = new ObservableCollection<SucursalDto>(
                     sucursales.Select(s => new SucursalDto
                     {
@@ -148,7 +148,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 );
 
                 // Cargar roles para el combo
-                var roles = await _uow.Roles.ObtenerTodasAsync();
+                var roles = await _uow.Roles.ObtenerTodosAsync();
                 Roles = new ObservableCollection<RolDto>(
                     roles.Select(r => new RolDto
                     {
