@@ -33,6 +33,10 @@ namespace GestionComercial.Aplicacion.Servicios
             if (usuario == null)
                 throw new NegocioException("No se encontró un usuario con ese email.");
 
+            // Seguridad: bloquear recuperación para roles superiores
+            if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
+                throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
+
             if (string.IsNullOrEmpty(usuario.PreguntaSecreta))
                 return null;
 
@@ -47,6 +51,10 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
                 ?? throw new NegocioException("Usuario no encontrado.");
+
+            // Seguridad: bloquear recuperación para roles superiores
+            if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
+                throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
 
             // Verificar bloqueo
             if (usuario.EstaBloqueado)
@@ -96,6 +104,10 @@ namespace GestionComercial.Aplicacion.Servicios
 
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
                 ?? throw new NegocioException("Usuario no encontrado.");
+
+            // Seguridad: bloquear recuperación para roles superiores
+            if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
+                throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
 
             usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(nuevaContrasena, workFactor: 12);
             _uow.Usuarios.Actualizar(usuario);
