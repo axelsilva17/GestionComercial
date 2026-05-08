@@ -74,7 +74,7 @@ namespace GestionComercial.UI.ViewModels.Main
         // ADMINISTRADOR:  Dashboard, Caja, Compras, Catálogo(Productos+Inventario), Clientes, Proveedores, Reportes(operativo)
         // VENDEDOR:       Dashboard, Ventas, Caja, Clientes
         public bool MostrarVentas => Rol == RolUsuario.Vendedor || Rol == RolUsuario.Gerente;
-        public bool MostrarCaja => Rol == RolUsuario.Vendedor;
+        public bool MostrarCaja => true;
         public bool MostrarCompras => Rol == RolUsuario.Administrador;
         public bool MostrarCatalogo => Rol == RolUsuario.Administrador;
         public bool MostrarProductos => Rol == RolUsuario.Administrador || Rol == RolUsuario.Gerente;
