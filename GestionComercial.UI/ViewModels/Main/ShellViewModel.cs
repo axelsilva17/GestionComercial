@@ -71,10 +71,10 @@ namespace GestionComercial.UI.ViewModels.Main
         // ── Visibilidad módulos ───────────────────────────────────────────────
         //
         // VENDEDOR:       Dashboard, Ventas, Clientes, Caja
-        // ADMINISTRADOR:  Dashboard, Productos, Inventario, Reportes (Admin), Caja
-        // GERENTE:        Dashboard, Reportes (Gerencia), Configuración, Caja
+        // ADMINISTRADOR:  Dashboard, Productos, Inventario, Reportes (Admin)
+        // GERENTE:        Dashboard, Reportes (Gerencia), Configuración
         public bool MostrarVentas       => Rol == RolUsuario.Vendedor;
-        public bool MostrarCaja         => true;
+        public bool MostrarCaja         => Rol == RolUsuario.Vendedor;
         public bool MostrarCompras      => false;
         public bool MostrarCatalogo     => Rol == RolUsuario.Administrador;
         public bool MostrarProductos    => Rol == RolUsuario.Administrador;
