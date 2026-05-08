@@ -172,7 +172,7 @@ namespace GestionComercial.UI
                     var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     
                     // Empresa
-                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Empresa VALUES (1, 'Mi Empresa', '20-12345678-9', 'Direccion 123', 'admin@miempresa.com', '3794000000', 1, '{now}', '{now}')");
+                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Empresa (Id, Nombre, CUIT, Direccion, Email, Telefono, LogoUrl, Activo, FechaAlta) VALUES (1, 'Mi Empresa', '20-12345678-9', 'Direccion 123', 'admin@miempresa.com', '3794000000', NULL, 1, '{now}')");
                     System.Diagnostics.Debug.WriteLine("[Bootstrapper] Empresa created");
                     
                     // Rol
