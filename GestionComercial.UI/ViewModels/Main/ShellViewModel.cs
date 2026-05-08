@@ -70,18 +70,18 @@ namespace GestionComercial.UI.ViewModels.Main
 
         // ── Visibilidad módulos ───────────────────────────────────────────────
         //
-        // GERENTE:        Dashboard, Ventas(lectura), Compras(lectura), Reportes, Configuración
-        // ADMINISTRADOR:  Dashboard, Caja, Compras, Catálogo(Productos+Inventario), Clientes, Proveedores, Reportes(operativo)
-        // VENDEDOR:       Dashboard, Ventas, Caja, Clientes
-        public bool MostrarVentas => Rol == RolUsuario.Vendedor || Rol == RolUsuario.Gerente;
-        public bool MostrarCaja => Rol == RolUsuario.Vendedor;
-        public bool MostrarCompras => Rol == RolUsuario.Administrador;
-        public bool MostrarCatalogo => Rol == RolUsuario.Administrador;
-        public bool MostrarProductos => Rol == RolUsuario.Administrador || Rol == RolUsuario.Gerente;
-        public bool MostrarInventario => Rol == RolUsuario.Administrador;
-        public bool MostrarClientes => Rol == RolUsuario.Vendedor || Rol == RolUsuario.Gerente;
-        public bool MostrarProveedores => Rol == RolUsuario.Administrador;
-        public bool MostrarReportes => Rol == RolUsuario.Gerente || Rol == RolUsuario.Administrador;
+        // VENDEDOR:       Dashboard, Ventas, Clientes
+        // ADMINISTRADOR:  Dashboard, Productos, Inventario, Reportes (Admin)
+        // GERENTE:        Dashboard, Reportes (Gerencia), Configuración
+        public bool MostrarVentas       => Rol == RolUsuario.Vendedor;
+        public bool MostrarCaja         => false;
+        public bool MostrarCompras      => false;
+        public bool MostrarCatalogo     => Rol == RolUsuario.Administrador;
+        public bool MostrarProductos    => Rol == RolUsuario.Administrador;
+        public bool MostrarInventario   => Rol == RolUsuario.Administrador;
+        public bool MostrarClientes     => Rol == RolUsuario.Vendedor;
+        public bool MostrarProveedores  => false;
+        public bool MostrarReportes     => Rol == RolUsuario.Administrador || Rol == RolUsuario.Gerente;
         public bool MostrarConfiguracion => Rol == RolUsuario.Gerente;
 
 

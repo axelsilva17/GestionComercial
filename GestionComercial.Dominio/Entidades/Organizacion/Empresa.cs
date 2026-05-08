@@ -20,6 +20,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
         private string _direccion = string.Empty;
         private string? _email;
         private string? _telefono;
+        private string? _logoUrl;
 
         // ── Propiedades con validación ──
         public string Nombre 
@@ -47,6 +48,11 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             get => _telefono; 
             set => _telefono = value; 
         }
+        public string? LogoUrl 
+        { 
+            get => _logoUrl; 
+            set => _logoUrl = value; 
+        }
 
         // ── Relaciones ──
         public ICollection<Sucursal>   Sucursales  { get; set; } = new List<Sucursal>();
@@ -61,7 +67,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
 
         // ── Factory method ──
         public static Empresa Crear(string nombre, string cuit, string direccion,
-            string? email = null, string? telefono = null)
+            string? email = null, string? telefono = null, string? logoUrl = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new ArgumentException("El nombre es requerido.", nameof(nombre));
@@ -77,6 +83,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
                 _direccion = direccion.Trim(),
                 _email = email?.Trim().ToLower(),
                 _telefono = telefono?.Trim(),
+                _logoUrl = logoUrl?.Trim(),
                 FechaAlta = DateTime.Now,
                 Activo = true
             };
@@ -87,18 +94,16 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
         /// <summary>
         /// Actualiza datos de la empresa.
         /// </summary>
-        public void Actualizar(string nombre, string cuit, string direccion, string? email, string? telefono)
+        public void Actualizar(string nombre, string direccion, string? email, string? telefono, string? logoUrl = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new ArgumentException("El nombre es requerido.", nameof(nombre));
-            if (string.IsNullOrWhiteSpace(cuit))
-                throw new ArgumentException("El CUIT es requerido.", nameof(cuit));
 
             _nombre = nombre.Trim();
-            _cuit = cuit.Trim();
             _direccion = direccion.Trim();
             _email = email?.Trim().ToLower();
             _telefono = telefono?.Trim();
+            if (logoUrl != null) _logoUrl = logoUrl.Trim();
         }
 
         /// <summary>

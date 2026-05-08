@@ -13,11 +13,44 @@ namespace GestionComercial.UI.ViewModels.Configuracion
     {
         private readonly IUnitOfWork _uow;
 
+        // ── Lista completa ────────────────────────────────────────────────────
+        private ObservableCollection<SucursalDto> _todos = new();
+
         private ObservableCollection<SucursalDto> _items = new();
         public ObservableCollection<SucursalDto> Items
         {
             get => _items;
             set { _items = value; NotifyOfPropertyChange(() => Items); }
+        }
+
+        // ── Búsqueda ──────────────────────────────────────────────────────────
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                NotifyOfPropertyChange(() => SearchText);
+                Filtrar();
+            }
+        }
+
+        private void Filtrar()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Items = new ObservableCollection<SucursalDto>(_todos);
+            }
+            else
+            {
+                var filtro = SearchText.Trim().ToLower();
+                Items = new ObservableCollection<SucursalDto>(
+                    _todos.Where(s =>
+                        s.Nombre.ToLower().Contains(filtro) ||
+                        (s.Direccion ?? "").ToLower().Contains(filtro))
+                );
+            }
         }
 
         private SucursalDto _seleccionada;
@@ -75,7 +108,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             try
             {
                 var sucursales = await _uow.Sucursales.ObtenerTodosAsync();
-                Items = new ObservableCollection<SucursalDto>(
+                _todos = new ObservableCollection<SucursalDto>(
                     sucursales.Select(s => new SucursalDto
                     {
                         IdSucursal = s.Id,
@@ -85,6 +118,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         IdEmpresa  = s.Id_empresa
                     })
                 );
+                Filtrar();
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
@@ -133,14 +167,16 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     await _uow.Sucursales.AgregarAsync(sucursal);
                     await _uow.GuardarCambiosAsync();
 
-                    Items.Add(new SucursalDto
+                    var nuevoDto = new SucursalDto
                     {
                         IdSucursal = sucursal.Id,
                         Nombre     = sucursal.Nombre,
                         Direccion  = sucursal.Direccion,
                         Activa     = sucursal.Activo,
                         IdEmpresa  = sucursal.Id_empresa
-                    });
+                    };
+                    _todos.Add(nuevoDto);
+                    Filtrar();
                 }
                 else if (Seleccionada != null)
                 {
@@ -156,9 +192,13 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         Seleccionada.Nombre    = sucursal.Nombre;
                         Seleccionada.Direccion = sucursal.Direccion;
                         Seleccionada.Activa    = sucursal.Activo;
-                        var idx = Items.IndexOf(Seleccionada);
-                        Items.RemoveAt(idx);
-                        Items.Insert(idx, Seleccionada);
+                        var idx = _todos.IndexOf(Seleccionada);
+                        if (idx >= 0)
+                        {
+                            _todos.RemoveAt(idx);
+                            _todos.Insert(idx, Seleccionada);
+                        }
+                        Filtrar();
                     }
                 }
                 PanelVisible = false;
@@ -180,9 +220,13 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     await _uow.GuardarCambiosAsync();
 
                     item.Activa = sucursal.Activo;
-                    var idx = Items.IndexOf(item);
-                    Items.RemoveAt(idx);
-                    Items.Insert(idx, item);
+                    var idx = _todos.IndexOf(item);
+                    if (idx >= 0)
+                    {
+                        _todos.RemoveAt(idx);
+                        _todos.Insert(idx, item);
+                    }
+                    Filtrar();
                 }
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }

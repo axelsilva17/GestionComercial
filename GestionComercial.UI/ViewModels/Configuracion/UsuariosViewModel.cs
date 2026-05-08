@@ -15,11 +15,46 @@ namespace GestionComercial.UI.ViewModels.Configuracion
     {
         private readonly IUnitOfWork _uow;
 
+        // ── Lista completa ────────────────────────────────────────────────────
+        private ObservableCollection<UsuarioDto> _todos = new();
+
         private ObservableCollection<UsuarioDto> _items = new();
         public ObservableCollection<UsuarioDto> Items
         {
             get => _items;
             set { _items = value; NotifyOfPropertyChange(() => Items); }
+        }
+
+        // ── Búsqueda ──────────────────────────────────────────────────────────
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                NotifyOfPropertyChange(() => SearchText);
+                Filtrar();
+            }
+        }
+
+        private void Filtrar()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Items = new ObservableCollection<UsuarioDto>(_todos);
+            }
+            else
+            {
+                var filtro = SearchText.Trim().ToLower();
+                Items = new ObservableCollection<UsuarioDto>(
+                    _todos.Where(u =>
+                        (u.Nombre + " " + u.Apellido).ToLower().Contains(filtro) ||
+                        (u.Email ?? "").ToLower().Contains(filtro) ||
+                        (u.Rol ?? "").ToLower().Contains(filtro) ||
+                        (u.SucursalNombre ?? "").ToLower().Contains(filtro))
+                );
+            }
         }
 
         private ObservableCollection<SucursalDto> _sucursales = new();
@@ -119,7 +154,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     .Include(u => u.Rol)
                     .ToListAsync();
 
-                Items = new ObservableCollection<UsuarioDto>(
+                _todos = new ObservableCollection<UsuarioDto>(
                     usuarios.Select(u => new UsuarioDto
                     {
                         IdUsuario      = u.Id,
@@ -133,6 +168,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         IdRol          = u.Id_rol
                     })
                 );
+                Filtrar();
 
                 // Cargar sucursales para el combo
                 var sucursales = await _uow.Sucursales.ObtenerTodosAsync();
@@ -220,7 +256,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         .Include(u => u.Rol)
                         .FirstOrDefaultAsync(u => u.Id == usuario.Id);
 
-                    Items.Add(new UsuarioDto
+                    var nuevoDto = new UsuarioDto
                     {
                         IdUsuario      = usuario.Id,
                         Nombre         = usuario.Nombre,
@@ -231,7 +267,9 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         SucursalNombre = usuarioCompleto?.Sucursal?.Nombre ?? string.Empty,
                         Rol            = usuarioCompleto?.Rol?.Nombre ?? string.Empty,
                         IdRol          = usuario.Id_rol
-                    });
+                    };
+                    _todos.Add(nuevoDto);
+                    Filtrar();
                 }
                 else if (Seleccionado != null)
                 {
@@ -266,12 +304,13 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         Seleccionado.Rol            = usuario.Rol?.Nombre ?? string.Empty;
                         Seleccionado.IdRol          = usuario.Id_rol;
 
-                        var idx = Items.IndexOf(Seleccionado);
+                        var idx = _todos.IndexOf(Seleccionado);
                         if (idx >= 0)
                         {
-                            Items.RemoveAt(idx);
-                            Items.Insert(idx, Seleccionado);
+                            _todos.RemoveAt(idx);
+                            _todos.Insert(idx, Seleccionado);
                         }
+                        Filtrar();
                     }
                 }
                 PanelVisible = false;
@@ -293,12 +332,13 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     await _uow.GuardarCambiosAsync();
 
                     item.Activo = usuario.Activo;
-                    var idx = Items.IndexOf(item);
+                    var idx = _todos.IndexOf(item);
                     if (idx >= 0)
                     {
-                        Items.RemoveAt(idx);
-                        Items.Insert(idx, item);
+                        _todos.RemoveAt(idx);
+                        _todos.Insert(idx, item);
                     }
+                    Filtrar();
                 }
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }

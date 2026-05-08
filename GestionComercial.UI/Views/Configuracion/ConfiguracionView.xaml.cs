@@ -1,6 +1,6 @@
-using DocumentFormat.OpenXml.Drawing.Charts;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
 using GestionComercial.UI.ViewModels.Configuracion;
+using Microsoft.Win32;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -104,6 +104,19 @@ namespace GestionComercial.UI.Views.Configuracion
             if (!VM.Empresa.PanelVisible) CerrarPanelActivo();
         }
 
+        private void SeleccionarLogo_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Title = "Seleccionar logo de la empresa",
+                Filter = "Imágenes (*.png;*.jpg;*.jpeg;*.gif)|*.png;*.jpg;*.jpeg;*.gif"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                VM.Empresa.LogoPath = dlg.FileName;
+            }
+        }
+
         // ══ SUCURSALES ═══════════════════════════════════════════════════════
         private void NuevaSucursal_Click(object sender, RoutedEventArgs e)
         {
@@ -180,7 +193,15 @@ namespace GestionComercial.UI.Views.Configuracion
         private async void EliminarRol_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as Button)?.Tag is RolDto item)
-                await VM.Roles.Eliminar(item);
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Eliminar el rol \"{item.Nombre}\"?\nLos usuarios con este rol quedarán sin asignación.",
+                    "Confirmar eliminación",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm == MessageBoxResult.Yes)
+                    await VM.Roles.Eliminar(item);
+            }
         }
 
         // ══ MÉTODOS DE PAGO ══════════════════════════════════════════════════
@@ -208,7 +229,15 @@ namespace GestionComercial.UI.Views.Configuracion
         private async void EliminarMetodo_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as Button)?.Tag is MetodoPagoDto item)
-                await VM.MetodosPago.Eliminar(item);
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Eliminar el método de pago \"{item.Nombre}\"?",
+                    "Confirmar eliminación",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm == MessageBoxResult.Yes)
+                    await VM.MetodosPago.Eliminar(item);
+            }
         }
     }
 }
