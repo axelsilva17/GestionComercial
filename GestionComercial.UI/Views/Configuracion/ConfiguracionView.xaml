@@ -256,25 +256,26 @@
                             <Grid Grid.Row="2">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="24"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="24"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="2*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
-                                    <TextBlock Text="{Binding Empresa.Empresa.Nombre}" FontSize="15" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Nombre}" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.CUIT}" FontSize="14"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
-                                    <TextBlock Text="{Binding Empresa.Empresa.CUIT}" FontSize="15"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="4">
                                     <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
-                                    <TextBlock Text="{Binding Empresa.Empresa.Direccion}" FontSize="15"
-                                               Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Direccion}" FontSize="14"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </Grid>
                         </Grid>
