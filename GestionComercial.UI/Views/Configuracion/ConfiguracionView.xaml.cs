@@ -1,7 +1,8 @@
-using DocumentFormat.OpenXml.Drawing.Charts;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
 using GestionComercial.UI.ViewModels.Configuracion;
+using Microsoft.Win32;
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -180,7 +181,15 @@ namespace GestionComercial.UI.Views.Configuracion
         private async void EliminarRol_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as Button)?.Tag is RolDto item)
-                await VM.Roles.Eliminar(item);
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Eliminar el rol \"{item.Nombre}\"?\nLos usuarios con este rol quedarán sin asignación.",
+                    "Confirmar eliminación",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm == MessageBoxResult.Yes)
+                    await VM.Roles.Eliminar(item);
+            }
         }
 
         // ══ MÉTODOS DE PAGO ══════════════════════════════════════════════════
@@ -208,7 +217,134 @@ namespace GestionComercial.UI.Views.Configuracion
         private async void EliminarMetodo_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as Button)?.Tag is MetodoPagoDto item)
-                await VM.MetodosPago.Eliminar(item);
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Eliminar el método de pago \"{item.Nombre}\"?",
+                    "Confirmar eliminación",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm == MessageBoxResult.Yes)
+                    await VM.MetodosPago.Eliminar(item);
+            }
+        }
+
+        // ══ BACKUP ═══════════════════════════════════════════════════════════
+        private async void BackupManual_Click(object sender, RoutedEventArgs e)
+        {
+            var confirm = MessageBox.Show(
+                "¿Deseás realizar una copia de seguridad de la base de datos?\n\nEsta operación puede tardar unos segundos.",
+                "Confirmar Backup",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirm == MessageBoxResult.Yes)
+            {
+                await VM.Backup.RealizarBackup();
+
+                if (VM.Backup.ErrorVisible)
+                {
+                    MessageBox.Show(
+                        $"Error al realizar backup:\n{VM.Backup.ErrorMessage}",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "Backup realizado correctamente.",
+                        "Éxito",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+        }
+
+        // ══ CAMBIAR CARPETA DE BACKUP ═══════════════════════════════════════════
+        private void CambiarCarpetaBackup_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFolderDialog
+            {
+                Title = "Seleccionar carpeta de backups",
+                Multiselect = false
+            };
+
+            // Si hay una carpeta actual, intentar establecerla
+            if (!string.IsNullOrEmpty(VM?.Backup?.CarpetaDestino) && 
+                Directory.Exists(VM.Backup.CarpetaDestino))
+            {
+                dialog.InitialDirectory = VM.Backup.CarpetaDestino;
+            }
+
+            bool? result = dialog.ShowDialog();
+
+            if (result == true)
+            {
+                // El usuario seleccionó una carpeta
+                // Actualizamos el ViewModel (solo en memoria, hasta que guarde)
+                if (VM?.Backup != null)
+                {
+                    VM.Backup.CarpetaDestino = dialog.FolderName;
+                }
+            }
+        }
+
+        // ══ GUARDAR CONFIGURACIÓN DE BACKUP ════════════════════════════════════
+        private async void GuardarConfigBackup_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.Backup == null) return;
+
+            try
+            {
+                await VM.Backup.GuardarConfiguracion();
+
+                // Verificar si hubo error
+                if (VM.Backup.ErrorVisible)
+                {
+                    MessageBox.Show(
+                        $"Error al guardar la configuración:\n{VM.Backup.ErrorMessage}",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "Configuración guardada correctamente.",
+                        "Éxito",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    // Recargar para reflejar cambios
+                    await VM.Backup.CargarAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error al guardar la configuración:\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private async void EliminarBackup_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.Tag is GestionComercial.Dominio.Interfaces.Servicios.BackupInfo item)
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Deseás eliminar el backup?\n{item.FileName}",
+                    "Confirmar eliminación",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (confirm == MessageBoxResult.Yes)
+                {
+                    VM.Backup.BackupSeleccionado = item;
+                    await VM.Backup.EliminarBackup();
+                }
+            }
         }
     }
 }

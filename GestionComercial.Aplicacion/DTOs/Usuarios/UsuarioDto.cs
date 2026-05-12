@@ -10,6 +10,7 @@ namespace GestionComercial.Aplicacion.DTOs.Usuarios
         public int    IdSucursal   { get; set; }
         public string SucursalNombre { get; set; }
         public string Rol    { get; set; }
+        public int    IdRol  { get; set; }
         public string NombreCompleto => $"{Nombre} {Apellido}";
         public string Inicial => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
     }

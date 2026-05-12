@@ -9,6 +9,7 @@ using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.Dominio.Entidades.Seguridad;
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Dominio.Entidades.Vistas;
 using GestionComercial.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,11 +46,39 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<TipoMovimientoCaja> MovimientosCaja { get; set; }
         public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
         public DbSet<TablaAuditada> TablasAuditadas { get; set; }
+        public DbSet<GestionComercial.Dominio.Entidades.Proveedores.ProveedorProductoCosto> ProveedorProductoCostos { get; set; }
+
+        // ── Vistas (entidades de solo lectura) ──────────────────────
+        public DbSet<VistaVentasResumida> VistaVentasResumidas { get; set; }
+        public DbSet<VistaProductosConStock> VistaProductosConStock { get; set; }
+        public DbSet<VistaMovimientosStock> VistaMovimientosStock { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(GestionComercialContext).Assembly);
             base.OnModelCreating(modelBuilder);
+
+            // ── Índices para optimizar búsquedas y filtros ──
+            // Producto: búsqueda por código de barra + empresa (importación masiva)
+            modelBuilder.Entity<Producto>()
+                .HasIndex(p => new { p.CodigoBarra, p.Id_empresa })
+                .HasDatabaseName("IX_Producto_CodigoBarra_Empresa")
+                .IsUnique();
+
+            // Producto: filtro por empresa (listado principal)
+            modelBuilder.Entity<Producto>()
+                .HasIndex(p => p.Id_empresa)
+                .HasDatabaseName("IX_Producto_IdEmpresa");
+
+            // Producto: búsqueda por categoría
+            modelBuilder.Entity<Producto>()
+                .HasIndex(p => p.Id_categoria)
+                .HasDatabaseName("IX_Producto_IdCategoria");
+
+            // Cliente: búsqueda por empresa
+            modelBuilder.Entity<Cliente>()
+                .HasIndex(c => c.Id_empresa)
+                .HasDatabaseName("IX_Cliente_IdEmpresa");
 
             SemillaRoles.Sembrar(modelBuilder);
             SemillaTipoMovimiento.Sembrar(modelBuilder);

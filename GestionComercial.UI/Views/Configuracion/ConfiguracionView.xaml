@@ -6,6 +6,7 @@
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:InverseBoolConverter x:Key="InverseBool"/>
 
         <Style TargetType="TabControl">
             <Setter Property="Background"      Value="Transparent"/>
@@ -72,6 +73,8 @@
             <Setter Property="Padding"         Value="8,4"/>
             <Setter Property="FontSize"        Value="12"/>
             <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -100,6 +103,8 @@
             <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -134,6 +139,8 @@
             <Setter Property="CaretBrush"      Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -157,6 +164,8 @@
             <Setter Property="CaretBrush"      Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="PasswordBox">
@@ -254,27 +263,44 @@
                                 </Button>
                             </Grid>
                             <Grid Grid.Row="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="24"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="24"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="2*"/>
                                 </Grid.ColumnDefinitions>
+                                <!-- Fila 0: Nombre, CUIT, Dirección -->
                                 <StackPanel>
                                     <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
-                                    <TextBlock Text="{Binding Empresa.Empresa.Nombre}" FontSize="15" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Nombre}" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.CUIT}" FontSize="14"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
-                                    <TextBlock Text="{Binding Empresa.Empresa.CUIT}" FontSize="15"
+                                    <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Direccion}" FontSize="14"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <!-- Fila 1: Email, Teléfono -->
+                                <StackPanel Grid.Row="1" Margin="0,16,0,0">
+                                    <TextBlock Text="EMAIL" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Email, TargetNullValue='—'}" FontSize="14"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
-                                <StackPanel Grid.Column="4">
-                                    <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
-                                    <TextBlock Text="{Binding Empresa.Empresa.Direccion}" FontSize="15"
-                                               Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,16,0,0">
+                                    <TextBlock Text="TELÉFONO" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock Text="{Binding Empresa.Empresa.Telefono, TargetNullValue='—'}" FontSize="14"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </Grid>
@@ -300,11 +326,31 @@
                             <Grid Margin="20,16,20,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Sucursales del negocio" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="8" Padding="8,0" Height="32">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding Sucursales.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                                 FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="🔍" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <Button Grid.Column="4" Style="{StaticResource PrimaryButton}"
                                         Height="36" Padding="14,0" FontSize="12" Click="NuevaSucursal_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -318,6 +364,16 @@
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}"
                                                     CornerRadius="10" Margin="0,0,0,8" Padding="16,12">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Opacity" Value="1"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Activa}" Value="False">
+                                                                <Setter Property="Opacity" Value="0.5"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
@@ -382,11 +438,31 @@
                             <Grid Margin="20,16,20,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Usuarios del sistema" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="8" Padding="8,0" Height="32">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding Usuarios.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                                 FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="🔍" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <Button Grid.Column="4" Style="{StaticResource PrimaryButton}"
                                         Height="36" Padding="14,0" FontSize="12" Click="NuevoUsuario_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -400,6 +476,16 @@
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}"
                                                     CornerRadius="10" Margin="0,0,0,8" Padding="16,12">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Opacity" Value="1"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Activo}" Value="False">
+                                                                <Setter Property="Opacity" Value="0.5"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
@@ -417,7 +503,7 @@
                                                         <TextBlock Text="{Binding NombreCompleto}" FontSize="14" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                            <TextBlock Text="{Binding RolNombre}" FontSize="11"
+                                                            <TextBlock Text="{Binding Rol}" FontSize="11"
                                                                        Foreground="{DynamicResource PrimaryBrush}"/>
                                                             <TextBlock Text=" · " FontSize="11"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -590,16 +676,193 @@
                             </ScrollViewer>
                         </Grid>
                     </Border>
+                 </TabItem>
+
+                <!-- ── BACKUP ────────────────────────────────────────────── -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💾" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Backup" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="12" ClipToBounds="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                             <!-- Sección superior: Título + Botón de backup manual -->
+                             <Grid Margin="20,16,20,12">
+                                 <Grid.ColumnDefinitions>
+                                     <ColumnDefinition Width="*"/>
+                                     <ColumnDefinition Width="Auto"/>
+                                 </Grid.ColumnDefinitions>
+                                 <StackPanel>
+                                     <TextBlock Text="Backup de la base de datos" FontSize="14" FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                     <TextBlock Text="Copia de seguridad de toda la información del sistema" FontSize="12"
+                                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                 </StackPanel>
+                                  <Button Grid.Column="1" Style="{StaticResource PrimaryButton}"
+                                          Height="36" Padding="14,0" FontSize="12"
+                                          Click="BackupManual_Click">
+                                     <StackPanel Orientation="Horizontal">
+                                         <TextBlock Text="📦" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                         <TextBlock Text="Realizar Backup" VerticalAlignment="Center"/>
+                                     </StackPanel>
+                                 </Button>
+                             </Grid>
+
+<!-- Configuración backup automático -->
+                            <Border Grid.Row="1" Margin="20,0,20,12" Background="{DynamicResource SurfaceBrush}"
+                                    CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="12"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="12"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="16"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Fila 0: Carpeta de destino -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="📂 Carpeta:" VerticalAlignment="Center"
+                                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding Backup.CarpetaDestino, Mode=OneWay}"
+                                                 Style="{StaticResource FormInput}" Height="32" FontSize="11"
+                                                 IsReadOnly="True" Background="{DynamicResource CardBrush}"/>
+                                        <Button Grid.Column="4" x:Name="BtnCambiarCarpeta"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Height="32" Padding="12,0" FontSize="11"
+                                                Click="CambiarCarpetaBackup_Click">
+                                            <TextBlock Text="📁 Cambiar"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Fila 2: Backup automático -->
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding Backup.BackupHabilitado}" 
+                                                  Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"
+                                                  Content="Backup automático al iniciar la app"/>
+                                        <TextBlock Grid.Column="2" Text="Mantener últimos:" VerticalAlignment="Center"
+                                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBox Grid.Column="4" Text="{Binding Backup.MaxBackups, UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="50" Height="28" Style="{StaticResource FormInput}"
+                                                 VerticalContentAlignment="Center" FontSize="11"/>
+                                    </Grid>
+
+                                    <!-- Fila 4: Botón Guardar -->
+                                    <Button Grid.Row="4" x:Name="BtnGuardarConfigBackup"
+                                            Style="{StaticResource PrimaryButton}"
+                                            HorizontalAlignment="Right"
+                                            Height="36" Padding="16,0" FontSize="12"
+                                            Click="GuardarConfigBackup_Click">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="💾" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Guardar Configuración" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- Lista de backups existentes -->
+                            <Grid Grid.Row="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <!-- Header de la lista -->
+                                <Border Margin="20,0,20,4" Background="{DynamicResource SurfaceBrush}"
+                                        CornerRadius="6" Padding="12,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="60"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Nombre" FontSize="11" 
+                                                   FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="Tamaño" FontSize="11" 
+                                                   FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="Fecha" FontSize="11" 
+                                                   FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="" FontSize="11" 
+                                                   FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Items de backups -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                              Margin="12,0,12,12">
+                                    <ItemsControl ItemsSource="{Binding Backup.Backups}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource SurfaceBrush}"
+                                                        CornerRadius="8" Margin="0,0,0,4" Padding="14,10">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="120"/>
+                                                            <ColumnDefinition Width="160"/>
+                                                            <ColumnDefinition Width="60"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding FileName}" 
+                                                                   FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="1" 
+                                                                   Text="{Binding FileSizeBytes, Converter={StaticResource TamanioArchivo}}" 
+                                                                   FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding CreatedAt, StringFormat='dd/MM/yyyy HH:mm'}" 
+                                                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                   VerticalAlignment="Center"/>
+                                                        <Button Grid.Column="3" Content="🗑️" 
+                                                                Style="{StaticResource AccionBtn}" Padding="8,2"
+                                                                ToolTip="Eliminar backup"
+                                                                Tag="{Binding}" Click="EliminarBackup_Click"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Grid>
+                    </Border>
                 </TabItem>
 
-            </TabControl>
+             </TabControl>
         </Grid>
 
         <!-- ══ OVERLAY ══════════════════════════════════════════════════════ -->
         <Rectangle x:Name="Overlay" Fill="#88000000" Opacity="0" IsHitTestVisible="False"/>
 
         <!-- Panel Empresa -->
-        <Border x:Name="PanelEmpresa" Width="360" HorizontalAlignment="Right"
+        <Border x:Name="PanelEmpresa" Width="400" HorizontalAlignment="Right"
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
                 Visibility="Collapsed">
@@ -617,23 +880,48 @@
                     <Button HorizontalAlignment="Right" Content="✕" Style="{StaticResource AccionBtn}"
                             FontSize="14" Click="CerrarPanel_Click"/>
                 </Grid>
-                <StackPanel Grid.Row="2">
-                    <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
-                    <TextBox Text="{Binding Empresa.EditNombre, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
-                    <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
-                    <TextBox Text="{Binding Empresa.EditCuit, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
-                    <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
-                    <TextBox Text="{Binding Empresa.EditDireccion, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FormInput}"/>
-                    <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
-                            Visibility="{Binding Empresa.TieneError, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding Empresa.MensajeError}" FontSize="12"
-                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                        <TextBox Text="{Binding Empresa.EditNombre, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="CUIT" Style="{StaticResource FormLabel}"/>
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Empresa.Empresa.CUIT}" FontSize="13"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="🔒 No editable" FontSize="10"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="DIRECCIÓN" Style="{StaticResource FormLabel}"/>
+                        <TextBox Text="{Binding Empresa.EditDireccion, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="EMAIL" Style="{StaticResource FormLabel}"/>
+                        <TextBox Text="{Binding Empresa.EditEmail, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="TELÉFONO" Style="{StaticResource FormLabel}"/>
+                        <TextBox Text="{Binding Empresa.EditTelefono, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+
+                        <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8"
+                                Visibility="{Binding Empresa.TieneError, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding Empresa.MensajeError}" FontSize="12"
+                                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                     <Button Content="Cancelar" Style="{StaticResource CancelBtn}" Click="CerrarPanel_Click"/>
                     <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
                             Height="38" Padding="16,0" Click="GuardarEmpresa_Click"/>

@@ -34,18 +34,12 @@ namespace GestionComercial.Aplicacion.Servicios
             producto.StockActual += cantidad;
             _uow.Productos.Actualizar(producto);
 
-            await _uow.MovimientosStock.AgregarAsync(new MovimientoStock
-            {
-                Id_producto = idProducto,
-                Id_sucursal = idSucursal,
-                Id_usuario = idUsuario,
-                Cantidad = Math.Abs(cantidad),
-                TipoMovimiento = cantidad >= 0 ? 1 : 2, // 1=Entrada 3=Ajuste
-                Observacion = motivo,
-                Fecha = DateTime.Now,
-                StockAnterior = stockAnterior,
-                StockNuevo = producto.StockActual,
-            });
+            // ── Usar factory method DDD según el tipo de movimiento ────────
+            var movimiento = cantidad >= 0
+                ? MovimientoStock.Entrada(Math.Abs(cantidad), stockAnterior, idProducto, idSucursal, idUsuario, motivo)
+                : MovimientoStock.Ajuste(producto.StockActual, stockAnterior, idProducto, idSucursal, idUsuario, motivo);
+
+            await _uow.MovimientosStock.AgregarAsync(movimiento);
 
             await _uow.GuardarCambiosAsync();
         }

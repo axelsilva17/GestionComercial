@@ -74,9 +74,9 @@ namespace GestionComercial.UI.Views.Main
                 ? WindowState.Normal
                 : WindowState.Maximized;
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-        // ══ RESPONSIVE SIDEBAR ═══════════════════════════════════════════════
+        // ══ RESPONSIVE SIDEBAR ═══════════════════════════════════════════════════
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {

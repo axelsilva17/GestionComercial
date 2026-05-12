@@ -7,7 +7,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
     public interface ICajaServicio
     {
         Task<Caja?>           ObtenerCajaAbiertaAsync(int idSucursal);
-        Task<Caja>            AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial);
+        Task<Caja>            AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, string? turno = null, bool esPrimaria = false);
         Task<Caja>            CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal);
         Task                  RegistrarMovimientoAsync(int idCaja, TipoMovimientoCajaEnum tipo, decimal monto, string descripcion);
         Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta);

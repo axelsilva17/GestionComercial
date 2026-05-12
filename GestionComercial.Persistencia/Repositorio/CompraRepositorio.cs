@@ -19,6 +19,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<IEnumerable<Compra>> ObtenerPorProveedorAsync(int idProveedor)
             => await _dbSet
                 .Where(c => c.Id_proveedor == idProveedor)
+                .Include(c => c.Detalles)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
 
@@ -26,6 +27,7 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet
                 .Where(c => c.Id_sucursal == idSucursal)
                 .Include(c => c.Proveedor)
+                .Include(c => c.Detalles)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
 
@@ -33,6 +35,7 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet
                 .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta)
                 .Include(c => c.Proveedor)
+                .Include(c => c.Detalles)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
     }

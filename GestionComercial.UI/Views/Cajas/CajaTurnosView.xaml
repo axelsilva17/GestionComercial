@@ -79,15 +79,8 @@
                     <DataGridTextColumn Header="Cierre" Binding="{Binding FechaCierre, StringFormat='dd/MM HH:mm'}" Width="130"/>
                     <DataGridTextColumn Header="Monto Inicial" Binding="{Binding MontoInicial, StringFormat='C0'}" Width="110"/>
                     <DataGridTextColumn Header="Monto Final" Binding="{Binding MontoFinal, StringFormat='C0'}" Width="110"/>
-                    <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
-                    <DataGridTemplateColumn Header="Principal" Width="80">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding EsPrimaria}" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
+                     <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
+                 </DataGrid.Columns>
             </DataGrid>
         </Border>
     </Grid>

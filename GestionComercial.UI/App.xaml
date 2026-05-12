@@ -20,7 +20,9 @@
             <converters:EnumToIntConverter x:Key="EnumToInt"/>
             <converters:ProgressToWidthConverter x:Key="ProgressToWidth"/>
             <converters:TabIndexToBoolConverter x:Key="TabIndexToBool"/>
-            <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
+             <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
+             <converters:TamanioArchivoConverter x:Key="TamanioArchivo"/>
+             <converters:BoolToPrimariaConverter x:Key="BoolToPrimaria"/>
             
             <!-- Estilos globales de cursor -->
             <Style TargetType="Button">
@@ -36,13 +38,14 @@
             <ResourceDictionary.MergedDictionaries>
                
 
-                <!-- Tema dinamico -->
-                <ResourceDictionary Source="/Views/Recursos/Estilos/ThemeLight.xaml"/>
+                <!-- Recursos base -->
                 <ResourceDictionary Source="/Views/Recursos/Diccionarios/Colors.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Diccionarios/Elevaciones.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Diccionarios/Espaciado.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Diccionarios/Fuentes.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Diccionarios/Iconos.xaml"/>
+                
+                <!-- Estilos -->
                 <ResourceDictionary Source="/Views/Recursos/Estilos/ButtonStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/CardStyles.xaml"/>
                 <ResourceDictionary Source="/Views/Recursos/Estilos/DataGridStyles.xaml"/>

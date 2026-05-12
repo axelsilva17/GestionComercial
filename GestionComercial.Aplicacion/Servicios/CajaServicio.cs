@@ -26,22 +26,15 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal)
             => await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
 
-        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial)
+        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, string? turno = null, bool esPrimaria = false)
         {
             LogHelper.Log("[DEBUG-AbrirCaja] Iniciando...");
             var cajaExistente = await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
             if (cajaExistente != null)
                 throw new NegocioException("Ya existe una caja abierta para esta sucursal");
 
-            var caja = new Caja
-            {
-                FechaApertura      = DateTime.Now,
-                MontoInicial       = montoInicial,
-                MontoFinal         = montoInicial,
-                Estado             = 1, // 1 = Abierta
-                Id_sucursal        = idSucursal,
-                UsuarioApertura_id = idUsuario,
-            };
+            // ── Crear caja usando factory method DDD ───────────────────────────────
+            var caja = Caja.Crear(idSucursal, idUsuario, montoInicial, esPrimaria, turno);
 
             // Serializar estado nuevo para auditoría
             var valoresNuevos = JsonSerializer.Serialize(new
@@ -51,7 +44,9 @@ namespace GestionComercial.Aplicacion.Servicios
                 caja.MontoFinal,
                 caja.Estado,
                 caja.Id_sucursal,
-                caja.UsuarioApertura_id
+                caja.UsuarioApertura_id,
+                caja.Turno,
+                caja.EsPrimaria
             });
 
             LogHelper.Log("[DEBUG-AbrirCaja] Paso 1: Agregando caja...");
@@ -165,11 +160,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 caja.UsuarioApertura_id
             });
 
-            LogHelper.Log("[DEBUG-CerrarCaja] Paso 1: Actualizando caja...");
-            caja.FechaCierre      = DateTime.Now;
-            caja.MontoFinal       = montoFinal;
-            caja.Estado           = 2; // 2 = Cerrada
-            caja.UsuarioCierre_id = idUsuario;
+            LogHelper.Log("[DEBUG-CerrarCaja] Paso 1: Cerrando caja con método de dominio...");
+            caja.Cerrar(idUsuario, montoFinal);
             _uow.Cajas.Actualizar(caja);
 
             // Registrar auditoría de cierre de caja

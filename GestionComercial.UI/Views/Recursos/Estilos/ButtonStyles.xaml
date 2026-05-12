@@ -22,6 +22,8 @@
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="Padding" Value="16,0"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -176,9 +178,9 @@
     </Style>
 
     <Style x:Key="BotonSecundarioSimple" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource ColorSuperficie}"/>
-        <Setter Property="Foreground" Value="{StaticResource ColorPrimario}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ColorBorde}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="15,8"/>
     </Style>

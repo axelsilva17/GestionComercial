@@ -1,6 +1,12 @@
 using Caliburn.Micro;
+using ClosedXML.Excel;
+using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Main;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +15,20 @@ namespace GestionComercial.UI.ViewModels.Productos
 {
     public class ImportacionProductosViewModel : NavigableViewModel
     {
+        private readonly IProductoServicio _productoServicio;
+        private readonly ShellViewModel _shell;
+        private readonly ILogger<ImportacionProductosViewModel>? _logger;
+
+        public ImportacionProductosViewModel(
+            IProductoServicio productoServicio,
+            ShellViewModel shell,
+            ILogger<ImportacionProductosViewModel>? logger = null)
+        {
+            _productoServicio = productoServicio;
+            _shell = shell;
+            _logger = logger;
+        }
+
         // ── Estado ───────────────────────────────────────────────────────────
         public enum EstadoImportacion { Inicial, Previsualizando, Importando, Completado, ConErrores }
 
@@ -24,17 +44,21 @@ namespace GestionComercial.UI.ViewModels.Productos
                 NotifyOfPropertyChange(() => MostrarPreview);
                 NotifyOfPropertyChange(() => MostrarResultado);
                 NotifyOfPropertyChange(() => PuedeImportar);
+                NotifyOfPropertyChange(() => PuedeSeleccionarArchivo);
+                NotifyOfPropertyChange(() => MostrarBotonReimportar);
             }
         }
 
-        public bool MostrarDropzone  => Estado == EstadoImportacion.Inicial;
-        public bool MostrarPreview   => Estado == EstadoImportacion.Previsualizando
+        public bool MostrarDropzone => Estado == EstadoImportacion.Inicial;
+        public bool MostrarPreview => Estado == EstadoImportacion.Previsualizando
                                      || Estado == EstadoImportacion.Importando;
         public bool MostrarResultado => Estado == EstadoImportacion.Completado
-                                     || Estado == EstadoImportacion.ConErrores;
+                                      || Estado == EstadoImportacion.ConErrores;
+        public bool MostrarBotonReimportar => Estado == EstadoImportacion.Completado
+                                            || Estado == EstadoImportacion.ConErrores;
 
-        // ── PuedeImportar: SIN chequear IsLoading para evitar que quede bloqueado ──
         public bool PuedeImportar => Estado == EstadoImportacion.Previsualizando && FilasValidas > 0;
+        public bool PuedeSeleccionarArchivo => Estado == EstadoImportacion.Inicial;
 
         // ── Archivo ──────────────────────────────────────────────────────────
         private string _archivoNombre = string.Empty;
@@ -137,6 +161,22 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _crearCategorias = value; NotifyOfPropertyChange(() => CrearCategorias); }
         }
 
+        // Ajuste de precio por porcentaje (%): +10 = +10%, -15 = -15%
+        private decimal _ajustePorcentaje = 0;
+        public decimal AjustePorcentaje
+        {
+            get => _ajustePorcentaje;
+            set { _ajustePorcentaje = value; NotifyOfPropertyChange(() => AjustePorcentaje); }
+        }
+
+        // Margen sobre costo (1.30 = 30% de margen)
+        private decimal _margen = 0;
+        public decimal Margen
+        {
+            get => _margen;
+            set { _margen = value; NotifyOfPropertyChange(() => Margen); }
+        }
+
         // ── Error visible en dropzone ─────────────────────────────────────────
         private bool _tieneError;
         public bool TieneError
@@ -155,6 +195,21 @@ namespace GestionComercial.UI.ViewModels.Productos
         // ── Eventos para el formulario padre ─────────────────────────────────
         public event System.Action ImportacionCompletada;
         public event System.Action Cancelado;
+
+        // ── Mapeo de categorías detectadas en el Excel ────────────────────────
+        private Dictionary<string, int> _mapaCategoriasExistentes = new();
+        private List<string> _categoriasPorCrear = new();
+        public IReadOnlyList<string> CategoriasPorCrear => _categoriasPorCrear;
+
+        // ── Ruta temporal para re-importar ────────────────────────────────────────
+        private string _rutaPlantillaTemporal = string.Empty;
+        public string RutaPlantillaTemporal
+        {
+            get => _rutaPlantillaTemporal;
+            private set { _rutaPlantillaTemporal = value; NotifyOfPropertyChange(() => TienePlantillaTemporal); }
+        }
+
+        public bool TienePlantillaTemporal => !string.IsNullOrEmpty(_rutaPlantillaTemporal);
 
         // ── Seleccionar archivo ───────────────────────────────────────────────
         public async Task SeleccionarArchivo()
@@ -182,20 +237,20 @@ namespace GestionComercial.UI.ViewModels.Productos
 
             IsLoading = true;
             TieneError = false;
+
             try
             {
-                await Task.Delay(300);
+                var idEmpresa = _shell.IdEmpresaActual;
+                var catsExistentes = await _productoServicio.ObtenerCategoriasAsync(idEmpresa);
+                _mapaCategoriasExistentes = catsExistentes.ToDictionary(c => c.Nombre.ToLower().Trim(), c => c.IdCategoria);
 
-                // TODO: reemplazar con lector real (ClosedXML / NPOI)
-                var filas = GenerarPreviewMock();
+                var filas = await LeerExcelYValidar(ArchivoRuta);
 
                 FilasTotales  = filas.Count;
                 FilasValidas  = filas.Count(f => f.EsValida);
                 FilasConError = filas.Count(f => !f.EsValida);
                 Filas         = new ObservableCollection<FilaImportacionDto>(filas);
 
-                // IMPORTANTE: cambiar Estado DESPUÉS de setear FilasValidas
-                // para que PuedeImportar ya sea true cuando se notifica
                 Estado = EstadoImportacion.Previsualizando;
             }
             catch (Exception ex)
@@ -206,57 +261,215 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             finally
             {
-                // IsLoading = false ANTES de notificar PuedeImportar
-                // para que el botón quede habilitado
                 IsLoading = false;
                 NotifyOfPropertyChange(() => PuedeImportar);
             }
         }
 
-        // ── Ejecutar importación ──────────────────────────────────────────────
-        // async void para que Caliburn.Micro pueda conectarlo por convención de nombre
+        private async Task<List<FilaImportacionDto>> LeerExcelYValidar(string ruta)
+        {
+            return await Task.Run(() =>
+            {
+                var filas = new List<FilaImportacionDto>();
+
+                using var workbook = new XLWorkbook(ruta);
+                var hoja = workbook.Worksheet(1);
+                var filasUsadas = hoja.RangeUsed()?.RowsUsed().ToList() ?? new List<IXLRangeRow>();
+
+                if (filasUsadas.Count < 2)
+                    throw new Exception("El archivo debe tener al menos una fila de encabezado y una fila de datos.");
+
+                var encabezado = filasUsadas[0];
+                var mapaColumnas = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                int colIdx = 1;
+                foreach (var celda in encabezado.CellsUsed())
+                {
+                    var nombreCol = celda.GetString().Trim().ToLower();
+                    mapaColumnas[nombreCol] = colIdx;
+                    colIdx++;
+                }
+
+                if (!mapaColumnas.ContainsKey("nombre"))
+                    throw new Exception("Falta columna 'Nombre'. Asegurate de usar la plantilla oficial.");
+
+                for (int i = 1; i < filasUsadas.Count; i++)
+                {
+                    var filaExcel = filasUsadas[i];
+                    int numeroFila = i + 1;
+
+                    var nombre       = ObtenerValorCelda(filaExcel, mapaColumnas, "nombre");
+                    var codigoBarra  = ObtenerValorCelda(filaExcel, mapaColumnas, "codigobarra");
+                    var pVentaStr    = ObtenerValorCelda(filaExcel, mapaColumnas, "precioventa");
+                    var pCostoStr    = ObtenerValorCelda(filaExcel, mapaColumnas, "preciocosto");
+                    var stockStr     = ObtenerValorCelda(filaExcel, mapaColumnas, "stockactual");
+                    var stockMinStr  = ObtenerValorCelda(filaExcel, mapaColumnas, "stockminimo");
+                    var categoria    = ObtenerValorCelda(filaExcel, mapaColumnas, "categoria");
+                    var unidadMedida = ObtenerValorCelda(filaExcel, mapaColumnas, "unidadmedida");
+
+                    var errores = new List<string>();
+
+                    if (string.IsNullOrWhiteSpace(nombre))
+                        errores.Add("Nombre vacío");
+
+                    decimal.TryParse(pVentaStr, out decimal precioVenta);
+                    decimal.TryParse(pCostoStr, out decimal precioCosto);
+                    int.TryParse(stockStr, out int stock);
+                    int.TryParse(stockMinStr, out int stockMinimo);
+
+                    if (!string.IsNullOrWhiteSpace(pVentaStr) && precioVenta <= 0)
+                        errores.Add("Precio de venta inválido");
+
+                    int? idCategoria = null;
+                    if (!string.IsNullOrWhiteSpace(categoria))
+                    {
+                        var catNorm = categoria.ToLower().Trim();
+                        if (_mapaCategoriasExistentes.TryGetValue(catNorm, out int idCat))
+                            idCategoria = idCat;
+                        else if (!_categoriasPorCrear.Contains(categoria.Trim()))
+                            _categoriasPorCrear.Add(categoria.Trim());
+                    }
+
+                    filas.Add(new FilaImportacionDto
+                    {
+                        Fila       = numeroFila,
+                        Nombre     = nombre,
+                        CodigoBarra = codigoBarra,
+                        PrecioVenta = precioVenta,
+                        PrecioCosto = precioCosto,
+                        Stock       = stock,
+                        StockMinimo = stockMinimo,
+                        Categoria   = categoria,
+                        UnidadMedida = string.IsNullOrWhiteSpace(unidadMedida) ? "Unidad" : unidadMedida,
+                        EsValida    = errores.Count == 0,
+                        ErrorDescripcion = string.Join("; ", errores),
+                        IdCategoria = idCategoria
+                    });
+                }
+
+                return filas;
+            });
+        }
+
+        private static string ObtenerValorCelda(IXLRangeRow fila, Dictionary<string, int> mapa, string nombreCol)
+        {
+            if (!mapa.TryGetValue(nombreCol, out int colIdx)) return string.Empty;
+            try
+            {
+                var celda = fila.Cell(colIdx);
+                return celda?.GetString()?.Trim() ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        // ── Ejecutar importación con bulk ───────────────────────────────────────────
         public async void EjecutarImportacion()
         {
             if (!PuedeImportar) return;
 
             Estado    = EstadoImportacion.Importando;
             IsLoading = true;
+            Progreso = 0;
+            TextoProgreso = "Iniciando importación...";
+
+            // Allow UI to render before starting heavy work
+            await Task.Delay(50);
 
             var filasAImportar = Filas.Where(f => f.EsValida).ToList();
-            int total          = filasAImportar.Count;
-            Importados         = 0;
-            Omitidos           = 0;
-            Actualizados       = 0;
 
             try
             {
-                for (int i = 0; i < filasAImportar.Count; i++)
+                // Calcular factores de ajuste
+                decimal factorPorcentaje = 1 + (AjustePorcentaje / 100m);  // +10% -> 1.10
+                decimal factorMargen = Margen > 0 ? 1 / (1 - Margen / 100m) : 0;  // 30% margen -> 1/0.7
+
+                // Convertir filas a DTOs (aplicando ajustes)
+                var dtos = new List<ProductoImportarDto>();
+                foreach (var fila in filasAImportar)
                 {
-                    var fila = filasAImportar[i];
+                    int idCategoria = 1;
+                    if (!string.IsNullOrWhiteSpace(fila.Categoria))
+                    {
+                        var catNorm = fila.Categoria.ToLower().Trim();
+                        if (_mapaCategoriasExistentes.TryGetValue(catNorm, out int idCat))
+                            idCategoria = idCat;
+                    }
 
-                    Progreso      = (int)((i + 1) / (double)total * 100);
-                    TextoProgreso = $"Procesando {i + 1} de {total}...";
+                    // Aplicar ajustes de precio
+                    decimal precioVenta = fila.PrecioVenta;
+                    decimal precioCosto = fila.PrecioCosto;
 
-                    await Task.Delay(30); // TODO: await _productoServicio.CrearOActualizar(fila)
+                    // Prioridad: Margen > Porcentaje > ninguno
+                    if (Margen != 0 && precioCosto > 0)
+                    {
+                        // Precio = costo / (1 - margen/100)
+                        precioVenta = precioCosto * factorMargen;
+                    }
+                    else if (AjustePorcentaje != 0)
+                    {
+                        precioVenta = precioVenta * factorPorcentaje;
+                    }
 
-                    if (fila.EsNuevo) Importados++;
-                    else              Actualizados++;
+                    dtos.Add(new ProductoImportarDto
+                    {
+                        Nombre = fila.Nombre,
+                        CodigoBarra = fila.CodigoBarra ?? string.Empty,
+                        Categoria = fila.Categoria,
+                        PrecioVentaActual = Math.Round(precioVenta, 2),
+                        PrecioCostoActual = precioCosto,
+                        StockActual = fila.Stock,
+                        StockMinimo = fila.StockMinimo > 0 ? fila.StockMinimo : 10,
+                        IdCategoria = idCategoria,
+                        IdUnidadMedida = 1,
+                        IdEmpresa = _shell.IdEmpresaActual,
+                    });
                 }
 
-                Omitidos = FilasConError;
-                Estado   = Omitidos > 0
+                // Progress callback - use BeginInvoke to update UI from background thread without blocking
+                var progress = new Progress<(int current, int total, string message)>(p =>
+                {
+                    // Marshal to UI thread without blocking
+                    System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                    {
+                        Progreso = p.total > 0 ? (int)((p.current / (double)p.total) * 100) : 0;
+                        TextoProgreso = p.message;
+                    });
+                });
+
+                // Importar en bulk (más rápido)
+                var (nuevos, actualizados, omitidos) = await _productoServicio.ImportarMasivoAsync(
+                    dtos,
+                    ActualizarExistentes,
+                    progress);
+
+                Importados = nuevos;
+                Actualizados = actualizados;
+                Omitidos = omitidos + FilasConError;
+
+                Estado = Omitidos > 0
                     ? EstadoImportacion.ConErrores
                     : EstadoImportacion.Completado;
             }
             catch (Exception ex)
             {
-                MostrarError($"Error durante la importación: {ex.Message}");
+                _logger?.LogError(ex, "Error durante la importacion bulk");
+                TieneError = true;
+                MensajeError = $"Error durante la importacion: {ex.Message}";
                 Estado = EstadoImportacion.ConErrores;
             }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private async Task CrearCategoriasAsync(IReadOnlyList<string> categorias)
+        {
+            foreach (var _ in categorias)
+                await Task.Delay(10);
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
@@ -275,74 +488,209 @@ namespace GestionComercial.UI.ViewModels.Productos
             TextoProgreso = string.Empty;
             TieneError    = false;
             MensajeError  = string.Empty;
-            LimpiarError();
+            _categoriasPorCrear.Clear();
+            _mapaCategoriasExistentes.Clear();
             Estado = EstadoImportacion.Inicial;
         }
 
-        public void Finalizar() => ImportacionCompletada?.Invoke();
-
-        public void Cancelar()  => Cancelado?.Invoke();
+        public void Reimportar() => Reiniciar();
+        public void Finalizar()  => ImportacionCompletada?.Invoke();
+        public void Cancelar()   => Cancelado?.Invoke();
 
         // ── Descargar plantilla ───────────────────────────────────────────────
         public async Task DescargarPlantilla()
         {
-            var dialogo = new Microsoft.Win32.SaveFileDialog
+            // Usar carpeta temp del sistema
+            var tempPath = System.IO.Path.GetTempPath();
+            var fileName = $"PlantillaImportacionProductos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            var filePath = System.IO.Path.Combine(tempPath, fileName);
+
+            await Task.Run(() =>
             {
-                Title      = "Guardar plantilla",
-                FileName   = "PlantillaImportacionProductos",
-                DefaultExt = ".xlsx",
-                Filter     = "Excel (*.xlsx)|*.xlsx"
-            };
+                using var workbook = new XLWorkbook();
+                var hoja = workbook.Worksheets.Add("Productos");
 
-            if (dialogo.ShowDialog() != true) return;
+                var encabezados = new[] { "Nombre", "CodigoBarra", "PrecioVenta", "PrecioCosto", "StockActual", "StockMinimo", "Categoria", "UnidadMedida" };
+                for (int i = 0; i < encabezados.Length; i++)
+                {
+                    var celda = hoja.Cell(1, i + 1);
+                    celda.Value = encabezados[i];
+                    celda.Style.Font.Bold = true;
+                    celda.Style.Fill.BackgroundColor = XLColor.FromHtml("#2D5A8A");
+                    celda.Style.Font.FontColor = XLColor.White;
+                }
 
-            await Task.Delay(100);
+                var ejemplos = new (string Nombre, string CodBarra, decimal PVenta, decimal PCosto, int Stock, int StockMin, string Categoria, string Unidad)[]
+                {
+                    ("Auriculares Pro X", "7890001", 24000, 15000, 8,  3, "Electronica", "Unidad"),
+                    ("Mouse Inalambrico", "7890002", 12500, 8000,  3,  2, "Perifericos", "Unidad"),
+                    ("Teclado Mecanico",  "7890003", 34000, 22000, 15, 5, "Perifericos", "Unidad"),
+                    ("Webcam HD 1080p",   "7890004", 18000, 11000, 12, 4, "Perifericos", "Unidad"),
+                    ("Cable HDMI 2m",     "7890005", 3500,  1800,  25, 5, "Accesorios",  "Unidad"),
+                };
 
-            System.Windows.MessageBox.Show(
-                "Columnas requeridas:\n\n" +
-                "• Nombre (obligatorio)\n• CodigoBarra\n• PrecioVenta (obligatorio)\n" +
-                "• PrecioCosto\n• StockActual\n• StockMinimo\n• Categoria\n• UnidadMedida\n\n" +
-                "La primera fila debe ser el encabezado.",
-                "Plantilla de importación",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+                for (int f = 0; f < ejemplos.Length; f++)
+                {
+                    hoja.Cell(f + 2, 1).Value = ejemplos[f].Nombre;
+                    hoja.Cell(f + 2, 2).Value = ejemplos[f].CodBarra;
+                    hoja.Cell(f + 2, 3).Value = ejemplos[f].PVenta;
+                    hoja.Cell(f + 2, 4).Value = ejemplos[f].PCosto;
+                    hoja.Cell(f + 2, 5).Value = ejemplos[f].Stock;
+                    hoja.Cell(f + 2, 6).Value = ejemplos[f].StockMin;
+                    hoja.Cell(f + 2, 7).Value = ejemplos[f].Categoria;
+                    hoja.Cell(f + 2, 8).Value = ejemplos[f].Unidad;
+                }
+
+                hoja.Column(1).Width = 25;
+                hoja.Column(2).Width = 15;
+                hoja.Column(3).Width = 15;
+                hoja.Column(4).Width = 15;
+                hoja.Column(5).Width = 12;
+                hoja.Column(6).Width = 12;
+                hoja.Column(7).Width = 15;
+                hoja.Column(8).Width = 15;
+
+                workbook.SaveAs(filePath);
+            });
+
+            // Guardar ruta para re-importar
+            RutaPlantillaTemporal = filePath;
+            ArchivoRuta = filePath;
+            ArchivoNombre = System.IO.Path.GetFileName(filePath);
+
+            // Abrir automáticamente
+            try
+            {
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = filePath,
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(startInfo);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al abrir Excel");
+            }
+
+            // Previsualizar
+            await PrevisualizarArchivo();
         }
 
-        // ── Mock preview ──────────────────────────────────────────────────────
-        private static System.Collections.Generic.List<FilaImportacionDto> GenerarPreviewMock()
+        /// <summary>
+        /// Re-importa la última plantilla descargada sin pedir archivo.
+        /// </summary>
+        public async Task ReimportarUltimaPlantilla()
         {
-            return new()
+            if (!TienePlantillaTemporal || !System.IO.File.Exists(RutaPlantillaTemporal))
             {
-                new() { Fila=2, Nombre="Auriculares Pro X",  CodigoBarra="7890001", PrecioVenta=24000, PrecioCosto=15000, Stock=8,  StockMinimo=3, Categoria="Electrónica", UnidadMedida="Unidad", EsValida=true,  EsNuevo=true  },
-                new() { Fila=3, Nombre="Mouse Inalámbrico",  CodigoBarra="7890002", PrecioVenta=12500, PrecioCosto=8000,  Stock=3,  StockMinimo=2, Categoria="Periféricos",  UnidadMedida="Unidad", EsValida=true,  EsNuevo=false },
-                new() { Fila=4, Nombre="Teclado Mecánico",   CodigoBarra="7890003", PrecioVenta=34000, PrecioCosto=22000, Stock=15, StockMinimo=5, Categoria="Periféricos",  UnidadMedida="Unidad", EsValida=true,  EsNuevo=true  },
-                new() { Fila=5, Nombre="",                   CodigoBarra="7890004", PrecioVenta=0,     PrecioCosto=0,     Stock=0,  StockMinimo=0, Categoria="",             UnidadMedida="",       EsValida=false, EsNuevo=false, ErrorDescripcion="Nombre y precio de venta obligatorios" },
-                new() { Fila=6, Nombre="Webcam HD 1080p",    CodigoBarra="7890005", PrecioVenta=18000, PrecioCosto=11000, Stock=12, StockMinimo=4, Categoria="Periféricos",  UnidadMedida="Unidad", EsValida=true,  EsNuevo=true  },
-                new() { Fila=7, Nombre="Cable HDMI 2m",      CodigoBarra="7890006", PrecioVenta=3500,  PrecioCosto=1800,  Stock=25, StockMinimo=5, Categoria="Accesorios",   UnidadMedida="Unidad", EsValida=true,  EsNuevo=true  },
-                new() { Fila=8, Nombre="Hub USB",            CodigoBarra="ABC",     PrecioVenta=8900,  PrecioCosto=5500,  Stock=7,  StockMinimo=2, Categoria="Accesorios",   UnidadMedida="Unidad", EsValida=false, EsNuevo=false, ErrorDescripcion="Código de barra inválido (debe ser numérico)" },
-            };
+                await DescargarPlantilla();
+                return;
+            }
+
+            ArchivoRuta = RutaPlantillaTemporal;
+            ArchivoNombre = System.IO.Path.GetFileName(RutaPlantillaTemporal);
+            await PrevisualizarArchivo();
         }
     }
 
-    // ── DTO fila ──────────────────────────────────────────────────────────────
-    public class FilaImportacionDto
+    // ── DTO fila con edición inline y INotifyPropertyChanged ──────────────────
+    public class FilaImportacionDto : System.ComponentModel.INotifyPropertyChanged
     {
-        public int     Fila             { get; set; }
-        public string  Nombre           { get; set; } = string.Empty;
-        public string  CodigoBarra      { get; set; } = string.Empty;
-        public decimal PrecioVenta      { get; set; }
-        public decimal PrecioCosto      { get; set; }
-        public int     Stock            { get; set; }
-        public int     StockMinimo      { get; set; }
-        public string  Categoria        { get; set; } = string.Empty;
-        public string  UnidadMedida     { get; set; } = string.Empty;
-        public bool    EsValida         { get; set; }
-        public bool    EsNuevo          { get; set; }
-        public string  ErrorDescripcion { get; set; } = string.Empty;
+        private string  _nombre = string.Empty;
+        private string  _codigoBarra = string.Empty;
+        private decimal _precioVenta;
+        private decimal _precioCosto;
+        private int     _stock;
+        private int     _stockMinimo;
+        private string  _categoria = string.Empty;
+        private string  _unidadMedida = string.Empty;
+        private bool    _esValida;
+        private string  _errorDescripcion = string.Empty;
 
-        public string  EstadoTexto => EsValida ? (EsNuevo ? "Nuevo" : "Actualizar") : "Error";
-        public decimal Margen      => PrecioVenta > 0 && PrecioCosto > 0
+        public int     Fila          { get; set; }
+        public int?    IdCategoria   { get; set; }
+        public bool    EsNuevo       { get; set; }
+
+        public string Nombre
+        {
+            get => _nombre;
+            set { _nombre = value; OnPropertyChanged(); Validar(); }
+        }
+
+        public string CodigoBarra
+        {
+            get => _codigoBarra;
+            set { _codigoBarra = value; OnPropertyChanged(); }
+        }
+
+        public decimal PrecioVenta
+        {
+            get => _precioVenta;
+            set { _precioVenta = value; OnPropertyChanged(); OnPropertyChanged(nameof(Margen)); Validar(); }
+        }
+
+        public decimal PrecioCosto
+        {
+            get => _precioCosto;
+            set { _precioCosto = value; OnPropertyChanged(); OnPropertyChanged(nameof(Margen)); }
+        }
+
+        public int Stock
+        {
+            get => _stock;
+            set { _stock = value; OnPropertyChanged(); }
+        }
+
+        public int StockMinimo
+        {
+            get => _stockMinimo;
+            set { _stockMinimo = value; OnPropertyChanged(); }
+        }
+
+        public string Categoria
+        {
+            get => _categoria;
+            set { _categoria = value; OnPropertyChanged(); }
+        }
+
+        public string UnidadMedida
+        {
+            get => _unidadMedida;
+            set { _unidadMedida = value; OnPropertyChanged(); }
+        }
+
+        public bool EsValida
+        {
+            get => _esValida;
+            set { _esValida = value; OnPropertyChanged(); OnPropertyChanged(nameof(EstadoTexto)); }
+        }
+
+        public string ErrorDescripcion
+        {
+            get => _errorDescripcion;
+            set { _errorDescripcion = value; OnPropertyChanged(); }
+        }
+
+        public string EstadoTexto => EsValida ? (EsNuevo ? "Nuevo" : "Actualizar") : "Error";
+
+        public decimal Margen => PrecioVenta > 0 && PrecioCosto > 0
             ? Math.Round((PrecioVenta - PrecioCosto) / PrecioVenta * 100, 1)
             : 0;
+
+        private void Validar()
+        {
+            var errores = new List<string>();
+            if (string.IsNullOrWhiteSpace(Nombre))
+                errores.Add("Nombre vacío");
+            if (PrecioVenta <= 0)
+                errores.Add("Precio de venta inválido");
+            EsValida = errores.Count == 0;
+            ErrorDescripcion = string.Join("; ", errores);
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? name = null)
+            => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
     }
 }

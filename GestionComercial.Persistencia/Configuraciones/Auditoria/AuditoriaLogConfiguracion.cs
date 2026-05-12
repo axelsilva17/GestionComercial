@@ -26,10 +26,10 @@ namespace GestionComercial.Persistencia.Configuraciones.Auditoria
                 .HasMaxLength(100);
 
             builder.Property(a => a.ValoresAnteriores)
-                .HasColumnType("nvarchar(max)");
+                .HasColumnType("TEXT");
 
             builder.Property(a => a.ValoresNuevos)
-                .HasColumnType("nvarchar(max)");
+                .HasColumnType("TEXT");
 
             builder.Property(a => a.Workstation)
                 .HasMaxLength(50);

@@ -13,6 +13,20 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
         public bool    Activo            { get; set; }
         public string  CategoriaNombre   { get; set; }
         public string  UnidadMedida      { get; set; }
+        
+        // Para preview de ajuste masivo
+        public decimal? PrecioVentaNuevo { get; set; }
+        public decimal? PrecioCostoNuevo { get; set; }
+        
         public string  Inicial => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
+        
+        // Diferencia calculada para preview
+        public decimal Diferencia => PrecioVentaNuevo.HasValue 
+            ? PrecioVentaNuevo.Value - PrecioVentaActual 
+            : 0;
+        
+        public string VariacionPorcentaje => PrecioVentaNuevo.HasValue && PrecioVentaActual > 0
+            ? $"{( (PrecioVentaNuevo.Value / PrecioVentaActual) - 1 ) * 100:F1}%"
+            : "";
     }
 }

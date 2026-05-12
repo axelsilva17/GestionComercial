@@ -43,14 +43,22 @@ namespace GestionComercial.UI.Views.Main
                 PasswordVisible.Text       = PasswordBox.Password;
                 PasswordBox.Visibility     = Visibility.Collapsed;
                 PasswordVisible.Visibility = Visibility.Visible;
-                TogglePassword.Content     = "●";
+                PasswordVisible.IsReadOnly  = false;
+                TogglePassword.Content     = "👁‍🗨";
             }
             else
             {
+                PasswordBox.Password       = PasswordVisible.Text;
                 PasswordBox.Visibility     = Visibility.Visible;
                 PasswordVisible.Visibility = Visibility.Collapsed;
-                TogglePassword.Content     = "○";
+                TogglePassword.Content     = "👁";
             }
+        }
+
+        private void PasswordVisible_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Sincronizar el texto con el PasswordBox
+            PasswordBox.Password = PasswordVisible.Text;
         }
 
         // ── Navegación entre paneles ──────────────────────────────────────────

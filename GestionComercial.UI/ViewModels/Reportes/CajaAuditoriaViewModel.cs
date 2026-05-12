@@ -343,7 +343,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
                 // Get SesionServicio from IoC
                 var sesion = Caliburn.Micro.IoC.Get<GestionComercial.Aplicacion.Servicios.SesionServicio>();
                 // Open caja with default monto inicial 0, in a real app this would come from UI
-                await _cajaServicio.AbrirCajaAsync(sesion.IdSucursal, sesion.IdUsuario, 0);
+                 await _cajaServicio.AbrirCajaAsync(sesion.IdSucursal, sesion.IdUsuario, 0, turno: SelectedTurno?.Nombre);
                 // Refresh data after opening
                 await CargarDatosAsync();
             }

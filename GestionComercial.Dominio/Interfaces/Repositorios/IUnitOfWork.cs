@@ -19,6 +19,8 @@ namespace GestionComercial.Dominio.Interfaces
         IPagoRepositorio            Pagos            { get; }
         IMetodoPagoRepositorio      MetodosPago      { get; }
         IAuditoriaRepositorio       Auditoria        { get; }
+        IProveedorProductoCostoRepositorio ProveedoresCostos { get; }
+        IRolRepositorio             Roles            { get; }
         Task<int> GuardarCambiosAsync();
         Task      EjecutarEnTransaccionAsync(Func<Task> operacion);
     }

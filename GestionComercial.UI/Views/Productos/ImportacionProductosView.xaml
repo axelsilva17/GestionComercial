@@ -6,6 +6,7 @@
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:ProgresoPorcentajeConverter x:Key="ProgresoPorcentaje"/>
         <Style x:Key="OpcionCheck" TargetType="CheckBox">
             <Setter Property="Foreground"  Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="FontSize"    Value="13"/>
@@ -129,6 +130,24 @@
                                       IsChecked="{Binding ActualizarExistentes}" Style="{StaticResource OpcionCheck}"/>
                             <CheckBox Content="Crear categorías nuevas automáticamente si no existen"
                                       IsChecked="{Binding CrearCategorias}" Style="{StaticResource OpcionCheck}"/>
+
+                            <!-- Ajuste de precio -->
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <TextBlock Text="Ajustar precio (%):" VerticalAlignment="Center" Width="140"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBox Text="{Binding AjustePorcentaje, UpdateSourceTrigger=PropertyChanged}" 
+                                        Width="70" Style="{StaticResource Input}"/>
+                                <TextBlock Text="%" VerticalAlignment="Center" Margin="4,0,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Text="Margen sobre costo (%):" VerticalAlignment="Center" Width="140"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBox Text="{Binding Margen, UpdateSourceTrigger=PropertyChanged}" 
+                                        Width="70" Style="{StaticResource Input}"/>
+                                <TextBlock Text="%" VerticalAlignment="Center" Margin="4,0,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
                         </StackPanel>
 
                         <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,8,0,0"
@@ -295,39 +314,50 @@
                                                             </TextBlock>
                                                         </Border>
 
-                                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding Nombre}" FontSize="12" FontWeight="SemiBold"
-                                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                            <TextBlock Text="{Binding ErrorDescripcion}" FontSize="10"
-                                                                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"
-                                                                       Visibility="{Binding EsValida, Converter={StaticResource BoolToVisibility}}"/>
-                                                        </StackPanel>
+                                                        <TextBox Grid.Column="2" Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   Background="Transparent" BorderThickness="0"
+                                                                   VerticalAlignment="Center" Padding="0"
+                                                                   ToolTip="{Binding ErrorDescripcion}"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding ErrorDescripcion}" FontSize="10"
+                                                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"
+                                                                   VerticalAlignment="Bottom" Margin="0,14,0,0"
+                                                                   Visibility="{Binding EsValida, Converter={StaticResource BoolToVisibility}}"/>
 
-                                                        <TextBlock Grid.Column="3" TextAlignment="Right" FontSize="12" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}">
-                                                            <TextBlock.Text>
-                                                                <MultiBinding StringFormat="$ {0:N0}">
-                                                                    <Binding Path="PrecioVenta"/>
-                                                                </MultiBinding>
-                                                            </TextBlock.Text>
-                                                        </TextBlock>
+                                                        <TextBox Grid.Column="3" TextAlignment="Right" FontSize="12" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   Background="Transparent" BorderThickness="0"
+                                                                   ToolTip="Precio de venta">
+                                                            <TextBox.Text>
+                                                                <Binding Path="PrecioVenta" StringFormat="C0" UpdateSourceTrigger="PropertyChanged">
+                                                                    <Binding.FallbackValue>0</Binding.FallbackValue>
+                                                                </Binding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
 
-                                                        <TextBlock Grid.Column="4" TextAlignment="Right" FontSize="12" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}">
-                                                            <TextBlock.Text>
-                                                                <MultiBinding StringFormat="$ {0:N0}">
-                                                                    <Binding Path="PrecioCosto"/>
-                                                                </MultiBinding>
-                                                            </TextBlock.Text>
-                                                        </TextBlock>
+                                                        <TextBox Grid.Column="4" TextAlignment="Right" FontSize="12" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                   Background="Transparent" BorderThickness="0"
+                                                                   ToolTip="Precio de costo">
+                                                            <TextBox.Text>
+                                                                <Binding Path="PrecioCosto" StringFormat="C0" UpdateSourceTrigger="PropertyChanged">
+                                                                    <Binding.FallbackValue>0</Binding.FallbackValue>
+                                                                </Binding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
 
-                                                        <TextBlock Grid.Column="5" Text="{Binding Stock}" FontSize="12"
-                                                                   TextAlignment="Right" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <TextBox Grid.Column="5" Text="{Binding Stock, UpdateSourceTrigger=PropertyChanged}"
+                                                                   FontSize="12" TextAlignment="Right" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   Background="Transparent" BorderThickness="0"
+                                                                   ToolTip="Stock actual"/>
 
-                                                        <TextBlock Grid.Column="6" Text="{Binding StockMinimo}" FontSize="12"
-                                                                   TextAlignment="Right" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                        <TextBox Grid.Column="6" Text="{Binding StockMinimo, UpdateSourceTrigger=PropertyChanged}"
+                                                                   FontSize="12" TextAlignment="Right" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                   Background="Transparent" BorderThickness="0"
+                                                                   ToolTip="Stock mínimo"/>
 
                                                         <TextBlock Grid.Column="7" FontSize="12" TextAlignment="Right"
                                                                    VerticalAlignment="Center" FontWeight="SemiBold">
@@ -379,25 +409,20 @@
                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
-                                    <TextBlock Text="Importando..." FontSize="12" FontWeight="SemiBold"
+                                    <TextBlock Text="Importando productos..." FontSize="12" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <TextBlock Text="{Binding TextoProgreso}" FontSize="12"
                                                Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border Background="{DynamicResource BorderBrush}" CornerRadius="4" Height="8">
-                                    <Border CornerRadius="4" Background="{DynamicResource PrimaryBrush}"
-                                            HorizontalAlignment="Left">
-                                        <Border.Width>
-                                            <MultiBinding>
-                                                <MultiBinding.Converter>
-                                                    <converters:ProgressToWidthConverter/>
-                                                </MultiBinding.Converter>
-                                                <Binding Path="Progreso"/>
-                                                <Binding RelativeSource="{RelativeSource AncestorType=Border, AncestorLevel=2}" Path="ActualWidth"/>
-                                            </MultiBinding>
-                                        </Border.Width>
-                                    </Border>
-                                </Border>
+                                <!-- Barra progreso real con porcentaje -->
+                                <Grid Height="24">
+                                    <Border Background="{DynamicResource BorderBrush}" CornerRadius="4"/>
+                                    <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="4"
+                                            HorizontalAlignment="Left"
+                                            Width="{Binding Progreso, Converter={StaticResource ProgresoPorcentaje}}"/>
+                                    <TextBlock Text="{Binding Progreso, StringFormat={}{0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"
+                                               Foreground="White" FontWeight="SemiBold"/>
+                                </Grid>
                             </StackPanel>
                         </Border>
 

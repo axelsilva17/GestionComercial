@@ -159,7 +159,7 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.Property(p => p.StockMinimo).HasColumnType("decimal(18,3)");
                 b.Ignore(p => p.StockBajo);
                 b.Ignore(p => p.Margen);
-                b.HasIndex(p => p.CodigoBarra).IsUnique().HasFilter("[CodigoBarra] IS NOT NULL");
+                b.HasIndex(p => p.CodigoBarra).IsUnique();
                 b.HasIndex(p => p.Id_empresa);
                 b.HasOne(p => p.Empresa).WithMany(e => e.Productos)
                  .HasForeignKey(p => p.Id_empresa).OnDelete(DeleteBehavior.Restrict);

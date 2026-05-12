@@ -14,7 +14,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     public interface IMovimientoStockRepositorio : IRepositorioBase<MovimientoStock>
     {
         Task<IEnumerable<MovimientoStock>> ObtenerPorProductoAsync(int idProducto);
-        Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal);
+        Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int? idSucursal = null);
     }
 
    

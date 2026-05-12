@@ -1,18 +1,56 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
+using GestionComercial.Dominio.Entidades.Organizacion;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Configuracion
 {
     public class SucursalesViewModel : NavigableViewModel
     {
+        private readonly IUnitOfWork _uow;
+
+        // ── Lista completa ────────────────────────────────────────────────────
+        private ObservableCollection<SucursalDto> _todos = new();
+
         private ObservableCollection<SucursalDto> _items = new();
         public ObservableCollection<SucursalDto> Items
         {
             get => _items;
             set { _items = value; NotifyOfPropertyChange(() => Items); }
+        }
+
+        // ── Búsqueda ──────────────────────────────────────────────────────────
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                NotifyOfPropertyChange(() => SearchText);
+                Filtrar();
+            }
+        }
+
+        private void Filtrar()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Items = new ObservableCollection<SucursalDto>(_todos);
+            }
+            else
+            {
+                var filtro = SearchText.Trim().ToLower();
+                Items = new ObservableCollection<SucursalDto>(
+                    _todos.Where(s =>
+                        s.Nombre.ToLower().Contains(filtro) ||
+                        (s.Direccion ?? "").ToLower().Contains(filtro))
+                );
+            }
         }
 
         private SucursalDto _seleccionada;
@@ -58,10 +96,32 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _tituloPanelPanel = value; NotifyOfPropertyChange(() => TituloPanel); }
         }
 
+        public SucursalesViewModel(IUnitOfWork uow)
+        {
+            _uow = uow;
+        }
+
         public async Task CargarAsync()
         {
-            await Task.Delay(100);
-           
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                var sucursales = await _uow.Sucursales.ObtenerTodosAsync();
+                _todos = new ObservableCollection<SucursalDto>(
+                    sucursales.Select(s => new SucursalDto
+                    {
+                        IdSucursal = s.Id,
+                        Nombre     = s.Nombre,
+                        Direccion  = s.Direccion,
+                        Activa     = s.Activo,
+                        IdEmpresa  = s.Id_empresa
+                    })
+                );
+                Filtrar();
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
 
         public void NuevaSucursal()
@@ -94,25 +154,52 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                await Task.Delay(300);
                 if (_esNueva)
                 {
-                    Items.Add(new SucursalDto
+                    var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Activo);
+                    if (empresa == null)
                     {
-                        IdSucursal = Items.Count + 1,
-                        Nombre     = EditNombre,
-                        Direccion  = EditDireccion,
-                        Activa     = EditActiva
-                    });
+                        MostrarError("No hay una empresa activa. Cree la empresa primero.");
+                        return;
+                    }
+
+                    var sucursal = Sucursal.Crear(EditNombre, EditDireccion, empresa.Id);
+                    await _uow.Sucursales.AgregarAsync(sucursal);
+                    await _uow.GuardarCambiosAsync();
+
+                    var nuevoDto = new SucursalDto
+                    {
+                        IdSucursal = sucursal.Id,
+                        Nombre     = sucursal.Nombre,
+                        Direccion  = sucursal.Direccion,
+                        Activa     = sucursal.Activo,
+                        IdEmpresa  = sucursal.Id_empresa
+                    };
+                    _todos.Add(nuevoDto);
+                    Filtrar();
                 }
                 else if (Seleccionada != null)
                 {
-                    Seleccionada.Nombre    = EditNombre;
-                    Seleccionada.Direccion = EditDireccion;
-                    Seleccionada.Activa    = EditActiva;
-                    var idx = Items.IndexOf(Seleccionada);
-                    Items.RemoveAt(idx);
-                    Items.Insert(idx, Seleccionada);
+                    var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(Seleccionada.IdSucursal);
+                    if (sucursal != null)
+                    {
+                        sucursal.Nombre    = EditNombre;
+                        sucursal.Direccion = EditDireccion;
+                        sucursal.Activo    = EditActiva;
+                        _uow.Sucursales.Actualizar(sucursal);
+                        await _uow.GuardarCambiosAsync();
+
+                        Seleccionada.Nombre    = sucursal.Nombre;
+                        Seleccionada.Direccion = sucursal.Direccion;
+                        Seleccionada.Activa    = sucursal.Activo;
+                        var idx = _todos.IndexOf(Seleccionada);
+                        if (idx >= 0)
+                        {
+                            _todos.RemoveAt(idx);
+                            _todos.Insert(idx, Seleccionada);
+                        }
+                        Filtrar();
+                    }
                 }
                 PanelVisible = false;
             }
@@ -122,11 +209,28 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
         public async Task ToggleActiva(SucursalDto item)
         {
-            item.Activa = !item.Activa;
-            var idx = Items.IndexOf(item);
-            Items.RemoveAt(idx);
-            Items.Insert(idx, item);
-            await Task.Delay(100); // TODO: await servicio
+            IsLoading = true;
+            try
+            {
+                var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(item.IdSucursal);
+                if (sucursal != null)
+                {
+                    sucursal.Activo = !sucursal.Activo;
+                    _uow.Sucursales.Actualizar(sucursal);
+                    await _uow.GuardarCambiosAsync();
+
+                    item.Activa = sucursal.Activo;
+                    var idx = _todos.IndexOf(item);
+                    if (idx >= 0)
+                    {
+                        _todos.RemoveAt(idx);
+                        _todos.Insert(idx, item);
+                    }
+                    Filtrar();
+                }
+            }
+            catch (System.Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
     }
 }

@@ -7,7 +7,13 @@ namespace GestionComercial.Aplicacion.DTOs.Configuracion
         public string Nombre     { get; set; } = string.Empty;
         public string CUIT       { get; set; } = string.Empty;
         public string Direccion  { get; set; } = string.Empty;
+        public string? Email     { get; set; }
+        public string? Telefono  { get; set; }
+        public string? LogoUrl   { get; set; }
         public bool   Activa     { get; set; }
+
+        public bool CUITValido => !string.IsNullOrEmpty(CUIT)
+            && System.Text.RegularExpressions.Regex.IsMatch(CUIT, @"^\d{2}-\d{8}-\d{1}$");
     }
 
     // ── SUCURSAL ─────────────────────────────────────────────────────────────

@@ -139,7 +139,7 @@
 
                 <!-- Cargando -->
                 <StackPanel x:Name="PnlCargando" Orientation="Horizontal"
-                            HorizontalAlignment="Center" Margin="12" Visibility="Collapsed">
+                            HorizontalAlignment="Center" Margin="12,50,12,12" Visibility="Collapsed">
                     <ProgressBar IsIndeterminate="True" Width="120" Height="2"
                                  Foreground="{DynamicResource PrimaryBrush}" BorderThickness="0"/>
                     <TextBlock Text=" Buscando..." FontSize="12"
