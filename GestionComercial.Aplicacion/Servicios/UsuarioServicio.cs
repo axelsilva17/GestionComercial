@@ -4,14 +4,19 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Seguridad;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
-using BC = BCrypt.Net.BCrypt;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
     public class UsuarioServicio : IUsuarioServicio
     {
         private readonly IUnitOfWork _uow;
-        public UsuarioServicio(IUnitOfWork uow) => _uow = uow;
+        private readonly IPasswordHasher _passwordHasher;
+
+        public UsuarioServicio(IUnitOfWork uow, IPasswordHasher passwordHasher)
+        {
+            _uow = uow;
+            _passwordHasher = passwordHasher;
+        }
 
         public async Task<IEnumerable<UsuarioDto>> ObtenerTodosAsync(int idSucursal)
         {
@@ -30,8 +35,7 @@ namespace GestionComercial.Aplicacion.Servicios
             if (await _uow.Usuarios.ExisteAsync(u => u.Email == email))
                 throw new InvalidOperationException($"El email {email} ya está en uso");
 
-            // ── Crear usuario usando factory method DDD ────────────────────────
-            var passwordHash = BC.HashPassword(password, workFactor: 12);
+            var passwordHash = _passwordHasher.HashPassword(password);
             var usuario = Usuario.Crear(nombre, apellido, email, passwordHash, idSucursal, idRol);
 
             await _uow.Usuarios.AgregarAsync(usuario);
@@ -44,11 +48,10 @@ namespace GestionComercial.Aplicacion.Servicios
             var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario)
                 ?? throw new KeyNotFoundException($"Usuario {idUsuario} no encontrado");
 
-            if (!BC.Verify(passwordActual, usuario.PasswordHash))
+            if (!_passwordHasher.VerifyPassword(passwordActual, usuario.PasswordHash))
                 throw new UnauthorizedAccessException("Contraseña actual incorrecta");
 
-            // ── Usar método de dominio para actualizar password ─────────────────
-            var nuevoHash = BC.HashPassword(passwordNuevo, workFactor: 12);
+            var nuevoHash = _passwordHasher.HashPassword(passwordNuevo);
             usuario.ActualizarPassword(nuevoHash);
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
@@ -59,7 +62,6 @@ namespace GestionComercial.Aplicacion.Servicios
             var usuario = await _uow.Usuarios.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Usuario {id} no encontrado");
 
-            // ── Usar método de dominio para inactivar ────────────────────────
             usuario.Inactivar();
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();

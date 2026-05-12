@@ -2,24 +2,30 @@ using GestionComercial.Aplicacion.DTOs.Usuarios;
 using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.EntityFrameworkCore;
-using BC = BCrypt.Net.BCrypt;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
     public class AutenticacionServicio : IAutenticacionServicio
     {
         private readonly IUnitOfWork _uow;
-        public AutenticacionServicio(IUnitOfWork uow) => _uow = uow;
+        private readonly IPasswordHasher _passwordHasher;
 
-public async Task<UsuarioSesionDto?> LoginAsync(string email, string password)
+        public AutenticacionServicio(IUnitOfWork uow, IPasswordHasher passwordHasher)
+        {
+            _uow = uow;
+            _passwordHasher = passwordHasher;
+        }
+
+        public async Task<UsuarioSesionDto?> LoginAsync(string email, string password)
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email);
 
             if (usuario == null)
                 return null;
 
-            bool passwordValido = BC.Verify(password, usuario.PasswordHash);
+            bool passwordValido = _passwordHasher.VerifyPassword(password, usuario.PasswordHash);
 
             if (!passwordValido)
                 return null;
@@ -35,7 +41,6 @@ public async Task<UsuarioSesionDto?> LoginAsync(string email, string password)
                 Apellido = usuario.Apellido,
                 Email = usuario.Email,
                 Rol = usuario.Rol?.Nombre ?? string.Empty,
-           
                 IdSucursal = usuario.Id_sucursal,
                 Sucursal = usuario.Sucursal?.Nombre ?? string.Empty,
                 IdEmpresa = usuario.Sucursal?.Id_empresa ?? 0,
@@ -44,6 +49,6 @@ public async Task<UsuarioSesionDto?> LoginAsync(string email, string password)
         }
 
         public string HashPassword(string password)
-            => BC.HashPassword(password, workFactor: 12);
+            => _passwordHasher.HashPassword(password);
     }
 }

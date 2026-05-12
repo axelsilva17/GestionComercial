@@ -1,5 +1,6 @@
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Aplicacion.Excepciones;
+using GestionComercial.Dominio.Interfaces.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -21,10 +22,15 @@ namespace GestionComercial.Aplicacion.Servicios
     public class RecuperacionContrasenaServicio
     {
         private readonly IUnitOfWork _uow;
+        private readonly IPasswordHasher _passwordHasher;
         private const int MaxIntentos = 5;
         private const int MinutosBloqueo = 30;
 
-        public RecuperacionContrasenaServicio(IUnitOfWork uow) => _uow = uow;
+        public RecuperacionContrasenaServicio(IUnitOfWork uow, IPasswordHasher passwordHasher)
+        {
+            _uow = uow;
+            _passwordHasher = passwordHasher;
+        }
 
         /// <summary>Obtiene la pregunta secreta del usuario por email.</summary>
         public async Task<string?> ObtenerPreguntaAsync(string email)
@@ -63,7 +69,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException($"Cuenta bloqueada. Intentá de nuevo en {restante} minutos.");
             }
 
-            bool correcta = BCrypt.Net.BCrypt.Verify(
+            bool correcta = _passwordHasher.VerifyPassword(
                 respuesta.Trim().ToLower(),
                 usuario.RespuestaHash);
 
@@ -109,7 +115,7 @@ namespace GestionComercial.Aplicacion.Servicios
             if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
                 throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
 
-            usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(nuevaContrasena, workFactor: 12);
+            usuario.PasswordHash = _passwordHasher.HashPassword(nuevaContrasena);
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
         }
@@ -124,8 +130,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException("Pregunta no válida.");
 
             usuario.PreguntaSecreta = pregunta;
-            usuario.RespuestaHash   = BCrypt.Net.BCrypt.HashPassword(
-                respuesta.Trim().ToLower(), workFactor: 12);
+            usuario.RespuestaHash   = _passwordHasher.HashPassword(
+                respuesta.Trim().ToLower());
 
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
