@@ -23,10 +23,10 @@ namespace GestionComercial.Persistencia.Contexto
 
             var connectionString =
                 config.GetConnectionString("DefaultConnection")
-                ?? "Server=DESKTOP-ECOJDUTSQLEXPRESS;Database=GestionComercial;Trusted_Connection=True;TrustServerCertificate=True;";
+                ?? "Data Source=GestionComercial.db";
 
             var options = new DbContextOptionsBuilder<GestionComercialContext>()
-                .UseSqlServer(connectionString)
+                .UseSqlite(connectionString)
                 .Options;
 
             return new GestionComercialContext(options);

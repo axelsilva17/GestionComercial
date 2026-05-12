@@ -4,6 +4,7 @@ using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Aplicacion.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -17,6 +18,7 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         private readonly IAuditoriaServicio _auditoriaServicio;
         private readonly IUnitOfWork _uow;
+        private readonly SesionServicio _sesion;
 
         // Horarios límite para detectar movimientos atípicos
         private const int HORA_INICIO_JORNADA = 8;   // 8:00 AM
@@ -24,11 +26,13 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public AuditoriaAppService(
             IAuditoriaServicio auditoriaServicio,
-            IUnitOfWork uow)
+            IUnitOfWork uow,
+            SesionServicio sesion)
         {
             _auditoriaServicio = auditoriaServicio 
                 ?? throw new ArgumentNullException(nameof(auditoriaServicio));
             _uow = uow ?? throw new ArgumentNullException(nameof(uow));
+            _sesion = sesion ?? throw new ArgumentNullException(nameof(sesion));
         }
 
         public async Task<AuditoriaCompletaCajaDto> ObtenerAuditoriaCompletaCajaAsync(
@@ -54,9 +58,10 @@ namespace GestionComercial.Aplicacion.Servicios
             DateTime? fechaHasta)
         {
             var kpi = new KpiFraudeDto();
+            var idSucursal = _sesion.IdSucursal != 0 ? _sesion.IdSucursal : 1; // Default a 1 si no hay sesión
 
             // 1. Caja con mayor diferencia
-            kpi.CajaMayorDiferencia = await ObtenerCajaMayorDiferenciaAsync(fechaDesde, fechaHasta);
+            kpi.CajaMayorDiferencia = await ObtenerCajaMayorDiferenciaAsync(fechaDesde, fechaHasta, idSucursal);
 
             // 2. Ventas anuladas por usuario
             kpi.VentasAnuladasPorUsuario = await ObtenerVentasAnuladasPorUsuarioAsync(fechaDesde, fechaHasta);
@@ -143,11 +148,12 @@ namespace GestionComercial.Aplicacion.Servicios
         /// Identifica la caja con mayor diferencia entre total de ventas y total cobrado.
         /// </summary>
         private async Task<CajaMayorDiferenciaDto?> ObtenerCajaMayorDiferenciaAsync(
-            DateTime? fechaDesde, DateTime? fechaHasta)
+            DateTime? fechaDesde, DateTime? fechaHasta,
+            int idSucursal)  // Usar parámetro en vez de hardcodear
         {
             // Obtener cierres de caja en el período
             var cierres = await _uow.Cajas.ObtenerHistorialAsync(
-                idSucursal: 1, // TODO: parametrizar por sucursal del usuario
+                idSucursal: idSucursal,
                 desde: fechaDesde ?? DateTime.Now.AddMonths(-1),
                 hasta: fechaHasta ?? DateTime.Now);
 
@@ -157,7 +163,7 @@ namespace GestionComercial.Aplicacion.Servicios
             foreach (var caja in cierres.Where(c => c.FechaCierre.HasValue))
             {
                 var totalVentas = caja.Ventas?
-                    .Where(v => v.Estado == (int)EstadoVentaEnum.Anulada)
+                    .Where(v => v.Estado != (int)EstadoVentaEnum.Anulada)  // Solo ventas NO anuladas
                     .Sum(v => v.TotalFinal) ?? 0;
 
                 var montoFinal = caja.MontoFinal ?? 0;
@@ -292,16 +298,16 @@ namespace GestionComercial.Aplicacion.Servicios
                     IdUsuario = grupo.Key.Id_usuario,
                     NombreUsuario = grupo.Key.NombreVendedor,
                     TotalEfectivo = vendedorPagos
-                        .Where(p => p.Id_metodoPago == 1) // Efectivo
+                        .Where(p => p.Id_metodoPago == (int)MetodoPagoEnum.Efectivo)
                         .Sum(p => p.Monto),
                     TotalTarjeta = vendedorPagos
-                        .Where(p => p.Id_metodoPago == 2) // Tarjeta
+                        .Where(p => p.Id_metodoPago == (int)MetodoPagoEnum.Tarjeta)
                         .Sum(p => p.Monto),
                     TotalTransferencia = vendedorPagos
-                        .Where(p => p.Id_metodoPago == 3) // Transferencia
+                        .Where(p => p.Id_metodoPago == (int)MetodoPagoEnum.Transferencia)
                         .Sum(p => p.Monto),
                     TotalOtro = vendedorPagos
-                        .Where(p => p.Id_metodoPago > 3)
+                        .Where(p => p.Id_metodoPago > (int)MetodoPagoEnum.Transferencia)
                         .Sum(p => p.Monto),
                     CantidadVentas = grupo.Count()
                 };

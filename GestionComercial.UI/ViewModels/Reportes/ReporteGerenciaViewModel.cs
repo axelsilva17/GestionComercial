@@ -428,25 +428,35 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 }
                 LogHelper.Log($"[ReporteGerencia] Export: Métodos pago mensuales ({metodosMensuales.Count}) en {swExport.ElapsedMilliseconds}ms");
 
-                // Ventas mensuales (ya calculadas en CargarAsync)
+                // Capturar valores de propiedades antes de ir al Dispatcher
                 var ventasMensuales = VentasMensuales.ToList();
+                var ventasAcum = VentasAcumuladas;
+                var comprasAcum = ComprasAcumuladas;
+                var resultadoNeto = ResultadoAcumulado;
+                var margenProm = MargenPromedio;
 
-                // Exportar todo a un solo archivo con múltiples hojas (evita dialogos duplicados)
+                // Exportar en UI thread (SaveFileDialog requiere UI thread)
                 swExport.Restart();
-                ExportHelper.ExportarReporteGerenciaCompleto(
-                    ventaPorDia, margen, topProductos, vendedores, rotacion, metodosPago, desde, hasta,
-                    ventasAcumuladas: VentasAcumuladas,
-                    comprasAcumuladas: ComprasAcumuladas,
-                    resultadoNeto: ResultadoAcumulado,
-                    margenPromedio: MargenPromedio,
-                    ventasMensuales: ventasMensuales,
-                    metodosPagoMensual: metodosMensuales);
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    ExportHelper.ExportarReporteGerenciaCompleto(
+                        ventaPorDia, margen, topProductos, vendedores, rotacion, metodosPago, desde, hasta,
+                        ventasAcumuladas: ventasAcum,
+                        comprasAcumuladas: comprasAcum,
+                        resultadoNeto: resultadoNeto,
+                        margenPromedio: margenProm,
+                        ventasMensuales: ventasMensuales,
+                        metodosPagoMensual: metodosMensuales);
+                });
                 LogHelper.Log($"[ReporteGerencia] ✓ Exportación completada en {swExport.ElapsedMilliseconds}ms");
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
-                    "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    System.Windows.MessageBox.Show($"Error al exportar: {ex.Message}",
+                        "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                });
             }
             finally { IsLoading = false; }
         }

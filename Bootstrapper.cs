@@ -1,6 +1,9 @@
 using Caliburn.Micro;
 using GestionComercial.UI.ViewModel.Main;
 using System;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.UI.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -23,6 +26,9 @@ namespace GestionComercial.UI
 
             _container.Singleton<IWindowManager, WindowManager>();
             _container.Singleton<IEventAggregator, EventAggregator>();
+// Servicio de costo por proveedor
+            _container.Singleton<IProveedorCostoServicio, ProveedorCostoService>();
+            _container.Singleton<IConfirmService, ConfirmService>();
 
             // ── Mapeo de namespaces ViewModel → View ──────────────────────────
             var config = new TypeMappingConfiguration

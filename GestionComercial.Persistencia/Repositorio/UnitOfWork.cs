@@ -25,6 +25,8 @@ namespace GestionComercial.Dominio.Repositorio
         public IPagoRepositorio            Pagos            { get; }
         public IMetodoPagoRepositorio      MetodosPago      { get; }
         public IAuditoriaRepositorio       Auditoria        { get; }
+        public IProveedorProductoCostoRepositorio ProveedoresCostos { get; }
+        public IRolRepositorio Roles { get; }
 
         public UnitOfWork(GestionComercialContext context)
         {
@@ -44,6 +46,8 @@ namespace GestionComercial.Dominio.Repositorio
             Pagos            = new PagoRepositorio(context);
             MetodosPago      = new MetodoPagoRepositorio(context);
             Auditoria        = new AuditoriaRepositorio(context);
+            ProveedoresCostos = new ProveedorProductoCostoRepositorio(context);
+            Roles            = new RolRepositorio(context);
         }
 
         public async Task<int> GuardarCambiosAsync()

@@ -1,7 +1,11 @@
 using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.UI.ViewModels.Compras;
 using GestionComercial.UI.ViewModels.Proveedores;
+using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.Views.Servicios;
 using System.Windows;
 using System.Windows.Controls;
+using CancellationToken = System.Threading.CancellationToken;
 
 namespace GestionComercial.UI.Views.Proveedores
 {
@@ -33,9 +37,12 @@ namespace GestionComercial.UI.Views.Proveedores
                 await VM.ActivarProveedor();
         }
 
-        private void VerCompras_Click(object sender, RoutedEventArgs e)
+        private async void VerCompras_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: navegar a compras filtrado por proveedor seleccionado
+            if (VM?.ProveedorSeleccionado == null) return;
+            
+            // Navegar a compras para ver historial del proveedor
+            await VM.VerCompras();
         }
 
         private async void PaginaAnterior_Click(object sender, RoutedEventArgs e)

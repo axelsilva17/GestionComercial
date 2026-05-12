@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
     <ProjectReference Include="..\GestionComercial.Dominio\GestionComercial.Dominio.csproj" />
+    <ProjectReference Include="..\GestionComercial.Infraestructura\GestionComercial.Infraestructura.csproj" />
   </ItemGroup>
 
 </Project>

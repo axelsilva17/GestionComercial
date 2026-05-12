@@ -20,7 +20,9 @@
             <converters:EnumToIntConverter x:Key="EnumToInt"/>
             <converters:ProgressToWidthConverter x:Key="ProgressToWidth"/>
             <converters:TabIndexToBoolConverter x:Key="TabIndexToBool"/>
-            <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
+             <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
+             <converters:TamanioArchivoConverter x:Key="TamanioArchivo"/>
+             <converters:BoolToPrimariaConverter x:Key="BoolToPrimaria"/>
             
             <!-- Estilos globales de cursor -->
             <Style TargetType="Button">
