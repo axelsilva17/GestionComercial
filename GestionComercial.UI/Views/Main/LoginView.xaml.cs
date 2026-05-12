@@ -44,14 +44,14 @@ namespace GestionComercial.UI.Views.Main
                 PasswordBox.Visibility     = Visibility.Collapsed;
                 PasswordVisible.Visibility = Visibility.Visible;
                 PasswordVisible.IsReadOnly  = false;
-                TogglePassword.Content     = "●";
+                TogglePassword.Content     = "👁‍🗨";
             }
             else
             {
                 PasswordBox.Password       = PasswordVisible.Text;
                 PasswordBox.Visibility     = Visibility.Visible;
                 PasswordVisible.Visibility = Visibility.Collapsed;
-                TogglePassword.Content     = "○";
+                TogglePassword.Content     = "👁";
             }
         }
 
