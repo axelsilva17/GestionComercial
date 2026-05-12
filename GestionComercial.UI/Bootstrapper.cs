@@ -13,6 +13,7 @@ using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Dominio.Repositorio;
+using GestionComercial.Infraestructura.Servicios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.Helpers;
@@ -60,6 +61,11 @@ namespace GestionComercial.UI
             // ── Servicios ─────────────────────────────────────────────────────
             _container.Singleton<SesionServicio>();
             _container.Singleton<IServicioImpresion, ServicioImpresionTermica>();
+
+            // Servicios de Dominio (implementados en Infraestructura)
+            _container.Singleton<IPasswordHasher, PasswordHasher>();
+            _container.Handler<IBackupService>(_ => new BackupService(connectionString));
+
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<IClienteServicio, ClienteServicio>();
             _container.PerRequest<IVentaServicio, VentaServicio>();
@@ -156,49 +162,75 @@ namespace GestionComercial.UI
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
         {
-            // ── Asegurar base de datos ─────────────────────────────
+            // ── Asegurar base de datos con MigrateAsync (migraciones EF Core) ──
             try
             {
                 var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
                 
-                // Try migrate, otherwise create
-                try { await context.Database.MigrateAsync(); }
-                catch { await context.Database.EnsureCreatedAsync(); }
+                // Ejecutar migraciones pendientes (incluye baseline + views + triggers).
+                // Si la BD fue creada con EnsureCreated, el baseline inserta el historial
+                // de migraciones y MigrateAsync no intenta recrear tablas existentes.
+                await context.Database.MigrateAsync();
                 
-                // Check if we need to create users
+                // Check if we need seed data (fallback si HasData no corrió)
                 var tieneUsuarios = await context.Usuarios.AnyAsync();
                 if (!tieneUsuarios)
                 {
-                    var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    
                     // Empresa
-                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Empresa (Id, Nombre, CUIT, Direccion, Email, Telefono, LogoUrl, Activo, FechaAlta) VALUES (1, 'Mi Empresa', '20-12345678-9', 'Direccion 123', 'admin@miempresa.com', '3794000000', NULL, 1, '{now}')");
-                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Empresa created");
+                    var empresa = new GestionComercial.Dominio.Entidades.Organizacion.Empresa
+                    {
+                        Id = 1,
+                        Nombre = "Mi Empresa",
+                        CUIT = "20-12345678-9",
+                        Direccion = "Direccion 123",
+                        Email = "admin@miempresa.com",
+                        Telefono = "3794000000"
+                    };
+                    context.Empresas.Add(empresa);
                     
-                    // Rol
-                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Rol VALUES (1, 'Administrador', 'Acceso total', 1, '{now}')");
-                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Rol created");
+                    // Sucursal - necesaria porque Usuario tiene FK Id_sucursal
+                    var sucursal = new GestionComercial.Dominio.Entidades.Organizacion.Sucursal
+                    {
+                        Id = 1,
+                        Nombre = "Sucursal Principal",
+                        Direccion = "Direccion 123",
+                        Id_empresa = 1
+                    };
+                    context.Sucursales.Add(sucursal);
+
+                    // Rol - Administrador con Id=2 (coherente con SemillaRoles)
+                    context.Roles.Add(new GestionComercial.Dominio.Entidades.Seguridad.Rol
+                    {
+                        Id = 2,
+                        Nombre = "Administrador",
+                        Descripcion = "Acceso total",
+                        Activo = true
+                    });
                     
-                    // Usuario - using known BCrypt hash for "admin123"
-                    // This hash was generated from "admin123"
+                    // Usuario
                     var hash = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy";
-                    await context.Database.ExecuteSqlRawAsync($"INSERT INTO Usuario VALUES (1, 'Admin', 'Sistema', 'admin@miempresa.com', 1, 1, '{hash}', 1, '{now}')");
-                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuario created with hash for admin123");
+                    var usuario = new GestionComercial.Dominio.Entidades.Seguridad.Usuario
+                    {
+                        Id = 1,
+                        Nombre = "Admin",
+                        Apellido = "Sistema",
+                        Email = "admin@miempresa.com",
+                        PasswordHash = hash,
+                        Id_sucursal = 1,
+                        Id_rol = 2,  // Administrador
+                        Activo = true
+                    };
+                    context.Usuarios.Add(usuario);
+                    
+                    await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Seed data created via EF Core");
                 }
                 
                 // Verify
                 var count = await context.Usuarios.CountAsync();
                 System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Total usuarios: {count}");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error: {ex.Message}");
-            }
 
-            // ── Cerrar cajas huérfanas ───────────────────────────
-            try
-            {
-                var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
+                // ── Cerrar cajas huérfanas ───────────────────────
                 var cajasAbiertas = await context.Cajas
                     .Where(c => c.Estado == 1)
                     .ToListAsync();
@@ -212,10 +244,33 @@ namespace GestionComercial.UI
                 if (cajasAbiertas.Count > 0)
                 {
                     await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Cerradas {cajasAbiertas.Count} cajas huérfanas");
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error: {ex.Message}");
+                if (ex.InnerException != null)
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {ex.InnerException.Message}");
+            }
             
+            // ── Backup automático (si está habilitado) ───────────────────────
+            try
+            {
+                var backupService = _container.GetInstance<GestionComercial.Dominio.Interfaces.Servicios.IBackupService>();
+                var resultado = await backupService.BackupAutomaticoSiHabilitadoAsync();
+                if (resultado != null && resultado.Success)
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático realizado: {resultado.RutaBackup}");
+                else if (resultado != null && !resultado.Success)
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático falló: {resultado.ErrorMessage}");
+                // Si null → estaba deshabilitado, no hacer nada
+            }
+            catch (Exception ex)
+            {
+                // No bloquear el inicio de la app si el backup falla
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático falló: {ex.Message}");
+            }
+
             await DisplayRootViewForAsync<LoginViewModel>();
         }
     }

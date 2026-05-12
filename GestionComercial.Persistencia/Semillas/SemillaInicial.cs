@@ -8,8 +8,8 @@ namespace GestionComercial.Persistencia.Semillas
     {
         // Hashes generados con BCrypt.Net-Next workFactor 12
         private const string AdminHash    = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy";
-        private const string GerenteHash  = "$2a$12$NKA/6TaLtSB80UsdZUsZN.uO0IhAMH03WPDNeRQMOHrN/XRTECI9a";
-        private const string VendedorHash = "$2a$12$v4qlp9oXiSIn8kCyfNdmU.fQJMAETzMpXvXVF9h5U.TnxOvq1yolu";
+        private const string GerenteHash  = "$2a$12$WDfsTRGXXJUgkt/2ETwMb.IHj4pLKMzg.uthmji/O8u7QFzv.kpw2"; // gerente2026
+        private const string VendedorHash = "$2a$12$zSKdkIO6EG0FVBmfvc8L9uSkHz35E5ENyP7v/JSElqAAAXuSZtnLG"; // vendedor2026
 
         public static void Sembrar(ModelBuilder builder)
         {
@@ -44,7 +44,7 @@ namespace GestionComercial.Persistencia.Semillas
                     Id           = 1,
                     Nombre       = "Administrador",
                     Apellido     = "Sistema",
-                    Email        = "admin@sistema.com",
+                        Email     = "admin@miempresa.com",
                     PasswordHash = AdminHash,
                     Activo       = true,
                     Id_sucursal  = 1,
@@ -55,7 +55,7 @@ namespace GestionComercial.Persistencia.Semillas
                     Id           = 2,
                     Nombre       = "Gerente",
                     Apellido     = "General",
-                    Email        = "gerente@sistema.com",
+                        Email        = "gerente@miempresa.com",
                     PasswordHash = GerenteHash,
                     Activo       = true,
                     Id_sucursal  = 1,
@@ -66,7 +66,7 @@ namespace GestionComercial.Persistencia.Semillas
                     Id           = 3,
                     Nombre       = "Vendedor",
                     Apellido     = "Sistema",
-                    Email        = "vendedor@sistema.com",
+                        Email        = "vendedor@miempresa.com",
                     PasswordHash = VendedorHash,
                     Activo       = true,
                     Id_sucursal  = 1,
