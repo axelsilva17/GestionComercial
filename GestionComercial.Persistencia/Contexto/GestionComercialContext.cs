@@ -9,6 +9,7 @@ using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.Dominio.Entidades.Seguridad;
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Dominio.Entidades.Vistas;
 using GestionComercial.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,6 +47,11 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
         public DbSet<TablaAuditada> TablasAuditadas { get; set; }
         public DbSet<GestionComercial.Dominio.Entidades.Proveedores.ProveedorProductoCosto> ProveedorProductoCostos { get; set; }
+
+        // ── Vistas (entidades de solo lectura) ──────────────────────
+        public DbSet<VistaVentasResumida> VistaVentasResumidas { get; set; }
+        public DbSet<VistaProductosConStock> VistaProductosConStock { get; set; }
+        public DbSet<VistaMovimientosStock> VistaMovimientosStock { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
