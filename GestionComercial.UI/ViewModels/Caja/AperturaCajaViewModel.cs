@@ -106,6 +106,7 @@ namespace GestionComercial.UI.ViewModels.Caja
                         Id = c.Id,
                         Nombre = c.EsPrimaria ? $"Caja {c.Id} (Principal)" : $"Caja {c.Id} - {c.Turno ?? "General"}",
                         Turno = c.Turno ?? "General",
+                        EsPrimaria = c.EsPrimaria,
                     }));
 
                 if (CajasDisponibles.Any())
@@ -191,7 +192,11 @@ namespace GestionComercial.UI.ViewModels.Caja
             try
             {
                 var caja = await _cajaServicio.AbrirCajaAsync(
-                    _sesion.IdSucursal, _sesion.IdUsuario, monto);
+                    _sesion.IdSucursal, 
+                    _sesion.IdUsuario, 
+                    monto,
+                    turno: TurnoSeleccionado,
+                    esPrimaria: CajaSeleccionada?.EsPrimaria ?? false);
 
                 _sesion.IdCajaActual = caja.Id;
                 await Cancelar();
@@ -219,5 +224,6 @@ namespace GestionComercial.UI.ViewModels.Caja
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public string Turno { get; set; } = "General";
+        public bool EsPrimaria { get; set; }
     }
 }

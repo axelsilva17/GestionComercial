@@ -26,7 +26,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal)
             => await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
 
-        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial)
+        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, string? turno = null, bool esPrimaria = false)
         {
             LogHelper.Log("[DEBUG-AbrirCaja] Iniciando...");
             var cajaExistente = await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
@@ -34,7 +34,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException("Ya existe una caja abierta para esta sucursal");
 
             // ── Crear caja usando factory method DDD ───────────────────────────────
-            var caja = Caja.Crear(idSucursal, idUsuario, montoInicial);
+            var caja = Caja.Crear(idSucursal, idUsuario, montoInicial, esPrimaria, turno);
 
             // Serializar estado nuevo para auditoría
             var valoresNuevos = JsonSerializer.Serialize(new
@@ -44,7 +44,9 @@ namespace GestionComercial.Aplicacion.Servicios
                 caja.MontoFinal,
                 caja.Estado,
                 caja.Id_sucursal,
-                caja.UsuarioApertura_id
+                caja.UsuarioApertura_id,
+                caja.Turno,
+                caja.EsPrimaria
             });
 
             LogHelper.Log("[DEBUG-AbrirCaja] Paso 1: Agregando caja...");

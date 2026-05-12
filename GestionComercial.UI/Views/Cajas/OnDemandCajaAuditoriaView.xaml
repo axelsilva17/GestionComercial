@@ -171,16 +171,17 @@
                                   Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
                                   RowBackground="Transparent" AlternatingRowBackground="#0AFFFFFF"
                                   HeadersVisibility="Column">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="90"/>
-                                <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="60"/>
-                                <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="100"/>
-                                <DataGridTextColumn Header="Inicial" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                                <DataGridTextColumn Header="Efectivo" Binding="{Binding VentasEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                                <DataGridTextColumn Header="Final" Binding="{Binding MontoFinal, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
-                                <DataGridTextColumn Header="Diff" Binding="{Binding DiferenciaConEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
-                                <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="70"/>
-                            </DataGrid.Columns>
+                             <DataGrid.Columns>
+                                 <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="90"/>
+                                 <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="60"/>
+                                 <DataGridTextColumn Header="Turno" Binding="{Binding Turno}" Width="80"/>
+                                 <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="100"/>
+                                 <DataGridTextColumn Header="Inicial" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
+                                 <DataGridTextColumn Header="Efectivo" Binding="{Binding VentasEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
+                                 <DataGridTextColumn Header="Final" Binding="{Binding MontoFinal, Converter={StaticResource DecimalToMoneda}}" Width="90"/>
+                                 <DataGridTextColumn Header="Diff" Binding="{Binding DiferenciaConEfectivo, Converter={StaticResource DecimalToMoneda}}" Width="80"/>
+                                 <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="70"/>
+                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
                 </Border>
