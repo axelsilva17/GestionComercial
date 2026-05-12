@@ -18,6 +18,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public UsuariosViewModel    Usuarios    { get; }
         public RolesViewModel       Roles       { get; }
         public MetodosPagoViewModel MetodosPago { get; }
+        public BackupViewModel      Backup      { get; }
 
         public ConfiguracionViewModel(
             IUnitOfWork          uow,
@@ -25,7 +26,8 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             SucursalesViewModel  sucursales,
             UsuariosViewModel    usuarios,
             RolesViewModel       roles,
-            MetodosPagoViewModel metodosPago)
+            MetodosPagoViewModel metodosPago,
+            BackupViewModel      backup)
         {
             _uow        = uow;
             Empresa     = empresa;
@@ -33,6 +35,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             Usuarios    = usuarios;
             Roles       = roles;
             MetodosPago = metodosPago;
+            Backup      = backup;
         }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -42,7 +45,8 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 Sucursales.CargarAsync(),
                 Usuarios.CargarAsync(),
                 Roles.CargarAsync(),
-                MetodosPago.CargarAsync()
+                MetodosPago.CargarAsync(),
+                Backup.CargarAsync()
             );
         }
     }

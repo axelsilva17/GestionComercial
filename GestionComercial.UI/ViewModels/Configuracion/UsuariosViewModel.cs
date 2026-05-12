@@ -1,8 +1,8 @@
-using BCrypt.Net;
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
 using GestionComercial.Aplicacion.DTOs.Configuracion;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
@@ -14,6 +14,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
     public class UsuariosViewModel : NavigableViewModel
     {
         private readonly IUnitOfWork _uow;
+        private readonly IPasswordHasher _passwordHasher;
 
         // ── Lista completa ────────────────────────────────────────────────────
         private ObservableCollection<UsuarioDto> _todos = new();
@@ -137,9 +138,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _tituloPanel = value; NotifyOfPropertyChange(() => TituloPanel); }
         }
 
-        public UsuariosViewModel(IUnitOfWork uow)
+        public UsuariosViewModel(IUnitOfWork uow, IPasswordHasher passwordHasher)
         {
             _uow = uow;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task CargarAsync()
@@ -242,7 +244,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             {
                 if (_esNuevo)
                 {
-                    var passwordHash = BCrypt.Net.BCrypt.HashPassword(EditPassword, workFactor: 12);
+                    var passwordHash = _passwordHasher.HashPassword(EditPassword);
                     var usuario = GestionComercial.Dominio.Entidades.Seguridad.Usuario.Crear(
                         EditNombre, EditApellido, EditEmail, passwordHash,
                         EditSucursal.IdSucursal, EditRol.IdRol);
@@ -288,7 +290,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
                         if (!string.IsNullOrWhiteSpace(EditPassword))
                         {
-                            var passwordHash = BCrypt.Net.BCrypt.HashPassword(EditPassword, workFactor: 12);
+                            var passwordHash = _passwordHasher.HashPassword(EditPassword);
                             usuario.ActualizarPassword(passwordHash);
                         }
 
