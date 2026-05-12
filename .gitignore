@@ -6,6 +6,10 @@ obj/
 .atl/
 nul
 openspec/
+.engram/
+wt/
+patch-*.patch
+ON_DEMAND_MERGE.md
 
 # SQLite temporary files
 *.db-shm
