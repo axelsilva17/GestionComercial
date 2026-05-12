@@ -5,3 +5,8 @@ obj/
 *.suo
 .atl/
 nul
+openspec/
+
+# SQLite temporary files
+*.db-shm
+*.db-wal
