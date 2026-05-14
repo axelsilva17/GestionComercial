@@ -71,7 +71,8 @@
                       AutoGenerateColumns="False" CanUserAddRows="False"
                       GridLinesVisibility="None" HeadersVisibility="Column"
                       Background="Transparent" BorderThickness="0"
-                      FontSize="12" RowHeight="38" ColumnHeaderHeight="38">
+                      FontSize="12" RowHeight="38" ColumnHeaderHeight="38"
+                      IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
                     <DataGridTextColumn Header="Turno" Binding="{Binding Turno}" Width="120"/>
@@ -79,8 +80,7 @@
                     <DataGridTextColumn Header="Cierre" Binding="{Binding FechaCierre, StringFormat='dd/MM HH:mm'}" Width="130"/>
                     <DataGridTextColumn Header="Monto Inicial" Binding="{Binding MontoInicial, StringFormat='C0'}" Width="110"/>
                     <DataGridTextColumn Header="Monto Final" Binding="{Binding MontoFinal, StringFormat='C0'}" Width="110"/>
-                     <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
-                 </DataGrid.Columns>
+                  </DataGrid.Columns>
             </DataGrid>
         </Border>
     </Grid>
