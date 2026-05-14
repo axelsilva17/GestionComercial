@@ -657,6 +657,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="12"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Tipo -->
@@ -703,8 +705,22 @@
                                      Foreground="White" VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </StackPanel>
 
+                        <!-- Categoría -->
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Categoría:"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <ComboBox Grid.Row="4" Grid.Column="1" 
+                                  ItemsSource="{Binding Categorias}"
+                                  SelectedItem="{Binding CategoriaAjuste}"
+                                  DisplayMemberPath="Nombre"
+                                  Width="240" Height="36"
+                                  HorizontalAlignment="Left" Margin="16,0,0,0"
+                                  Background="{DynamicResource SurfaceBrush}"
+                                  Foreground="White"
+                                  BorderBrush="{DynamicResource BorderBrush}"
+                                  BorderThickness="1" Padding="10,0"/>
+
                         <!-- Botón -->
-                        <Button Grid.Row="4" Grid.Column="1" x:Name="GenerarPreviewBtn"
+                        <Button Grid.Row="6" Grid.Column="1" x:Name="GenerarPreviewBtn"
                                 Content="Vista Previa" Height="36" Padding="20,0"
                                 HorizontalAlignment="Left" Margin="16,8,0,0"
                                 Style="{StaticResource SecondaryButton}"

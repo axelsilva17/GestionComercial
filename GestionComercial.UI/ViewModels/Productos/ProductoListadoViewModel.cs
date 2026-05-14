@@ -144,6 +144,14 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         // ── Ajuste Masivo de Precios ───────────────────────────────────────────
         private bool _mostrarPopupAjuste;
+
+        // ── Ajuste Masivo - Filtro por categoría ──
+        private CategoriaItemDto _categoriaAjuste;
+        public CategoriaItemDto CategoriaAjuste
+        {
+            get => _categoriaAjuste;
+            set { _categoriaAjuste = value; NotifyOfPropertyChange(() => CategoriaAjuste); }
+        }
         public bool MostrarPopupAjuste
         {
             get => _mostrarPopupAjuste;
@@ -313,6 +321,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             PorcentajeAjuste = 0;
             MontoFijo = 0;
             TipoAjuste = "porcentaje";
+            CategoriaAjuste = Categorias.FirstOrDefault(); // "Todas las categorías" por defecto
             // Pre-cargar preview con todos los productos visibles
             _productosPreview = new ObservableCollection<ProductoListadoDto>(Productos);
             NotifyOfPropertyChange(() => ProductosPreview);
@@ -363,11 +372,16 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             // Generar preview sin modificar la base de datos
             var preview = new ObservableCollection<ProductoListadoDto>();
-            
-            // Si no hay valor, mostrar todos los productos actuales
+
+            // Filtrar por categoría si se eligió una específica en el popup
+            var fuente = Productos.AsEnumerable();
+            if (CategoriaAjuste?.IdCategoria > 0)
+                fuente = fuente.Where(p => p.IdCategoria == CategoriaAjuste.IdCategoria);
+
+            // Si no hay valor, mostrar todos los productos actuales (filtrados por categoría)
             if (PorcentajeAjuste == 0 && MontoFijo == 0)
             {
-                foreach (var p in Productos)
+                foreach (var p in fuente)
                 {
                     var copia = new ProductoListadoDto
                     {
@@ -386,7 +400,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                 return;
             }
             
-            foreach (var p in Productos)
+            foreach (var p in fuente)
             {
                 decimal nuevoVenta = p.PrecioVentaActual;
                 decimal nuevoCosto = p.PrecioCostoActual;
