@@ -8,6 +8,7 @@
         <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
         <converters:BoolToColorConverter x:Key="BoolToColor"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -25,6 +26,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -36,8 +38,15 @@
                        Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
+        <!-- Error message -->
+        <Border Grid.Row="1" Background="#EF444430" BorderBrush="#EF4444" BorderThickness="1"
+                CornerRadius="8" Padding="12,8" Margin="0,0,0,8"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibility}}">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontSize="12"/>
+        </Border>
+
         <!-- Toolbar: Filtros + KPIs + Acciones -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -108,7 +117,7 @@
         </Border>
 
         <!-- Contenido principal -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="320"/>

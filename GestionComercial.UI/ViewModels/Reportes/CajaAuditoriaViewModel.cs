@@ -48,7 +48,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
 
         public System.Windows.Input.ICommand OpenCajaCommand { get; set; }
 
-        private DateTime _fechaDesde = DateTime.Today.AddDays(-30);
+        private DateTime _fechaDesde = DateTime.Today.AddMonths(-6);
         public DateTime FechaDesde
         {
             get => _fechaDesde;
@@ -280,9 +280,9 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             
             Series = new ObservableCollection<ISeries>
             {
-                new ColumnSeries<decimal>
+                new ColumnSeries<double>
                 {
-                    Values = diffs.Select(c => c.DiferenciaConEfectivo).ToArray(),
+                    Values = diffs.Select(c => (double)c.DiferenciaConEfectivo).ToArray(),
                     Fill = new SolidColorPaint(SKColor.Parse("#38BDF8")),
                     Name = "Diferencia ($)"
                 }
