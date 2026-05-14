@@ -266,6 +266,21 @@ namespace GestionComercial.UI
                     }
                 }
 
+                // ── Backfill Turno en cajas existentes ────────────────
+                var cajasSinTurno = await context.Cajas
+                    .Where(c => c.Turno == null || c.Turno == "")
+                    .ToListAsync();
+                if (cajasSinTurno.Count > 0)
+                {
+                    var turnos = new[] { "Mañana", "Tarde", "Noche" };
+                    var rng = new Random();
+                    foreach (var caja in cajasSinTurno)
+                        caja.Turno = turnos[rng.Next(turnos.Length)];
+
+                    await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Asignados turnos a {cajasSinTurno.Count} cajas");
+                }
+
                 // Verify
                 var count = await context.Usuarios.CountAsync();
                 System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Total usuarios: {count}");
