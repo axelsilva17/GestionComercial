@@ -453,9 +453,12 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     decimal totalIng = 0, totalEgr = 0;
                     foreach (var caja in cajas)
                     {
-                        foreach (var mov in caja.Movimientos)
+                        if (caja.Movimientos != null)
                         {
-                            if (mov.Tipo == 1) totalIng += mov.Monto; else totalEgr += mov.Monto;
+                            foreach (var mov in caja.Movimientos)
+                            {
+                                if (mov.Tipo == 1) totalIng += mov.Monto; else totalEgr += mov.Monto;
+                            }
                         }
                     }
 
@@ -475,7 +478,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         BuildLineaVentas(labelsLinea, valoresLinea);
 
                         // Gráfico dona: Métodos de Pago
-                        if (metodosPago.Any() && metodosPago.Count < 6)
+                        if (metodosPago.Any())
                         {
                             SeriesMetodosPago = metodosPago.Select((m, i) => new PieSeries<double>
                             {
