@@ -211,8 +211,17 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             try
             {
-                var categorias = await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual);
-                Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
+                var categorias = (await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual)).ToList();
+
+                // Insertar opción "Todas las categorías" al inicio
+                var lista = new List<CategoriaItemDto>(categorias.Count + 1);
+                lista.Add(new CategoriaItemDto { IdCategoria = 0, Nombre = "Todas las categorías" });
+                lista.AddRange(categorias);
+
+                Categorias = new ObservableCollection<CategoriaItemDto>(lista);
+
+                // Seleccionar "Todas las categorías" por defecto
+                CategoriaSeleccionada = lista[0];
             }
             catch (Exception ex)
             {
@@ -241,8 +250,8 @@ namespace GestionComercial.UI.ViewModels.Productos
                         (p.CodigoBarra?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
                 }
 
-                // Filtro por categoría
-                if (CategoriaSeleccionada != null)
+                // Filtro por categoría (IdCategoria == 0 = "Todas las categorías")
+                if (CategoriaSeleccionada?.IdCategoria > 0)
                 {
                     filtrados = filtrados.Where(p => p.IdCategoria == CategoriaSeleccionada.IdCategoria);
                 }

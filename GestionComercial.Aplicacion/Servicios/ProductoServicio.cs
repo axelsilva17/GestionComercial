@@ -111,8 +111,11 @@ public class ProductoServicio : IProductoServicio
         }
 
         /// <summary>
-        /// Importación masivo optimizada para PC lentas.
-        /// Procesa en batches de 50 para no agotar memoria.
+        /// Importación masiva optimizada.
+        /// 1) Crea categorías nuevas primero para tener IDs válidos.
+        /// 2) Para cada producto: si el código de barra ya existe y actualizarExistentes = true,
+        ///    actualiza el producto existente; si no existe (o no se busca por barra), crea uno nuevo.
+        /// 3) Procesa en batches de 50 para no agotar memoria.
         /// </summary>
         public async Task<(int Nuevos, int Actualizados, int Omitidos)> ImportarMasivoAsync(
             IEnumerable<ProductoImportarDto> dtos,
@@ -120,7 +123,7 @@ public class ProductoServicio : IProductoServicio
             IProgress<(int current, int total, string message)>? progreso = null)
         {
             const int BATCH_SIZE = 50;
-            const int PROGRESS_STEP = 5; // Reportar cada 5 productos
+            const int PROGRESS_STEP = 5;
 
             var productosAImportar = dtos.ToList();
             var total = productosAImportar.Count;
@@ -129,21 +132,55 @@ public class ProductoServicio : IProductoServicio
             var omitidos = 0;
             var procesados = 0;
 
-            // Obtener todos los códigos de barra existentes de una sola vez
             var idEmpresa = productosAImportar.FirstOrDefault()?.IdEmpresa ?? 0;
+            if (idEmpresa <= 0)
+                return (0, 0, total);
+
+            // ── 1. Cargar datos existentes ──────────────────────────────────────
             var codigosExistentes = new HashSet<string>(
                 _uow.Productos.Consultar()
                     .Where(p => p.Id_empresa == idEmpresa && !string.IsNullOrEmpty(p.CodigoBarra))
                     .Select(p => p.CodigoBarra!),
                 StringComparer.OrdinalIgnoreCase);
 
-            var categoriasMap = (await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa))
+            var categoriasExistentes = (await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa))
                 .ToDictionary(c => c.Nombre.ToLower().Trim(), c => c.Id);
 
-            // Lista categorías nuevas a crear
+            // ── 2. Identificar categorías nuevas y crearlas ANTES ────────────────
+            var categoriasMap = new Dictionary<string, int>(categoriasExistentes, StringComparer.OrdinalIgnoreCase);
             var nuevasCategorias = new List<string>();
 
-            var batch = new List<Producto>();
+            // Primera pasada: detectar categorías nuevas
+            foreach (var dto in productosAImportar)
+            {
+                if (string.IsNullOrWhiteSpace(dto.Categoria)) continue;
+                var catKey = dto.Categoria.ToLower().Trim();
+                if (!categoriasMap.ContainsKey(catKey) && !nuevasCategorias.Contains(catKey))
+                    nuevasCategorias.Add(dto.Categoria.Trim());
+            }
+
+            // Crear categorías nuevas y agregarlas al map
+            if (nuevasCategorias.Count > 0)
+            {
+                foreach (var nombreCat in nuevasCategorias)
+                {
+                    var nuevaCat = new Categoria
+                    {
+                        Nombre = nombreCat,
+                        Id_empresa = idEmpresa,
+                        Activo = true,
+                    };
+                    _uow.Categorias.AgregarAsync(nuevaCat);
+                }
+                await _uow.GuardarCambiosAsync();
+
+                // Recargar categorías para tener los IDs generados
+                var categoriasActualizadas = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+                foreach (var c in categoriasActualizadas)
+                    categoriasMap[c.Nombre.ToLower().Trim()] = c.Id;
+            }
+
+            var batchNuevos = new List<Producto>();
             foreach (var dto in productosAImportar)
             {
                 procesados++;
@@ -151,6 +188,7 @@ public class ProductoServicio : IProductoServicio
                 if (string.IsNullOrWhiteSpace(dto.Nombre) || dto.PrecioVentaActual <= 0)
                 {
                     omitidos++;
+                    progreso?.Report((procesados, total, $"Omitido: '{dto.Nombre}' (datos inválidos)..."));
                     continue;
                 }
 
@@ -160,93 +198,72 @@ public class ProductoServicio : IProductoServicio
                 {
                     var catKey = dto.Categoria.ToLower().Trim();
                     if (categoriasMap.TryGetValue(catKey, out int idCat))
-                    {
                         idCategoria = idCat;
-                    }
-                    else if (!nuevasCategorias.Contains(catKey))
-                    {
-                        // Registrar para crear después
-                        nuevasCategorias.Add(dto.Categoria.Trim());
-                    }
                 }
 
-                var producto = new Producto
-                {
-                    Nombre = dto.Nombre,
-                    CodigoBarra = dto.CodigoBarra,
-                    PrecioVentaActual = dto.PrecioVentaActual,
-                    PrecioCostoActual = dto.PrecioCostoActual,
-                    StockActual = dto.StockActual,
-                    StockMinimo = dto.StockMinimo,
-                    Id_empresa = dto.IdEmpresa,
-                    Id_categoria = idCategoria,
-                    Id_unidadMedida = dto.IdUnidadMedida,
-                    Activo = true,
-                };
+                // Buscar por código de barra si corresponde
+                var productoExistente = actualizarExistentes
+                    && !string.IsNullOrWhiteSpace(dto.CodigoBarra)
+                    && codigosExistentes.Contains(dto.CodigoBarra)
+                        ? await _uow.Productos.ObtenerPorCodigoBarraAsync(dto.CodigoBarra)
+                        : null;
 
-                // Determinar si es nuevo o para actualizar
-                var esNuevo = actualizarExistentes && !string.IsNullOrWhiteSpace(dto.CodigoBarra)
-                    ? !codigosExistentes.Contains(dto.CodigoBarra)
-                    : true;
-
-                if (esNuevo)
+                if (productoExistente != null)
                 {
-                    nuevos++;
-                    batch.Add(producto);
+                    // ── ACTUALIZAR existente ──
+                    productoExistente.Nombre = dto.Nombre;
+                    productoExistente.PrecioVentaActual = dto.PrecioVentaActual;
+                    productoExistente.PrecioCostoActual = dto.PrecioCostoActual;
+                    productoExistente.StockActual = dto.StockActual;
+                    productoExistente.StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10;
+                    productoExistente.Id_categoria = idCategoria;
+                    productoExistente.Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1;
+                    _uow.Productos.Actualizar(productoExistente);
+                    actualizados++;
                 }
                 else
                 {
-                    actualizados++;
-                    // Por ahora solo cuenta, la actualización real se hace en paralelo
+                    // ── CREAR nuevo ──
+                    batchNuevos.Add(new Producto
+                    {
+                        Nombre = dto.Nombre,
+                        CodigoBarra = dto.CodigoBarra,
+                        PrecioVentaActual = dto.PrecioVentaActual,
+                        PrecioCostoActual = dto.PrecioCostoActual,
+                        StockActual = dto.StockActual,
+                        StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10,
+                        Id_empresa = dto.IdEmpresa,
+                        Id_categoria = idCategoria > 0 ? idCategoria : 1,
+                        Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1,
+                        Activo = true,
+                    });
+                    nuevos++;
                 }
 
-                // Reportar progreso cada PROGRESS_STEP productos
+                // Reportar progreso
                 if (procesados % PROGRESS_STEP == 0)
                 {
                     var porcentaje = (int)((procesados / (double)total) * 100);
                     progreso?.Report((procesados, total, $"Importando {porcentaje}% ({procesados}/{total})..."));
                 }
 
-                // Procesar batch cuando alcance el tamaño
-                if (batch.Count >= BATCH_SIZE)
+                // Guardar batch de nuevos cada BATCH_SIZE
+                if (batchNuevos.Count >= BATCH_SIZE)
                 {
-                    await _uow.Productos.AgregarRangoMasivoAsync(batch);
-                    batch.Clear();
+                    await _uow.Productos.AgregarRangoMasivoAsync(batchNuevos);
+                    batchNuevos.Clear();
                 }
             }
 
-            // Procesar resto
-            if (batch.Count > 0)
-            {
-                await _uow.Productos.AgregarRangoMasivoAsync(batch);
-            }
+            // Guardar resto de nuevos
+            if (batchNuevos.Count > 0)
+                await _uow.Productos.AgregarRangoMasivoAsync(batchNuevos);
 
-            // Crear categorías nuevas detectadas
-            var categoriasCreadas = 0;
-            if (nuevasCategorias.Count > 0)
-            {
-                foreach (var nombreCat in nuevasCategorias)
-                {
-                    try
-                    {
-                        var nuevaCat = new Categoria
-                        {
-                            Nombre = nombreCat,
-                            Id_empresa = idEmpresa,
-                            Activo = true
-                        };
-                        _uow.Categorias.AgregarAsync(nuevaCat);
-                        categoriasCreadas++;
-                    }
-                    catch
-                    {
-                        // Ignorar si ya existe
-                    }
-                }
+            // Guardar cambios de actualizaciones (se ejecuta una sola vez al final)
+            if (actualizados > 0)
                 await _uow.GuardarCambiosAsync();
-            }
 
-            progreso?.Report((total, total, $"Completado: {nuevos} nuevos, {actualizados} actualizados, {categoriasCreadas} categorías creadas"));
+            progreso?.Report((total, total, $"Completado: {nuevos} nuevos, {actualizados} actualizados, {omitidos} omitidos"));
             return (nuevos, actualizados, omitidos);
         }
 
