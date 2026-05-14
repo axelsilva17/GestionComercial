@@ -17,6 +17,8 @@ using GestionComercial.Infraestructura.Servicios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.Helpers;
+using GestionComercial.Dominio.Entidades.Movimientos;
+using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.Views.Servicios;
 using Microsoft.EntityFrameworkCore;
@@ -226,6 +228,44 @@ namespace GestionComercial.UI
                     System.Diagnostics.Debug.WriteLine("[Bootstrapper] Seed data created via EF Core");
                 }
                 
+                // ── Seed movimientos de stock inicial ─────────────────
+                var tieneMovimientos = await context.MovimientosStock.AnyAsync();
+                if (!tieneMovimientos)
+                {
+                    var productosConStock = await context.Productos
+                        .Where(p => p.StockActual > 0)
+                        .ToListAsync();
+
+                    if (productosConStock.Count > 0)
+                    {
+                        var hoy = DateTime.Now;
+                        var diaBase = hoy.AddDays(-5);
+                        var dias = Enumerable.Range(0, productosConStock.Count)
+                            .Select(i => diaBase.AddMinutes(i * 15))  // 15 min entre cada uno
+                            .ToList();
+
+                        foreach (var prod in productosConStock)
+                        {
+                            var idx = productosConStock.IndexOf(prod);
+                            var mov = MovimientoStock.Ajuste(
+                                cantidad: prod.StockActual,
+                                stockAnterior: 0,
+                                idProducto: prod.Id,
+                                idSucursal: 1,
+                                idUsuario: 1,
+                                observacion: "Stock inicial",
+                                referenciaId: null
+                            );
+                            // Setear fecha explícita para no tener todos iguales
+                            mov.Fecha = dias[idx];
+                            context.MovimientosStock.Add(mov);
+                        }
+
+                        await context.SaveChangesAsync();
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Creados {productosConStock.Count} movimientos de stock inicial");
+                    }
+                }
+
                 // Verify
                 var count = await context.Usuarios.CountAsync();
                 System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Total usuarios: {count}");
