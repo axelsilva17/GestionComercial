@@ -116,7 +116,6 @@ namespace GestionComercial.Aplicacion.Servicios
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Inventario");
 
-            // ── Header ─
             var headerRow = ws.Row(1);
             headerRow.Style.Font.Bold = true;
             headerRow.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E79");
@@ -128,7 +127,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 ws.Cell(1, i + 1).Value = headers[i];
             }
 
-            // ── Data ─
             int row = 2;
             foreach (var m in lista)
             {
@@ -154,7 +152,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 row++;
             }
 
-            // ── Ajustar ancho columnas ─
             ws.Columns().AdjustToContents();
 
             using var stream = new MemoryStream();

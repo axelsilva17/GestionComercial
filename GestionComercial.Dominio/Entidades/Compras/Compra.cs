@@ -14,7 +14,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
     /// </summary>
     public class Compra : EntidadBase
     {
-        // ── Backing fields ──
         private DateTime _fecha = DateTime.Now;
         private decimal _total;
         private int _estado = 1;
@@ -23,7 +22,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
         private int _id_sucursal;
         private int _id_usuario;
 
-        // ── Propiedades con validación ──
         public DateTime Fecha 
         { 
             get => _fecha; 
@@ -57,7 +55,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
         // ── Constructor vacío (para EF Core) ──
         public Compra() { }
 
-        // ── Factory method ──
         public static Compra Crear(int idProveedor, int idSucursal, int idUsuario, string? observacion = null)
         {
             if (idProveedor <= 0)
@@ -79,8 +76,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
                 Activo = true
             };
         }
-
-        // ── Métodos de dominio ──
 
         /// <summary>
         /// Añade un ítem a la compra y actualiza el total.
@@ -153,7 +148,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
             _observacion = $"ANULADA: {motivo}";
         }
 
-        // ── Propiedades computed ──
         public bool EsPendiente => _estado == (int)EstadoCompraEnum.Pendiente;
         public bool EsRecibida  => _estado == (int)EstadoCompraEnum.Recibida;
         public bool EsAnulada   => _estado == (int)EstadoCompraEnum.Anulada;

@@ -8,14 +8,12 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
     /// </summary>
     public class AuditoriaLog
     {
-        // ── Backing fields ──
         private string _nombreTabla = string.Empty;
         private string? _nombreUsuario;
         private string? _valoresAnteriores;
         private string? _valoresNuevos;
         private string? _workstation;
 
-        // ── Propiedades con validación ──
         [Key]
         public int Id { get; set; }  // Para EF Core
 
@@ -111,8 +109,6 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
         // ── Constructor vacío (para EF Core) ──
         public AuditoriaLog() { }
 
-        // ── Factory methods ──
-
         /// <summary>
         /// Crea un log de inserción.
         /// </summary>
@@ -182,7 +178,6 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             };
         }
 
-        // ── Propiedades computed ──
         public bool EsInsert => TipoOperacion == 1;
         public bool EsUpdate => TipoOperacion == 2;
         public bool EsDelete => TipoOperacion == 3;

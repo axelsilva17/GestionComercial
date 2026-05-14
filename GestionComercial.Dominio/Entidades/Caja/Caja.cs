@@ -13,7 +13,6 @@ namespace GestionComercial.Dominio.Entidades.Caja
     /// </summary>
     public class Caja : EntidadBase
     {
-        // ── Backing fields ──
         private DateTime _fechaApertura = DateTime.Now;
         private DateTime? _fechaCierre;
         private decimal _montoInicial;
@@ -26,7 +25,6 @@ namespace GestionComercial.Dominio.Entidades.Caja
         private bool _esPrimaria;
         private string? _turno;
 
-        // ── Propiedades con validación ──
         public DateTime FechaApertura 
         { 
             get => _fechaApertura; 
@@ -81,7 +79,6 @@ namespace GestionComercial.Dominio.Entidades.Caja
         // ── Constructor vacío (para EF Core) ──
         public Caja() { }
 
-        // ── Factory method ──
         public static Caja Crear(int idSucursal, int idUsuarioApertura, 
             decimal montoInicial = 0, bool esPrimaria = false, string? turno = null)
         {
@@ -106,10 +103,8 @@ namespace GestionComercial.Dominio.Entidades.Caja
             };
         }
 
-        // ── Métodos de dominio ──
-
         /// <summary>
-        /// Abre la caja (re-apertura). Solo si está cerrada.
+        /// Abre la caja (cambia estado a Abierta).
         /// </summary>
         public void Abrir(int idUsuario, decimal montoInicial)
         {
@@ -160,7 +155,6 @@ namespace GestionComercial.Dominio.Entidades.Caja
         /// </summary>
         public decimal MontoActual => _montoInicial + (Ventas.Sum(v => v.TotalFinal) - Ventas.Sum(v => v.TotalPagado));
 
-        // ── Propiedades computed ──
         public bool EstaAbierta => _estado == (int)EstadoCajaEnum.Abierta;
         
         public bool EstaCerrada => _estado == (int)EstadoCajaEnum.Cerrada;

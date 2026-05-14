@@ -15,7 +15,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
     /// </summary>
     public class VentaDetalle
     {
-        // ── Backing fields ──
         private decimal _cantidad;
         private decimal _precioUnitario;
         private decimal _costoUnitario;
@@ -25,7 +24,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         private int _id_venta;
         private int _id_producto;
 
-        // ── Propiedades con validación/encapsulamiento ──
         public int Id { get; set; }  // Para EF Core
 
         public decimal Cantidad 
@@ -71,7 +69,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         // ── Constructor vacío (para EF Core) ──
         public VentaDetalle() { }
 
-        // ── Factory method ──
         public static VentaDetalle Crear(Producto.Producto producto, decimal cantidad, 
             decimal precioUnitario, decimal costoUnitario = 0, decimal descuentoPorItem = 0)
         {
@@ -98,8 +95,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             
             return detalle;
         }
-
-        // ── Métodos de dominio ──
 
         /// <summary>
         /// Recalcula subtotal y margen desde los valores actuales.
@@ -141,7 +136,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             Impuestos.Add(impuesto);
         }
 
-        // ── Propiedades computed ──
         public decimal DescuentoTotal => _descuento + Descuentos.Sum(d => d.Monto);
         
         public decimal ImpuestosTotal => Impuestos.Sum(i => i.Monto);

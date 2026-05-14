@@ -11,7 +11,6 @@ namespace GestionComercial.Dominio.Entidades.Cliente
     /// </summary>
     public class Cliente : EntidadBase
     {
-        // ── Backing fields ──
         private string _nombre = string.Empty;
         private int _documento;
         private string? _telefono;
@@ -20,7 +19,6 @@ namespace GestionComercial.Dominio.Entidades.Cliente
 
         // Nota: 'Activo' hereda de EntidadBase (backing field compartido)
 
-        // ── Propiedades con validación ──
         public string Nombre 
         { 
             get => _nombre; 
@@ -52,7 +50,6 @@ namespace GestionComercial.Dominio.Entidades.Cliente
         // ── Constructor vacío (para EF Core) ──
         public Cliente() { }
 
-        // ── Factory method ──
         public static Cliente Crear(string nombre, int documento, int idEmpresa, 
             string? telefono = null, string? email = null)
         {
@@ -77,10 +74,8 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             };
         }
 
-        // ── Métodos de dominio ──
-
         /// <summary>
-        /// Actualiza datos del cliente. Solo si está activo.
+        /// Actualiza los datos de contacto del cliente.
         /// </summary>
         public void Actualizar(string nombre, int documento, string? telefono, string? email)
         {
@@ -136,7 +131,6 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             .Where(v => v.EsPagada)
             .Count();
 
-        // ── Propiedades computed ──
         public string Inicial => string.IsNullOrEmpty(_nombre) ? "?" : _nombre[0].ToString().ToUpper();
         
         public bool EsActivo => Activo;

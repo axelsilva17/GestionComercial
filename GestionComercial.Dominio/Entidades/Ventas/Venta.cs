@@ -14,7 +14,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
     /// </summary>
     public class Venta : EntidadBase
     {
-        // ── Backing fields para encapsulamiento ──
         private DateTime _fecha = DateTime.Now;
         private decimal _totalBruto;
         private decimal _totalDescuento;
@@ -30,7 +29,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         private DateTime? _fechaAnulacion;
         private int? _usuarioAnulacionId;
 
-        // ── Propiedades con validación ──
         public DateTime Fecha 
         { 
             get => _fecha; 
@@ -91,7 +89,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         // ── Constructor vacío (para EF Core) ──
         public Venta() { }
 
-        // ── Factory method principal ──
         public static Venta Crear(int idSucursal, int idCliente, int idUsuario, int? idCaja = null)
         {
             if (idSucursal <= 0)
@@ -113,8 +110,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
                 Activo = true
             };
         }
-
-        // ── Métodos de dominio ──
 
         /// <summary>
         /// Añade un ítem a la venta y actualiza totales.
@@ -232,7 +227,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             ? TotalPagado - _totalFinal 
             : 0;
 
-        // ── Propiedades computed ──
         public bool EsPendiente => _estado == (int)EstadoVentaEnum.Pendiente;
         public bool EsPagada => _estado == (int)EstadoVentaEnum.Pagada;
         public bool EsAnulada => _estado == (int)EstadoVentaEnum.Anulada;

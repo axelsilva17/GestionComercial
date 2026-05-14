@@ -6,13 +6,11 @@ namespace GestionComercial.Dominio.Entidades.Ventas
     /// </summary>
     public class VentaDetalleDescuento
     {
-        // ── Backing fields ──
         private decimal _porcentaje;
         private decimal _monto;
         private int _id_detalle;
         private string? _descripcion;
 
-        // ── Propiedades con validación ──
         public int Id { get; set; }  // Para EF Core
 
         public int Id_detalle 
@@ -41,8 +39,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         // ── Constructor vacío (para EF Core) ──
         public VentaDetalleDescuento() { }
 
-        // ── Factory methods ──
-        
         /// <summary>
         /// Crea un descuento por monto fijo.
         /// </summary>
@@ -95,13 +91,11 @@ namespace GestionComercial.Dominio.Entidades.Ventas
     /// </summary>
     public class VentaDetalleImpuesto
     {
-        // ── Backing fields ──
         private decimal _porcentaje;
         private decimal _monto;
         private int _id_detalle;
         private int _id_tipoImpuesto;
 
-        // ── Propiedades con validación ──
         public int Id { get; set; }  // Para EF Core
 
         public int Id_detalle 
@@ -130,7 +124,6 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         // ── Constructor vacío (para EF Core) ──
         public VentaDetalleImpuesto() { }
 
-        // ── Factory method ──
         public static VentaDetalleImpuesto Crear(decimal porcentaje, decimal montoBase, 
             int idDetalle, int idTipoImpuesto)
         {

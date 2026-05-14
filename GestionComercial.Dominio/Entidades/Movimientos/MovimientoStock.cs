@@ -15,7 +15,6 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
     /// </summary>
     public class MovimientoStock
     {
-        // ── Backing fields ──
         private int _tipoMovimiento;
         private string? _observacion;
         private decimal _cantidad;
@@ -27,7 +26,6 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
         private int _id_producto;
         private int _id_usuario;
 
-        // ── Propiedades con validación ──
         public int Id { get; set; }  // Para EF Core
 
         public int TipoMovimiento 
@@ -77,8 +75,6 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
         // ── Constructor vacío (para EF Core) ──
         public MovimientoStock() { }
 
-        // ── Factory methods ──
-        
         /// <summary>
         /// Crea un movimiento de entrada (compra, ajuste positivo, etc.)
         /// </summary>
@@ -153,7 +149,6 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
             };
         }
 
-        // ── Propiedades computed ──
         public bool EsEntrada => _tipoMovimiento == (int)TipoMovimientoStockEnum.Entrada;
         public bool EsSalida  => _tipoMovimiento == (int)TipoMovimientoStockEnum.Salida;
         public bool EsAjuste => _tipoMovimiento == (int)TipoMovimientoStockEnum.Ajuste;

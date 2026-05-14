@@ -8,11 +8,9 @@ namespace GestionComercial.Dominio.Entidades
     /// </summary>
     public abstract class EntidadBase
     {
-        // ── Backing fields ──
         private DateTime _fechaAlta = DateTime.Now;
         protected bool _activo = true;
 
-        // ── Propiedades con encapsulamiento ──
         public int Id { get; set; }
 
         public DateTime FechaAlta 
@@ -33,8 +31,6 @@ namespace GestionComercial.Dominio.Entidades
             _fechaAlta = DateTime.Now;
             _activo   = true;
         }
-
-        // ── Métodos de dominio virtuales ──
 
         /// <summary>
         /// Inactiva la entidad (soft delete).

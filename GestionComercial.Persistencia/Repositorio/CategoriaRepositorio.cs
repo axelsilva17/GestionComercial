@@ -1,5 +1,4 @@
-﻿// ── Categoria ─────────────────────────────────────────────────────────────
-using GestionComercial.Dominio.Entidades.Producto;
+﻿using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;

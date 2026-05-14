@@ -11,7 +11,6 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
         private string? _cuit;
         private int _id_empresa;
 
-        // ── Propiedades con validación ──
         public string Nombre 
         { 
             get => _nombre; 
@@ -41,7 +40,6 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
         // ── Constructor vacío (para EF Core) ──
         public Proveedor() { }
 
-        // ── Factory method ──
         public static Proveedor Crear(string nombre, int idEmpresa, 
             string? telefono = null, string? email = null, string? cuit = null)
         {
@@ -61,8 +59,6 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
                 Activo = true
             };
         }
-
-        // ── Métodos de dominio ──
 
         /// <summary>
         /// Actualiza datos del proveedor.
@@ -85,7 +81,6 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
             ? false 
             : System.Text.RegularExpressions.Regex.IsMatch(_cuit, @"^\d{2}-\d{8}-\d{1}$");
 
-        // ── Propiedades computed ──
         public string NombreDisplay => Activo ? _nombre : $"{_nombre} (Inactivo)";
         public int CantidadCompras => Compras.Count;
     }

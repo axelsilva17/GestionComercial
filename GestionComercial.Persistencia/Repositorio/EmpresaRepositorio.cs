@@ -1,5 +1,4 @@
-﻿// ── Empresa ───────────────────────────────────────────────────────────────
-using GestionComercial.Dominio.Entidades.Organizacion;
+﻿using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;

@@ -13,14 +13,12 @@ namespace GestionComercial.Dominio.Entidades.Pagos
     /// </summary>
     public class Pago
     {
-        // ── Backing fields ──
         private decimal _monto;
         private DateTime _fecha = DateTime.Now;
         private int _id_venta;
         private int _id_metodoPago;
         private int? _id_movimientoCaja;
 
-        // ── Propiedades con validación ──
         public int Id { get; set; }  // Para EF Core
 
         public decimal Monto 
@@ -46,7 +44,6 @@ namespace GestionComercial.Dominio.Entidades.Pagos
         // ── Constructor vacío (para EF Core) ──
         public Pago() { }
 
-        // ── Factory method ──
         public static Pago Crear(decimal monto, int idVenta, int idMetodoPago)
         {
             if (monto <= 0)
@@ -78,7 +75,6 @@ namespace GestionComercial.Dominio.Entidades.Pagos
             _id_movimientoCaja = idMovimientoCaja;
         }
 
-        // ── Propiedades computed ──
         public bool EsEfectivo => Id_metodoPago == (int)MetodoPagoEnum.Efectivo;
         public bool EsTarjeta => Id_metodoPago == (int)MetodoPagoEnum.Tarjeta;
         public bool EsTransferencia => Id_metodoPago == (int)MetodoPagoEnum.Transferencia;

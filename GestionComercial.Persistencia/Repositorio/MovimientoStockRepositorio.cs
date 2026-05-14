@@ -1,6 +1,4 @@
-﻿
-// ── MovimientoStock ───────────────────────────────────────────────────────
-using GestionComercial.Dominio.Entidades.Movimientos;
+﻿using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Proveedores;

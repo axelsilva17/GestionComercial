@@ -13,14 +13,12 @@ namespace GestionComercial.Dominio.Entidades.Compras
     /// </summary>
     public class CompraDetalle
     {
-        // ── Backing fields ──
         private decimal _cantidad;
         private decimal _precioCosto;
         private decimal _subtotal;
         private int _id_compra;
         private int _id_producto;
 
-        // ── Propiedades con validación ──
         public int Id { get; set; }  // Para EF Core
 
         public decimal Cantidad 
@@ -47,7 +45,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
         // ── Constructor vacío (para EF Core) ──
         public CompraDetalle() { }
 
-        // ── Factory method ──
         public static CompraDetalle Crear(Producto.Producto producto, decimal cantidad, decimal precioCosto)
         {
             if (producto == null)
@@ -69,8 +66,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
             
             return detalle;
         }
-
-        // ── Métodos de dominio ──
 
         /// <summary>
         /// Recalcula el subtotal.
