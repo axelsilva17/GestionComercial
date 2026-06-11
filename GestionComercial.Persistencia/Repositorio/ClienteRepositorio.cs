@@ -36,5 +36,12 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Where(c => c.Id_empresa == idEmpresa && c.FechaAlta >= desde && c.FechaAlta <= hasta)
                 .OrderByDescending(c => c.FechaAlta)
                 .ToListAsync();
+
+        public async Task<int> ContarClientesConVentasAsync(int idEmpresa)
+            => await _context.Ventas
+                .Where(v => v.Cliente.Id_empresa == idEmpresa)
+                .Select(v => v.Id_cliente)
+                .Distinct()
+                .CountAsync();
     }
 }

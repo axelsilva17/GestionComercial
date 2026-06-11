@@ -51,6 +51,9 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
         }
 
+        public async Task<int> ContarClientesConVentasAsync(int idEmpresa)
+            => await _uow.Clientes.ContarClientesConVentasAsync(idEmpresa);
+
         public async Task DesactivarAsync(int id)
         {
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(id)
