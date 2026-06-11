@@ -291,7 +291,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 // Ventas de hoy del vendedor
                 var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
                         _sesion.IdSucursal, hoy, hoy))
-                    .Where(v => v.UsuarioNombre.Contains(
+                    .Where(v => v.UsuarioNombre != null && v.UsuarioNombre.Contains(
                         _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
