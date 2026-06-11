@@ -22,7 +22,6 @@ namespace GestionComercial.UI.ViewModels.Productos
         private readonly ShellViewModel _shell;
         private readonly ILogger<ProductoListadoViewModel>? _logger;
         private readonly SemaphoreSlim _lock = new(1, 1);
-        private bool _isInitializing = true;
 
         public ProductoListadoViewModel(
             IProductoServicio productoServicio,
@@ -313,7 +312,6 @@ namespace GestionComercial.UI.ViewModels.Productos
             finally
             {
                 _lock.Release();
-                _isInitializing = false;
             }
         }
 
