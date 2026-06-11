@@ -114,7 +114,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 _categoriaSeleccionada = value;
                 NotifyOfPropertyChange(() => CategoriaSeleccionada);
-                _ = Buscar(); // Filtrar automaticamente al cambiar categoria
+                _ = BuscarConCatch(); // Filtrar automaticamente al cambiar categoria
             }
         }
 
@@ -317,6 +317,23 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
         }
 
+        /// <summary>
+        /// Wrapper fire-and-forget seguro para Buscar() desde setters de propiedades.
+        /// Engulle cualquier excepción para evitar unobserved task exceptions.
+        /// </summary>
+        private async Task BuscarConCatch()
+        {
+            try
+            {
+                await Buscar();
+            }
+            catch
+            {
+                // Buscar() ya maneja errores internamente via CargarAsync();
+                // este catch solo protege contra unobserved task exceptions.
+            }
+        }
+
         public async Task NuevoProducto()
         {
             // ProductoFormularioViewModel sirve tanto para crear como para editar
@@ -478,8 +495,8 @@ namespace GestionComercial.UI.ViewModels.Productos
                     {
                         if (AplicarAPrecioVenta)
                             producto.PrecioVentaActual = p.PrecioVentaNuevo ?? producto.PrecioVentaActual;
-                        else
-                            producto.PrecioCostoActual = p.PrecioVentaNuevo ?? producto.PrecioCostoActual;
+                        if (AplicarAPrecioCosto)
+                            producto.PrecioCostoActual = p.PrecioCostoNuevo ?? producto.PrecioCostoActual;
 
                         // Map to DTO
                         var dto = new ProductoActualizarDto

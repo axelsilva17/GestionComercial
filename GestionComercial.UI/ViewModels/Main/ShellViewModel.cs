@@ -112,7 +112,14 @@ namespace GestionComercial.UI.ViewModels.Main
         protected override async void OnViewLoaded(object view)
         {
             base.OnViewLoaded(view);
-            await IrDashboard();
+            try
+            {
+                await IrDashboard();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al cargar dashboard: {ex.Message}");
+            }
         }
 
         // ── Navegación ────────────────────────────────────────────────────────
