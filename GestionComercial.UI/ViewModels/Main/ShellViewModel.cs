@@ -109,22 +109,9 @@ namespace GestionComercial.UI.ViewModels.Main
             UsuarioNombre = nombre;
         }
 
-        protected override async Task OnActivateAsync(CancellationToken cancellationToken)
+        protected override async void OnViewLoaded(object view)
         {
-            // Por defecto, todos van al Dashboard (Menú principal)
-            //
-            // IMPORTANTE: Task.Yield() posterga la navegación al siguiente tick del
-            // dispatcher de WPF. Esto es necesario porque OnActivateAsync se dispara
-            // durante el evento Loaded de la ventana, y el ContentControl donde se
-            // aloja el ActiveItem (Dashboard) no está listo para crear vistas hijas.
-            // Sin este yield, el Dashboard se activa pero su vista no se conecta
-            // al árbol visual, y los datos cargados no se muestran hasta que el
-            // usuario hace clic manualmente en el botón del módulo.
-            await Task.Yield();
-
-            // VENDEDOR → Dashboard
-            // GERENTE → Dashboard (Menú)
-            // ADMINISTRADOR → Dashboard (Menú)
+            base.OnViewLoaded(view);
             await IrDashboard();
         }
 
