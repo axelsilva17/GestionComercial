@@ -487,6 +487,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
                                 Fill = new SolidColorPaint(ColoresGrafico[i % ColoresGrafico.Length]),
                             } as ISeries).ToArray();
                         }
+                        else
+                        {
+                            SeriesMetodosPago = new ISeries[]
+                            {
+                                new PieSeries<double> { Values = new double[] { 1 }, Name = "Sin datos" }
+                            };
+                        }
 
                         // Top 3 Productos
                         if (topProductos.Any())
@@ -516,6 +523,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
                                     LabelsPaint = new SolidColorPaint(Col_TextSec),
                                     LabelsRotation = 0,
                                 }
+                            };
+                        }
+                        else
+                        {
+                            SeriesTopProductos = new ISeries[]
+                            {
+                                new ColumnSeries<double> { Values = new double[] { 0 }, Name = "Sin datos" }
                             };
                         }
 
@@ -699,8 +713,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
                 var historialCajas = cajas.Select(caja =>
                 {
+                    var totalVentasCaja = caja.Ventas?.Sum(v => v.TotalFinal) ?? 0;
                     var diff = caja.MontoFinal.HasValue
-                        ? caja.MontoFinal.Value - (caja.MontoInicial + caja.Ventas.Sum(v => v.TotalFinal))
+                        ? caja.MontoFinal.Value - (caja.MontoInicial + totalVentasCaja)
                         : (decimal?)null;
                     return new CajaHistorialDto
                     {
@@ -720,10 +735,11 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 // ── Ventas por caja ────────────────────────────────────────────────
                 var ventasPorCaja = cajas
-                    .SelectMany(caja => caja.Ventas.Select(venta => new VentaResumenCajaDto
+                    .Where(c => c.Ventas != null)
+                    .SelectMany(c => c.Ventas!.Select(venta => new VentaResumenCajaDto
                     {
-                        CajaId = caja.Id,
-                        NumeroCaja = $"Caja {caja.Id}",
+                        CajaId = c.Id,
+                        NumeroCaja = $"Caja {c.Id}",
                         FechaVenta = venta.Fecha.ToString("dd/MM/yyyy HH:mm"),
                         Total = venta.TotalFinal,
                         MetodoPago = venta.Pagos?.FirstOrDefault()?.MetodoPago?.Nombre ?? "—",
