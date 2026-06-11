@@ -110,7 +110,12 @@ namespace GestionComercial.UI.ViewModels.Productos
         public CategoriaItemDto CategoriaSeleccionada
         {
             get => _categoriaSeleccionada;
-            set { _categoriaSeleccionada = value; NotifyOfPropertyChange(() => CategoriaSeleccionada); }
+            set
+            {
+                _categoriaSeleccionada = value;
+                NotifyOfPropertyChange(() => CategoriaSeleccionada);
+                _ = Buscar(); // Filtrar automaticamente al cambiar categoria
+            }
         }
 
         private int _filtroActivo;
@@ -150,7 +155,13 @@ namespace GestionComercial.UI.ViewModels.Productos
         public CategoriaItemDto CategoriaAjuste
         {
             get => _categoriaAjuste;
-            set { _categoriaAjuste = value; NotifyOfPropertyChange(() => CategoriaAjuste); }
+            set
+            {
+                _categoriaAjuste = value;
+                NotifyOfPropertyChange(() => CategoriaAjuste);
+                if (MostrarPopupAjuste)
+                    GenerarPreviewAjuste();
+            }
         }
         public bool MostrarPopupAjuste
         {
