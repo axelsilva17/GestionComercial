@@ -281,6 +281,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
             var ventas = await _uow.Ventas.ObtenerPorPeriodoAsync(desde, hasta);
             var pagos = await _uow.Pagos.ObtenerPagosPorPeriodoAsync(desde, hasta);
+            var metodosPago = await _uow.MetodosPago.ObtenerTodosAsync();
+
+            var metodosCategoriaDict = metodosPago.ToDictionary(m => m.Id, m => m.Categoria);
 
             var resultado = new List<FormaPagoVendedorDto>();
 
@@ -298,16 +301,16 @@ namespace GestionComercial.Aplicacion.Servicios
                     IdUsuario = grupo.Key.Id_usuario,
                     NombreUsuario = grupo.Key.NombreVendedor,
                     TotalEfectivo = vendedorPagos
-                        .Where(p => p.Id_metodoPago == (int)MetodoPagoEnum.Efectivo)
+                        .Where(p => metodosCategoriaDict.TryGetValue(p.Id_metodoPago, out var cat) && cat == "Efectivo")
                         .Sum(p => p.Monto),
                     TotalTarjeta = vendedorPagos
-                        .Where(p => p.Id_metodoPago == (int)MetodoPagoEnum.Tarjeta)
+                        .Where(p => metodosCategoriaDict.TryGetValue(p.Id_metodoPago, out var cat) && cat == "Tarjeta")
                         .Sum(p => p.Monto),
                     TotalTransferencia = vendedorPagos
-                        .Where(p => p.Id_metodoPago == (int)MetodoPagoEnum.Transferencia)
+                        .Where(p => metodosCategoriaDict.TryGetValue(p.Id_metodoPago, out var cat) && cat == "Transferencia")
                         .Sum(p => p.Monto),
                     TotalOtro = vendedorPagos
-                        .Where(p => p.Id_metodoPago > (int)MetodoPagoEnum.Transferencia)
+                        .Where(p => metodosCategoriaDict.TryGetValue(p.Id_metodoPago, out var cat) && cat == "Otro")
                         .Sum(p => p.Monto),
                     CantidadVentas = grupo.Count()
                 };

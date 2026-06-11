@@ -19,6 +19,7 @@ using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.Helpers;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Producto;
+using GestionComercial.Dominio.Entidades.Pagos.Strategies;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.Views.Servicios;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,7 @@ namespace GestionComercial.UI
             // ── Servicios ─────────────────────────────────────────────────────
             _container.Singleton<SesionServicio>();
             _container.Singleton<IServicioImpresion, ServicioImpresionTermica>();
+            _container.Singleton<PaymentStrategyFactory>();
 
             // Servicios de Dominio (implementados en Infraestructura)
             _container.Singleton<IPasswordHasher, PasswordHasher>();

@@ -44,6 +44,6 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
         public string  Metodo     { get; set; } = string.Empty;
         public decimal Total      { get; set; }
         public int     Cantidad   { get; set; }
-        public bool    EsEfectivo { get; set; }
+        public string  Categoria  { get; set; } = "Otro";
     }
 }

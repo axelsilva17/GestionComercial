@@ -311,7 +311,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="💳"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding EsEfectivo}" Value="True">
+                                                <DataTrigger Binding="{Binding Categoria}" Value="Efectivo">
                                                     <Setter Property="Text" Value="💵"/>
                                                 </DataTrigger>
                                             </Style.Triggers>

@@ -210,7 +210,7 @@ namespace GestionComercial.UI.ViewModels.Caja
 
                 // Desglose libre para lista (excluir efectivo que ya se muestra en la sección principal)
                 Desglose = new ObservableCollection<DesglosePagoDto>(
-                    resumen.DesglosePorMetodo.Where(d => !d.EsEfectivo));
+                    resumen.DesglosePorMetodo.Where(d => d.Categoria != "Efectivo"));
 
                 FechaApertura = resumen.FechaApertura;
                 FechaCierre   = DateTime.Now;

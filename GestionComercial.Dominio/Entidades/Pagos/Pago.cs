@@ -34,6 +34,10 @@ namespace GestionComercial.Dominio.Entidades.Pagos
         public int Id_venta { get => _id_venta; set => _id_venta = value; }
         public int Id_metodoPago { get => _id_metodoPago; set => _id_metodoPago = value; }
         
+        private decimal _vuelto;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal Vuelto { get => _vuelto; set => _vuelto = value >= 0 ? value : throw new ArgumentException("El vuelto no puede ser negativo.", nameof(value)); }
+        
         // ── Link a MovimientoCaja (solo para pagos en efectivo) ─────────────────
         public int? Id_movimientoCaja { get => _id_movimientoCaja; set => _id_movimientoCaja = value; }
 
@@ -69,15 +73,10 @@ namespace GestionComercial.Dominio.Entidades.Pagos
         {
             if (idMovimientoCaja <= 0)
                 throw new ArgumentException("ID de movimiento de caja inválido.", nameof(idMovimientoCaja));
-            if (Id_metodoPago != (int)MetodoPagoEnum.Efectivo)
-                throw new InvalidOperationException("Solo los pagos en efectivo pueden vincularse a un movimiento de caja.");
 
             _id_movimientoCaja = idMovimientoCaja;
         }
 
-        public bool EsEfectivo => Id_metodoPago == (int)MetodoPagoEnum.Efectivo;
-        public bool EsTarjeta => Id_metodoPago == (int)MetodoPagoEnum.Tarjeta;
-        public bool EsTransferencia => Id_metodoPago == (int)MetodoPagoEnum.Transferencia;
         public bool Linkeado => _id_movimientoCaja.HasValue;
     }
 }

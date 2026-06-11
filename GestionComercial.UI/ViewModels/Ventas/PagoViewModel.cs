@@ -172,11 +172,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     {
                         IdMetodoPago = m.Id,
                         NombreMetodo = m.Nombre,
-                        EsEfectivo   = m.EsEfectivo == true,
+                        Categoria    = m.Categoria ?? "Otro",
                         Monto        = 0,
                     }));
 
-                MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.EsEfectivo)
+                MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo")
                                   ?? MetodosPago.FirstOrDefault();
 
                 // Precompletar con el total en el campo de monto
@@ -219,27 +219,27 @@ namespace GestionComercial.UI.ViewModels.Ventas
             LimpiarError();
 
             // Si el método ya existe, sumar el monto
-            var existente = Pagos.FirstOrDefault(p => p.IdMetodoPago == MetodoSeleccionado.IdMetodoPago);
-            if (existente != null)
-            {
-                var idx = Pagos.IndexOf(existente);
-                Pagos[idx] = new PagoLineaVm
+                var existente = Pagos.FirstOrDefault(p => p.IdMetodoPago == MetodoSeleccionado.IdMetodoPago);
+                if (existente != null)
                 {
-                    IdMetodoPago = existente.IdMetodoPago,
-                    NombreMetodo = existente.NombreMetodo,
-                    EsEfectivo   = existente.EsEfectivo,
-                    Monto        = existente.Monto + monto,
-                };
-            }
-            else
-            {
-                Pagos.Add(new PagoLineaVm
+                    var idx = Pagos.IndexOf(existente);
+                    Pagos[idx] = new PagoLineaVm
+                    {
+                        IdMetodoPago = existente.IdMetodoPago,
+                        NombreMetodo = existente.NombreMetodo,
+                        Categoria    = existente.Categoria,
+                        Monto        = existente.Monto + monto,
+                    };
+                }
+                else
                 {
-                    IdMetodoPago = MetodoSeleccionado.IdMetodoPago,
-                    NombreMetodo = MetodoSeleccionado.NombreMetodo,
-                    EsEfectivo   = MetodoSeleccionado.EsEfectivo,
-                    Monto        = monto,
-                });
+                    Pagos.Add(new PagoLineaVm
+                    {
+                        IdMetodoPago = MetodoSeleccionado.IdMetodoPago,
+                        NombreMetodo = MetodoSeleccionado.NombreMetodo,
+                        Categoria    = MetodoSeleccionado.Categoria,
+                        Monto        = monto,
+                    });
             }
 
             MontoIngresado = string.Empty;
@@ -257,7 +257,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public void CompletarConEfectivo()
         {
             if (Faltante <= 0) return;
-            var efectivo = MetodosPago.FirstOrDefault(m => m.EsEfectivo);
+            var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
             if (efectivo == null) return;
             MetodoSeleccionado = efectivo;
             MontoIngresado     = Faltante.ToString("F2");
@@ -270,7 +270,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// </summary>
         public void AgregarEfectivo()
         {
-            var efectivo = MetodosPago.FirstOrDefault(m => m.EsEfectivo);
+            var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
             if (efectivo == null) { MostrarError("No hay método de pago en efectivo configurado."); return; }
             MetodoSeleccionado = efectivo;
             MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
@@ -340,14 +340,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 {
                     IdMetodoPago = p.IdMetodoPago,
                     Monto        = p.Monto,
-                    EsEfectivo   = p.EsEfectivo,
+                    Categoria    = p.Categoria,
                 }).ToList();
 
                 // Calcular el vuelto total y asignarlo al primer pago en efectivo
                 var hayVuelto = Vuelto > 0;
                 if (hayVuelto)
                 {
-                    var primerEfectivo = pagosDto.FirstOrDefault(p => p.EsEfectivo);
+                    var primerEfectivo = pagosDto.FirstOrDefault(p => p.Categoria == "Efectivo");
                     if (primerEfectivo != null)
                     {
                         primerEfectivo.Vuelto = Vuelto;
@@ -513,7 +513,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
     {
         public int     IdMetodoPago { get; set; }
         public string  NombreMetodo { get; set; } = string.Empty;
-        public bool    EsEfectivo   { get; set; }
+        public string  Categoria    { get; set; } = "Otro";
         public decimal Monto        { get; set; }
     }
 }

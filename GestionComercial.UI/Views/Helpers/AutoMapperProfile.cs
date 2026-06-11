@@ -65,7 +65,7 @@ namespace GestionComercial.UI.Helpers
 
             // ── Método de Pago ────────────────────────────────────────────────
             CreateMap<MetodoPago, MetodoPagoDto>()
-                .ForMember(d => d.EsEfectivo, o => o.MapFrom(s => s.EsEfectivo == 1));
+                .ForMember(d => d.Categoria, o => o.MapFrom(s => s.Categoria));
         }
     }
 }

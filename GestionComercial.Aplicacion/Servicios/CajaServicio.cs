@@ -366,36 +366,37 @@ namespace GestionComercial.Aplicacion.Servicios
             var metodosPago = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(
                 await ObtenerIdEmpresaDeSucursalAsync(caja.Id_sucursal));
 
-            var metodosDict = metodosPago.ToDictionary(m => m.Nombre, m => m.EsEfectivo);
+            var metodosDict = metodosPago.ToDictionary(m => m.Nombre, m => m.Categoria);
 
             foreach (var (metodo, total) in pagosDelTurno)
             {
-                var esEfectivo = metodosDict.TryGetValue(metodo, out var ef) && ef == true;
+                var categoria = metodosDict.TryGetValue(metodo, out var cat) ? cat : "Otro";
                 var cantidad   = 0; // se puede extender si el repo devuelve cantidad
 
                 resumen.DesglosePorMetodo.Add(new DesglosePagoDto
                 {
                     Metodo     = metodo,
                     Total      = total,
-                    EsEfectivo = esEfectivo,
+                    Categoria  = categoria,
                 });
 
-                if (esEfectivo)
+                if (categoria == "Efectivo")
                     resumen.VentasEfectivo += total;
                 else
                 {
-                    // Clasificar por nombre para mostrar en UI
-                    var nombreUpper = metodo.ToUpper();
-                    if (nombreUpper.Contains("TARJETA") || nombreUpper.Contains("DEBITO") || nombreUpper.Contains("CRÉDITO"))
-                        resumen.VentasTarjeta += total;
-                    else if (nombreUpper.Contains("TRANSFER"))
-                        resumen.VentasTransferencia += total;
-                    else if (nombreUpper.Contains("QR") || nombreUpper.Contains("MERCADO") || nombreUpper.Contains("MP"))
-                        resumen.VentasQR += total;
-                    else if (nombreUpper.Contains("CUENTA") || nombreUpper.Contains("CTE") || nombreUpper.Contains("CORRIENTE"))
-                        resumen.VentasCuentaCte += total;
-                    else
-                        resumen.VentasOtros += total;
+                    // Clasificar por categoría
+                    switch (categoria)
+                    {
+                        case "Tarjeta":
+                            resumen.VentasTarjeta += total;
+                            break;
+                        case "Transferencia":
+                            resumen.VentasTransferencia += total;
+                            break;
+                        default:
+                            resumen.VentasOtros += total;
+                            break;
+                    }
                 }
             }
 

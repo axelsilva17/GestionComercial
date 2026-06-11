@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Pagos;
+using GestionComercial.Dominio.Entidades.Pagos.Strategies;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
@@ -18,6 +19,7 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly SesionServicio _sesion;
         private readonly IInventarioServicio _inventarioServicio;
         private readonly ILogger<VentaServicio>? _logger;
+        private readonly PaymentStrategyFactory _paymentStrategyFactory;
 
         public VentaServicio(
             IUnitOfWork uow,
@@ -31,6 +33,7 @@ namespace GestionComercial.Aplicacion.Servicios
             _sesion = sesion;
             _inventarioServicio = inventarioServicio;
             _logger = logger;
+            _paymentStrategyFactory = new PaymentStrategyFactory();
         }
 
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
@@ -176,58 +179,16 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException(
                     $"El monto pagado (${totalPagado:N2}) es menor al total (${venta.TotalFinal:N2}).");
 
-            // Calcular el total de vuelto de todos los pagos en efectivo
-            decimal totalVuelto = pagos.Where(p => p.EsEfectivo).Sum(p => p.Vuelto);
-
             foreach (var pago in pagos.Where(p => p.Monto > 0))
             {
                 // ── Crear pago usando factory method DDD ──────────────────────
                 var pagoEntity = Pago.Crear(pago.Monto, idVenta, pago.IdMetodoPago);
+                pagoEntity.Vuelto = pago.Vuelto;
 
-                // ── Crear movimiento de caja SOLO para pagos en efectivo ─────────
-                if (pago.EsEfectivo && venta.Id_caja.HasValue)
-                {
-                    // El monto del movimiento es: efectivo recibido - vuelto dado
-                    var montoNeto = pago.Monto - pago.Vuelto;
-
-                    var movimiento = new TipoMovimientoCaja
-                    {
-                        Tipo         = (int)TipoMovimientoCajaEnum.Ingreso,
-                        Monto        = montoNeto,
-                        Concepto     = $"Venta #{venta.Id} (recibido: ${pago.Monto:N2}, vuelto: ${pago.Vuelto:N2})",
-                        ReferenciaId = venta.Id,
-                        Id_venta     = venta.Id,
-                        Id_caja      = venta.Id_caja.Value,
-                        Id_usuario   = venta.Id_usuario,
-                        Fecha        = DateTime.Now,
-                    };
-                    await _uow.MovimientosCaja.AgregarAsync(movimiento);
-                    await _uow.GuardarCambiosAsync();
-                    
-                    // Vincular el pago con el movimiento de caja
-                    pagoEntity.Id_movimientoCaja = movimiento.Id;
-
-                    // ── Registrar monto efectivo para cierre de caja ───────────────
-                    // Guardamos el monto TOTAL recibido (sin restar el vuelto) para el cierre
-                    venta.EfectivoRecibido = (venta.EfectivoRecibido ?? 0) + pago.Monto;
-
-                    // ── Registrar el vuelto como egreso si corresponde ───────────
-                    if (pago.Vuelto > 0)
-                    {
-                        var movimientoVuelto = new TipoMovimientoCaja
-                        {
-                            Tipo         = (int)TipoMovimientoCajaEnum.Egreso,
-                            Monto        = pago.Vuelto,
-                            Concepto     = $"Vuelto venta #{venta.Id}",
-                            ReferenciaId = venta.Id,
-                            Id_venta     = venta.Id,
-                            Id_caja      = venta.Id_caja.Value,
-                            Id_usuario   = venta.Id_usuario,
-                            Fecha        = DateTime.Now,
-                        };
-                        await _uow.MovimientosCaja.AgregarAsync(movimientoVuelto);
-                    }
-                }
+                // ── Delegar procesamiento a strategy ─────────────────────────
+                var metodo = await _uow.MetodosPago.ObtenerPorIdAsync(pago.IdMetodoPago);
+                var strategy = _paymentStrategyFactory.Resolve(metodo?.Categoria ?? "Otro");
+                await strategy.ProcesarPagoAsync(pagoEntity, venta, _uow);
 
                 await _uow.Pagos.AgregarAsync(pagoEntity);
             }
@@ -259,7 +220,7 @@ namespace GestionComercial.Aplicacion.Servicios
                     Monto        = p.Monto,
                     IdMetodoPago = p.Id_metodoPago,
                     MetodoNombre = p.MetodoPago?.Nombre ?? "Desconocido",
-                    EsEfectivo   = p.MetodoPago?.EsEfectivo ?? false,
+                    Categoria    = p.MetodoPago?.Categoria ?? "Otro",
                 }).ToList();
 
                 _servicioImpresion.ImprimirTicket(ventaDto, pagosDto);

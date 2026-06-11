@@ -6,7 +6,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal Monto         { get; set; }
         public int     IdMetodoPago  { get; set; }
         public string  MetodoNombre  { get; set; }
-        public bool    EsEfectivo    { get; set; }
+        public string  Categoria     { get; set; } = "Otro";
         public string  Icono         { get; set; }
     }
     public class MetodoPagoItemDto
@@ -14,7 +14,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public int Id { get; set; }
         public string Nombre { get; set; }
         public string Icono { get; set; }
-        public bool EsEfectivo { get; set; }
+        public string Categoria { get; set; } = "Otro";
         public bool IsSeleccionado { get; set; }
     }
 

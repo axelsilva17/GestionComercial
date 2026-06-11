@@ -8,7 +8,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
     {
         public int     IdMetodoPago  { get; set; }
         public string  NombreMetodo  { get; set; } = string.Empty;
-        public bool    EsEfectivo    { get; set; }
+        public string  Categoria     { get; set; } = "Otro";
         public decimal Monto         { get; set; }
         /// <summary>
         /// Monto del vuelto dado al cliente (solo aplica para pagos en efectivo).

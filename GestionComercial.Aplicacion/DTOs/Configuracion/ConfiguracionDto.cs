@@ -40,10 +40,22 @@ namespace GestionComercial.Aplicacion.DTOs.Configuracion
     {
         public int    IdMetodoPago { get; set; }
         public string Nombre       { get; set; } = string.Empty;
-        public bool   EsEfectivo   { get; set; }
+        public string Categoria    { get; set; } = "Otro";
         public int    IdEmpresa    { get; set; }
-        public string Icono        => EsEfectivo ? "💵" : "💳";
-        public string TipoTexto    => EsEfectivo ? "Efectivo" : "Electrónico";
+        public string Icono        => Categoria switch
+        {
+            "Efectivo"      => "💵",
+            "Tarjeta"       => "💳",
+            "Transferencia" => "🏦",
+            _               => "💳"
+        };
+        public string TipoTexto    => Categoria switch
+        {
+            "Efectivo"      => "Efectivo",
+            "Tarjeta"       => "Tarjeta",
+            "Transferencia" => "Transferencia",
+            _               => "Otro"
+        };
     }
 
     // ── PERFIL ───────────────────────────────────────────────────────────────
