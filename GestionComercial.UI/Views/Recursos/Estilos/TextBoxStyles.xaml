@@ -38,6 +38,31 @@
         </Setter>
     </Style>
 
+    <!-- Input - 40px height for form fields -->
+    <Style x:Key="Input" TargetType="TextBox">
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+                        <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"
+                                      Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Default TextBox style -->
     <Style TargetType="TextBox">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
