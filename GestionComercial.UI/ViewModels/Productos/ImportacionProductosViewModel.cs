@@ -305,7 +305,9 @@ namespace GestionComercial.UI.ViewModels.Productos
             catch (Exception ex)
             {
                 TieneError   = true;
-                MensajeError = $"Error al leer el archivo: {ex.Message}";
+                MensajeError = ex.Message.Contains("same key", StringComparison.OrdinalIgnoreCase)
+                    ? $"El archivo tiene categorías duplicadas. Revisá que no haya nombres de categorías con diferencias de mayúsculas/minúsculas o espacios extra."
+                    : $"Error al leer el archivo: {ex.Message}";
                 Estado       = EstadoImportacion.Inicial;
             }
             finally

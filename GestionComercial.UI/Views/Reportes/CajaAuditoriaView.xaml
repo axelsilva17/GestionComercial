@@ -67,25 +67,18 @@
                     <TextBlock Text="Desde:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
                     <DatePicker SelectedDate="{Binding FechaDesde, UpdateSourceTrigger=PropertyChanged}" 
-                                Width="110" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"/>
+                                Style="{StaticResource FilterDatePickerStyle}" Width="120"/>
                     <TextBlock Text="Hasta:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="12,0,8,0" FontSize="12"/>
                     <DatePicker SelectedDate="{Binding FechaHasta, UpdateSourceTrigger=PropertyChanged}" 
-                                Width="110" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"/>
+                                Style="{StaticResource FilterDatePickerStyle}" Width="120"/>
 
                     <Rectangle Width="1" Height="28" Fill="{DynamicResource BorderBrush}" Margin="16,0"/>
 
                     <TextBlock Text="Turno:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
                     <ComboBox ItemsSource="{Binding TurnosDisponibles}" SelectedItem="{Binding TurnoFiltro}"
-                              Width="100" Height="30" FontSize="12"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}"/>
+                              Width="110" Style="{StaticResource FilterComboBoxStyle}"/>
 
                     <Rectangle Width="1" Height="28" Fill="{DynamicResource BorderBrush}" Margin="16,0"/>
 
@@ -93,10 +86,7 @@
                                VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
                     <ComboBox ItemsSource="{Binding TurnosDisponibles}" 
                               SelectedItem="{Binding TurnoNuevaCaja}"
-                              Width="90" Height="30" FontSize="12"
-                              Background="{DynamicResource SurfaceBrush}"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              BorderBrush="{DynamicResource BorderBrush}"/>
+                              Width="100" Style="{StaticResource FilterComboBoxStyle}"/>
                     <Button Content="+ Crear" cal:Message.Attach="CrearCajaAsync"
                             Background="{DynamicResource PrimaryBrush}"
                             Foreground="#0F172A" FontWeight="Bold" FontSize="12"

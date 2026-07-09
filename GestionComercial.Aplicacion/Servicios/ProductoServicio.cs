@@ -172,7 +172,8 @@ public class ProductoServicio : IProductoServicio
                 .ToDictionary(p => p.CodigoBarra!, StringComparer.OrdinalIgnoreCase);
 
             var categoriasExistentes = (await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa))
-                .ToDictionary(c => c.Nombre.ToLower().Trim(), c => c.Id);
+                .GroupBy(c => c.Nombre.ToLower().Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
 
             // ── 2. Ejecutar TODO dentro de una transacción ─────────────────────
             //    Si falla en cualquier punto (crear categorías, procesar, guardar),
@@ -325,12 +326,15 @@ public class ProductoServicio : IProductoServicio
         public async Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa)
         {
             var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
-            return categorias.Select(c => new CategoriaItemDto
-            {
-                IdCategoria = c.Id,
-                Nombre = c.Nombre,
-                CategoriaPadre = c.CategoriaPadre_id
-            });
+            return categorias
+                .GroupBy(c => c.Nombre.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(g => new CategoriaItemDto
+                {
+                    IdCategoria = g.First().Id,
+                    Nombre = g.Key,
+                    CategoriaPadre = g.First().CategoriaPadre_id
+                })
+                .OrderBy(c => c.Nombre);
         }
 
         public async Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync()
