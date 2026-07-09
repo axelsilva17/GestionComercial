@@ -28,6 +28,15 @@ namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
                 Fecha        = DateTime.Now,
             };
             await uow.MovimientosCaja.AgregarAsync(movimiento);
+
+            // Actualizar saldo de caja en tiempo real
+            var caja = await uow.Cajas.ObtenerPorIdAsync(venta.Id_caja.Value);
+            if (caja != null)
+            {
+                caja.MontoFinal = (caja.MontoFinal ?? caja.MontoInicial) + montoNeto;
+                uow.Cajas.Actualizar(caja);
+            }
+
             await uow.GuardarCambiosAsync();
 
             pago.Id_movimientoCaja = movimiento.Id;

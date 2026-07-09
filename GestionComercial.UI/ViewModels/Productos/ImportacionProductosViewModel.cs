@@ -166,7 +166,40 @@ namespace GestionComercial.UI.ViewModels.Productos
         public decimal AjustePorcentaje
         {
             get => _ajustePorcentaje;
-            set { _ajustePorcentaje = value; NotifyOfPropertyChange(() => AjustePorcentaje); }
+            set
+            {
+                if (_ajustePorcentaje == value) return;
+                _ajustePorcentaje = value;
+                NotifyOfPropertyChange(() => AjustePorcentaje);
+                RecalcularPreview();
+            }
+        }
+
+        // ── Flags para elegir sobre qué precio aplicar el ajuste ──
+        private bool _ajustarVenta = true;
+        public bool AjustarVenta
+        {
+            get => _ajustarVenta;
+            set
+            {
+                if (_ajustarVenta == value) return;
+                _ajustarVenta = value;
+                NotifyOfPropertyChange(() => AjustarVenta);
+                RecalcularPreview();
+            }
+        }
+
+        private bool _ajustarCosto = true;
+        public bool AjustarCosto
+        {
+            get => _ajustarCosto;
+            set
+            {
+                if (_ajustarCosto == value) return;
+                _ajustarCosto = value;
+                NotifyOfPropertyChange(() => AjustarCosto);
+                RecalcularPreview();
+            }
         }
 
         // Margen sobre costo (1.30 = 30% de margen)
@@ -175,6 +208,19 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             get => _margen;
             set { _margen = value; NotifyOfPropertyChange(() => Margen); }
+        }
+
+        // ── Recalcular preview cuando cambia el ajuste ────────────────────────
+        private void RecalcularPreview()
+        {
+            if (Filas == null || Filas.Count == 0) return;
+
+            decimal factor = 1 + (AjustePorcentaje / 100m);
+
+            foreach (var fila in Filas)
+            {
+                fila.AplicarAjuste(factor, AjustarVenta, AjustarCosto);
+            }
         }
 
         // ── Error visible en dropzone ─────────────────────────────────────────
@@ -249,7 +295,10 @@ namespace GestionComercial.UI.ViewModels.Productos
                 FilasTotales  = filas.Count;
                 FilasValidas  = filas.Count(f => f.EsValida);
                 FilasConError = filas.Count(f => !f.EsValida);
-                Filas         = new ObservableCollection<FilaImportacionDto>(filas);
+                Filas = new ObservableCollection<FilaImportacionDto>(filas);
+
+                // Aplicar ajuste a la vista previa si hay porcentaje configurado
+                RecalcularPreview();
 
                 Estado = EstadoImportacion.Previsualizando;
             }
@@ -336,7 +385,9 @@ namespace GestionComercial.UI.ViewModels.Productos
                         Nombre     = nombre,
                         CodigoBarra = codigoBarra,
                         PrecioVenta = precioVenta,
+                        PrecioVentaOriginal = precioVenta,
                         PrecioCosto = precioCosto,
+                        PrecioCostoOriginal = precioCosto,
                         Stock       = stock,
                         StockMinimo = stockMinimo,
                         Categoria   = categoria,
@@ -410,7 +461,10 @@ namespace GestionComercial.UI.ViewModels.Productos
                     }
                     else if (AjustePorcentaje != 0)
                     {
-                        precioVenta = precioVenta * factorPorcentaje;
+                        if (AjustarVenta)
+                            precioVenta = precioVenta * factorPorcentaje;
+                        if (AjustarCosto)
+                            precioCosto = precioCosto * factorPorcentaje;
                     }
 
                     dtos.Add(new ProductoImportarDto
@@ -496,6 +550,13 @@ namespace GestionComercial.UI.ViewModels.Productos
         public void Reimportar() => Reiniciar();
         public void Finalizar()  => ImportacionCompletada?.Invoke();
         public void Cancelar()   => Cancelado?.Invoke();
+
+        // ── Volver al listado de productos ────────────────────────────────────
+        public async Task Volver()
+        {
+            var listado = IoC.Get<ProductoListadoViewModel>();
+            await _shell.ActivateItemAsync(listado, CancellationToken.None);
+        }
 
         // ── Descargar plantilla ───────────────────────────────────────────────
         public async Task DescargarPlantilla()
@@ -612,6 +673,10 @@ namespace GestionComercial.UI.ViewModels.Productos
         public int?    IdCategoria   { get; set; }
         public bool    EsNuevo       { get; set; }
 
+        // Valores originales (desde Excel, nunca cambian)
+        public decimal PrecioVentaOriginal { get; set; }
+        public decimal PrecioCostoOriginal { get; set; }
+
         public string Nombre
         {
             get => _nombre;
@@ -634,6 +699,22 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             get => _precioCosto;
             set { _precioCosto = value; OnPropertyChanged(); OnPropertyChanged(nameof(Margen)); }
+        }
+
+        /// <summary>
+        /// Recalcula los precios mostrados desde los valores originales aplicando el factor de ajuste.
+        /// </summary>
+        public void AplicarAjuste(decimal factor, bool ajustarVenta, bool ajustarCosto)
+        {
+            if (ajustarVenta)
+                PrecioVenta = Math.Round(PrecioVentaOriginal * factor, 2);
+            else
+                PrecioVenta = PrecioVentaOriginal;
+
+            if (ajustarCosto)
+                PrecioCosto = Math.Round(PrecioCostoOriginal * factor, 2);
+            else
+                PrecioCosto = PrecioCostoOriginal;
         }
 
         public int Stock

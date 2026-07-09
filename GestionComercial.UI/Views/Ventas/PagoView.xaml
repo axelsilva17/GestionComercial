@@ -224,65 +224,34 @@
                 </UniformGrid>
 
                 <!-- Monto a ingresar -->
-                <Grid Margin="0,4,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="250"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Height="44" Padding="12,0" Margin="0,4,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="$" FontSize="16" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBox x:Name="MontoIngresado" Grid.Column="1"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 FontSize="18" FontWeight="Bold"
+                                 TextAlignment="Right"
+                                 VerticalContentAlignment="Center"
+                                 MaxLength="15"
+                                 Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
+                                 PreviewTextInput="MontoIngresado_PreviewTextInput"
+                                 KeyDown="MontoIngresado_KeyDown"/>
+                    </Grid>
+                </Border>
 
-                    <!-- Monto -->
-                    <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="8" Height="44" Padding="12,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="$" FontSize="16" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox x:Name="MontoIngresado" Grid.Column="1"
-                                     Background="Transparent" BorderThickness="0"
-                                     Foreground="{DynamicResource TextPrimaryBrush}"
-                                     FontSize="18" FontWeight="Bold"
-                                     TextAlignment="Right"
-                                     VerticalContentAlignment="Center"
-                                     MaxLength="15"
-                                     Text="{Binding MontoIngresado, UpdateSourceTrigger=PropertyChanged}"
-                                     PreviewTextInput="MontoIngresado_PreviewTextInput"
-                                     KeyDown="MontoIngresado_KeyDown"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- Botón agregar pago -->
-                    <Button Grid.Column="2" x:Name="AgregarPago"
-                            Height="44" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}"
-                            cal:Message.Attach="[Event Click] = [Action AgregarPago]">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="＋" FontSize="14" FontWeight="Bold"
-                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Agregar" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </Grid>
-
-                <!-- Botón completar con efectivo rápido -->
-                <Button x:Name="CompletarConEfectivo"
-                        Height="44" Margin="0,12,0,0"
-                        Style="{StaticResource BotonPagoSecundario}"
-                        ToolTip="F5 - Completar con efectivo"
-                        cal:Message.Attach="[Event Click] = [Action CompletarConEfectivo]">
-                    <Button.Visibility>
-                        <Binding Path="HayFaltante" Converter="{StaticResource BoolToVisibility}"/>
-                    </Button.Visibility>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💵" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Completar faltante en efectivo" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+                <!-- Hint de uso -->
+                <TextBlock Margin="0,8,0,0" FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Text="💡 Escribí el monto y clickeá el método de pago. Si ya hay un pago parcial, clickeá otro método para completar el faltante."/>
             </StackPanel>
         </Border>
 
@@ -327,12 +296,13 @@
                                            FontSize="15" FontWeight="Bold"
                                            Foreground="{DynamicResource SuccessBrush}"
                                            VerticalAlignment="Center"/>
-                                <Button Grid.Column="4" x:Name="QuitarPago"
-                                        Width="28" Height="28" FontSize="11"
-                                        Background="Transparent" BorderThickness="0"
-                                        Foreground="{DynamicResource ErrorBrush}"
-                                        Cursor="Hand"
-                                        cal:Message.Attach="[Event Click] = [Action QuitarPago($dataContext)]"/>
+                                 <Button Grid.Column="4" x:Name="QuitarPago"
+                                         Width="28" Height="28" FontSize="14" FontWeight="Bold"
+                                         Background="Transparent" BorderThickness="0"
+                                         Foreground="{DynamicResource ErrorBrush}"
+                                         Cursor="Hand"
+                                         Content="✕"
+                                         cal:Message.Attach="[Event Click] = [Action QuitarPago($dataContext)]"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

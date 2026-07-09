@@ -206,7 +206,7 @@ namespace GestionComercial.UI.ViewModels.Main
             var finMesAnterior    = inicioMes.AddDays(-1);
 
             var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMes, hoy)).ToList();
+                _sesion.IdSucursal, inicioMes, hoy.AddDays(1))).ToList();
 
             TotalVentasMes = ventasMes.Sum(v => v.TotalFinal);
             TicketPromedio = ventasMes.Any() ? TotalVentasMes / ventasMes.Count : 0;
@@ -237,7 +237,7 @@ namespace GestionComercial.UI.ViewModels.Main
             var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
 
             var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMes, hoy)).ToList();
+                _sesion.IdSucursal, inicioMes, hoy.AddDays(1))).ToList();
             CantidadVentasMes = ventasMes.Count;
             VentasPendientes  = ventasMes.Count(v => v.Estado == "Pendiente");
 
@@ -278,7 +278,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 if (caja != null)
                 {
                     CajaAbierta      = true;
-                    SaldoCaja        = (decimal)caja.MontoFinal;
+                    SaldoCaja        = caja.MontoFinal ?? caja.MontoInicial;
                     HoraAperturaCaja = caja.FechaApertura.ToString("HH:mm");
                 }
                 else
@@ -289,8 +289,8 @@ namespace GestionComercial.UI.ViewModels.Main
                 }
 
                 // Ventas de hoy del vendedor
-                var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
-                        _sesion.IdSucursal, hoy, hoy))
+            var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, hoy, hoy.AddDays(1)))
                     .Where(v => v.UsuarioNombre != null && v.UsuarioNombre.Contains(
                         _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
                     .ToList();

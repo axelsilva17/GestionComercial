@@ -84,29 +84,22 @@ namespace GestionComercial.Aplicacion.Servicios
                 FiltrosAplicados = filtros
             };
 
-            // Usar el repositorio directamente para filtros flexibles
-            var query = _uow.Auditoria.ObtenerAuditoriaFiltradaAsync(
+            // Paginación en SQL: count + página en un solo viaje
+            var (entidades, total) = await _uow.Auditoria.ObtenerAuditoriaPaginadaAsync(
                 idUsuario: filtros.IdUsuario,
                 tipoOperacion: filtros.TipoOperacionCodigo,
                 nombreTabla: filtros.NombreTabla,
                 fechaDesde: filtros.FechaDesde,
-                fechaHasta: filtros.FechaHasta);
+                fechaHasta: filtros.FechaHasta,
+                pagina: filtros.PaginaActual,
+                tamanioPagina: filtros.TamanioPagina);
 
-            var entidades = await query;
-
-            // Convertir a DTOs con deserialización
-            var dtos = entidades.Select(e => MapearADto(e)).ToList();
-
-            resultado.TotalRegistros = dtos.Count;
+            resultado.TotalRegistros = total;
             resultado.PaginaActual = filtros.PaginaActual;
             resultado.TamanioPagina = filtros.TamanioPagina;
 
-            // Aplicar paginación
-            var skip = (resultado.PaginaActual - 1) * resultado.TamanioPagina;
-            resultado.Registros = dtos
-                .Skip(skip)
-                .Take(resultado.TamanioPagina)
-                .ToList();
+            // Convertir a DTOs con deserialización (solo la página, no todos)
+            resultado.Registros = entidades.Select(e => MapearADto(e)).ToList();
 
             return resultado;
         }

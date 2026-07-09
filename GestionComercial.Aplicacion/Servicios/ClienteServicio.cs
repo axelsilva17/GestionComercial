@@ -73,6 +73,7 @@ namespace GestionComercial.Aplicacion.Servicios
             Email     = c.Email ?? string.Empty,
             IdEmpresa = c.Id_empresa,
             Activo    = c.Activo,
+            TotalVentas = c.CantidadCompras,
         };
     }
 }

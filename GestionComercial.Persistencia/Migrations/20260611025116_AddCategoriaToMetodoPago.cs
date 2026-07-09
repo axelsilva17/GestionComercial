@@ -11,21 +11,39 @@ namespace GestionComercial.Persistencia.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Categoria",
-                table: "MetodoPago",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "Otro");
+            // Drop vista que depende de MetodoPago antes de dropear la tabla
+            migrationBuilder.Sql("DROP VIEW IF EXISTS VistaVentasResumidas;");
 
-            // Migrate data: EsEfectivo → Categoria
-            migrationBuilder.Sql("UPDATE MetodoPago SET Categoria = 'Efectivo' WHERE EsEfectivo = 1");
-            migrationBuilder.Sql("UPDATE MetodoPago SET Categoria = 'Tarjeta' WHERE Nombre IN ('Débito', 'Crédito') AND EsEfectivo = 0");
-            migrationBuilder.Sql("UPDATE MetodoPago SET Categoria = 'Transferencia' WHERE Nombre = 'Transferencia' AND EsEfectivo = 0");
+            // Limpiar FK references de Pago a MetodoPago (seed data se reinserta al final del migration)
+            migrationBuilder.Sql("DELETE FROM Pago;");
 
-            migrationBuilder.DropColumn(
-                name: "EsEfectivo",
-                table: "MetodoPago");
+            // Rebuild MetodoPago via raw SQL (SQLite no permite ALTER COLUMN)
+            // EsEfectivo → Categoria con migración de datos incluida
+            migrationBuilder.Sql(@"
+                CREATE TABLE ""tmp_MetodoPago_new"" (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MetodoPago"" PRIMARY KEY AUTOINCREMENT,
+                    ""Nombre"" TEXT NOT NULL,
+                    ""Categoria"" TEXT NOT NULL DEFAULT 'Otro',
+                    ""Activo"" INTEGER NOT NULL DEFAULT 1,
+                    ""Id_empresa"" INTEGER NOT NULL,
+                    ""FechaAlta"" TEXT NULL,
+                    CONSTRAINT ""FK_MetodoPago_Empresa_Id_empresa"" FOREIGN KEY (""Id_empresa"") REFERENCES ""Empresa"" (""Id"") ON DELETE CASCADE
+                );
+
+                INSERT INTO ""tmp_MetodoPago_new"" (""Id"", ""Nombre"", ""Categoria"", ""Activo"", ""Id_empresa"", ""FechaAlta"")
+                SELECT ""Id"", ""Nombre"",
+                    CASE
+                        WHEN ""EsEfectivo"" = 1 THEN 'Efectivo'
+                        WHEN ""Nombre"" IN ('Débito', 'Crédito') THEN 'Tarjeta'
+                        WHEN ""Nombre"" = 'Transferencia' THEN 'Transferencia'
+                        ELSE 'Otro'
+                    END,
+                    ""Activo"", ""Id_empresa"", ""FechaAlta""
+                FROM ""MetodoPago"";
+
+                DROP TABLE ""MetodoPago"";
+                ALTER TABLE ""tmp_MetodoPago_new"" RENAME TO ""MetodoPago"";
+            ");
 
             migrationBuilder.AddColumn<string>(
                 name: "LogoUrl",
@@ -33,36 +51,7 @@ namespace GestionComercial.Persistencia.Migrations
                 type: "TEXT",
                 nullable: true);
 
-            migrationBuilder.CreateTable(
-                name: "ProveedorProductoCostos",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    IdProveedor = table.Column<int>(type: "INTEGER", nullable: false),
-                    IdProducto = table.Column<int>(type: "INTEGER", nullable: false),
-                    Costo = table.Column<decimal>(type: "TEXT", nullable: false),
-                    ProveedorId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ProductoId = table.Column<int>(type: "INTEGER", nullable: false),
-                    FechaAlta = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Activo = table.Column<bool>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProveedorProductoCostos", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ProveedorProductoCostos_ProveedorProductoCostos_ProductoId",
-                        column: x => x.ProductoId,
-                        principalTable: "ProveedorProductoCostos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ProveedorProductoCostos_Proveedor_ProveedorId",
-                        column: x => x.ProveedorId,
-                        principalTable: "Proveedor",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            // ProveedorProductoCostos ya fue creada en la migration ProveedorProductoCosto
 
             migrationBuilder.UpdateData(
                 table: "Caja",
@@ -1322,31 +1311,60 @@ namespace GestionComercial.Persistencia.Migrations
                 table: "ProveedorProductoCostos",
                 column: "ProductoId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ProveedorProductoCostos_ProveedorId",
-                table: "ProveedorProductoCostos",
-                column: "ProveedorId");
+            // Index de ProveedorProductoCostos ya fue creado en ProveedorProductoCosto
+
+            // Recrear vista que depende de MetodoPago (dropeada al inicio del Up)
+            migrationBuilder.Sql(@"
+                DROP VIEW IF EXISTS VistaVentasResumidas;
+                CREATE VIEW VistaVentasResumidas AS
+                SELECT
+                    v.Id,
+                    v.Fecha,
+                    v.TotalFinal AS Total,
+                    v.Estado,
+                    c.Nombre AS ClienteNombre,
+                    (u.Nombre || ' ' || u.Apellido) AS UsuarioNombre,
+                    s.Nombre AS SucursalNombre,
+                    mp.Nombre AS MetodoPagoNombre
+                FROM Venta v
+                LEFT JOIN Cliente c ON v.Id_cliente = c.Id
+                LEFT JOIN Usuario u ON v.Id_usuario = u.Id
+                LEFT JOIN Sucursal s ON v.Id_sucursal = s.Id
+                LEFT JOIN Pago p ON p.Id_venta = v.Id
+                LEFT JOIN MetodoPago mp ON p.Id_metodoPago = mp.Id;
+            ");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ProveedorProductoCostos");
+            // ProveedorProductoCostos no se dropea aquí (fue creada en ProveedorProductoCosto)
 
-            migrationBuilder.AddColumn<bool>(
-                name: "EsEfectivo",
-                table: "MetodoPago",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: false);
+            // Rebuild MetodoPago via raw SQL (reversión: Categoria → EsEfectivo)
+            migrationBuilder.Sql("DROP VIEW IF EXISTS VistaVentasResumidas;");
+            migrationBuilder.Sql("DELETE FROM Pago;");
+            migrationBuilder.Sql(@"
+                CREATE TABLE tmp_MetodoPago_new (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MetodoPago"" PRIMARY KEY AUTOINCREMENT,
+                    ""Nombre"" TEXT NOT NULL,
+                    ""EsEfectivo"" INTEGER NOT NULL DEFAULT 0,
+                    ""Activo"" INTEGER NOT NULL DEFAULT 1,
+                    ""Id_empresa"" INTEGER NOT NULL,
+                    ""FechaAlta"" TEXT NULL,
+                    CONSTRAINT ""FK_MetodoPago_Empresa_Id_empresa"" FOREIGN KEY (""Id_empresa"") REFERENCES ""Empresa"" (""Id"") ON DELETE CASCADE
+                );
 
-            // Restore data: Categoria → EsEfectivo
-            migrationBuilder.Sql("UPDATE MetodoPago SET EsEfectivo = 1 WHERE Categoria = 'Efectivo'");
+                INSERT INTO tmp_MetodoPago_new (""Id"", ""Nombre"", ""EsEfectivo"", ""Activo"", ""Id_empresa"", ""FechaAlta"")
+                SELECT ""Id"", ""Nombre"",
+                    CASE WHEN ""Categoria"" = 'Efectivo' THEN 1 ELSE 0 END,
+                    ""Activo"", ""Id_empresa"", ""FechaAlta""
+                FROM ""MetodoPago"";
 
-            migrationBuilder.DropColumn(
-                name: "Categoria",
-                table: "MetodoPago");
+                DROP TABLE ""MetodoPago"";
+                ALTER TABLE tmp_MetodoPago_new RENAME TO ""MetodoPago"";
+            ");
+
+            // Pago se restaura via UpdateData al final del Down
 
             migrationBuilder.DropColumn(
                 name: "LogoUrl",
@@ -2604,6 +2622,27 @@ namespace GestionComercial.Persistencia.Migrations
                 keyValue: 28,
                 column: "FechaAlta",
                 value: new DateTime(2026, 4, 26, 17, 44, 55, 979, DateTimeKind.Local).AddTicks(4444));
+
+            // Recrear vista que depende de MetodoPago
+            migrationBuilder.Sql(@"
+                DROP VIEW IF EXISTS VistaVentasResumidas;
+                CREATE VIEW VistaVentasResumidas AS
+                SELECT
+                    v.Id,
+                    v.Fecha,
+                    v.TotalFinal AS Total,
+                    v.Estado,
+                    c.Nombre AS ClienteNombre,
+                    (u.Nombre || ' ' || u.Apellido) AS UsuarioNombre,
+                    s.Nombre AS SucursalNombre,
+                    mp.Nombre AS MetodoPagoNombre
+                FROM Venta v
+                LEFT JOIN Cliente c ON v.Id_cliente = c.Id
+                LEFT JOIN Usuario u ON v.Id_usuario = u.Id
+                LEFT JOIN Sucursal s ON v.Id_sucursal = s.Id
+                LEFT JOIN Pago p ON p.Id_venta = v.Id
+                LEFT JOIN MetodoPago mp ON p.Id_metodoPago = mp.Id;
+            ");
         }
     }
 }

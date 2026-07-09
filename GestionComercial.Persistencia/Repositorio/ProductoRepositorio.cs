@@ -43,11 +43,14 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
 
         public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa)
-            => await _dbSet
+        {
+            // Materializar primero y ordenar en memoria porque SQLite no soporta ORDER BY con decimal
+            var productos = await _dbSet
                 .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
                 .Include(p => p.Categoria)
-                .OrderBy(p => p.StockActual)
                 .ToListAsync();
+            return productos.OrderBy(p => p.StockActual);
+        }
 
         public async Task<Producto?> ObtenerPorIdConDetallesAsync(int id)
             => await _dbSet

@@ -1,6 +1,7 @@
 using Caliburn.Micro;
 using FluentValidation;
 using GestionComercial.Aplicacion.DTOs.Clientes;
+using Microsoft.Data.Sqlite;
 using GestionComercial.Aplicacion.DTOs.Compras;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.DTOs.Proveedores;
@@ -49,6 +50,18 @@ namespace GestionComercial.UI
                 .Build();
 
             var connectionString = config.GetConnectionString("DefaultConnection")!;
+
+            // ── Optimización SQLite: WAL mode + synchronous=NORMAL ────────────
+            //    WAL permite lecturas concurrentes sin bloqueos.
+            //    synchronous=NORMAL reduce fsync (más rápido) sin riesgo de corrupción.
+            var sqliteConn = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+            sqliteConn.Open();
+            using (var cmd = sqliteConn.CreateCommand())
+            {
+                cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
+                cmd.ExecuteNonQuery();
+            }
+            sqliteConn.Close();
 
             _container.Handler<GestionComercialContext>(
                 _ => new GestionComercialContext(
@@ -113,6 +126,12 @@ namespace GestionComercial.UI
 
             _container.Handler<IValidator<CajaAbrirDto>>(
                 c => new CajaValidator(c.GetInstance<IUnitOfWork>().Cajas));
+
+            _container.Handler<IValidator<ProductoActualizarDto>>(
+                c => new ProductoActualizarValidator(c.GetInstance<IUnitOfWork>().Productos));
+
+            _container.Handler<IValidator<ProductoImportarDto>>(
+                c => new ProductoImportarValidator());
 
             // ── Navigation Service ─────────────────────────────────────────────────
             _container.Singleton<GestionComercial.UI.Views.Servicios.INavigationService, GestionComercial.UI.Views.Servicios.NavigationService>();

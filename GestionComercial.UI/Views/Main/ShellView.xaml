@@ -368,10 +368,13 @@
 
                         
 
-                        <Button Grid.Column="2" x:Name="CerrarSesion" Content="⏻" FontSize="16"
+                        <Button Grid.Column="2" x:Name="CerrarSesion"
                                 Width="30" Height="30" Background="Transparent" BorderThickness="0"
                                 Foreground="{DynamicResource TextSecondaryBrush}"
                                 Cursor="Hand" ToolTip="Cerrar sesión">
+                            <TextBlock Text="{StaticResource IconoCerrarSesion}"
+                                       FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">

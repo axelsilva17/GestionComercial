@@ -203,7 +203,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _aplicarAPrecioVenta = value; NotifyOfPropertyChange(() => AplicarAPrecioVenta); }
         }
 
-        private bool _aplicarAPrecioCosto = false;
+        private bool _aplicarAPrecioCosto = true;
         public bool AplicarAPrecioCosto
         {
             get => _aplicarAPrecioCosto;
@@ -473,7 +473,10 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
 
             var result = MessageBox.Show(
-                $"Se actualizarán {ProductosActualizados} productos.\n\nPrecio de venta: {(AplicarAPrecioVenta ? "✓ SÍ" : "✗ NO")}\nPorcentaje: {PorcentajeAjuste}%\n\n¿Continuar?",
+                $"Se actualizarán {ProductosActualizados} productos.\n\n" +
+                $"Precio venta: {(AplicarAPrecioVenta ? "✓ SÍ" : "✗ NO")}\n" +
+                $"Precio costo: {(AplicarAPrecioCosto ? "✓ SÍ" : "✗ NO")}\n" +
+                $"Tipo: {TipoAjuste}  Valor: {(TipoAjuste == "porcentaje" ? PorcentajeAjuste.ToString("0.#") + "%" : MontoFijo.ToString("C0"))}\n\n¿Continuar?",
                 "Confirmar Ajuste Masivo",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);

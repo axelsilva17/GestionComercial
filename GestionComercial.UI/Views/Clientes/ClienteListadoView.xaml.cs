@@ -1,5 +1,10 @@
+using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Clientes;
 using GestionComercial.UI.ViewModels.Clientes;
+using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.ViewModels.Ventas;
+using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -26,9 +31,16 @@ namespace GestionComercial.UI.Views.Clientes
         private async void DesactivarCliente_Click(object sender, RoutedEventArgs e)
             => await VM?.DesactivarCliente();
 
-        private void VerVentas_Click(object sender, RoutedEventArgs e)
+        private async void VerVentas_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: navegar a ventas filtrado por cliente seleccionado
+            if (VM?.ClienteSeleccionado == null) return;
+            var shell = IoC.Get<ShellViewModel>();
+            var listado = IoC.Get<VentaListadoViewModel>();
+            listado.ClienteId = VM.ClienteSeleccionado.IdCliente;
+            listado.ClienteNombre = VM.ClienteSeleccionado.Nombre;
+            listado.FechaDesde = DateTime.Today.AddYears(-1);
+            listado.FechaHasta = DateTime.Now;
+            await shell.ActivateItemAsync(listado, CancellationToken.None);
         }
 
         private async void PaginaAnterior_Click(object sender, RoutedEventArgs e)

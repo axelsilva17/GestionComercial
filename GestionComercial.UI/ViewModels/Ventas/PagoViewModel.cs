@@ -51,9 +51,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 case Key.F4:
                     AgregarQR();
                     break;
-                case Key.F5:
-                    CompletarConEfectivo();
-                    break;
                 case Key.F6:
                     if (PuedeCobrar) _ = Confirmar();
                     break;
@@ -253,77 +250,60 @@ namespace GestionComercial.UI.ViewModels.Ventas
             RecalcularTotalPagado();
         }
 
-        /// <summary>Agrega la diferencia faltante en efectivo con un clic.</summary>
-        public void CompletarConEfectivo()
-        {
-            if (Faltante <= 0) return;
-            var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
-            if (efectivo == null) return;
-            MetodoSeleccionado = efectivo;
-            MontoIngresado     = Faltante.ToString("F2");
-            AgregarPago();
-        }
+		/// <summary>
+		/// Agrega un pago con el método seleccionado.
+		/// Si hay un monto escrito usa ese, si no completa el faltante automáticamente.
+		/// </summary>
+		private void SeleccionarOCompletar(PagoItemDto metodo)
+		{
+			MetodoSeleccionado = metodo;
 
-        /// <summary>
-        /// Agrega pago en efectivo (botón rápido).
-        /// Usa el total de la venta si no hay pagos, sino usa el faltante.
-        /// </summary>
-        public void AgregarEfectivo()
-        {
-            var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
-            if (efectivo == null) { MostrarError("No hay método de pago en efectivo configurado."); return; }
-            MetodoSeleccionado = efectivo;
-            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
-            AgregarPago();
-        }
+			// Si el campo está vacío o inválido, completar con faltante o total
+			var texto = (MontoIngresado ?? "").Replace(",", ".");
+			if (!decimal.TryParse(texto,
+					System.Globalization.NumberStyles.Any,
+					System.Globalization.CultureInfo.InvariantCulture,
+					out var monto) || monto <= 0)
+			{
+				MontoIngresado = (Faltante > 0 ? Faltante : TotalVenta).ToString("F2");
+			}
 
-        /// <summary>
-        /// Agrega pago con tarjeta de débito (botón rápido).
-        /// </summary>
-        public void AgregarDebito()
-        {
-            var debito = MetodosPago.FirstOrDefault(m =>
-                m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
-                m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
-            if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
-            MetodoSeleccionado = debito;
-            var monto = Faltante > 0 ? Faltante : TotalVenta;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarDebito: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
-            MontoIngresado = monto.ToString("F2");
-            AgregarPago();
-        }
+			AgregarPago();
+		}
 
-        /// <summary>
-        /// Agrega pago con tarjeta de crédito (botón rápido).
-        /// </summary>
-        public void AgregarCredito()
-        {
-            var credito = MetodosPago.FirstOrDefault(m =>
-                m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
-                m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
-            if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
-            MetodoSeleccionado = credito;
-            var monto = Faltante > 0 ? Faltante : TotalVenta;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarCredito: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
-            MontoIngresado = monto.ToString("F2");
-            AgregarPago();
-        }
+		public void AgregarEfectivo()
+		{
+			var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
+			if (efectivo == null) { MostrarError("No hay método de pago en efectivo configurado."); return; }
+			SeleccionarOCompletar(efectivo);
+		}
 
-        /// <summary>
-        /// Agrega pago con QR (botón rápido).
-        /// </summary>
-        public void AgregarQR()
-        {
-            var qr = MetodosPago.FirstOrDefault(m =>
-                m.NombreMetodo.Contains("QR", StringComparison.OrdinalIgnoreCase) ||
-                m.NombreMetodo.Contains("Transferencia", StringComparison.OrdinalIgnoreCase));
-            if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
-            MetodoSeleccionado = qr;
-            var monto = Faltante > 0 ? Faltante : TotalVenta;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarQR: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
-            MontoIngresado = monto.ToString("F2");
-            AgregarPago();
-        }
+		public void AgregarDebito()
+		{
+			var debito = MetodosPago.FirstOrDefault(m =>
+				m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
+				m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
+			if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
+			SeleccionarOCompletar(debito);
+		}
+
+		public void AgregarCredito()
+		{
+			var credito = MetodosPago.FirstOrDefault(m =>
+				m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
+				m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
+			if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
+			SeleccionarOCompletar(credito);
+		}
+
+		public void AgregarQR()
+		{
+			var qr = MetodosPago.FirstOrDefault(m =>
+				m.NombreMetodo.Contains("QR", StringComparison.OrdinalIgnoreCase) ||
+				m.NombreMetodo.Contains("Transferencia", StringComparison.OrdinalIgnoreCase));
+			if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
+			SeleccionarOCompletar(qr);
+		}
 
         public async Task Confirmar()
         {

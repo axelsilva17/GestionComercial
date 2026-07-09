@@ -70,7 +70,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             DateTime? fechaHasta = null);
 
         /// <summary>
-        /// Obtiene auditoría filtrada por múltiples criterios.
+        /// Obtiene auditoría filtrada por múltiples criterios (todos los registros).
         /// </summary>
         Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaFiltradaAsync(
             int? idUsuario = null,
@@ -78,5 +78,18 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             string? nombreTabla = null,
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null);
+
+        /// <summary>
+        /// Obtiene auditoría filtrada con paginación en SQL (sin materializar todo).
+        /// Devuelve los items de la página + el total de registros.
+        /// </summary>
+        Task<(IEnumerable<AuditoriaLog> Items, int Total)> ObtenerAuditoriaPaginadaAsync(
+            int? idUsuario,
+            int? tipoOperacion,
+            string? nombreTabla,
+            DateTime? fechaDesde,
+            DateTime? fechaHasta,
+            int pagina,
+            int tamanioPagina);
     }
 }

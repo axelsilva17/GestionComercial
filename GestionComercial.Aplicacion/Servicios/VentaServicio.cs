@@ -39,6 +39,9 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
             int idSucursal, DateTime desde, DateTime hasta)
         {
+            // Normalizar: si hasta es inicio del día, usar fin del día para incluir todo el día
+            if (hasta.TimeOfDay == TimeSpan.Zero)
+                hasta = hasta.Date.AddDays(1).AddSeconds(-1);
             var ventas = await _uow.Ventas.ObtenerPorFechaAsync(desde, hasta, idSucursal);
             return ventas.Select(MapearResumen);
         }
@@ -203,6 +206,38 @@ namespace GestionComercial.Aplicacion.Servicios
         }
 
         /// <summary>
+        /// Marca una venta pendiente como pagada usando efectivo como método por defecto.
+        /// Útil para "Cobrar" rápido desde el historial.
+        /// </summary>
+        public async Task CobrarVentaAsync(int idVenta)
+        {
+            var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
+                ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
+
+            if (venta.Estado != (int)EstadoVentaEnum.Pendiente)
+                throw new VentaInvalidaException("Solo se pueden cobrar ventas pendientes.");
+
+            // Buscar método de pago en efectivo
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
+            var metodos = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(sucursal?.Id_empresa ?? 0);
+            var efectivo = metodos.FirstOrDefault(m => m.Categoria == "Efectivo")
+                        ?? metodos.FirstOrDefault()
+                        ?? throw new NegocioException("No hay métodos de pago configurados.");
+
+            // Crear pago único por el total
+            var pagoEntity = Pago.Crear(venta.TotalFinal, idVenta, efectivo.Id);
+            var strategy = _paymentStrategyFactory.Resolve(efectivo.Categoria ?? "Otro");
+            await strategy.ProcesarPagoAsync(pagoEntity, venta, _uow);
+
+            venta.MarcarPagada();
+            await _uow.Pagos.AgregarAsync(pagoEntity);
+            _uow.Ventas.Actualizar(venta);
+            await _uow.GuardarCambiosAsync();
+
+            _ = ImprimirTicketAsync(venta.Id);
+        }
+
+        /// <summary>
         /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
         /// Los errores de impresión NO deben revertir el pago.
         /// </summary>
@@ -279,6 +314,7 @@ namespace GestionComercial.Aplicacion.Servicios
             Fecha         = v.Fecha,
             TotalFinal    = v.TotalFinal,
             Estado        = MapEstado(v.Estado),
+            IdCliente     = v.Id_cliente,
             ClienteNombre = v.Cliente?.Nombre ?? "Consumidor Final",
             UsuarioNombre = v.Usuario != null
                 ? $"{v.Usuario.Nombre} {v.Usuario.Apellido}" : string.Empty,
@@ -291,6 +327,7 @@ namespace GestionComercial.Aplicacion.Servicios
             TotalBruto     = v.TotalBruto,
             TotalDescuento = v.TotalDescuento,
             TotalFinal     = v.TotalFinal,
+            Total          = v.TotalBruto,
             Estado         = MapEstado(v.Estado),
             ClienteNombre  = v.Cliente?.Nombre ?? "Consumidor Final",
             UsuarioNombre  = v.Usuario != null
@@ -305,6 +342,20 @@ namespace GestionComercial.Aplicacion.Servicios
                 CostoUnitario  = d.CostoUnitario,
                 Subtotal       = d.Subtotal,
                 MargenUnitario = d.MargenUnitario,
+            }).ToList(),
+            Pagos = v.Pagos.Select(p => new PagoDto
+            {
+                IdPago       = p.Id,
+                Monto        = p.Monto,
+                IdMetodoPago = p.Id_metodoPago,
+                MetodoNombre = p.MetodoPago?.Nombre ?? "—",
+                Categoria    = p.MetodoPago?.Categoria ?? "Otro",
+                Icono        = (p.MetodoPago?.Categoria) switch
+                {
+                    "Efectivo" => "💵",
+                    "Tarjeta"  => "💳",
+                    _          => "💲",
+                },
             }).ToList(),
         };
 

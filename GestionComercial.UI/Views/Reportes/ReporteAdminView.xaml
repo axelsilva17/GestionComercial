@@ -67,6 +67,13 @@
         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,0,28">
 
+                <!-- Error banner -->
+                <Border Background="#1AEF4444" CornerRadius="8" Padding="12,10" Margin="0,0,0,10"
+                        Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding MensajeError}" FontSize="12" Foreground="#EF4444"
+                               TextWrapping="Wrap"/>
+                </Border>
+
                 <!-- Barra de filtros -->
                 <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                     <Grid>

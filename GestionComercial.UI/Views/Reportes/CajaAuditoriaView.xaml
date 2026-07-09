@@ -27,11 +27,19 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Volver -->
+        <Button Grid.Row="0" x:Name="Volver" Content="← Volver"
+                Background="Transparent" BorderThickness="0"
+                Foreground="{DynamicResource TextSecondaryBrush}"
+                FontSize="13" Cursor="Hand" HorizontalAlignment="Left"
+                Margin="0,0,0,12"/>
+
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+        <StackPanel Grid.Row="1" Margin="0,0,0,20">
             <TextBlock Text="Auditoría de Caja" FontSize="24" FontWeight="Bold" 
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="Historial de cajas, movimientos y diferencias" FontSize="13" 
@@ -39,14 +47,14 @@
         </StackPanel>
 
         <!-- Error message -->
-        <Border Grid.Row="1" Background="#EF444430" BorderBrush="#EF4444" BorderThickness="1"
+        <Border Grid.Row="2" Background="#EF444430" BorderBrush="#EF4444" BorderThickness="1"
                 CornerRadius="8" Padding="12,8" Margin="0,0,0,8"
                 Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibility}}">
             <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontSize="12"/>
         </Border>
 
         <!-- Toolbar: Filtros + KPIs + Acciones -->
-        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
+        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -117,7 +125,7 @@
         </Border>
 
         <!-- Contenido principal -->
-        <Grid Grid.Row="3">
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="320"/>

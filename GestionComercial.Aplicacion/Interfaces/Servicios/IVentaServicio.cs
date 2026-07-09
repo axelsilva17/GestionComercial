@@ -14,6 +14,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<VentaDto?>   ObtenerPorIdAsync(int id);
         Task<VentaDto>    CrearAsync(VentaCrearDto dto);
         Task              RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos);
+        Task              CobrarVentaAsync(int idVenta);
         Task              CancelarAsync(int id, string motivo);
         Task<decimal>     ObtenerTotalDelDiaAsync(int idSucursal);
     }

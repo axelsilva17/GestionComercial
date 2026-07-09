@@ -10,6 +10,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal  TotalDescuento { get; set; }
         public decimal  TotalFinal     { get; set; }
         public string   Estado         { get; set; }
+        public int      IdCliente      { get; set; }
         public string   ClienteNombre  { get; set; }
         public string   UsuarioNombre  { get; set; }
         public string   ClienteInicial => string.IsNullOrEmpty(ClienteNombre) ? "?" : ClienteNombre[0].ToString().ToUpper();

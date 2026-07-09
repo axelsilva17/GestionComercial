@@ -58,17 +58,38 @@
             <!-- ── Header ── -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
+                <Button Grid.Column="0" Content="← Volver"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        FontSize="13" Cursor="Hand" VerticalAlignment="Center"
+                        Margin="0,0,20,0" Click="Volver_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="b" Background="{TemplateBinding Background}"
+                                    CornerRadius="6" Padding="10,6">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <StackPanel Grid.Column="1">
                     <TextBlock Text="Importar Productos desde Excel" FontSize="24" FontWeight="Bold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="Cargá masivamente productos con su stock, precios y categorías"
                                FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
                 <!-- ✅ Click conectado -->
-                <Button Grid.Column="1" Style="{StaticResource GhostBtn}"
+                <Button Grid.Column="2" Style="{StaticResource GhostBtn}"
                         Height="38" Padding="14,0" FontSize="12"
                         Click="DescargarPlantilla_Click">
                     <StackPanel Orientation="Horizontal">
@@ -132,15 +153,23 @@
                                       IsChecked="{Binding CrearCategorias}" Style="{StaticResource OpcionCheck}"/>
 
                             <!-- Ajuste de precio -->
-                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                                <TextBlock Text="Ajustar precio (%):" VerticalAlignment="Center" Width="140"
+                            <TextBlock Text="AJUSTE DE PRECIOS" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,12,0,8"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <CheckBox Content="Precio venta" IsChecked="{Binding AjustarVenta}"
+                                          Style="{StaticResource OpcionCheck}" Margin="0,0,16,0"/>
+                                <CheckBox Content="Precio costo" IsChecked="{Binding AjustarCosto}"
+                                          Style="{StaticResource OpcionCheck}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="Ajuste (%):" VerticalAlignment="Center" Width="80"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBox Text="{Binding AjustePorcentaje, UpdateSourceTrigger=PropertyChanged}" 
                                         Width="70" Style="{StaticResource Input}"/>
                                 <TextBlock Text="%" VerticalAlignment="Center" Margin="4,0,0,0"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
                                 <TextBlock Text="Margen sobre costo (%):" VerticalAlignment="Center" Width="140"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBox Text="{Binding Margen, UpdateSourceTrigger=PropertyChanged}" 

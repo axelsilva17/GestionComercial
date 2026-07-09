@@ -306,8 +306,8 @@ namespace GestionComercial.UI.ViewModels.Inventario
             LimpiarError();
             try
             {
-                // Obtener movimientos desde el servicio real
-                var (movimientos, total) = await _inventarioServicio.ObtenerMovimientosAsync(
+                // Obtener movimientos desde el servicio real (paginación en SQL)
+                var resultado = await _inventarioServicio.ObtenerMovimientosAsync(
                     TextoBusqueda,
                     FiltroTipo,
                     FiltroUsuario,
@@ -318,9 +318,9 @@ namespace GestionComercial.UI.ViewModels.Inventario
                     ItemsPorPagina,
                     IdEmpresa);
 
-                Movimientos = new ObservableCollection<MovimientoStockDto>(movimientos);
-                TotalMovimientos = total;
-                TotalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)ItemsPorPagina));
+                Movimientos = new ObservableCollection<MovimientoStockDto>(resultado.Items);
+                TotalMovimientos = resultado.TotalItems;
+                TotalPaginas = resultado.TotalPaginas;
                 PaginaActual = Math.Min(PaginaActual, TotalPaginas);
 
                 MovimientosMostrados = Movimientos.Count;
@@ -339,7 +339,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
         private async Task CalcularResumenPeriodoAsync()
         {
             // Obtener todos los movimientos del período para el resumen (sin paginación)
-            var (todosMovimientos, _) = await _inventarioServicio.ObtenerMovimientosAsync(
+            var resultado = await _inventarioServicio.ObtenerMovimientosAsync(
                 null,  // sin filtro búsqueda
                 null,  // sin filtro tipo
                 null,  // sin filtro usuario
@@ -350,7 +350,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
                 int.MaxValue, // todos los registros
                 IdEmpresa);
 
-            var lista = todosMovimientos.ToList();
+            var lista = resultado.Items;
 
             TotalEntradas      = lista.Count(m => m.TipoMovimiento == "Entrada");
             TotalSalidas       = lista.Count(m => m.TipoMovimiento == "Salida");

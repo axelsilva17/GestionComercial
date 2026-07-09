@@ -1,3 +1,4 @@
+using GestionComercial.Aplicacion.DTOs;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
 
@@ -7,8 +8,9 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
     {
         /// <summary>
         /// Obtiene movimientos de stock con filtros y paginación.
+        /// La paginación se ejecuta EN SQL, no en memoria.
         /// </summary>
-        Task<(IEnumerable<MovimientoStockDto> Movimientos, int Total)> ObtenerMovimientosAsync(
+        Task<PagedResult<MovimientoStockDto>> ObtenerMovimientosAsync(
             string? textoBusqueda,
             string? filtroTipo,
             string? filtroUsuario,

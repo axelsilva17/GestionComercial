@@ -186,5 +186,43 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderByDescending(a => a.FechaOperacion)
                 .ToListAsync();
         }
+
+        public async Task<(IEnumerable<AuditoriaLog> Items, int Total)> ObtenerAuditoriaPaginadaAsync(
+            int? idUsuario,
+            int? tipoOperacion,
+            string? nombreTabla,
+            DateTime? fechaDesde,
+            DateTime? fechaHasta,
+            int pagina,
+            int tamanioPagina)
+        {
+            var query = _context.AuditoriaLogs.AsQueryable();
+
+            if (idUsuario.HasValue)
+                query = query.Where(a => a.IdUsuario == idUsuario.Value);
+
+            if (tipoOperacion.HasValue)
+                query = query.Where(a => a.TipoOperacion == tipoOperacion.Value);
+
+            if (!string.IsNullOrWhiteSpace(nombreTabla))
+                query = query.Where(a => a.NombreTabla == nombreTabla);
+
+            if (fechaDesde.HasValue)
+                query = query.Where(a => a.FechaOperacion >= fechaDesde.Value);
+
+            if (fechaHasta.HasValue)
+                query = query.Where(a => a.FechaOperacion <= fechaHasta.Value);
+
+            var ordenada = query.OrderByDescending(a => a.FechaOperacion);
+
+            // ── Count en SQL + página en SQL ──
+            var total = await ordenada.CountAsync();
+            var items = await ordenada
+                .Skip((pagina - 1) * tamanioPagina)
+                .Take(tamanioPagina)
+                .ToListAsync();
+
+            return (items, total);
+        }
     }
 }

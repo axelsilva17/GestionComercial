@@ -29,6 +29,33 @@ namespace GestionComercial.UI.ViewModels.Ventas
             FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1);
         }
 
+        // ── Filtro por cliente (desde sidebar de clientes) ───────────────────
+        private int _clienteId;
+        public int ClienteId
+        {
+            get => _clienteId;
+            set
+            {
+                _clienteId = value;
+                NotifyOfPropertyChange(() => ClienteId);
+            }
+        }
+
+        private string _clienteNombre = string.Empty;
+        public string ClienteNombre
+        {
+            get => _clienteNombre;
+            set
+            {
+                _clienteNombre = value;
+                NotifyOfPropertyChange(() => ClienteNombre);
+                Titulo = string.IsNullOrEmpty(value)
+                    ? "Historial de Ventas"
+                    : $"Ventas de {value}";
+                NotifyOfPropertyChange(() => Titulo);
+            }
+        }
+
         /// <summary>
         /// Maneja atajos de teclado globales en el listado de ventas.
         /// </summary>
@@ -119,6 +146,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         public bool PuedeAnular     => VentaSeleccionada?.Estado is "Pendiente" or "Pagada";
+        public bool PuedeCobrar     => VentaSeleccionada?.Estado == "Pendiente";
         public bool PuedeVerDetalle => VentaSeleccionada != null;
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
@@ -134,8 +162,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 var ventas = await _ventaServicio.ObtenerPorSucursalAsync(
                     _sesion.IdSucursal, FechaDesde, FechaHasta);
+
+                IEnumerable<VentaResumenDto> filtradas = ventas;
+                if (ClienteId > 0)
+                    filtradas = filtradas.Where(v => v.IdCliente == ClienteId);
+
                 _todasLasVentas = new ObservableCollection<VentaResumenDto>(
-                    ventas.OrderByDescending(v => v.Fecha));
+                    filtradas.OrderByDescending(v => v.Fecha));
                 AplicarFiltros();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
@@ -177,6 +210,30 @@ namespace GestionComercial.UI.ViewModels.Ventas
             var vm = IoC.Get<ComprobanteViewModel>();
             await vm.CargarAsync(VentaSeleccionada.IdVenta, 0);
             await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public async Task CobrarVenta()
+        {
+            if (VentaSeleccionada == null || !PuedeCobrar) return;
+
+            var confirmacion = MessageBox.Show(
+                $"¿Cobrar la venta #{VentaSeleccionada.IdVenta}?\n\n" +
+                $"Se registrará como pago en efectivo por ${VentaSeleccionada.TotalFinal:N2}.",
+                "Confirmar cobro",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmacion != MessageBoxResult.Yes) return;
+
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                await _ventaServicio.CobrarVentaAsync(VentaSeleccionada.IdVenta);
+                await Buscar(); // Recargar lista
+            }
+            catch (Exception ex) { MostrarError(ex.Message); }
+            finally { IsLoading = false; }
         }
 
         public async Task AnularVenta()
