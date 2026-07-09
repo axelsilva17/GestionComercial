@@ -834,14 +834,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             public decimal Total { get; set; }
         }
 
-        // ── Navegar a Caja Turnos ─────────────────────────────────────────────
-        public async Task MostrarTurnos()
-        {
-            await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
-                .ActivateItemAsync(Caliburn.Micro.IoC.Get<Cajas.CajaTurnosViewModel>(),
-                    System.Threading.CancellationToken.None);
-        }
-
         // ── Navegar a Caja Auditoría ───────────────────────────────────────────
         public async Task IrCajaAuditoria()
         {

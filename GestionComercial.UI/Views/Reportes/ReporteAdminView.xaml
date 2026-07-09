@@ -95,12 +95,6 @@
                             </Button.Template>
                         </Button>
 
-                        <Button cal:Message.Attach="MostrarTurnos" 
-                                Content="Turnos" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="0,0,6,0" />
-
                         <Button cal:Message.Attach="IrCajaAuditoria" 
                                 Content="Caja Auditoría" Background="{DynamicResource SurfaceBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
@@ -240,46 +234,51 @@
                     </Border>
                 </Grid>
 
-                <!-- Compras recientes -->
+                <!-- Stock Crítico -->
                 <Border Style="{StaticResource CardNoPad}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <StackPanel Margin="16,14,16,10">
-                                <TextBlock Text="COMPRAS RECIENTES" Style="{StaticResource ColHeader}"/>
-                                <TextBlock Text="Últimas órdenes" FontSize="12" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            </StackPanel>
-                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ComprasRecientes}" Margin="8,0,8,10">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="6" Padding="10,10" Margin="0,2">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Proveedor}" FontSize="12" FontWeight="Medium"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                    TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="{Binding Fecha}" FontSize="10"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding Total, Converter={StaticResource DecimalToMoneda}}"
-                                                               FontSize="13" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                                               VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
-                        </Border>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Margin="16,14,16,10">
+                            <TextBlock Text="STOCK CRÍTICO" Style="{StaticResource ColHeader}"/>
+                            <TextBlock Text="Productos con stock bajo o sin stock" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding StockCritico}" Margin="8,0,8,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Padding="10,10" Margin="0,2">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Nombre}" FontSize="12" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Estado}" FontSize="10"
+                                                           Foreground="{DynamicResource ErrorBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding StockActual, StringFormat='Stock: {0}'}"
+                                                       FontSize="12" Foreground="{DynamicResource ErrorBrush}"
+                                                       VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding StockMinimo, StringFormat='Mín: {0}'}"
+                                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
 
 
             </StackPanel>

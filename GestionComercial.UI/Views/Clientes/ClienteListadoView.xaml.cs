@@ -16,11 +16,13 @@ namespace GestionComercial.UI.Views.Clientes
 
         public ClienteListadoView() => InitializeComponent();
 
-        private async void NuevoCliente_Click(object sender, RoutedEventArgs e)
-            => await VM?.NuevoCliente();
+        private async void NuevoCliente_Click(object sender, RoutedEventArgs e) => await VM?.NuevoCliente();
 
-        private async void Buscar_Click(object sender, RoutedEventArgs e)
-            => await VM?.Buscar();
+        private async void TextoBusqueda_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter && VM != null)
+                await VM.Buscar();
+        }
 
         private void CerrarDetalle_Click(object sender, RoutedEventArgs e)
             => VM?.CerrarDetalle();
