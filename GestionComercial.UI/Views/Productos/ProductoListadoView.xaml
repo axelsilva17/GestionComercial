@@ -256,10 +256,6 @@
 
                         <Border Width="12" MinWidth="0"/>
 
-                        <Button Content="Buscar" Height="38" Padding="16,0"
-                               Style="{StaticResource SecondaryButton}"
-                               Click="Buscar_Click"/>
-                        <Border Width="8" MinWidth="0"/>
                         <Button Content="⚡ Ajuste" Height="38" Padding="16,0"
                                Style="{StaticResource SecondaryButton}"
                                Click="AbrirAjusteMasivo_Click"/>

@@ -233,12 +233,12 @@ namespace GestionComercial.UI.ViewModels.Productos
 
                 // Insertar opción "Todas las categorías" al inicio
                 var lista = new List<CategoriaItemDto>(categorias.Count + 1);
-                lista.Add(new CategoriaItemDto { IdCategoria = 0, Nombre = "Todas las categorías" });
+                lista.Add(new CategoriaItemDto { IdCategoria = 0, Nombre = "Todos" });
                 lista.AddRange(categorias);
 
                 Categorias = new ObservableCollection<CategoriaItemDto>(lista);
 
-                // Seleccionar "Todas las categorías" por defecto
+                // Seleccionar "Todos" por defecto
                 CategoriaSeleccionada = lista[0];
             }
             catch (Exception ex)
@@ -268,7 +268,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                         (p.CodigoBarra?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
                 }
 
-                // Filtro por categoría (IdCategoria == 0 = "Todas las categorías")
+                // Filtro por categoría (IdCategoria == 0 = "Todos")
                 if (CategoriaSeleccionada?.IdCategoria > 0)
                 {
                     filtrados = filtrados.Where(p => p.IdCategoria == CategoriaSeleccionada.IdCategoria);
@@ -347,7 +347,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             PorcentajeAjuste = 0;
             MontoFijo = 0;
             TipoAjuste = "porcentaje";
-            CategoriaAjuste = Categorias.FirstOrDefault(); // "Todas las categorías" por defecto
+            CategoriaAjuste = Categorias.FirstOrDefault(); // "Todos" por defecto
             // Pre-cargar preview con todos los productos visibles
             _productosPreview = new ObservableCollection<ProductoListadoDto>(Productos);
             NotifyOfPropertyChange(() => ProductosPreview);

@@ -334,11 +334,11 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             public async void Execute(object parameter) => await _execute(parameter);
         }
 
-        // ── Volver al Dashboard ────────────────────────────────────────────────
+        // ── Volver a Reporte Admin ─────────────────────────────────────────────
         public async Task Volver()
         {
-            var dashboard = Caliburn.Micro.IoC.Get<DashboardViewModel>();
-            await Caliburn.Micro.IoC.Get<ShellViewModel>().ActivateItemAsync(dashboard, CancellationToken.None);
+            var reporteAdmin = Caliburn.Micro.IoC.Get<ReporteAdminViewModel>();
+            await Caliburn.Micro.IoC.Get<ShellViewModel>().ActivateItemAsync(reporteAdmin, CancellationToken.None);
         }
 
         // Action: open caja with selected caja/turno

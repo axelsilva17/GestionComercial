@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.ViewModels.Reportes;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -195,11 +196,11 @@ namespace GestionComercial.UI.ViewModels.Cajas
             }
         }
 
-        // ── Volver al Dashboard ────────────────────────────────────────────────
+        // ── Volver a Reportes ──────────────────────────────────────────────────
         public async Task Volver()
         {
-            var dashboard = IoC.Get<DashboardViewModel>();
-            await IoC.Get<ShellViewModel>().ActivateItemAsync(dashboard, CancellationToken.None);
+            var reportes = IoC.Get<Reportes.ReporteAdminViewModel>();
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(reportes, CancellationToken.None);
         }
     }
 }
