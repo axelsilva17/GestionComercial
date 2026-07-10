@@ -1,9 +1,7 @@
 namespace GestionComercial.Dominio.Entidades.Ventas
 {
-    /// <summary>
-    /// Representa un descuento aplicado a un ítem específico de venta.
+    ///     /// Representa un descuento aplicado a un ítem específico de venta.
     /// Permite múltiples descuentos por ítem con porcentaje y monto.
-    /// </summary>
     public class VentaDetalleDescuento
     {
         private decimal _porcentaje;
@@ -39,9 +37,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         // ── Constructor vacío (para EF Core) ──
         public VentaDetalleDescuento() { }
 
-        /// <summary>
-        /// Crea un descuento por monto fijo.
-        /// </summary>
+        ///         /// Crea un descuento por monto fijo.
         public static VentaDetalleDescuento PorMonto(decimal monto, int idDetalle, string? descripcion = null)
         {
             if (monto <= 0)
@@ -56,9 +52,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             };
         }
 
-        /// <summary>
-        /// Crea un descuento por porcentaje.
-        /// </summary>
+        ///         /// Crea un descuento por porcentaje.
         public static VentaDetalleDescuento PorPorcentaje(decimal porcentaje, decimal montoBase, int idDetalle, string? descripcion = null)
         {
             if (porcentaje <= 0 || porcentaje > 100)
@@ -73,9 +67,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             };
         }
 
-        /// <summary>
-        /// Recalcula el monto basándose en un nuevo precio base.
-        /// </summary>
+        ///         /// Recalcula el monto basándose en un nuevo precio base.
         public void RecalcularMonto(decimal precioBase)
         {
             if (_porcentaje > 0)
@@ -86,9 +78,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         public bool EsPorPorcentaje => _porcentaje > 0;
     }
 
-    /// <summary>
-    /// Representa un impuesto aplicado a un ítem específico de venta.
-    /// </summary>
+    ///     /// Representa un impuesto aplicado a un ítem específico de venta.
     public class VentaDetalleImpuesto
     {
         private decimal _porcentaje;
@@ -139,9 +129,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             };
         }
 
-        /// <summary>
-        /// Recalcula el monto basándose en un nuevo precio base.
-        /// </summary>
+        ///         /// Recalcula el monto basándose en un nuevo precio base.
         public void RecalcularMonto(decimal precioBase)
         {
             _monto = precioBase * (_porcentaje / 100m);

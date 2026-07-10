@@ -3,9 +3,7 @@ using GestionComercial.Dominio.Interfaces.Repositorios;
 
 namespace GestionComercial.Aplicacion.Validators
 {
-    /// <summary>
-    /// DTO para abrir una caja. Agregarlo en DTOs/Caja si no existe.
-    /// </summary>
+    ///     /// DTO para abrir una caja. Agregarlo en DTOs/Caja si no existe.
     public class CajaAbrirDto
     {
         public int     IdSucursal   { get; set; }

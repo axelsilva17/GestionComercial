@@ -1,9 +1,7 @@
 namespace GestionComercial.Dominio.Enumeraciones
 {
-    /// <summary>
-    /// Enum para métodos de pago default del sistema.
+    ///     /// Enum para métodos de pago default del sistema.
     /// Los IDs corresponden a los valores sembrados en la DB inicial.
-    /// </summary>
     public enum MetodoPagoEnum
     {
         Efectivo = 1,

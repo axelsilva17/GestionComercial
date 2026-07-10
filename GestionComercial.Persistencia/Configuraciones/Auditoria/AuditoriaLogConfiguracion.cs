@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GestionComercial.Persistencia.Configuraciones.Auditoria
 {
-    /// <summary>
-    /// Configuración de Entity Framework para AuditoriaLog.
-    /// </summary>
+    ///     /// Configuración de Entity Framework para AuditoriaLog.
     public class AuditoriaLogConfiguracion : IEntityTypeConfiguration<AuditoriaLog>
     {
         public void Configure(EntityTypeBuilder<AuditoriaLog> builder)

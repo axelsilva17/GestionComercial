@@ -844,9 +844,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         }
     }
 
-    /// <summary>
-    /// DTO para ventas por caja en export.
-    /// </summary>
+    ///     /// DTO para ventas por caja en export.
     public class VentaResumenCajaDto
     {
         public int CajaId { get; set; }

@@ -1,8 +1,9 @@
-﻿using GestionComercial.Dominio.Entidades.Organizacion;
+namespace GestionComercial.Persistencia.Repositorio
+{
+using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
-using GestionComercial.Persistencia.Repositorio;
 
 public class EmpresaRepositorio : RepositorioBase<Empresa>, IEmpresaRepositorio
 {
@@ -10,4 +11,5 @@ public class EmpresaRepositorio : RepositorioBase<Empresa>, IEmpresaRepositorio
 
     public async Task<Empresa?> ObtenerPorCUITAsync(string cuit)
         => await _dbSet.FirstOrDefaultAsync(e => e.CUIT == cuit);
+}
 }

@@ -31,9 +31,7 @@ namespace GestionComercial.UI.Controles
 
         // ── Eventos ──────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Se dispara cuando el usuario presiona Enter o Tab (lector de barras).
-        /// </summary>
+        ///         /// Se dispara cuando el usuario presiona Enter o Tab (lector de barras).
         public event RoutedEventHandler CodigoIngresado;
 
         public CodigoBarraInput()

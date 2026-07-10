@@ -2,11 +2,9 @@ using GestionComercial.Aplicacion.DTOs.Usuarios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
-    /// <summary>
-    /// Servicio singleton que mantiene los datos del usuario logueado en memoria.
+    ///     /// Servicio singleton que mantiene los datos del usuario logueado en memoria.
     /// Se popula en el LoginViewModel tras autenticación exitosa y se inyecta
     /// en cualquier ViewModel que necesite saber quién está logueado.
-    /// </summary>
     public class SesionServicio
     {
         private UsuarioSesionDto _sesion = new();

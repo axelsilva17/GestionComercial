@@ -17,9 +17,7 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Reportes
 {
-    /// <summary>
-    /// DTO para mostrar movimientos de caja en la auditoría.
-    /// </summary>
+    ///     /// DTO para mostrar movimientos de caja en la auditoría.
     
 
 public class CajaAuditoriaViewModel : NavigableViewModel

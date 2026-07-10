@@ -22,9 +22,7 @@ namespace GestionComercial.Aplicacion.DTOs.Reportes
         public double Margen { get; set; }
     }
 
-    /// <summary>
-    /// DTO for top products report - used by ExportHelper and reportes.
-    /// </summary>
+    ///     /// DTO for top products report - used by ExportHelper and reportes.
     public class ReporteTopProductoDto
     {
         public int IdProducto { get; set; }
@@ -36,9 +34,7 @@ namespace GestionComercial.Aplicacion.DTOs.Reportes
         public double MargenPorcentaje { get; set; }
     }
 
-    /// <summary>
-    /// DTO for payment methods summary in reports.
-    /// </summary>
+    ///     /// DTO for payment methods summary in reports.
     public class ReporteMetodosPagoDto
     {
         public string Metodo { get; set; } = string.Empty;

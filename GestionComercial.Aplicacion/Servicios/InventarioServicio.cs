@@ -6,7 +6,6 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace GestionComercial.Aplicacion.Servicios
@@ -33,69 +32,26 @@ namespace GestionComercial.Aplicacion.Servicios
             int itemsPorPagina,
             int idEmpresa)
         {
-            // ── Construir query en IQueryable (se ejecuta EN SQL) ──────────────
-            //    Usamos Consultar() aunque proyectamos a DTO con .Select().
-            //    EF Core ignora Include() cuando hay Select() a DTO, así que no los ponemos.
-            var query = _uow.MovimientosStock.Consultar()
-                .Where(m => m.Fecha >= fechaDesde && m.Fecha <= fechaHasta.AddDays(1));
+            // Delegar la consulta paginada al repositorio (elimina dependencia de EF Core)
+            var (movimientos, total) = await _uow.MovimientosStock.ObtenerPaginadoAsync(
+                textoBusqueda, filtroTipo, filtroUsuario, filtroSucursal,
+                fechaDesde, fechaHasta, pagina, itemsPorPagina);
 
-            // Filtrar por tipo
-            if (!string.IsNullOrWhiteSpace(filtroTipo) && filtroTipo != "Todos")
+            // Mapear a DTOs en memoria (ya materializados por el repositorio)
+            var items = movimientos.Select(m => new MovimientoStockDto
             {
-                var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>(filtroTipo, ignoreCase: true);
-                query = query.Where(m => m.TipoMovimiento == (int)tipoEnum);
-            }
-
-            // Filtrar por usuario
-            if (!string.IsNullOrWhiteSpace(filtroUsuario) && filtroUsuario != "Todos")
-            {
-                var termino = filtroUsuario.ToLower();
-                query = query.Where(m =>
-                    m.Usuario != null &&
-                    (m.Usuario.Nombre.ToLower().Contains(termino) ||
-                     m.Usuario.Apellido.ToLower().Contains(termino)));
-            }
-
-            // Filtrar por búsqueda (producto o código)
-            if (!string.IsNullOrWhiteSpace(textoBusqueda))
-            {
-                var termino = textoBusqueda.ToLower();
-                query = query.Where(m =>
-                    (m.Producto != null && m.Producto.Nombre.ToLower().Contains(termino)) ||
-                    (m.Producto != null && m.Producto.CodigoBarra != null && m.Producto.CodigoBarra.ToLower().Contains(termino)));
-            }
-
-            // Filtrar por sucursal
-            if (!string.IsNullOrWhiteSpace(filtroSucursal) && filtroSucursal != "Todas")
-            {
-                query = query.Where(m => m.Sucursal != null && m.Sucursal.Nombre == filtroSucursal);
-            }
-
-            // Ordenar
-            query = query.OrderByDescending(m => m.Fecha);
-
-            // ── Total (COUNT en SQL) ────────────────────────────────────────────
-            var total = await query.CountAsync();
-
-            // ── Página (Skip/Take en SQL) ───────────────────────────────────────
-            var items = await query
-                .Skip((pagina - 1) * itemsPorPagina)
-                .Take(itemsPorPagina)
-                .Select(m => new MovimientoStockDto
-                {
-                    IdMovimiento = m.Id,
-                    TipoMovimiento = ((TipoMovimientoStockEnum)m.TipoMovimiento).ToString(),
-                    Observacion = m.Observacion ?? string.Empty,
-                    Cantidad = (int)m.Cantidad,
-                    Fecha = m.Fecha,
-                    IdProducto = m.Id_producto,
-                    ProductoNombre = m.Producto != null ? m.Producto.Nombre : "Sin producto",
-                    CodigoBarra = m.Producto != null ? m.Producto.CodigoBarra ?? string.Empty : string.Empty,
-                    CategoriaNombre = m.Producto != null && m.Producto.Categoria != null ? m.Producto.Categoria.Nombre : "Sin categoría",
-                    SucursalNombre = m.Sucursal != null ? m.Sucursal.Nombre : "Sin sucursal",
-                    UsuarioNombre = m.Usuario != null ? $"{m.Usuario.Nombre} {m.Usuario.Apellido}" : "Sistema"
-                })
-                .ToListAsync();
+                IdMovimiento = m.Id,
+                TipoMovimiento = ((TipoMovimientoStockEnum)m.TipoMovimiento).ToString(),
+                Observacion = m.Observacion ?? string.Empty,
+                Cantidad = (int)m.Cantidad,
+                Fecha = m.Fecha,
+                IdProducto = m.Id_producto,
+                ProductoNombre = m.Producto != null ? m.Producto.Nombre : "Sin producto",
+                CodigoBarra = m.Producto != null ? m.Producto.CodigoBarra ?? string.Empty : string.Empty,
+                CategoriaNombre = m.Producto != null && m.Producto.Categoria != null ? m.Producto.Categoria.Nombre : "Sin categoría",
+                SucursalNombre = m.Sucursal != null ? m.Sucursal.Nombre : "Sin sucursal",
+                UsuarioNombre = m.Usuario != null ? $"{m.Usuario.Nombre} {m.Usuario.Apellido}" : "Sistema"
+            }).ToList();
 
             _logger?.LogDebug("Obtenidos {Count} movimientos de {Total} total", items.Count, total);
 

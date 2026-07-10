@@ -6,12 +6,10 @@ using GestionComercial.Dominio.Enumeraciones;
 
 namespace GestionComercial.Dominio.Entidades.Ventas
 {
-    /// <summary>
-    /// Entidad Venta con patrón DDD.
+    ///     /// Entidad Venta con patrón DDD.
     /// 
     /// Preferir factory methods Crear() y CrearDesdeCarrito():
     ///   var venta = Venta.Crear(idSucursal, idCliente, idUsuario, idCaja);
-    /// </summary>
     public class Venta : EntidadBase
     {
         private DateTime _fecha = DateTime.Now;
@@ -111,9 +109,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             };
         }
 
-        /// <summary>
-        /// Añade un ítem a la venta y actualiza totales.
-        /// </summary>
+        ///         /// Añade un ítem a la venta y actualiza totales.
         public void AgregarDetalle(VentaDetalle detalle)
         {
             if (detalle == null)
@@ -129,9 +125,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             RecalcularTotales();
         }
 
-        /// <summary>
-        /// Quita un ítem y recalcula.
-        /// </summary>
+        ///         /// Quita un ítem y recalcula.
         public void QuitarDetalle(int detalleId)
         {
             if (_estado == (int)EstadoVentaEnum.Pagada)
@@ -147,9 +141,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             }
         }
 
-        /// <summary>
-        /// Recalcula bruto, descuento y final desde los detalles.
-        /// </summary>
+        ///         /// Recalcula bruto, descuento y final desde los detalles.
         public void RecalcularTotales()
         {
             _totalBruto = Detalles.Sum(d => d.Subtotal);
@@ -157,9 +149,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             _totalFinal = _totalBruto - _totalDescuento;
         }
 
-        /// <summary>
-        /// Marcar como pagada. Solo si está pendiente.
-        /// </summary>
+        ///         /// Marcar como pagada. Solo si está pendiente.
         public void MarcarPagada()
         {
             if (_estado != (int)EstadoVentaEnum.Pendiente)
@@ -169,9 +159,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             _estado = (int)EstadoVentaEnum.Pagada;
         }
 
-        /// <summary>
-        /// Marcar como pendiente (para reverses).
-        /// </summary>
+        ///         /// Marcar como pendiente (para reverses).
         public void MarcarPendiente()
         {
             if (_estado == (int)EstadoVentaEnum.Anulada)
@@ -180,9 +168,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             _estado = (int)EstadoVentaEnum.Pendiente;
         }
 
-        /// <summary>
-        /// Anula la venta con motivo. Requiere que esté pendiente o pagada.
-        /// </summary>
+        ///         /// Anula la venta con motivo. Requiere que esté pendiente o pagada.
         public void Anular(string motivo, int idUsuarioAnulacion)
         {
             if (string.IsNullOrWhiteSpace(motivo))
@@ -196,9 +182,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             _usuarioAnulacionId = idUsuarioAnulacion;
         }
 
-        /// <summary>
-        /// Agregar pago.
-        /// </summary>
+        ///         /// Agregar pago.
         public void AgregarPago(Pago pago)
         {
             if (pago == null)
@@ -210,19 +194,13 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             Pagos.Add(pago);
         }
 
-        /// <summary>
-        /// Total de pagos registrados.
-        /// </summary>
+        ///         /// Total de pagos registrados.
         public decimal TotalPagado => Pagos.Sum(p => p.Monto);
 
-        /// <summary>
-        /// Verifica si el total pagado cubre el total de la venta.
-        /// </summary>
+        ///         /// Verifica si el total pagado cubre el total de la venta.
         public bool EstaPagada => TotalPagado >= _totalFinal;
 
-        /// <summary>
-        /// Cambio/restante.
-        /// </summary>
+        ///         /// Cambio/restante.
         public decimal Cambio => TotalPagado > _totalFinal 
             ? TotalPagado - _totalFinal 
             : 0;

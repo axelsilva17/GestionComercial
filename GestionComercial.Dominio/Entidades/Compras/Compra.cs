@@ -6,12 +6,10 @@ using GestionComercial.Dominio.Enumeraciones;
 
 namespace GestionComercial.Dominio.Entidades.Compras
 {
-    /// <summary>
-    /// Entidad Compra con patrón DDD.
+    ///     /// Entidad Compra con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var compra = Compra.Crear(idProveedor, idSucursal, idUsuario);
-    /// </summary>
     public class Compra : EntidadBase
     {
         private DateTime _fecha = DateTime.Now;
@@ -77,9 +75,7 @@ namespace GestionComercial.Dominio.Entidades.Compras
             };
         }
 
-        /// <summary>
-        /// Añade un ítem a la compra y actualiza el total.
-        /// </summary>
+        ///         /// Añade un ítem a la compra y actualiza el total.
         public void AgregarDetalle(CompraDetalle detalle)
         {
             if (detalle == null)
@@ -94,9 +90,7 @@ namespace GestionComercial.Dominio.Entidades.Compras
             RecalcularTotal();
         }
 
-        /// <summary>
-        /// Quita un ítem y recalcula el total.
-        /// </summary>
+        ///         /// Quita un ítem y recalcula el total.
         public void QuitarDetalle(int detalleId)
         {
             if (_estado == (int)EstadoCompraEnum.Recibida)
@@ -112,17 +106,13 @@ namespace GestionComercial.Dominio.Entidades.Compras
             }
         }
 
-        /// <summary>
-        /// Recalcula el total desde los detalles.
-        /// </summary>
+        ///         /// Recalcula el total desde los detalles.
         public void RecalcularTotal()
         {
             _total = Detalles.Sum(d => d.Subtotal);
         }
 
-        /// <summary>
-        /// Marca como recibida. Solo si está pendiente.
-        /// </summary>
+        ///         /// Marca como recibida. Solo si está pendiente.
         public void MarcarRecibida()
         {
             if (_estado != (int)EstadoCompraEnum.Pendiente)
@@ -132,9 +122,7 @@ namespace GestionComercial.Dominio.Entidades.Compras
             _estado = (int)EstadoCompraEnum.Recibida;
         }
 
-        /// <summary>
-        /// Anula la compra. Solo si está pendiente.
-        /// </summary>
+        ///         /// Anula la compra. Solo si está pendiente.
         public void Anular(string motivo)
         {
             if (string.IsNullOrWhiteSpace(motivo))

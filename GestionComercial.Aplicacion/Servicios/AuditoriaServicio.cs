@@ -5,10 +5,8 @@ using GestionComercial.Dominio.Interfaces;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
-    /// <summary>
-    /// Implementación de IAuditoriaServicio. Convierte entidades AuditoriaLog a DTOs
+    ///     /// Implementación de IAuditoriaServicio. Convierte entidades AuditoriaLog a DTOs
     /// y aplica localización de TipoOperacion.
-    /// </summary>
     public class AuditoriaServicio : IAuditoriaServicio
     {
         private readonly IUnitOfWork _uow;
@@ -42,11 +40,9 @@ namespace GestionComercial.Aplicacion.Servicios
             return entidades.Select(MapearADto);
         }
 
-        /// <summary>
-        /// Mapea una entidad AuditoriaLog a AuditoriaLogDto, localizando TipoOperacion
+        ///         /// Mapea una entidad AuditoriaLog a AuditoriaLogDto, localizando TipoOperacion
         /// de código numérico a texto legible.
-        /// </summary>
-        private static AuditoriaLogDto MapearADto(AuditoriaLog entidad)
+        internal static AuditoriaLogDto MapearADto(AuditoriaLog entidad)
         {
             return new AuditoriaLogDto
             {

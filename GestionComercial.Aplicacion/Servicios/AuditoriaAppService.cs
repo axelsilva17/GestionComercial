@@ -8,12 +8,10 @@ using GestionComercial.Aplicacion.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
-    /// <summary>
-    /// Implementación de IAuditoriaAppService.
+    ///     /// Implementación de IAuditoriaAppService.
     /// Delega la lógica de negocio a IAuditoriaServicio y combina los resultados
     /// para optimizar la llamada desde el popup de auditoría de caja.
     /// Incluye KPIs de fraude y filtros avanzados.
-    /// </summary>
     public class AuditoriaAppService : IAuditoriaAppService
     {
         private readonly IAuditoriaServicio _auditoriaServicio;
@@ -99,7 +97,7 @@ namespace GestionComercial.Aplicacion.Servicios
             resultado.TamanioPagina = filtros.TamanioPagina;
 
             // Convertir a DTOs con deserialización (solo la página, no todos)
-            resultado.Registros = entidades.Select(e => MapearADto(e)).ToList();
+            resultado.Registros = entidades.Select(e => AuditoriaServicio.MapearADto(e)).ToList();
 
             return resultado;
         }
@@ -124,7 +122,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 fechaDesde: fechaDesde,
                 fechaHasta: fechaHasta);
 
-            var dtos = entidades.Select(e => MapearADto(e)).ToList();
+            var dtos = entidades.Select(e => AuditoriaServicio.MapearADto(e)).ToList();
 
             // Deserializar JSON para cada registro
             foreach (var dto in dtos)
@@ -137,9 +135,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
         #region Métodos privados de KPIs
 
-        /// <summary>
-        /// Identifica la caja con mayor diferencia entre total de ventas y total cobrado.
-        /// </summary>
+        ///         /// Identifica la caja con mayor diferencia entre total de ventas y total cobrado.
         private async Task<CajaMayorDiferenciaDto?> ObtenerCajaMayorDiferenciaAsync(
             DateTime? fechaDesde, DateTime? fechaHasta,
             int idSucursal)  // Usar parámetro en vez de hardcodear
@@ -197,9 +193,7 @@ namespace GestionComercial.Aplicacion.Servicios
             };
         }
 
-        /// <summary>
-        /// Obtiene ventas anuladas agrupadas por usuario.
-        /// </summary>
+        ///         /// Obtiene ventas anuladas agrupadas por usuario.
         private async Task<List<VentaAnuladaDto>> ObtenerVentasAnuladasPorUsuarioAsync(
             DateTime? fechaDesde, DateTime? fechaHasta)
         {
@@ -232,9 +226,7 @@ namespace GestionComercial.Aplicacion.Servicios
             return agrupado;
         }
 
-        /// <summary>
-        /// Obtiene movimientos de caja fuera del horario laboral (antes 8am, después 10pm).
-        /// </summary>
+        ///         /// Obtiene movimientos de caja fuera del horario laboral (antes 8am, después 10pm).
         private async Task<List<MovimientoFueraHorarioDto>> ObtenerMovimientosFueraHorarioAsync(
             DateTime? fechaDesde, DateTime? fechaHasta)
         {
@@ -263,9 +255,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 .ToList();
         }
 
-        /// <summary>
-        /// Obtiene desglose de formas de pago por vendedor.
-        /// </summary>
+        ///         /// Obtiene desglose de formas de pago por vendedor.
         private async Task<List<FormaPagoVendedorDto>> ObtenerFormasPagoPorVendedorAsync(
             DateTime? fechaDesde, DateTime? fechaHasta)
         {
@@ -316,28 +306,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
         #endregion
 
-        /// <summary>
-        /// Mapea una entidad AuditoriaLog a AuditoriaLogDto.
-        /// </summary>
-        private static AuditoriaLogDto MapearADto(Dominio.Entidades.Auditoria.AuditoriaLog entidad)
-        {
-            return new AuditoriaLogDto
-            {
-                Id = entidad.Id,
-                NombreTabla = entidad.NombreTabla,
-                RegistroId = entidad.RegistroId,
-                TipoOperacion = entidad.TipoOperacion switch
-                {
-                    1 => "Creación",
-                    2 => "Modificación",
-                    3 => "Eliminación",
-                    _ => "Desconocido"
-                },
-                Usuario = entidad.NombreUsuario ?? "—",
-                FechaOperacion = entidad.FechaOperacion,
-                ValoresAnteriores = entidad.ValoresAnteriores,
-                ValoresNuevos = entidad.ValoresNuevos
-            };
-        }
+        ///         /// Mapea una entidad AuditoriaLog a AuditoriaLogDto.
+
     }
 }

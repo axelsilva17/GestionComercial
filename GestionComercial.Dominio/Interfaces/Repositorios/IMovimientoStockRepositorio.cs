@@ -15,7 +15,18 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     {
         Task<IEnumerable<MovimientoStock>> ObtenerPorProductoAsync(int idProducto);
         Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int? idSucursal = null);
+
+        // Nuevos métodos para eliminar dependencias EF Core de la capa Aplicacion
+        Task<(List<MovimientoStock> Items, int Total)> ObtenerPaginadoAsync(
+            string? textoBusqueda,
+            string? filtroTipo,
+            string? filtroUsuario,
+            string? filtroSucursal,
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int pagina,
+            int itemsPorPagina);
     }
 
-   
+
 }

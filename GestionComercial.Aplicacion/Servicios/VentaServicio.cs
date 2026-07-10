@@ -46,9 +46,7 @@ namespace GestionComercial.Aplicacion.Servicios
             return ventas.Select(MapearResumen);
         }
 
-        /// <summary>
-        /// Feature 3: Obtiene ventas con filtros opcionales y combinables.
-        /// </summary>
+        ///         /// Feature 3: Obtiene ventas con filtros opcionales y combinables.
         public async Task<IEnumerable<VentaResumenDto>> ObtenerVentasAsync(
             int idSucursal,
             DateTime? fechaDesde = null,
@@ -161,12 +159,10 @@ namespace GestionComercial.Aplicacion.Servicios
             return MapearDto(ventaResult);
         }
 
-        /// <summary>
-        /// Registra los pagos y recién aquí marca la venta como Pagada.
+        ///         /// Registra los pagos y recién aquí marca la venta como Pagada.
         /// Soporta pagos mixtos (efectivo + tarjeta + QR, etc.).
         /// Para pagos en efectivo, crea automáticamente un movimiento de caja.
         /// El vuelto se registra como egreso en la caja.
-        /// </summary>
         public async Task RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos)
         {
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
@@ -205,10 +201,8 @@ namespace GestionComercial.Aplicacion.Servicios
             _ = ImprimirTicketAsync(venta.Id);
         }
 
-        /// <summary>
-        /// Marca una venta pendiente como pagada usando efectivo como método por defecto.
+        ///         /// Marca una venta pendiente como pagada usando efectivo como método por defecto.
         /// Útil para "Cobrar" rápido desde el historial.
-        /// </summary>
         public async Task CobrarVentaAsync(int idVenta)
         {
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
@@ -237,10 +231,8 @@ namespace GestionComercial.Aplicacion.Servicios
             _ = ImprimirTicketAsync(venta.Id);
         }
 
-        /// <summary>
-        /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
+        ///         /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
         /// Los errores de impresión NO deben revertir el pago.
-        /// </summary>
         private async Task ImprimirTicketAsync(int idVenta)
         {
             try
@@ -266,12 +258,10 @@ namespace GestionComercial.Aplicacion.Servicios
             }
         }
 
-        /// <summary>
-        /// Anula la venta con motivo obligatorio y devuelve el stock.
+        ///         /// Anula la venta con motivo obligatorio y devuelve el stock.
         /// Los pagos ya registrados quedan en BD como historial.
         /// ObtenerTotalDelDiaAsync filtra solo Estado=Pagada así que
         /// las ventas anuladas no afectan reportes de ingresos.
-        /// </summary>
         /// <param name="id">ID de la venta a anular</param>
         /// <param name="motivo">Motivo obligatorio de la anulación</param>
         /// <exception cref="VentaInvalidaException">Si la venta no existe o ya está anulada</exception>

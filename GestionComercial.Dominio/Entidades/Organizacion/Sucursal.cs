@@ -5,12 +5,10 @@ using GestionComercial.Dominio.Entidades.Ventas;
 
 namespace GestionComercial.Dominio.Entidades.Organizacion
 {
-    /// <summary>
-    /// Entidad Sucursal con patrón DDD.
+    ///     /// Entidad Sucursal con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var sucursal = Sucursal.Crear(nombre, direccion, idEmpresa);
-    /// </summary>
     public class Sucursal : EntidadBase
     {
         private string _nombre = string.Empty;
@@ -65,9 +63,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             };
         }
 
-        /// <summary>
-        /// Actualiza datos de la sucursal.
-        /// </summary>
+        ///         /// Actualiza datos de la sucursal.
         public void Actualizar(string nombre, string direccion, string? telefono)
         {
             if (string.IsNullOrWhiteSpace(nombre))

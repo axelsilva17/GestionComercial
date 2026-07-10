@@ -5,11 +5,9 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// true  → Visible
+    ///     /// true  → Visible
     /// false → Collapsed
     /// Con InvertirValor = true: al revés.
-    /// </summary>
     public class BoolToVisibilityConverter : IValueConverter
     {
         public bool InvertirValor { get; set; } = false;

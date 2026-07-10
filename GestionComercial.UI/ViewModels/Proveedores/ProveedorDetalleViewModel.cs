@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Proveedores
 {
-    /// <summary>
-    /// ViewModel de solo lectura — se activa al hacer clic en una fila del listado
+    ///     /// ViewModel de solo lectura — se activa al hacer clic en una fila del listado
     /// cuando se quiere ver el detalle completo en pantalla propia (no sidebar).
-    /// </summary>
     public class ProveedorDetalleViewModel : NavigableViewModel
     {
         private readonly ShellViewModel _shell;

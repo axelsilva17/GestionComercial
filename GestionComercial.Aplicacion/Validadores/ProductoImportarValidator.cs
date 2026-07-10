@@ -3,12 +3,10 @@ using GestionComercial.Aplicacion.DTOs.Productos;
 
 namespace GestionComercial.Aplicacion.Validators
 {
-    /// <summary>
-    /// Valida un DTO individual de importación antes de procesarlo.
+    ///     /// Valida un DTO individual de importación antes de procesarlo.
     /// Nota: en importación masiva se usa validación inline por performance
     /// (no se valida con FluentValidation item por item para 10K registros).
     /// Este validador es útil para imports individuales o pruebas unitarias.
-    /// </summary>
     public class ProductoImportarValidator : AbstractValidator<ProductoImportarDto>
     {
         public ProductoImportarValidator()

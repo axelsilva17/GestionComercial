@@ -5,12 +5,10 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
-    /// <summary>
-    /// Implementación del servicio de impresión térmica.
+    ///     /// Implementación del servicio de impresión térmica.
     /// Soporta dos modos:
     /// - ModoTest=true: Guarda tickets en archivos de texto legible en DirectorioTest
     /// - ModoTest=false: Envía comandos ESCPOS a la impresora térmica
-    /// </summary>
     public class ServicioImpresionTermica : IServicioImpresion
     {
         private ImpresoraConfig _config = new();
@@ -56,9 +54,7 @@ namespace GestionComercial.Aplicacion.Servicios
             }
         }
 
-        /// <summary>
-        /// Genera el contenido de texto legible para el ticket (modo test).
-        /// </summary>
+        ///         /// Genera el contenido de texto legible para el ticket (modo test).
         private string GenerarContenidoTicket(VentaDto venta, List<PagoDto> pagos)
         {
             var sb = new StringBuilder();
@@ -107,9 +103,7 @@ namespace GestionComercial.Aplicacion.Servicios
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Genera bytes ESCPOS para enviar a impresora térmica.
-        /// </summary>
+        ///         /// Genera bytes ESCPOS para enviar a impresora térmica.
         private byte[] GenerarBytesTicket(VentaDto venta, List<PagoDto> pagos)
         {
             var sb = new List<byte>();
@@ -154,9 +148,7 @@ namespace GestionComercial.Aplicacion.Servicios
             return sb.ToArray();
         }
 
-        /// <summary>
-        /// Envía bytes raw a la impresora (requiere P/Invoke o biblioteca ESCPOS).
-        /// </summary>
+        ///         /// Envía bytes raw a la impresora (requiere P/Invoke o biblioteca ESCPOS).
         private void EnviarAImpresora(byte[] datos)
         {
             // Placeholder: implementar con RawPrinterHelper o similar

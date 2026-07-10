@@ -1,10 +1,8 @@
-﻿using System;
+using System;
 
 namespace GestionComercial.Aplicacion.DTOs.Caja
 {
-    /// <summary>
-    /// Representa un movimiento individual de caja (ingreso o egreso manual, o venta).
-    /// </summary>
+    ///     /// Representa un movimiento individual de caja (ingreso o egreso manual, o venta).
     public class MovimientoCajaDto
     {
         public int IdMovimiento { get; set; }
@@ -47,9 +45,7 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
         public bool EsIngreso { get; set; }
     }
 
-    /// <summary>
-    /// DTO para mostrar un cierre de caja en la auditoría.
-    /// </summary>
+    ///     /// DTO para mostrar un cierre de caja en la auditoría.
     public class CajaAuditoriaItemDto
     {
         public int Id { get; set; }

@@ -59,6 +59,10 @@ namespace GestionComercial.UI.Views.Productos
         private void Cancelar_Click(object sender, RoutedEventArgs e)
             => VM?.Cancelar();
 
+        // ── Toggle collapsible de lista preview ──────────────────────────────
+        private void ToggleLista_Click(object sender, RoutedEventArgs e)
+            => VM?.ToggleLista();
+
         // ── Cambiar archivo (vuelve al paso 1) ───────────────────────────────
         private void Reiniciar_Click(object sender, RoutedEventArgs e)
             => VM?.Reiniciar();

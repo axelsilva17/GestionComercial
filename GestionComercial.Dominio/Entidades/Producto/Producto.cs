@@ -5,9 +5,7 @@ using GestionComercial.Dominio.Entidades.Ventas;
 
 namespace GestionComercial.Dominio.Entidades.Producto
 {
-    /// <summary>
-    /// Unidad de medida para productos.
-    /// </summary>
+    ///     /// Unidad de medida para productos.
     public class UnidadMedida
     {
         private string _nombre = string.Empty;
@@ -45,9 +43,7 @@ namespace GestionComercial.Dominio.Entidades.Producto
             };
         }
 
-        /// <summary>
-        /// Actualiza datos.
-        /// </summary>
+        ///         /// Actualiza datos.
         public void Actualizar(string nombre, string abreviatura)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -62,9 +58,7 @@ namespace GestionComercial.Dominio.Entidades.Producto
         public string Display => $"{_nombre} ({_abreviatura})";
     }
 
-    /// <summary>
-    /// Categoría de productos con soporte para jerarquía.
-    /// </summary>
+    ///     /// Categoría de productos con soporte para jerarquía.
     public class Categoria : EntidadBase
     {
         private string _nombre = string.Empty;
@@ -108,9 +102,7 @@ namespace GestionComercial.Dominio.Entidades.Producto
             };
         }
 
-        /// <summary>
-        /// Actualiza nombre y categoría padre.
-        /// </summary>
+        ///         /// Actualiza nombre y categoría padre.
         public void Actualizar(string nombre, int? categoriaPadreId = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -120,26 +112,20 @@ namespace GestionComercial.Dominio.Entidades.Producto
             _categoriaPadre_id = categoriaPadreId;
         }
 
-        /// <summary>
-        /// Verifica si es categoría raíz (sin padre).
-        /// </summary>
+        ///         /// Verifica si es categoría raíz (sin padre).
         public bool EsRaiz => !_categoriaPadre_id.HasValue;
 
-        /// <summary>
-        /// Profundidad en la jerarquía.
-        /// </summary>
+        ///         /// Profundidad en la jerarquía.
         public int Nivel => CategoriaPadre != null ? CategoriaPadre.Nivel + 1 : 0;
 
         public int CantidadProductos => Productos.Count;
         public int CantidadSubcategorias => SubCategorias.Count;
     }
 
-    /// <summary>
-    /// Entidad Producto con patrón DDD.
+    ///     /// Entidad Producto con patrón DDD.
     /// 
     /// Preferir factory method Crear() en vez de new Producto():
     ///   var producto = Producto.Crear(nombre, precioVenta, precioCosto, ...);
-    /// </summary>
     public class Producto : EntidadBase
     {
         private string _nombre = string.Empty;
@@ -252,9 +238,7 @@ namespace GestionComercial.Dominio.Entidades.Producto
             ? (_precioVentaActual - _precioCostoActual) / _precioVentaActual * 100
             : 0;
 
-        /// <summary>
-        /// Descuenta stock de forma atómica. Lanza si no hay suficiente.
-        /// </summary>
+        ///         /// Descuenta stock de forma atómica. Lanza si no hay suficiente.
         public void DescontarStock(decimal cantidad)
         {
             if (cantidad <= 0)
@@ -265,9 +249,7 @@ namespace GestionComercial.Dominio.Entidades.Producto
             _stockActual -= cantidad;
         }
 
-        /// <summary>
-        /// Agrega stock.
-        /// </summary>
+        ///         /// Agrega stock.
         public void AgregarStock(decimal cantidad)
         {
             if (cantidad <= 0)
@@ -275,9 +257,7 @@ namespace GestionComercial.Dominio.Entidades.Producto
             _stockActual += cantidad;
         }
 
-        /// <summary>
-        /// Actualiza precios con validación.
-        /// </summary>
+        ///         /// Actualiza precios con validación.
         public void ActualizarPrecios(decimal nuevoPrecioVenta, decimal nuevoPrecioCosto)
         {
             if (nuevoPrecioVenta < 0)
@@ -289,14 +269,10 @@ namespace GestionComercial.Dominio.Entidades.Producto
             _precioCostoActual = nuevoPrecioCosto;
         }
 
-        /// <summary>
-        /// Inactiva el producto (soft delete).
-        /// </summary>
+        ///         /// Inactiva el producto (soft delete).
         public override void Inactivar() => Activo = false;
 
-        /// <summary>
-        /// Reactiva el producto.
-        /// </summary>
+        ///         /// Reactiva el producto.
         public override void Reactivar() => Activo = true;
     }
 }

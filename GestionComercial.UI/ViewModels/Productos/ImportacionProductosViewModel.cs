@@ -55,7 +55,7 @@ namespace GestionComercial.UI.ViewModels.Productos
         public bool MostrarResultado => Estado == EstadoImportacion.Completado
                                       || Estado == EstadoImportacion.ConErrores;
         public bool MostrarBotonReimportar => Estado == EstadoImportacion.Completado
-                                            || Estado == EstadoImportacion.ConErrores;
+                                             || Estado == EstadoImportacion.ConErrores;
 
         public bool PuedeImportar => Estado == EstadoImportacion.Previsualizando && FilasValidas > 0;
         public bool PuedeSeleccionarArchivo => Estado == EstadoImportacion.Inicial;
@@ -81,6 +81,26 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             get => _filas;
             set { _filas = value; NotifyOfPropertyChange(() => Filas); }
+        }
+
+        // ── Collapsible preview list ──────────────────────────────────────────
+        private bool _mostrarLista = false;
+        public bool MostrarLista
+        {
+            get => _mostrarLista;
+            set
+            {
+                _mostrarLista = value;
+                NotifyOfPropertyChange(() => MostrarLista);
+                NotifyOfPropertyChange(() => FlechaListaTexto);
+            }
+        }
+
+        public string FlechaListaTexto => MostrarLista ? "▲ Ocultar lista" : "▼ Mostrar lista";
+
+        public void ToggleLista()
+        {
+            MostrarLista = !MostrarLista;
         }
 
         private int _filasValidas;
@@ -161,68 +181,6 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _crearCategorias = value; NotifyOfPropertyChange(() => CrearCategorias); }
         }
 
-        // Ajuste de precio por porcentaje (%): +10 = +10%, -15 = -15%
-        private decimal _ajustePorcentaje = 0;
-        public decimal AjustePorcentaje
-        {
-            get => _ajustePorcentaje;
-            set
-            {
-                if (_ajustePorcentaje == value) return;
-                _ajustePorcentaje = value;
-                NotifyOfPropertyChange(() => AjustePorcentaje);
-                RecalcularPreview();
-            }
-        }
-
-        // ── Flags para elegir sobre qué precio aplicar el ajuste ──
-        private bool _ajustarVenta = true;
-        public bool AjustarVenta
-        {
-            get => _ajustarVenta;
-            set
-            {
-                if (_ajustarVenta == value) return;
-                _ajustarVenta = value;
-                NotifyOfPropertyChange(() => AjustarVenta);
-                RecalcularPreview();
-            }
-        }
-
-        private bool _ajustarCosto = true;
-        public bool AjustarCosto
-        {
-            get => _ajustarCosto;
-            set
-            {
-                if (_ajustarCosto == value) return;
-                _ajustarCosto = value;
-                NotifyOfPropertyChange(() => AjustarCosto);
-                RecalcularPreview();
-            }
-        }
-
-        // Margen sobre costo (1.30 = 30% de margen)
-        private decimal _margen = 0;
-        public decimal Margen
-        {
-            get => _margen;
-            set { _margen = value; NotifyOfPropertyChange(() => Margen); }
-        }
-
-        // ── Recalcular preview cuando cambia el ajuste ────────────────────────
-        private void RecalcularPreview()
-        {
-            if (Filas == null || Filas.Count == 0) return;
-
-            decimal factor = 1 + (AjustePorcentaje / 100m);
-
-            foreach (var fila in Filas)
-            {
-                fila.AplicarAjuste(factor, AjustarVenta, AjustarCosto);
-            }
-        }
-
         // ── Error visible en dropzone ─────────────────────────────────────────
         private bool _tieneError;
         public bool TieneError
@@ -296,9 +254,6 @@ namespace GestionComercial.UI.ViewModels.Productos
                 FilasValidas  = filas.Count(f => f.EsValida);
                 FilasConError = filas.Count(f => !f.EsValida);
                 Filas = new ObservableCollection<FilaImportacionDto>(filas);
-
-                // Aplicar ajuste a la vista previa si hay porcentaje configurado
-                RecalcularPreview();
 
                 Estado = EstadoImportacion.Previsualizando;
             }
@@ -435,11 +390,7 @@ namespace GestionComercial.UI.ViewModels.Productos
 
             try
             {
-                // Calcular factores de ajuste
-                decimal factorPorcentaje = 1 + (AjustePorcentaje / 100m);  // +10% -> 1.10
-                decimal factorMargen = Margen > 0 ? 1 / (1 - Margen / 100m) : 0;  // 30% margen -> 1/0.7
-
-                // Convertir filas a DTOs (aplicando ajustes)
+                // Convertir filas a DTOs
                 var dtos = new List<ProductoImportarDto>();
                 foreach (var fila in filasAImportar)
                 {
@@ -451,31 +402,13 @@ namespace GestionComercial.UI.ViewModels.Productos
                             idCategoria = idCat;
                     }
 
-                    // Aplicar ajustes de precio
-                    decimal precioVenta = fila.PrecioVenta;
-                    decimal precioCosto = fila.PrecioCosto;
-
-                    // Prioridad: Margen > Porcentaje > ninguno
-                    if (Margen != 0 && precioCosto > 0)
-                    {
-                        // Precio = costo / (1 - margen/100)
-                        precioVenta = precioCosto * factorMargen;
-                    }
-                    else if (AjustePorcentaje != 0)
-                    {
-                        if (AjustarVenta)
-                            precioVenta = precioVenta * factorPorcentaje;
-                        if (AjustarCosto)
-                            precioCosto = precioCosto * factorPorcentaje;
-                    }
-
                     dtos.Add(new ProductoImportarDto
                     {
                         Nombre = fila.Nombre,
                         CodigoBarra = fila.CodigoBarra ?? string.Empty,
                         Categoria = fila.Categoria,
-                        PrecioVentaActual = Math.Round(precioVenta, 2),
-                        PrecioCostoActual = precioCosto,
+                        PrecioVentaActual = Math.Round(fila.PrecioVenta, 2),
+                        PrecioCostoActual = fila.PrecioCosto,
                         StockActual = fila.Stock,
                         StockMinimo = fila.StockMinimo > 0 ? fila.StockMinimo : 10,
                         IdCategoria = idCategoria,
@@ -513,7 +446,10 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 _logger?.LogError(ex, "Error durante la importacion bulk");
                 TieneError = true;
-                MensajeError = $"Error durante la importacion: {ex.Message}";
+                var innerMsg = ex.InnerException?.Message;
+                MensajeError = $"Error durante la importación: {ex.Message}";
+                if (!string.IsNullOrEmpty(innerMsg))
+                    MensajeError += $"\nDetalle: {innerMsg}";
                 Estado = EstadoImportacion.ConErrores;
             }
             finally
@@ -537,6 +473,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             FilasTotales  = 0;
             FilasValidas  = 0;
             FilasConError = 0;
+            MostrarLista  = false;
             Importados    = 0;
             Actualizados  = 0;
             Omitidos      = 0;
@@ -640,9 +577,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             await PrevisualizarArchivo();
         }
 
-        /// <summary>
-        /// Re-importa la última plantilla descargada sin pedir archivo.
-        /// </summary>
+        ///         /// Re-importa la última plantilla descargada sin pedir archivo.
         public async Task ReimportarUltimaPlantilla()
         {
             if (!TienePlantillaTemporal || !System.IO.File.Exists(RutaPlantillaTemporal))
@@ -703,9 +638,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _precioCosto = value; OnPropertyChanged(); OnPropertyChanged(nameof(Margen)); }
         }
 
-        /// <summary>
-        /// Recalcula los precios mostrados desde los valores originales aplicando el factor de ajuste.
-        /// </summary>
+        ///         /// Recalcula los precios mostrados desde los valores originales aplicando el factor de ajuste.
         public void AplicarAjuste(decimal factor, bool ajustarVenta, bool ajustarCosto)
         {
             if (ajustarVenta)

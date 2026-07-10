@@ -4,10 +4,8 @@ using System.Windows.Input;
 
 namespace GestionComercial.UI.Views.Comandos
 {
-    /// <summary>
-    /// Comando asincrónico reutilizable. Evita doble ejecución mientras corre.
+    ///     /// Comando asincrónico reutilizable. Evita doble ejecución mientras corre.
     /// Uso: new AsyncRelayCommand(async () => await CargarDatosAsync())
-    /// </summary>
     public class AsyncRelayCommand : ICommand
     {
         private readonly Func<Task> _execute;
@@ -55,10 +53,8 @@ namespace GestionComercial.UI.Views.Comandos
             CommandManager.InvalidateRequerySuggested();
     }
 
-    /// <summary>
-    /// Versión genérica con parámetro tipado.
+    ///     /// Versión genérica con parámetro tipado.
     /// Uso: new AsyncRelayCommand&lt;Producto&gt;(async p => await EditarAsync(p))
-    /// </summary>
     public class AsyncRelayCommand<T> : ICommand
     {
         private readonly Func<T?, Task> _execute;

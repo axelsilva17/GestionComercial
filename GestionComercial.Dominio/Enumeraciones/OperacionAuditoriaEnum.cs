@@ -1,23 +1,15 @@
 namespace GestionComercial.Dominio.Entidades.Auditoria
 {
-    /// <summary>
-    /// Tipos de operaciones que se registran en la auditoría.
-    /// </summary>
+    ///     /// Tipos de operaciones que se registran en la auditoría.
     public enum OperacionAuditoriaEnum
     {
-        /// <summary>
-        /// Inserción de un nuevo registro.
-        /// </summary>
+        ///         /// Inserción de un nuevo registro.
         Insert = 1,
 
-        /// <summary>
-        /// Actualización de un registro existente.
-        /// </summary>
+        ///         /// Actualización de un registro existente.
         Update = 2,
 
-        /// <summary>
-        /// Eliminación de un registro.
-        /// </summary>
+        ///         /// Eliminación de un registro.
         Delete = 3
     }
 }

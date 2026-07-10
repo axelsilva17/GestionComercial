@@ -2,13 +2,11 @@ using System.Windows;
 
 namespace GestionComercial.UI.Views.Servicios
 {
-    /// <summary>
-    /// Implementación de INotificationService.
+    ///     /// Implementación de INotificationService.
     /// Por ahora usa MessageBox. Cuando quieras toasts visuales,
     /// reemplazá el cuerpo de cada método con la librería que elijas
     /// (Ej: Hardcodet.NotifyIcon, ToastNotifications, Snackbar de MahApps, etc.)
     /// sin tocar ningún ViewModels
-    /// </summary>
     public class NotificationService : INotificationService
     {
         public void MostrarExito(string mensaje)

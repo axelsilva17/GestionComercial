@@ -3,10 +3,8 @@ using BC = BCrypt.Net.BCrypt;
 
 namespace GestionComercial.Infraestructura.Servicios
 {
-    /// <summary>
-    /// Implementación de IPasswordHasher usando BCrypt.Net-Next.
+    ///     /// Implementación de IPasswordHasher usando BCrypt.Net-Next.
     /// Factor de trabajo (workFactor) = 12 para un balance entre seguridad y rendimiento.
-    /// </summary>
     public class PasswordHasher : IPasswordHasher
     {
         // WorkFactor = 12 → ~250ms por hash en hardware moderno

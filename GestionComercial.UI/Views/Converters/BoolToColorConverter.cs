@@ -5,11 +5,9 @@ using System.Windows.Media;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un booleano a color:
+    ///     /// Convierte un booleano a color:
     /// true → Verde (#10B981)
     /// false → Rojo (#EF4444)
-    /// </summary>
     public class BoolToColorConverter : IValueConverter
     {
         private static readonly SolidColorBrush Verde = new(Color.FromRgb(0x10, 0xB9, 0x81));

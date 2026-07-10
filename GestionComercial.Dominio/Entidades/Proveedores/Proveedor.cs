@@ -60,9 +60,7 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
             };
         }
 
-        /// <summary>
-        /// Actualiza datos del proveedor.
-        /// </summary>
+        ///         /// Actualiza datos del proveedor.
         public void Actualizar(string nombre, string? telefono, string? email, string? cuit)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -74,9 +72,7 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
             _cuit = cuit?.Trim();
         }
 
-        /// <summary>
-        /// Valida formato de CUIT (XX-XXXXXXXX-X).
-        /// </summary>
+        ///         /// Valida formato de CUIT (XX-XXXXXXXX-X).
         public bool CUITValido => string.IsNullOrEmpty(_cuit) 
             ? false 
             : System.Text.RegularExpressions.Regex.IsMatch(_cuit, @"^\d{2}-\d{8}-\d{1}$");

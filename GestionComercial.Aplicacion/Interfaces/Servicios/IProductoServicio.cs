@@ -19,6 +19,10 @@ public interface IProductoServicio
 
         // Reference data
         Task<IEnumerable<CategoriaItemDto>>   ObtenerCategoriasAsync(int idEmpresa);
+        Task<CategoriaItemDto>                CrearCategoriaAsync(int idEmpresa, string nombre);
+        Task<CategoriaItemDto>                ActualizarCategoriaAsync(int idCategoria, string nuevoNombre);
+        Task<bool>                            EliminarCategoriaAsync(int idCategoria);
+        Task<int>                             EliminarProductosPorCategoriaAsync(int idCategoria);
         Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync();
         Task<IEnumerable<Proveedor>> ObtenerProveedoresAsync();
     }

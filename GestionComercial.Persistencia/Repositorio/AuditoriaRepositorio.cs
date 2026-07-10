@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
-    /// <summary>
-    /// Implementación del repositorio de auditoría.
-    /// </summary>
+    ///     /// Implementación del repositorio de auditoría.
     public class AuditoriaRepositorio : IAuditoriaRepositorio
     {
         private readonly GestionComercialContext _context;

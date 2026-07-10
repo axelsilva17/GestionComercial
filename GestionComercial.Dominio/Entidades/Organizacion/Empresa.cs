@@ -6,12 +6,10 @@ using GestionComercial.Dominio.Entidades.Seguridad;
 
 namespace GestionComercial.Dominio.Entidades.Organizacion
 {
-    /// <summary>
-    /// Entidad Empresa con patrón DDD.
+    ///     /// Entidad Empresa con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var empresa = Empresa.Crear(nombre, cuit, direccion);
-    /// </summary>
     public class Empresa : EntidadBase
     {
         private string _nombre = string.Empty;
@@ -86,9 +84,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             };
         }
 
-        /// <summary>
-        /// Actualiza datos de la empresa.
-        /// </summary>
+        ///         /// Actualiza datos de la empresa.
         public void Actualizar(string nombre, string direccion, string? email, string? telefono, string? logoUrl = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -101,9 +97,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             if (logoUrl != null) _logoUrl = logoUrl.Trim();
         }
 
-        /// <summary>
-        /// Valida formato de CUIT (XX-XXXXXXXX-X).
-        /// </summary>
+        ///         /// Valida formato de CUIT (XX-XXXXXXXX-X).
         public bool CUITValido => !string.IsNullOrEmpty(_cuit) 
             && System.Text.RegularExpressions.Regex.IsMatch(_cuit, @"^\d{2}-\d{8}-\d{1}$");
 

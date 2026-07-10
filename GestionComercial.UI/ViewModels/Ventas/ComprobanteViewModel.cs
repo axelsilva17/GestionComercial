@@ -173,8 +173,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             => await IoC.Get<ShellViewModel>()
                         .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
 
-        /// <summary>
-        /// Genera un HTML del comprobante y lo abre en el navegador.
+        ///         /// Genera un HTML del comprobante y lo abre en el navegador.
         /// El botón 🖨️ Imprimir del HTML usa window.print().
         ///
         /// Para impresora térmica (58mm o 80mm):
@@ -184,7 +183,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
         ///
         /// Para probar sin impresora:
         ///   Ctrl+P en el navegador → "Guardar como PDF"
-        /// </summary>
         public async Task GenerarComprobante()
         {
             IsLoading = true;

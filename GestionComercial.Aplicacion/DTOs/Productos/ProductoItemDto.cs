@@ -1,9 +1,7 @@
 namespace GestionComercial.Aplicacion.DTOs.Productos
 {
-    /// <summary>
-    /// Alias de ProductoListadoDto — usado en el VM del listado y sidebar.
+    ///     /// Alias de ProductoListadoDto — usado en el VM del listado y sidebar.
     /// Mantiene compatibilidad con el ViewModel generado.
-    /// </summary>
     public class ProductoItemDto
     {
         public int IdProducto { get; set; }
@@ -19,9 +17,7 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
         public string Inicial => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
     }
 
-    /// <summary>
-    /// DTO liviano para poblar el ComboBox de categorías en filtros y formularios.
-    /// </summary>
+    ///     /// DTO liviano para poblar el ComboBox de categorías en filtros y formularios.
     public class CategoriaItemDto
     {
         public int IdCategoria { get; set; }
@@ -29,9 +25,7 @@ namespace GestionComercial.Aplicacion.DTOs.Productos
         public int? CategoriaPadre { get; set; }
     }
 
-    /// <summary>
-    /// DTO liviano para poblar el ComboBox de unidades de medida en formularios.
-    /// </summary>
+    ///     /// DTO liviano para poblar el ComboBox de unidades de medida en formularios.
     public class UnidadMedidaItemDto
     {
         public int IdUnidadMedida { get; set; }

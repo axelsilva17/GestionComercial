@@ -5,12 +5,10 @@ using GestionComercial.Dominio.Entidades.Seguridad;
 
 namespace GestionComercial.Dominio.Entidades.Compras
 {
-    /// <summary>
-    /// Entidad CompraDetalle con patrón DDD.
+    ///     /// Entidad CompraDetalle con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var detalle = CompraDetalle.Crear(producto, cantidad, precioCosto);
-    /// </summary>
     public class CompraDetalle
     {
         private decimal _cantidad;
@@ -67,17 +65,13 @@ namespace GestionComercial.Dominio.Entidades.Compras
             return detalle;
         }
 
-        /// <summary>
-        /// Recalcula el subtotal.
-        /// </summary>
+        ///         /// Recalcula el subtotal.
         public void Recalcular()
         {
             _subtotal = _cantidad * _precioCosto;
         }
 
-        /// <summary>
-        /// Actualiza el precio de costo.
-        /// </summary>
+        ///         /// Actualiza el precio de costo.
         public void ActualizarPrecio(decimal nuevoPrecioCosto)
         {
             if (nuevoPrecioCosto < 0)

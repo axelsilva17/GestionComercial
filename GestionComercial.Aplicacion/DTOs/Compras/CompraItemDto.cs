@@ -3,11 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace GestionComercial.Aplicacion.DTOs.Compras
 {
-    /// <summary>
-    /// Ítem de la compra en curso — usado en la UI para el carrito de compra.
+    ///     /// Ítem de la compra en curso — usado en la UI para el carrito de compra.
     /// Implementa INotifyPropertyChanged para que los cambios de Cantidad/SubTotal
     /// se reflejen en el DataGrid sin necesidad de refrescar la colección.
-    /// </summary>
     public class CompraItemDto : INotifyPropertyChanged
     {
         private int     _cantidad;
@@ -45,8 +43,6 @@ namespace GestionComercial.Aplicacion.DTOs.Compras
 
 namespace GestionComercial.Aplicacion.DTOs.Proveedores
 {
-    /// <summary>
-    /// DTO liviano para mostrar proveedores en ComboBox.
-    /// </summary>
+    ///     /// DTO liviano para mostrar proveedores en ComboBox.
    
 }

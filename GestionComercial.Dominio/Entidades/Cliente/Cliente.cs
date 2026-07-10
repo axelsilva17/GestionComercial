@@ -3,12 +3,10 @@ using GestionComercial.Dominio.Entidades.Ventas;
 
 namespace GestionComercial.Dominio.Entidades.Cliente
 {
-    /// <summary>
-    /// Entidad Cliente con patrón DDD.
+    ///     /// Entidad Cliente con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var cliente = Cliente.Crear(nombre, documento, idEmpresa);
-    /// </summary>
     public class Cliente : EntidadBase
     {
         private string _nombre = string.Empty;
@@ -74,9 +72,7 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             };
         }
 
-        /// <summary>
-        /// Actualiza los datos de contacto del cliente.
-        /// </summary>
+        ///         /// Actualiza los datos de contacto del cliente.
         public void Actualizar(string nombre, int documento, string? telefono, string? email)
         {
             if (!Activo)
@@ -96,9 +92,7 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             _email = email?.Trim().ToLower();
         }
 
-        /// <summary>
-        /// Inactiva el cliente (soft delete).
-        /// </summary>
+        ///         /// Inactiva el cliente (soft delete).
         public override void Inactivar()
         {
             if (!Activo) return;
@@ -111,22 +105,16 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             base.Reactivar();
         }
 
-        /// <summary>
-        /// Busca una venta específica en el historial.
-        /// </summary>
+        ///         /// Busca una venta específica en el historial.
         public Venta? BuscarVenta(int idVenta)
             => Ventas.FirstOrDefault(v => v.Id == idVenta);
 
-        /// <summary>
-        /// Total de compras del cliente.
-        /// </summary>
+        ///         /// Total de compras del cliente.
         public decimal TotalCompras => Ventas
             .Where(v => v.EsPagada)
             .Sum(v => v.TotalFinal);
 
-        /// <summary>
-        /// Cantidad de compras.
-        /// </summary>
+        ///         /// Cantidad de compras.
         public int CantidadCompras => Ventas
             .Where(v => v.EsPagada)
             .Count();

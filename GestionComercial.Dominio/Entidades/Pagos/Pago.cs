@@ -5,12 +5,10 @@ using GestionComercial.Dominio.Enumeraciones;
 
 namespace GestionComercial.Dominio.Entidades.Pagos
 {
-    /// <summary>
-    /// Entidad Pago con patrón DDD.
+    ///     /// Entidad Pago con patrón DDD.
     /// 
     /// Preferir factory method:
     ///   var pago = Pago.Crear(monto, idVenta, idMetodoPago);
-    /// </summary>
     public class Pago
     {
         private decimal _monto;
@@ -66,9 +64,7 @@ namespace GestionComercial.Dominio.Entidades.Pagos
             };
         }
 
-        /// <summary>
-        /// Vincula con un movimiento de caja (para efectivo).
-        /// </summary>
+        ///         /// Vincula con un movimiento de caja (para efectivo).
         public void VincularMovimientoCaja(int idMovimientoCaja)
         {
             if (idMovimientoCaja <= 0)

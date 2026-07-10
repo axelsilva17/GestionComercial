@@ -30,9 +30,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Titulo         = "Cobrar Venta";
         }
 
-        /// <summary>
-        /// Maneja atajos de teclado globales en la vista de pago.
-        /// </summary>
+        ///         /// Maneja atajos de teclado globales en la vista de pago.
         public void HandleKeyDown(Key key, ModifierKeys modifiers)
         {
             if (modifiers != ModifierKeys.None) return;
@@ -187,7 +185,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>Llamado desde VentaViewModel antes de navegar.</summary>
+        /// Llamado desde VentaViewModel antes de navegar.
         public void InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
         {
             _idVenta       = idVenta;
@@ -250,10 +248,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             RecalcularTotalPagado();
         }
 
-		/// <summary>
-		/// Agrega un pago con el método seleccionado.
+		/// 		/// Agrega un pago con el método seleccionado.
 		/// Si hay un monto escrito usa ese, si no completa el faltante automáticamente.
-		/// </summary>
 		private void SeleccionarOCompletar(PagoItemDto metodo)
 		{
 			MetodoSeleccionado = metodo;
@@ -434,9 +430,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { SetProperty(ref _estadoVentaFiltro, value); }
         }
 
-        /// <summary>
-        /// Carga el historial de ventas (reutiliza la lógica de VentaViewModel).
-        /// </summary>
+        ///         /// Carga el historial de ventas (reutiliza la lógica de VentaViewModel).
         public async Task CargarHistorialAsync()
         {
             try
@@ -465,17 +459,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Filtra el historial aplicando los filtros activos.
-        /// </summary>
+        ///         /// Filtra el historial aplicando los filtros activos.
         public void FiltrarHistorial()
         {
             _ = CargarHistorialAsync();
         }
 
-        /// <summary>
-        /// Cierra el popup de historial.
-        /// </summary>
+        ///         /// Cierra el popup de historial.
         public void CerrarHistorial()
         {
             MostrarHistorial = false;

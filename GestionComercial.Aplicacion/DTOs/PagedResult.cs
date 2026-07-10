@@ -1,9 +1,7 @@
 namespace GestionComercial.Aplicacion.DTOs;
 
-/// <summary>
-/// Envelope genérico para respuestas paginadas.
+/// /// Envelope genérico para respuestas paginadas.
 /// Reemplaza tuplas (datos, total) con metadata completa para el frontend.
-/// </summary>
 /// <typeparam name="T">Tipo de los elementos de la página.</typeparam>
 public class PagedResult<T>
 {

@@ -121,7 +121,12 @@ namespace GestionComercial.UI.ViewModels.Productos
         public int FiltroActivo
         {
             get => _filtroActivo;
-            set { _filtroActivo = value; NotifyOfPropertyChange(() => FiltroActivo); }
+            set
+            {
+                _filtroActivo = value;
+                NotifyOfPropertyChange(() => FiltroActivo);
+                _ = BuscarConCatch();
+            }
         }
 
         // ── Paginación ────────────────────────────────────────────────
@@ -315,10 +320,8 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
         }
 
-        /// <summary>
-        /// Wrapper fire-and-forget seguro para Buscar() desde setters de propiedades.
+        ///         /// Wrapper fire-and-forget seguro para Buscar() desde setters de propiedades.
         /// Engulle cualquier excepción para evitar unobserved task exceptions.
-        /// </summary>
         private async Task BuscarConCatch()
         {
             try
@@ -338,6 +341,165 @@ namespace GestionComercial.UI.ViewModels.Productos
             var vm = IoC.Get<ProductoFormularioViewModel>();
             vm.InicializarParaCrear();
             await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        // ── Popup: Crear / Eliminar Categoría ──────────────────────────
+        private bool _mostrarPopupCategoria;
+        public bool MostrarPopupCategoria
+        {
+            get => _mostrarPopupCategoria;
+            set { _mostrarPopupCategoria = value; NotifyOfPropertyChange(() => MostrarPopupCategoria); }
+        }
+
+        private string _nombreNuevaCategoria = string.Empty;
+        public string NombreNuevaCategoria
+        {
+            get => _nombreNuevaCategoria;
+            set { _nombreNuevaCategoria = value; NotifyOfPropertyChange(() => NombreNuevaCategoria); }
+        }
+
+        private ObservableCollection<CategoriaItemDto> _categoriasGestion = new();
+        public ObservableCollection<CategoriaItemDto> CategoriasGestion
+        {
+            get => _categoriasGestion;
+            set { _categoriasGestion = value; NotifyOfPropertyChange(() => CategoriasGestion); }
+        }
+
+        public async Task AbrirPopupCategorias()
+        {
+            NombreNuevaCategoria = string.Empty;
+            MostrarPopupCategoria = true;
+            await CargarCategoriasGestionAsync();
+        }
+
+        private async Task CargarCategoriasGestionAsync()
+        {
+            var categorias = (await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual)).ToList();
+            CategoriasGestion = new ObservableCollection<CategoriaItemDto>(categorias);
+        }
+
+        public async Task CrearCategoria()
+        {
+            if (string.IsNullOrWhiteSpace(NombreNuevaCategoria)) return;
+
+            try
+            {
+                await _productoServicio.CrearCategoriaAsync(_shell.IdEmpresaActual, NombreNuevaCategoria);
+                NombreNuevaCategoria = string.Empty;
+                await CargarCategoriasGestionAsync();
+                await CargarCategoriasAsync();
+                await Buscar();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al crear categoría");
+                MessageBox.Show($"Error al crear categoría: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ── Renombrar categoría ──────────────────────────────────────────
+        public async Task RenombrarCategoria(CategoriaItemDto categoria)
+        {
+            if (categoria == null || categoria.IdCategoria <= 0) return;
+
+            var nuevoNombre = Microsoft.VisualBasic.Interaction.InputBox(
+                "Nuevo nombre para la categoría:",
+                "Renombrar categoría",
+                categoria.Nombre);
+
+            if (string.IsNullOrWhiteSpace(nuevoNombre) || nuevoNombre.Trim() == categoria.Nombre)
+                return;
+
+            try
+            {
+                await _productoServicio.ActualizarCategoriaAsync(categoria.IdCategoria, nuevoNombre.Trim());
+                await CargarCategoriasGestionAsync();
+                await CargarCategoriasAsync();
+                await Buscar();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al renombrar categoría");
+                MessageBox.Show($"Error al renombrar: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ── Borrar todos los productos de una categoría ──────────────────
+        public async Task EliminarTodosLosProductos(CategoriaItemDto categoria)
+        {
+            if (categoria == null || categoria.IdCategoria <= 0) return;
+
+            var confirm = MessageBox.Show(
+                $"¿Estás SEGURO de eliminar TODOS los productos de la categoría \"{categoria.Nombre}\"?\n\n" +
+                "Esta acción NO se puede deshacer.",
+                "Eliminar todos los productos", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var cantidad = await _productoServicio.EliminarProductosPorCategoriaAsync(categoria.IdCategoria);
+                if (cantidad > 0)
+                {
+                    MessageBox.Show($"Se eliminaron {cantidad} producto(s) de la categoría \"{categoria.Nombre}\".",
+                        "Productos eliminados", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await CargarCategoriasGestionAsync();
+                    await CargarCategoriasAsync();
+                    await Buscar();
+                }
+                else
+                {
+                    MessageBox.Show("No hay productos en esta categoría.",
+                        "Sin productos", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al eliminar productos por categoría");
+                MessageBox.Show($"Error al eliminar productos: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task EliminarCategoria(CategoriaItemDto categoria)
+        {
+            if (categoria == null || categoria.IdCategoria <= 0) return;
+
+            var confirm = MessageBox.Show(
+                $"¿Estás seguro de eliminar la categoría \"{categoria.Nombre}\"?\n\n" +
+                "Los productos se moverán a una nueva categoría \"Sin Categoría\" que podés renombrar después.",
+                "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var resultado = await _productoServicio.EliminarCategoriaAsync(categoria.IdCategoria);
+                if (resultado)
+                {
+                    await CargarCategoriasGestionAsync();
+                    await CargarCategoriasAsync();
+                    await Buscar();
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "No se puede eliminar", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al eliminar categoría");
+                var inner = ex.InnerException?.Message ?? "";
+                var mensaje = inner != ""
+                    ? $"Error al eliminar categoría:\n{ex.Message}\n\nDetalle: {inner}"
+                    : $"Error al eliminar categoría: {ex.Message}";
+                MessageBox.Show(mensaje, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void CerrarPopupCategorias()
+        {
+            NombreNuevaCategoria = string.Empty;
+            MostrarPopupCategoria = false;
         }
 
         // ── Ajuste Masivo de Precios ─────────────────────────────────

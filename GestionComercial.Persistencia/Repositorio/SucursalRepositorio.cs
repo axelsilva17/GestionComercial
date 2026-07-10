@@ -1,8 +1,9 @@
-﻿using GestionComercial.Dominio.Entidades.Organizacion;
+namespace GestionComercial.Persistencia.Repositorio
+{
+using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
-using GestionComercial.Persistencia.Repositorio;
 
 public class SucursalRepositorio : RepositorioBase<Sucursal>, ISucursalRepositorio
 {
@@ -13,4 +14,5 @@ public class SucursalRepositorio : RepositorioBase<Sucursal>, ISucursalRepositor
             .Where(s => s.Id_empresa == idEmpresa && s.Activo)
             .OrderBy(s => s.Nombre)
             .ToListAsync();
+}
 }

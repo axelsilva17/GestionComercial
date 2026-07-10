@@ -33,9 +33,7 @@ namespace GestionComercial.UI.Views.Ventas
             e.Handled = true;
         }
 
-        /// <summary>
-        /// Maneja el doble click en un producto del popup de autocompletado.
-        /// </summary>
+        ///         /// Maneja el doble click en un producto del popup de autocompletado.
         private void ResultadosBusquedaList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (DataContext is not VentaViewModel vm) return;
@@ -47,9 +45,7 @@ namespace GestionComercial.UI.Views.Ventas
             }
         }
 
-        /// <summary>
-        /// Maneja la selección con Enter en el popup de autocompletado.
-        /// </summary>
+        ///         /// Maneja la selección con Enter en el popup de autocompletado.
         private void ResultadosBusquedaList_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;
@@ -62,9 +58,7 @@ namespace GestionComercial.UI.Views.Ventas
             }
         }
 
-        /// <summary>
-        /// Navega al historial de ventas (VentaListadoView).
-        /// </summary>
+        ///         /// Navega al historial de ventas (VentaListadoView).
         private async void VerHistorial_Click(object sender, RoutedEventArgs e)
         {
             var shell = IoC.Get<GestionComercial.UI.ViewModels.Main.ShellViewModel>();
@@ -76,9 +70,7 @@ namespace GestionComercial.UI.Views.Ventas
             ViewModel?.CerrarHistorialCommand?.Execute(null);
         }
 
-        /// <summary>
-        /// Maneja Enter en el input de test de código de barras.
-        /// </summary>
+        ///         /// Maneja Enter en el input de test de código de barras.
         private void TestBarcodeInput_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && ViewModel != null)
@@ -88,25 +80,19 @@ namespace GestionComercial.UI.Views.Ventas
             }
         }
 
-        /// <summary>
-        /// Maneja el cambio de fecha "Desde" en los filtros del historial.
-        /// </summary>
+        ///         /// Maneja el cambio de fecha "Desde" en los filtros del historial.
         private void FechaDesde_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
             ViewModel?.FiltrarHistorialCommand?.Execute(null);
         }
 
-        /// <summary>
-        /// Maneja el cambio de fecha "Hasta" en los filtros del historial.
-        /// </summary>
+        ///         /// Maneja el cambio de fecha "Hasta" en los filtros del historial.
         private void FechaHasta_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
             ViewModel?.FiltrarHistorialCommand?.Execute(null);
         }
 
-        /// <summary>
-        /// Maneja el cambio de estado en los filtros del historial.
-        /// </summary>
+        ///         /// Maneja el cambio de estado en los filtros del historial.
         private void EstadoFiltro_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ViewModel == null) return; // Protección: DataContext puede no estar asignado aún
@@ -126,9 +112,7 @@ namespace GestionComercial.UI.Views.Ventas
             ViewModel?.FiltrarHistorialCommand?.Execute(null);
         }
 
-        /// <summary>
-        /// Maneja Enter en el filtro de DNI del historial.
-        /// </summary>
+        ///         /// Maneja Enter en el filtro de DNI del historial.
         private void DniClienteFiltro_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)

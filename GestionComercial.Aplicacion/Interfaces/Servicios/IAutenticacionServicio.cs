@@ -7,6 +7,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
     public interface IAutenticacionServicio
     {
         Task<UsuarioSesionDto?> LoginAsync(string email, string password);
+        bool IsCurrentUserAdmin();
         string HashPassword(string password);
     }
 }

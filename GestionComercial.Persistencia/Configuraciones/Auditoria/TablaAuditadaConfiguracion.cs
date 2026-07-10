@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GestionComercial.Persistencia.Configuraciones.Auditoria
 {
-    /// <summary>
-    /// Configuración de Entity Framework para TablaAuditada.
-    /// </summary>
+    ///     /// Configuración de Entity Framework para TablaAuditada.
     public class TablaAuditadaConfiguracion : IEntityTypeConfiguration<TablaAuditada>
     {
         public void Configure(EntityTypeBuilder<TablaAuditada> builder)

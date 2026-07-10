@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Excepciones;
@@ -73,7 +72,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de caja guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de caja", ex);
                 // Continuar aunque falle la auditoría
@@ -119,7 +118,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de movimiento guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de movimiento", ex);
                 // Continuar aunque falle la auditoría
@@ -132,7 +131,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] TODO EXITOSO!");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-AbrirCaja] Fallo al guardar movimiento", ex);
                 throw;
@@ -195,7 +194,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de caja guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de caja", ex);
             }
@@ -240,7 +239,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de movimiento guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de movimiento", ex);
             }
@@ -252,7 +251,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] TODO EXITOSO!");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-CerrarCaja] Fallo al guardar movimiento", ex);
                 throw;
@@ -431,9 +430,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
             => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta);
 
-        /// <summary>
-        /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
-        /// </summary>
+        ///         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
         public async Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia)
         {
             try
@@ -461,10 +458,8 @@ namespace GestionComercial.Aplicacion.Servicios
             }
         }
 
-        /// <summary>
-        /// Obtiene el total de efectivo recibido por caja desde las ventas.
+        ///         /// Obtiene el total de efectivo recibido por caja desde las ventas.
         /// Usado para cierre automático de caja.
-        /// </summary>
         public async Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja)
         {
             var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);

@@ -7,12 +7,10 @@ using GestionComercial.Dominio.Entidades.Seguridad;
 
 namespace GestionComercial.Dominio.Entidades.Ventas
 {
-    /// <summary>
-    /// Entidad VentaDetalle con patrón DDD.
+    ///     /// Entidad VentaDetalle con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var detalle = VentaDetalle.Crear(producto, cantidad, precioUnitario);
-    /// </summary>
     public class VentaDetalle
     {
         private decimal _cantidad;
@@ -96,9 +94,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             return detalle;
         }
 
-        /// <summary>
-        /// Recalcula subtotal y margen desde los valores actuales.
-        /// </summary>
+        ///         /// Recalcula subtotal y margen desde los valores actuales.
         public void Recalcular()
         {
             // Descuentos por porcentaje
@@ -115,9 +111,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             }
         }
 
-        /// <summary>
-        /// Agrega un descuento al ítem.
-        /// </summary>
+        ///         /// Agrega un descuento al ítem.
         public void AgregarDescuento(VentaDetalleDescuento descuento)
         {
             if (descuento == null)
@@ -126,9 +120,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             Recalcular();
         }
 
-        /// <summary>
-        /// Agrega un impuesto al ítem.
-        /// </summary>
+        ///         /// Agrega un impuesto al ítem.
         public void AgregarImpuesto(VentaDetalleImpuesto impuesto)
         {
             if (impuesto == null)

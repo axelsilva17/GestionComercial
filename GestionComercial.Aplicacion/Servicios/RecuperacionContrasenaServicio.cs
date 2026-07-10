@@ -32,7 +32,7 @@ namespace GestionComercial.Aplicacion.Servicios
             _passwordHasher = passwordHasher;
         }
 
-        /// <summary>Obtiene la pregunta secreta del usuario por email.</summary>
+        /// Obtiene la pregunta secreta del usuario por email.
         public async Task<string?> ObtenerPreguntaAsync(string email)
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email);
@@ -52,7 +52,7 @@ namespace GestionComercial.Aplicacion.Servicios
             } 
         }
 
-        /// <summary>Valida la respuesta y si es correcta permite cambiar la contraseña.</summary>
+        /// Valida la respuesta y si es correcta permite cambiar la contraseña.
         public async Task<bool> ValidarRespuestaAsync(string email, string respuesta)
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
@@ -102,7 +102,7 @@ namespace GestionComercial.Aplicacion.Servicios
             return true;
         }
 
-        /// <summary>Cambia la contraseña después de validar la respuesta.</summary>
+        /// Cambia la contraseña después de validar la respuesta.
         public async Task CambiarContrasenaAsync(string email, string nuevaContrasena)
         {
             if (nuevaContrasena.Length < 8)
@@ -120,7 +120,7 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
         }
 
-        /// <summary>Configura la pregunta secreta de un usuario.</summary>
+        /// Configura la pregunta secreta de un usuario.
         public async Task ConfigurarPreguntaAsync(string email, string pregunta, string respuesta)
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)

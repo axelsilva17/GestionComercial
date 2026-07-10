@@ -5,10 +5,8 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte el índice de tab activo (int) a IsChecked para RadioButtons.
+    ///     /// Convierte el índice de tab activo (int) a IsChecked para RadioButtons.
     /// Parameter indica el índice de este tab.
-    /// </summary>
     public class TabIndexToBoolConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -26,9 +24,7 @@ namespace GestionComercial.UI.Views.Converters
         }
     }
 
-    /// <summary>
-    /// Muestra el contenido si el tab activo coincide con el parámetro.
-    /// </summary>
+    ///     /// Muestra el contenido si el tab activo coincide con el parámetro.
     public class TabIndexToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

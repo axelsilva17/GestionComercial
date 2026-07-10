@@ -253,13 +253,19 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="CodigoBarraField" Style="{StaticResource FormField}"
                                          FontFamily="Consolas"
                                          Text="{Binding CodigoBarra, UpdateSourceTrigger=PropertyChanged}"/>
-                                <Button Grid.Column="1" Content="📷" Style="{StaticResource IconBtn}"
+                                <Button Grid.Column="1" Content="⟳" Style="{StaticResource IconBtn}"
+                                        Foreground="{DynamicResource PrimaryBrush}"
+                                        ToolTip="Generar código de barras aleatorio"
+                                        Click="GenerarCodigoBarra_Click"/>
+                                <Button Grid.Column="3" Content="📷" Style="{StaticResource IconBtn}"
                                         Foreground="{DynamicResource TextSecondaryBrush}"
-                                        Margin="8,0,0,0" ToolTip="Escanear código"/>
+                                        ToolTip="Escanear código"/>
                             </Grid>
                         </StackPanel>
 
@@ -270,7 +276,7 @@
                                       Style="{StaticResource FilterComboBoxStyle}"
                                       VerticalContentAlignment="Center"
                                       ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
-                                      SelectedValuePath="Id"/>
+                                      SelectedItem="{Binding CategoriaSeleccionada, Mode=TwoWay}"/>
                         </StackPanel>
 
                         <!-- Unidad -->
@@ -280,7 +286,7 @@
                                       Style="{StaticResource FilterComboBoxStyle}"
                                       VerticalContentAlignment="Center"
                                       ItemsSource="{Binding UnidadesMedida}" DisplayMemberPath="Nombre"
-                                      SelectedValuePath="Id"/>
+                                      SelectedItem="{Binding UnidadMedidaSeleccionada, Mode=TwoWay}"/>
                         </StackPanel>
 
                         <!-- Activo -->

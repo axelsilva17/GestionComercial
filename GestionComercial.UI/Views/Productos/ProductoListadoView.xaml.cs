@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.UI.ViewModels.Productos;
 
 namespace GestionComercial.UI.Views.Productos
@@ -121,6 +122,57 @@ namespace GestionComercial.UI.Views.Productos
         {
             if (ViewModel != null)
                 await ViewModel.ConfirmarAjusteMasivo();
+        }
+
+        // ── Gestión de Categorías ─────────────────────────────────────
+        private async void CrearCategoria_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel != null)
+                await ViewModel.AbrirPopupCategorias();
+        }
+
+        private async void CrearCategoriaConfirmar_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel != null)
+                await ViewModel.CrearCategoria();
+        }
+
+        private void CancelarCrearCategoria_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.CerrarPopupCategorias();
+        }
+
+        private async void NuevaCategoria_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && ViewModel != null)
+                await ViewModel.CrearCategoria();
+        }
+
+        private async void EliminarCategoria_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null) return;
+            var btn = sender as FrameworkElement;
+            var categoria = btn?.DataContext as CategoriaItemDto;
+            if (categoria != null)
+                await ViewModel.EliminarCategoria(categoria);
+        }
+
+        private async void RenombrarCategoria_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null) return;
+            var btn = sender as FrameworkElement;
+            var categoria = btn?.DataContext as CategoriaItemDto;
+            if (categoria != null)
+                await ViewModel.RenombrarCategoria(categoria);
+        }
+
+        private async void EliminarTodosProductos_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null) return;
+            var btn = sender as FrameworkElement;
+            var categoria = btn?.DataContext as CategoriaItemDto;
+            if (categoria != null)
+                await ViewModel.EliminarTodosLosProductos(categoria);
         }
     }
 }

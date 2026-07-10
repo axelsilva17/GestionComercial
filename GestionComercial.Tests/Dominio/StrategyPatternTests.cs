@@ -14,10 +14,20 @@ namespace GestionComercial.Tests.Dominio
         private readonly EfectivoStrategy _strategy = new();
         private readonly Mock<IUnitOfWork> _mockUow = new();
         private readonly Mock<IMovimientoCajaRepositorio> _mockMovimientoRepo = new();
+        private readonly Mock<ICajaRepositorio> _mockCajaRepo = new();
+        private readonly Caja _cajaMock = Caja.Crear(idSucursal: 1, idUsuarioApertura: 1, montoInicial: 0);
 
         public EfectivoStrategyTests()
         {
+            // Set Id to match what tests use
+            typeof(Caja).GetProperty(nameof(Caja.Id))!.SetValue(_cajaMock, 5);
+
+            _mockCajaRepo
+                .Setup(r => r.ObtenerPorIdAsync(It.IsAny<int>()))
+                .ReturnsAsync(_cajaMock);
+
             _mockUow.Setup(u => u.MovimientosCaja).Returns(_mockMovimientoRepo.Object);
+            _mockUow.Setup(u => u.Cajas).Returns(_mockCajaRepo.Object);
         }
 
         [Fact]

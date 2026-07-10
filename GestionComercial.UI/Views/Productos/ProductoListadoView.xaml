@@ -244,6 +244,29 @@
                                   ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
                                   SelectedItem="{Binding CategoriaSeleccionada}"/>
 
+                        <Button Width="28" Height="28" Content="+" FontSize="16" FontWeight="Bold"
+                                Margin="4,0,0,0"
+                                Background="{DynamicResource PrimaryBrush}"
+                                Foreground="White" BorderThickness="0"
+                                Cursor="Hand"
+                                Click="CrearCategoria_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="b"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="6"
+                                            BorderThickness="0">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryHoverBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
                         <Border Width="10" MinWidth="0"/>
 
                         <ComboBox x:Name="FiltroActivo" Width="90" Height="38"
@@ -815,6 +838,103 @@
                     </Border>
                 </Grid>
 </Border>
+        </Border>
+
+        <!-- POPUP: Gestión de Categorías -->
+        <Border Grid.Row="0" Grid.RowSpan="10"
+                Background="#CC000000"
+                Visibility="{Binding MostrarPopupCategoria, Converter={StaticResource BoolToVisibility}}">
+            <Border Background="{DynamicResource CardBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="12" Width="420" MaxHeight="520"
+                    VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                <StackPanel>
+                    <TextBlock Text="Gestionar Categorías" FontSize="18" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Creá o eliminá categorías del catálogo" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                    <!-- Crear nueva -->
+                    <TextBlock Text="Nueva categoría" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Margin="0,0,8,0">
+                            <TextBox Text="{Binding NombreNuevaCategoria, UpdateSourceTrigger=PropertyChanged}"
+                                     Height="36" FontSize="13" Padding="10,0"
+                                     Background="Transparent"
+                                     Foreground="{DynamicResource TextPrimaryBrush}"
+                                     BorderThickness="0"
+                                     KeyDown="NuevaCategoria_KeyDown"/>
+                        </Border>
+                        <Button Grid.Column="1" Content="+ Crear" Height="36" Padding="14,0" FontSize="13"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="CrearCategoriaConfirmar_Click"/>
+                    </Grid>
+
+                    <!-- Lista de categorías existentes -->
+                    <TextBlock Text="Categorías existentes" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,16,0,8"/>
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="8" MaxHeight="240">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding CategoriasGestion}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource BorderBrush}"
+                                                BorderThickness="0,0,0,1" Padding="12,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Nombre}" FontSize="13"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" Content="✏️" Width="28" Height="28"
+                                                    FontSize="12"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                                    Cursor="Hand"
+                                                    Click="RenombrarCategoria_Click"
+                                                    ToolTip="Renombrar categoría"/>
+                                            <Button Grid.Column="2" Content="🗑" Width="28" Height="28"
+                                                    FontSize="12"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource ErrorBrush}"
+                                                    Cursor="Hand"
+                                                    Click="EliminarCategoria_Click"
+                                                    ToolTip="Eliminar categoría (reasigna productos a Sin Categoría)"/>
+                                            <Button Grid.Column="3" Content="⊘" Width="28" Height="28"
+                                                    FontSize="12" Margin="4,0,0,0"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource ErrorBrush}"
+                                                    Cursor="Hand"
+                                                    Click="EliminarTodosProductos_Click"
+                                                    ToolTip="Eliminar TODOS los productos de esta categoría"/>
+                                        </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Content="Cerrar" Height="36" Padding="20,0" FontSize="13"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Cursor="Hand" Click="CancelarCrearCategoria_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Border>
 
     </Grid>

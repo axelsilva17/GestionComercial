@@ -1,11 +1,10 @@
 using System;
 using System.Security.Principal;
-using GestionComercial.Aplicacion.Interfaces.Autenticacion;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
     // Implementación de ejemplo; en la siguiente iteración conectaremos con el servicio de autenticación real.
-    public class AuthService : IAuthService
+    public class AuthService
     {
         public bool IsCurrentUserAdmin()
         {

@@ -1,10 +1,9 @@
 using FluentAssertions;
-using GestionComercial.Infraestructura.Utilidades;
+using GestionComercial.Dominio.Utilidades;
 
 namespace GestionComercial.Tests
 {
-    /// <summary>
-    /// Tests unitarios para ValidadorCUIT.
+    ///     /// Tests unitarios para ValidadorCUIT.
     /// 
     /// CUITs de ejemplo válidos:
     /// - 20-12345678-9 (formato con guiones)
@@ -15,7 +14,6 @@ namespace GestionComercial.Tests
     /// - Los siguientes 8 son el número base
     /// - El último es el dígito verificador
     /// - Cálculo: módulo 11 con serie [5,4,3,2,7,6,5,4,3,2]
-    /// </summary>
     public class ValidadorCUITTests
     {
         #region EsValido Tests

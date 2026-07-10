@@ -56,9 +56,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Maneja atajos de teclado globales en el listado de ventas.
-        /// </summary>
+        ///         /// Maneja atajos de teclado globales en el listado de ventas.
         public void HandleKeyDown(Key key, ModifierKeys modifiers)
         {
             switch (modifiers)

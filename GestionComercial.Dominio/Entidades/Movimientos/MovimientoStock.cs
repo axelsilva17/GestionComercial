@@ -5,14 +5,12 @@ using GestionComercial.Dominio.Enumeraciones;
 
 namespace GestionComercial.Dominio.Entidades.Movimientos
 {
-    /// <summary>
-    /// Entidad MovimientoStock con patrón DDD.
+    ///     /// Entidad MovimientoStock con patrón DDD.
     /// 
     /// Preferir factory methods:
     ///   var mov = MovimientoStock.Entrada(...);
     ///   var mov = MovimientoStock.Salida(...);
     ///   var mov = MovimientoStock.Ajuste(...);
-    /// </summary>
     public class MovimientoStock
     {
         private int _tipoMovimiento;
@@ -75,27 +73,21 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
         // ── Constructor vacío (para EF Core) ──
         public MovimientoStock() { }
 
-        /// <summary>
-        /// Crea un movimiento de entrada (compra, ajuste positivo, etc.)
-        /// </summary>
+        ///         /// Crea un movimiento de entrada (compra, ajuste positivo, etc.)
         public static MovimientoStock Entrada(decimal cantidad, decimal stockActual,
             int idProducto, int idSucursal, int idUsuario, string? observacion = null, int? referenciaId = null)
         {
             return Crear(TipoMovimientoStockEnum.Entrada, cantidad, stockActual, idProducto, idSucursal, idUsuario, observacion, referenciaId);
         }
 
-        /// <summary>
-        /// Crea un movimiento de salida (venta, ajuste negativo, etc.)
-        /// </summary>
+        ///         /// Crea un movimiento de salida (venta, ajuste negativo, etc.)
         public static MovimientoStock Salida(decimal cantidad, decimal stockActual,
             int idProducto, int idSucursal, int idUsuario, string? observacion = null, int? referenciaId = null)
         {
             return Crear(TipoMovimientoStockEnum.Salida, cantidad, stockActual, idProducto, idSucursal, idUsuario, observacion, referenciaId);
         }
 
-        /// <summary>
-        /// Crea un movimiento de ajuste (recount, etc.)
-        /// </summary>
+        ///         /// Crea un movimiento de ajuste (recount, etc.)
         public static MovimientoStock Ajuste(decimal cantidad, decimal stockAnterior,
             int idProducto, int idSucursal, int idUsuario, string? observacion = null, int? referenciaId = null)
         {

@@ -5,12 +5,10 @@ using GestionComercial.Dominio.Enumeraciones;
 
 namespace GestionComercial.Dominio.Entidades.Caja
 {
-    /// <summary>
-    /// Entidad Caja con patrón DDD.
+    ///     /// Entidad Caja con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var caja = Caja.Crear(idSucursal, idUsuarioApertura, montoInicial, esPrimaria, turno);
-    /// </summary>
     public class Caja : EntidadBase
     {
         private DateTime _fechaApertura = DateTime.Now;
@@ -103,9 +101,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
             };
         }
 
-        /// <summary>
-        /// Abre la caja (cambia estado a Abierta).
-        /// </summary>
+        ///         /// Abre la caja (cambia estado a Abierta).
         public void Abrir(int idUsuario, decimal montoInicial)
         {
             if (EsAbierta)
@@ -121,9 +117,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
             _observacion = null;
         }
 
-        /// <summary>
-        /// Cierra la caja. Solo si está abierta.
-        /// </summary>
+        ///         /// Cierra la caja. Solo si está abierta.
         public void Cerrar(int idUsuarioCierre, decimal? montoFinal = null)
         {
             if (!EsAbierta)
@@ -137,9 +131,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
             _montoFinal = montoFinal;
         }
 
-        /// <summary>
-        /// Agrega monto adicional (aperturas parciales).
-        /// </summary>
+        ///         /// Agrega monto adicional (aperturas parciales).
         public void AgregarMonto(decimal monto)
         {
             if (!EsAbierta)
@@ -150,9 +142,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
             _montoInicial += monto;
         }
 
-        /// <summary>
-        /// Obtiene el monto actual en caja.
-        /// </summary>
+        ///         /// Obtiene el monto actual en caja.
         public decimal MontoActual => _montoInicial + (Ventas.Sum(v => v.TotalFinal) - Ventas.Sum(v => v.TotalPagado));
 
         public bool EstaAbierta => _estado == (int)EstadoCajaEnum.Abierta;

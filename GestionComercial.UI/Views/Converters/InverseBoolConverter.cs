@@ -4,9 +4,7 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Invierte un valor booleano.
-    /// </summary>
+    ///     /// Invierte un valor booleano.
     public class InverseBoolConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

@@ -1,11 +1,9 @@
 namespace GestionComercial.Dominio.Entidades
 {
-    /// <summary>
-    /// Entidad base con patrón DDD.
+    ///     /// Entidad base con patrón DDD.
     /// 
     /// Heredan: Producto, Venta, Cliente, Proveedor, Usuario, Caja, Compra, Sucursal, Empresa.
     /// Las subclases pueden sobreescribir el comportamiento de Activo/Inactivar via virtual.
-    /// </summary>
     public abstract class EntidadBase
     {
         private DateTime _fechaAlta = DateTime.Now;
@@ -32,17 +30,13 @@ namespace GestionComercial.Dominio.Entidades
             _activo   = true;
         }
 
-        /// <summary>
-        /// Inactiva la entidad (soft delete).
-        /// </summary>
+        ///         /// Inactiva la entidad (soft delete).
         public virtual void Inactivar()
         {
             _activo = false;
         }
 
-        /// <summary>
-        /// Reactiva la entidad.
-        /// </summary>
+        ///         /// Reactiva la entidad.
         public virtual void Reactivar()
         {
             _activo = true;

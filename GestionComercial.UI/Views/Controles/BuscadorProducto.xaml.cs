@@ -16,11 +16,9 @@ namespace GestionComercial.UI.Controles
             DependencyProperty.Register(nameof(ProductoSeleccionado), typeof(ProductoDto), typeof(BuscadorProducto),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
-        /// <summary>
-        /// Función de búsqueda que el ViewModel padre debe proveer.
+        ///         /// Función de búsqueda que el ViewModel padre debe proveer.
         /// Recibe el texto y retorna la lista de productos.
         /// Ejemplo: BuscarProductos="{Binding BuscarProductosAsync}"
-        /// </summary>
         public static readonly DependencyProperty BuscarFuncProperty =
             DependencyProperty.Register(nameof(BuscarFunc), typeof(Func<string, Task<IEnumerable<ProductoDto>>>),
                 typeof(BuscadorProducto), new PropertyMetadata(null));

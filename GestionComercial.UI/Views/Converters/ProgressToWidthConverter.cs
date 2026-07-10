@@ -4,12 +4,10 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un porcentaje (0-100) en un ancho en píxeles relativo al contenedor.
+    ///     /// Convierte un porcentaje (0-100) en un ancho en píxeles relativo al contenedor.
     /// Uso en XAML:
     ///   Width="{MultiBinding Converter={StaticResource ProgressToWidthConverter}}"
     ///   con Binding Progreso (int 0-100) y Binding ActualWidth del contenedor.
-    /// </summary>
     public class ProgressToWidthConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

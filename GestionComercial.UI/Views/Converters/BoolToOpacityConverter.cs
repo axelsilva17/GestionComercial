@@ -5,10 +5,8 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// true  → 1.0 (completamente opaco)
+    ///     /// true  → 1.0 (completamente opaco)
     /// false → 0.4 (semi-transparente para botones deshabilitados)
-    /// </summary>
     public class BoolToOpacityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

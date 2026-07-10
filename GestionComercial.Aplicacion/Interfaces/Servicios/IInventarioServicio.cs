@@ -6,10 +6,8 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
 {
     public interface IInventarioServicio
     {
-        /// <summary>
-        /// Obtiene movimientos de stock con filtros y paginación.
+        ///         /// Obtiene movimientos de stock con filtros y paginación.
         /// La paginación se ejecuta EN SQL, no en memoria.
-        /// </summary>
         Task<PagedResult<MovimientoStockDto>> ObtenerMovimientosAsync(
             string? textoBusqueda,
             string? filtroTipo,
@@ -21,14 +19,10 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
             int itemsPorPagina,
             int idEmpresa);
 
-        /// <summary>
-        /// Obtiene movimientos de un producto específico.
-        /// </summary>
+        ///         /// Obtiene movimientos de un producto específico.
         Task<IEnumerable<MovimientoStockDto>> ObtenerMovimientosPorProductoAsync(int idProducto);
 
-        /// <summary>
-        /// Exporta movimientos a Excel.
-        /// </summary>
+        ///         /// Exporta movimientos a Excel.
         Task<byte[]> ExportarAExcelAsync(
             string? textoBusqueda,
             string? filtroTipo,
@@ -38,14 +32,10 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
             DateTime fechaHasta,
             int idEmpresa);
 
-        /// <summary>
-        /// Obtiene productos con stock crítico (bajo mínimo).
-        /// </summary>
+        ///         /// Obtiene productos con stock crítico (bajo mínimo).
         Task<IEnumerable<ProductoListadoDto>> ObtenerStockCriticoAsync(int idEmpresa);
 
-        /// <summary>
-        /// Registra un nuevo movimiento de inventario y actualiza el stock del producto.
-        /// </summary>
+        ///         /// Registra un nuevo movimiento de inventario y actualiza el stock del producto.
         Task RegistrarMovimientoAsync(
             int idProducto,
             string tipoMovimiento,
