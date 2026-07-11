@@ -49,6 +49,10 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
         int itemsPorPagina)
     {
         var query = _dbSet
+            .Include(m => m.Producto)
+                .ThenInclude(p => p!.Categoria)
+            .Include(m => m.Usuario)
+            .Include(m => m.Sucursal)
             .Where(m => m.Fecha >= fechaDesde && m.Fecha <= fechaHasta.AddDays(1));
 
         // Filtrar por tipo
