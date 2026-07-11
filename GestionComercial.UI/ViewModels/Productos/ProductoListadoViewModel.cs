@@ -299,7 +299,10 @@ namespace GestionComercial.UI.ViewModels.Productos
 
                 // Filtro stock crítico (desde dashboard "Ver todos")
                 if (MostrarSoloStockCritico)
-                    filtrados = filtrados.Where(p => p.StockActual <= p.StockMinimo);
+                {
+                    var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_shell.IdEmpresaActual);
+                    filtrados = filtrados.Where(p => p.StockActual <= umbral);
+                }
 
                 var filtradosList = filtrados.ToList();
                 Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);

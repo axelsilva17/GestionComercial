@@ -25,5 +25,8 @@ public interface IProductoServicio
         Task<int>                             EliminarProductosPorCategoriaAsync(int idCategoria);
         Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync();
         Task<IEnumerable<Proveedor>> ObtenerProveedoresAsync();
+
+        ///         /// Devuelve el umbral global de stock crítico configurado en la empresa.
+        Task<int> ObtenerUmbralStockCriticoAsync(int idEmpresa);
     }
 }

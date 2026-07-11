@@ -241,10 +241,12 @@ namespace GestionComercial.UI.ViewModels.Main
             CantidadVentasMes = ventasMes.Count;
             VentasPendientes  = ventasMes.Count(v => v.Estado == "Pendiente");
 
-            var stockCritico = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
-            ProductosCriticos = stockCritico.Count;
+            var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
+            var todosProductos = (await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+            var stockBajo = todosProductos.Where(p => p.StockActual <= umbral).ToList();
+            ProductosCriticos = stockBajo.Count;
             ProductosCriticosList = new ObservableCollection<ProductoCriticoDash>(
-                stockCritico.Take(8).Select(p => new ProductoCriticoDash
+                stockBajo.Take(8).Select(p => new ProductoCriticoDash
                 {
                     Nombre      = p.Nombre,
                     StockActual = p.StockActual,

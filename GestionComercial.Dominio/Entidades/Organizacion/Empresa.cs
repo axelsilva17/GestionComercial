@@ -50,6 +50,14 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             set => _logoUrl = value; 
         }
 
+        // ── Configuración ──
+        private int _umbralStockCritico = 10;
+        public int UmbralStockCritico
+        {
+            get => _umbralStockCritico;
+            set => _umbralStockCritico = Math.Max(1, value);
+        }
+
         // ── Relaciones ──
         public ICollection<Sucursal>   Sucursales  { get; set; } = new List<Sucursal>();
         public ICollection<Categoria>  Categorias  { get; set; } = new List<Categoria>();

@@ -10,6 +10,7 @@ namespace GestionComercial.Aplicacion.DTOs.Configuracion
         public string? Email     { get; set; }
         public string? Telefono  { get; set; }
         public string? LogoUrl   { get; set; }
+        public int    UmbralStockCritico { get; set; } = 10;
         public bool   Activa     { get; set; }
 
         public bool CUITValido => !string.IsNullOrEmpty(CUIT)

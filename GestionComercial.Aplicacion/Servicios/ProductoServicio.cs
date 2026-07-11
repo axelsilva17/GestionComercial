@@ -504,6 +504,12 @@ public class ProductoServicio : IProductoServicio
             return productos.Count;
         }
 
+        public async Task<int> ObtenerUmbralStockCriticoAsync(int idEmpresa)
+        {
+            var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Id == idEmpresa);
+            return empresa?.UmbralStockCritico ?? 10;
+        }
+
         private static ProductoDto MapearDto(Producto p) => new()
         {
             IdProducto = p.Id,
