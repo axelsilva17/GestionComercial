@@ -239,43 +239,57 @@
 
                     <!-- Resto de filtros y botones con espaciado -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <ComboBox x:Name="CategoriaSeleccionada" Width="130" Height="38"
-                                  Style="{StaticResource FilterComboBoxStyle}"
-                                  ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
-                                  SelectedItem="{Binding CategoriaSeleccionada}"/>
 
-                        <Button Width="28" Height="28" Content="+" FontSize="16" FontWeight="Bold"
-                                Margin="4,0,0,0"
-                                Background="{DynamicResource PrimaryBrush}"
-                                Foreground="White" BorderThickness="0"
-                                Cursor="Hand"
-                                Click="CrearCategoria_Click">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="b"
-                                            Background="{TemplateBinding Background}"
-                                            CornerRadius="6"
-                                            BorderThickness="0">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryHoverBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
+                        <!-- Filtro Categoría -->
+                        <StackPanel>
+                            <TextBlock Text="CATEGORÍA" FontSize="9" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,0,3"/>
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox x:Name="CategoriaSeleccionada" Width="130" Height="34"
+                                          Style="{StaticResource FilterComboBoxStyle}"
+                                          ItemsSource="{Binding Categorias}" DisplayMemberPath="Nombre"
+                                          SelectedItem="{Binding CategoriaSeleccionada}"/>
+                                <Button Width="24" Height="24" Content="+" FontSize="14" FontWeight="Bold"
+                                        Margin="4,0,0,0"
+                                        Background="{DynamicResource PrimaryBrush}"
+                                        Foreground="White" BorderThickness="0"
+                                        Cursor="Hand"
+                                        Click="CrearCategoria_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="b"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="5"
+                                                    BorderThickness="0">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryHoverBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
 
-                        <Border Width="10" MinWidth="0"/>
+                        <Border Width="12" MinWidth="0"/>
 
-                        <ComboBox x:Name="FiltroActivo" Width="90" Height="38"
-                                  Style="{StaticResource FilterComboBoxStyle}"
-                                  SelectedIndex="{Binding FiltroActivo}">
-                            <ComboBoxItem Content="Todos"/>
-                            <ComboBoxItem Content="Activos"/>
-                            <ComboBoxItem Content="Inactivos"/>
-                        </ComboBox>
+                        <!-- Filtro Estado -->
+                        <StackPanel>
+                            <TextBlock Text="ESTADO" FontSize="9" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,0,3"/>
+                            <ComboBox x:Name="FiltroActivo" Width="100" Height="34"
+                                      Style="{StaticResource FilterComboBoxStyle}"
+                                      SelectedIndex="{Binding FiltroActivo}">
+                                <ComboBoxItem Content="Todos"/>
+                                <ComboBoxItem Content="Activos"/>
+                                <ComboBoxItem Content="Inactivos"/>
+                            </ComboBox>
+                        </StackPanel>
 
                         <Border Width="12" MinWidth="0"/>
 

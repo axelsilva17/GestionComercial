@@ -322,7 +322,8 @@
                                          Background="Transparent" BorderThickness="0"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
                                          CaretBrush="{DynamicResource TextPrimaryBrush}"
-                                         FontSize="13" VerticalAlignment="Center"/>
+                                         FontSize="13" VerticalAlignment="Center"
+                                         KeyDown="TxtBusqueda_KeyDown"/>
                                 <TextBlock Text="Buscar por producto o código..."
                                            FontSize="13" VerticalAlignment="Center"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
