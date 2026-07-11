@@ -127,7 +127,20 @@ namespace GestionComercial.UI.ViewModels.Main
         public async Task IrVentas()        => await ActivateItemAsync(IoC.Get<VentaViewModel>(),            CancellationToken.None);
         public async Task IrCompras()       => await ActivateItemAsync(IoC.Get<CompraListadoViewModel>(),    CancellationToken.None);
         public async Task IrCaja()          => await ActivateItemAsync(IoC.Get<CajaViewModel>(),             CancellationToken.None);
-        public async Task IrProductos()     => await ActivateItemAsync(IoC.Get<ProductoListadoViewModel>(),  CancellationToken.None);
+        public async Task IrProductos()
+        {
+            // Resetear filtro de stock crítico al navegar normal
+            var vm = IoC.Get<ProductoListadoViewModel>();
+            vm.MostrarSoloStockCritico = false;
+            await ActivateItemAsync(vm, CancellationToken.None);
+        }
+
+        public async Task IrProductosStockCritico()
+        {
+            var vm = IoC.Get<ProductoListadoViewModel>();
+            vm.MostrarSoloStockCritico = true;
+            await ActivateItemAsync(vm, CancellationToken.None);
+        }
         public async Task IrInventario()    => await ActivateItemAsync(IoC.Get<InventarioViewModel>(),       CancellationToken.None);
         public async Task IrClientes()      => await ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(),   CancellationToken.None);
         public async Task IrProveedores()   => await ActivateItemAsync(IoC.Get<ProveedorListadoViewModel>(), CancellationToken.None);

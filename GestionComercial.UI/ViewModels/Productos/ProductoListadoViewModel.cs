@@ -222,6 +222,18 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _productosActualizados = value; NotifyOfPropertyChange(() => ProductosActualizados); }
         }
 
+        // ── Flag para stock crítico (desde dashboard) ──────────────────
+        private bool _mostrarSoloStockCritico;
+        public bool MostrarSoloStockCritico
+        {
+            get => _mostrarSoloStockCritico;
+            set
+            {
+                _mostrarSoloStockCritico = value;
+                NotifyOfPropertyChange(() => MostrarSoloStockCritico);
+            }
+        }
+
         // ── Lifecycle ─────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
@@ -284,6 +296,10 @@ namespace GestionComercial.UI.ViewModels.Productos
                     filtrados = filtrados.Where(p => p.Activo);
                 else if (FiltroActivo == 2)
                     filtrados = filtrados.Where(p => !p.Activo);
+
+                // Filtro stock crítico (desde dashboard "Ver todos")
+                if (MostrarSoloStockCritico)
+                    filtrados = filtrados.Where(p => p.StockActual <= p.StockMinimo);
 
                 var filtradosList = filtrados.ToList();
                 Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);

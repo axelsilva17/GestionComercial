@@ -104,7 +104,12 @@ namespace GestionComercial.UI.ViewModels.Inventario
         public string FiltroTipo
         {
             get => _filtroTipo;
-            set { _filtroTipo = value; NotifyOfPropertyChange(() => FiltroTipo); }
+            set
+            {
+                _filtroTipo = value;
+                NotifyOfPropertyChange(() => FiltroTipo);
+                _ = CargarAsync(); // filtrar automático al cambiar tipo
+            }
         }
 
         // ── Filtro usuario ───────────────────────────────────────────────────

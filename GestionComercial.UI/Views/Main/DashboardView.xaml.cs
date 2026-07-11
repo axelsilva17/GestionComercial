@@ -30,7 +30,7 @@ namespace GestionComercial.UI.Views.Main
             => Shell?.IrProductos();
 
         private void IrProductosStock_Click(object sender, RoutedEventArgs e)
-            => Shell?.IrProductos();
+            => Shell?.IrProductosStockCritico();
 
         private void IrInventario_Click(object sender, RoutedEventArgs e)
             => Shell?.IrInventario();
