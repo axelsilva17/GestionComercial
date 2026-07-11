@@ -269,7 +269,7 @@
                                                        FontSize="12" Foreground="{DynamicResource ErrorBrush}"
                                                        VerticalAlignment="Center" Margin="0,0,12,0"/>
                                             <TextBlock Grid.Column="2"
-                                                       Text="{Binding StockMinimo, StringFormat='Mín: {0}'}"
+                                                       Text="{Binding Umbral, StringFormat='Umbral: {0}'}"
                                                        FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center"/>
                                         </Grid>

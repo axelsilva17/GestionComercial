@@ -26,7 +26,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
     {
         public string Nombre      { get; set; } = string.Empty;
         public int    StockActual { get; set; }
-        public int    StockMinimo { get; set; }
+        public int    Umbral      { get; set; }
         public string Estado      => StockActual == 0 ? "Sin stock" : "Crítico";
     }
 
@@ -154,14 +154,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _ventasPendientes = value; NotifyOfPropertyChange(() => VentasPendientes); }
         }
 
-        // ── Panel de Auditoría ────────────────────────────────────────────────
-        private bool _mostrarPanelAuditoria;
-        public bool MostrarPanelAuditoria
-        {
-            get => _mostrarPanelAuditoria;
-            set { _mostrarPanelAuditoria = value; NotifyOfPropertyChange(() => MostrarPanelAuditoria); }
-        }
-
         // ── Filtros ───────────────────────────────────────────────────────────
         private DateTime _fechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         public DateTime FechaDesde
@@ -190,8 +182,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
         public ObservableCollection<CajaHistorialDto>        HistorialCajas   { get; set; } = new();
         public ObservableCollection<MovimientoCajaHistorialDto> MovimientosCaja { get; set; } = new();
-        public ObservableCollection<AuditoriaLogDto>        AuditoriaCajas       { get; set; } = new();
-        public ObservableCollection<AuditoriaLogDto>        AuditoriaMovimientos { get; set; } = new();
 
         // ── KPIs de caja ───────────────────────────────────────────────────────
         private int _totalCajas;
@@ -326,10 +316,12 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     _sesion.IdSucursal, desde, hasta)).ToList();
                 LogHelper.Log($"[ReporteAdmin] Ventas: {ventasPeriodo.Count} registros en {sw.ElapsedMilliseconds}ms");
 
-                // Stock crítico (solo contar, no cargar detalles)
+                // Stock crítico (usa umbral configurable de empresa)
                 sw.Restart();
-                var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
-                LogHelper.Log($"[ReporteAdmin] Stock crítico: {criticos.Count} en {sw.ElapsedMilliseconds}ms");
+                var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
+                var todosProductos = (await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+                var criticos = todosProductos.Where(p => p.StockActual <= umbral).ToList();
+                LogHelper.Log($"[ReporteAdmin] Stock crítico (umbral ≤ {umbral}): {criticos.Count} en {sw.ElapsedMilliseconds}ms");
 
                 // Clientes nuevos
                 sw.Restart();
@@ -405,7 +397,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 {
                     Nombre = p.Nombre,
                     StockActual = p.StockActual,
-                    StockMinimo = p.StockMinimo,
+                    Umbral = umbral,
                 }).ToList();
 
                 var comprasRecientesData = comprasPeriodo
@@ -581,66 +573,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     SeparatorsPaint = new SolidColorPaint(Col_Sep),
                 }
             };
-        }
-
-        // ── Acciones de Auditoría ─────────────────────────────────────────────
-        public void MostrarAuditoria()
-        {
-            try
-            {
-                MostrarPanelAuditoria = true;
-                _ = CargarAuditoriaAsync();
-            }
-            catch (Exception ex)
-            {
-                MostrarError(ex.Message);
-            }
-        }
-
-        public void CargarAuditoria()
-        {
-            try
-            {
-                _ = CargarAuditoriaAsync();
-            }
-            catch (Exception ex)
-            {
-                MostrarError(ex.Message);
-            }
-        }
-
-        public void OcultarAuditoria()
-        {
-            MostrarPanelAuditoria = false;
-        }
-
-        public async Task CargarAuditoriaAsync()
-        {
-            if (!MostrarPanelAuditoria) return;
-
-            IsLoading = true;
-            LimpiarError();
-            try
-            {
-                var desde = FechaDesde.Date;
-                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
-
-                var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
-                var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
-
-                // Deserializar JSON para mostrar montos correctamente
-                foreach (var a in auditoriaCajas) a.DeserializarJson();
-                foreach (var a in auditoriaMovimientos) a.DeserializarJson();
-
-                LogHelper.Log($"[ReporteAdmin] AuditoriaCajas: {auditoriaCajas.Count}, AuditoriaMovimientos: {auditoriaMovimientos.Count}");
-                AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(auditoriaCajas);
-                AuditoriaMovimientos = new ObservableCollection<AuditoriaLogDto>(auditoriaMovimientos);
-
-                NotifyOfPropertyChange(() => AuditoriaCajas);
-                NotifyOfPropertyChange(() => AuditoriaMovimientos);
-            }
-            catch (Exception ex) { MostrarError(ex.Message); }
-            finally { IsLoading = false; }
         }
 
         // ── Acciones filtro ───────────────────────────────────────────────────
