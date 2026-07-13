@@ -77,28 +77,4 @@ GestionComercial.Persistencia     → EF Core DbContext, migraciones, repositori
 GestionComercial.Infraestructura  → Servicios externos (BCrypt, backup, logging)
 ```
 
-Patrones: Repository, Unit of Work, MVVM (Caliburn.Micro), RelayCommand, Inyección de dependencias. Principios SOLID aplicados en toda la solución.
-
----
-
-## Tests
-
-```bash
-dotnet test
-```
-
-La suite incluye tests unitarios para servicios de dominio (ventas, pagos, productos, clientes, autenticación) y validación de reglas de negocio. SQLite en memoria para aislamiento.
-
----
-
-## Contribución
-
-1. Crear un branch desde `main` con el formato `feature/descripcion` o `fix/descripcion`
-2. Commits con mensajes claros siguiendo [Conventional Commits](https://www.conventionalcommits.org/)
-3. Abrir Pull Request contra `main`
-
----
-
-## Licencia
-
-MIT License — ver el archivo [LICENSE](LICENSE) para más detalles.
+Patrones: Repository, Unit of Work, MVVM (Caliburn.Micro), Strategy (procesamiento de pagos), RelayCommand, Inyección de dependencias. Principios SOLID aplicados en toda la solución.
