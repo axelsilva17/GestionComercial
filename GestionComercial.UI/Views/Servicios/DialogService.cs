@@ -4,9 +4,7 @@ using System.Windows.Threading;
 
 namespace GestionComercial.UI.Views.Servicios
 {
-    /// <summary>
-    /// Implementación de IDialogService usando DialogWindow estilizado.
-    /// </summary>
+    ///     /// Implementación de IDialogService usando DialogWindow estilizado.
     public class DialogService : IDialogService
     {
         private readonly DispatcherTimer _debounceTimer;
@@ -65,10 +63,8 @@ namespace GestionComercial.UI.Views.Servicios
             return dialog.Resultado == DialogResultado.Aceptar;
         }
 
-        /// <summary>
-        /// Ejecuta una acción con debounce de 300ms.
+        ///         /// Ejecuta una acción con debounce de 300ms.
         /// Si se llama múltiples veces antes de 300ms, solo se ejecuta la última.
-        /// </summary>
         public void EjecutarConDebounce(System.Action accion)
         {
             _debounceAction = accion;

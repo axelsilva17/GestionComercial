@@ -1,6 +1,6 @@
 namespace GestionComercial.Aplicacion.DTOs.Productos
 {
-    /// <summary>DTO para importar productos desde Excel con soporte de creación y actualización.</summary>
+    /// DTO para importar productos desde Excel con soporte de creación y actualización.
     public class ProductoImportarDto
     {
         public string  Nombre            { get; set; } = string.Empty;

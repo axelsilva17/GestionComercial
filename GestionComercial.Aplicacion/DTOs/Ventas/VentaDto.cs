@@ -10,7 +10,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal  TotalBruto     { get; set; }
         public decimal  TotalDescuento { get; set; }
         public decimal  TotalFinal     { get; set; }
-        /// <summary>Total de la venta (sin descuentos). Usado para cálculos de caja.</summary>
+        /// Total de la venta (sin descuentos). Usado para cálculos de caja.
         public decimal  Total          { get; set; }
         public string   Estado         { get; set; }
         public int      IdSucursal     { get; set; }
@@ -33,16 +33,14 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal PrecioUnitario { get; set; }
         public decimal CostoUnitario { get; set; }
         public decimal Subtotal { get; set; }
-        /// <summary>Descuento aplicado directamente al ítem (no al total de la venta).</summary>
+        /// Descuento aplicado directamente al ítem (no al total de la venta).
         public decimal DescuentoPorItem { get; set; }
-        /// <summary>Lista de descuentos aplicados al ítem (nuevo en spec modulo-ventas-full).</summary>
+        /// Lista de descuentos aplicados al ítem (nuevo en spec modulo-ventas-full).
         public List<DescuentoItemDto> Descuentos { get; set; } = new();
     }
 
-    /// <summary>
-    /// DTO para representar un descuento aplicado a un ítem de venta.
+    ///     /// DTO para representar un descuento aplicado a un ítem de venta.
     /// Agregado según spec modulo-ventas-full.
-    /// </summary>
     public class DescuentoItemDto
     {
         public decimal Porcentaje { get; set; }

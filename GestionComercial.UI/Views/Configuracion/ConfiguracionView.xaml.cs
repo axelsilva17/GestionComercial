@@ -1,5 +1,6 @@
 using GestionComercial.Aplicacion.DTOs.Configuracion;
 using GestionComercial.UI.ViewModels.Configuracion;
+using GestionComercial.Dominio.DTOs.Infraestructura;
 using Microsoft.Win32;
 using System;
 using System.IO;
@@ -331,7 +332,7 @@ namespace GestionComercial.UI.Views.Configuracion
 
         private async void EliminarBackup_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as Button)?.Tag is GestionComercial.Dominio.Interfaces.Servicios.BackupInfo item)
+            if ((sender as Button)?.Tag is BackupInfo item)
             {
                 var confirm = MessageBox.Show(
                     $"¿Deseás eliminar el backup?\n{item.FileName}",

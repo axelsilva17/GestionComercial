@@ -19,6 +19,7 @@ namespace GestionComercial.Persistencia.Semillas
                     UsuarioApertura_id = 1,
                     UsuarioCierre_id   = 1,
                     Id_sucursal        = 1,
+                    Turno              = "Mañana",
                 },
                 new Caja
                 {
@@ -31,6 +32,7 @@ namespace GestionComercial.Persistencia.Semillas
                     UsuarioApertura_id = 1,
                     UsuarioCierre_id   = 1,
                     Id_sucursal        = 1,
+                    Turno              = "Tarde",
                 },
                 new Caja
                 {
@@ -43,6 +45,7 @@ namespace GestionComercial.Persistencia.Semillas
                     UsuarioApertura_id = 1,
                     UsuarioCierre_id   = 1,
                     Id_sucursal        = 1,
+                    Turno              = "Mañana",
                 },
                 new Caja
                 {
@@ -55,6 +58,7 @@ namespace GestionComercial.Persistencia.Semillas
                     UsuarioApertura_id = 1,
                     UsuarioCierre_id   = 1,
                     Id_sucursal        = 1,
+                    Turno              = "Noche",
                 },
                 new Caja
                 {
@@ -67,6 +71,7 @@ namespace GestionComercial.Persistencia.Semillas
                     UsuarioApertura_id = 1,
                     UsuarioCierre_id   = 1,
                     Id_sucursal        = 1,
+                    Turno              = "Mañana",
                 },
                 new Caja
                 {
@@ -79,6 +84,7 @@ namespace GestionComercial.Persistencia.Semillas
                     UsuarioApertura_id = 1,
                     UsuarioCierre_id   = 1,
                     Id_sucursal        = 1,
+                    Turno              = "Tarde",
                 }
             );
         }

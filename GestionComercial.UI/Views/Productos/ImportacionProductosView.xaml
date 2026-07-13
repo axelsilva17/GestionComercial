@@ -58,17 +58,38 @@
             <!-- ── Header ── -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel>
+                <Button Grid.Column="0" Content="← Volver"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        FontSize="13" Cursor="Hand" VerticalAlignment="Center"
+                        Margin="0,0,20,0" Click="Volver_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="b" Background="{TemplateBinding Background}"
+                                    CornerRadius="6" Padding="10,6">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <StackPanel Grid.Column="1">
                     <TextBlock Text="Importar Productos desde Excel" FontSize="24" FontWeight="Bold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="Cargá masivamente productos con su stock, precios y categorías"
                                FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
                 <!-- ✅ Click conectado -->
-                <Button Grid.Column="1" Style="{StaticResource GhostBtn}"
+                <Button Grid.Column="2" Style="{StaticResource GhostBtn}"
                         Height="38" Padding="14,0" FontSize="12"
                         Click="DescargarPlantilla_Click">
                     <StackPanel Orientation="Horizontal">
@@ -123,33 +144,6 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Margin="0,20,0,0">
-                            <TextBlock Text="OPCIONES" FontSize="10" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
-                            <CheckBox Content="Actualizar precio y stock de productos existentes (por código de barra)"
-                                      IsChecked="{Binding ActualizarExistentes}" Style="{StaticResource OpcionCheck}"/>
-                            <CheckBox Content="Crear categorías nuevas automáticamente si no existen"
-                                      IsChecked="{Binding CrearCategorias}" Style="{StaticResource OpcionCheck}"/>
-
-                            <!-- Ajuste de precio -->
-                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                                <TextBlock Text="Ajustar precio (%):" VerticalAlignment="Center" Width="140"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBox Text="{Binding AjustePorcentaje, UpdateSourceTrigger=PropertyChanged}" 
-                                        Width="70" Style="{StaticResource Input}"/>
-                                <TextBlock Text="%" VerticalAlignment="Center" Margin="4,0,0,0"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <TextBlock Text="Margen sobre costo (%):" VerticalAlignment="Center" Width="140"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBox Text="{Binding Margen, UpdateSourceTrigger=PropertyChanged}" 
-                                        Width="70" Style="{StaticResource Input}"/>
-                                <TextBlock Text="%" VerticalAlignment="Center" Margin="4,0,0,0"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                        </StackPanel>
-
                         <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,8,0,0"
                                 Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding MensajeError}" FontSize="12"
@@ -157,6 +151,8 @@
                         </Border>
                     </StackPanel>
                 </Border>
+
+
 
                 <!-- ══ PASO 2: PREVIEW ══ -->
                 <Border Style="{StaticResource StepCard}"
@@ -187,6 +183,15 @@
                                     Click="Reiniciar_Click"/>
                         </Grid>
 
+                        <!-- Opciones de importación -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <CheckBox Content="Actualizar precio y stock de productos existentes (por código de barra)"
+                                      IsChecked="{Binding ActualizarExistentes}" Style="{StaticResource OpcionCheck}"
+                                      Margin="0,0,24,0"/>
+                            <CheckBox Content="Crear categorías nuevas si no existen"
+                                      IsChecked="{Binding CrearCategorias}" Style="{StaticResource OpcionCheck}"/>
+                        </StackPanel>
+
                         <!-- Badges resumen -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                             <Border Background="#1A22C55E" CornerRadius="8" Padding="12,6" Margin="0,0,8,0">
@@ -210,13 +215,51 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- Tabla preview -->
+                        <!-- Action bar: Importar arriba + Collapsible toggle -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Botón Importar - SIEMPRE visible arriba -->
+                            <Button Grid.Column="0" Style="{StaticResource PrimaryButton}"
+                                    Height="38" Padding="20,0" FontSize="13"
+                                    IsEnabled="{Binding PuedeImportar}"
+                                    Click="EjecutarImportacion_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⬆ " FontSize="13" VerticalAlignment="Center"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run Text="Importar "/>
+                                        <Run Text="{Binding FilasValidas}"/>
+                                        <Run Text=" productos"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Botón Cancelar -->
+                            <Button Grid.Column="1" Content="Cancelar" Style="{StaticResource GhostBtn}"
+                                    Height="38" Padding="16,0" Margin="8,0,0,0" FontSize="13"
+                                    Click="Cancelar_Click"/>
+
+                            <!-- Toggle collapsible lista (alineado a la derecha) -->
+                            <Button Grid.Column="3" Style="{StaticResource GhostBtn}"
+                                    Height="32" Padding="14,0" FontSize="12"
+                                    Click="ToggleLista_Click">
+                                <TextBlock Text="{Binding FlechaListaTexto}" VerticalAlignment="Center"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Tabla preview - collapsible -->
                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="10" ClipToBounds="True">
+                                CornerRadius="10" ClipToBounds="True"
+                                Visibility="{Binding MostrarLista, Converter={StaticResource BoolToVisibility}}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto" MaxHeight="320"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
                                 <!-- Header tabla con Padding en cada celda para separar MARGEN y CATEGORÍA -->
@@ -426,28 +469,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Botones preview -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                            <!-- ✅ Click conectado -->
-                            <Button Content="Cancelar" Style="{StaticResource GhostBtn}"
-                                    Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="13"
-                                    Click="Cancelar_Click"/>
-
-                            <!-- ✅ Click conectado — este era el que no funcionaba -->
-                            <Button Style="{StaticResource PrimaryButton}"
-                                    Height="38" Padding="20,0" FontSize="13"
-                                    IsEnabled="{Binding PuedeImportar}"
-                                    Click="EjecutarImportacion_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="⬆ " FontSize="13" VerticalAlignment="Center"/>
-                                    <TextBlock VerticalAlignment="Center">
-                                        <Run Text="Importar "/>
-                                        <Run Text="{Binding FilasValidas}"/>
-                                        <Run Text=" productos"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -459,6 +480,14 @@
                         <TextBlock Text="Importación completada" FontSize="20" FontWeight="Bold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
+                        <!-- Error en resultado -->
+                        <Border Background="#1AEF4444" CornerRadius="8" Padding="14,10" Margin="0,0,0,16"
+                                Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding MensajeError}" FontSize="12"
+                                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"
+                                       HorizontalAlignment="Center"/>
+                        </Border>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
                             <Border Background="#1A22C55E" CornerRadius="10" Padding="20,12" Margin="6,0">

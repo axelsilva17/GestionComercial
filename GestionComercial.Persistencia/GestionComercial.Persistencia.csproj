@@ -1,15 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- CS8618: suprimido en Migrations (codigo generado) y entidades con navegacion lazy -->
+		<NoWarn>$(NoWarn);CS8618</NoWarn>
 	</PropertyGroup>
 
-	<!-- Persistencia depende de Dominio y Aplicacion -->
+	<!-- Persistencia depende solo de Dominio (regla arquitectonica) -->
 	<ItemGroup>
 		<ProjectReference Include="..\GestionComercial.Dominio\GestionComercial.Dominio.csproj" />
-		<ProjectReference Include="..\GestionComercial.Aplicacion\GestionComercial.Aplicacion.csproj" />
-		
 	</ItemGroup>
 
 	<ItemGroup>

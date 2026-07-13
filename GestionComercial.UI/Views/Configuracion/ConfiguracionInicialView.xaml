@@ -1,0 +1,374 @@
+<Window x:Class="GestionComercial.UI.Views.Configuracion.ConfiguracionInicialView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:GestionComercial.UI.Views.Converters"
+        Title="Configuración Inicial del Sistema"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Width="900"
+        Height="780"
+        Background="Transparent">
+
+    <Window.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <Storyboard x:Key="FadeIn">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.5">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                             From="20" To="0" Duration="0:0:0.5">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource BackgroundBrush}"
+            CornerRadius="20"
+            Effect="{DynamicResource CardShadow}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LADO IZQUIERDO: Branding -->
+            <Border Grid.Column="0" CornerRadius="20,0,0,20">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1E3A5F" Offset="0"/>
+                        <GradientStop Color="#2A4A6F" Offset="0.5"/>
+                        <GradientStop Color="#1E3A5F" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Grid Margin="50">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <!-- LOGO -->
+                        <Border Width="140" Height="140" CornerRadius="24" Margin="0,0,0,32"
+                                Background="Transparent">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="40" ShadowDepth="0" Opacity="0.4" Color="#000000"/>
+                            </Border.Effect>
+                            <Image Source="/Views/Recursos/Imagenes/logo.png"
+                                   Width="140" Height="140" Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+
+                        <TextBlock Text="Gestión Comercial" FontSize="30" FontWeight="Bold"
+                                   Foreground="#E0F2FE" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                        <TextBlock Text="Configuración Inicial" FontSize="18"
+                                   Foreground="#7DD3FC" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" TextAlignment="Center" MaxWidth="350" Margin="0,0,0,8"/>
+                        <TextBlock Text="Creá los usuarios administrador y gerente para comenzar a usar el sistema."
+                                   FontSize="13" Foreground="#93C5FD" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" TextAlignment="Center" MaxWidth="320"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- LADO DERECHO: Formulario -->
+            <Border Grid.Column="1" Background="{DynamicResource CardBrush}" CornerRadius="0,20,20,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="48,40" Opacity="0" Loaded="Grid_Loaded">
+                        <Grid.RenderTransform><TranslateTransform/></Grid.RenderTransform>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="24"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="24"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="24"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="24"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="32"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- ── Header ── -->
+                        <TextBlock Grid.Row="0" Text="Bienvenido al sistema" FontSize="26" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Grid.Row="0" FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Completá los datos para crear los dos primeros usuarios del sistema."
+                                   TextWrapping="Wrap" Margin="0,38,0,0"/>
+
+                        <!-- ── Sección Admin ── -->
+                        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+                                CornerRadius="12" Padding="20,16" Margin="0,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="👤  Administrador" FontSize="15" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Acceso total al sistema" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Grid.Row="4" Text="Nombre" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <TextBox x:Name="NombreAdmin" Grid.Row="5" Height="44" Padding="16,0" FontSize="14"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                 BorderThickness="1" VerticalContentAlignment="Center">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                                    <ScrollViewer x:Name="PART_ContentHost"
+                                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsFocused" Value="True">
+                                                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Row="6" Text="Email" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <TextBox x:Name="EmailAdmin" Grid.Row="7" Height="44" Padding="16,0" FontSize="14"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                 BorderThickness="1" VerticalContentAlignment="Center">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                                    <ScrollViewer x:Name="PART_ContentHost"
+                                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsFocused" Value="True">
+                                                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Row="8" Text="Contraseña" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <Grid Grid.Row="9" Height="44">
+                            <PasswordBox x:Name="PasswordAdminBox" Padding="16,0" FontSize="14"
+                                         Background="{DynamicResource SurfaceBrush}"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                         BorderThickness="1" VerticalContentAlignment="Center"
+                                         PasswordChanged="PasswordAdminBox_PasswordChanged">
+                                <PasswordBox.Style>
+                                    <Style TargetType="PasswordBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="PasswordBox">
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                                      Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsFocused" Value="True">
+                                                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                            <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </PasswordBox.Style>
+                            </PasswordBox>
+                        </Grid>
+
+                        <!-- ── Sección Gerente ── -->
+                        <Border Grid.Row="10" Background="{DynamicResource SurfaceBrush}"
+                                CornerRadius="12" Padding="20,16">
+                            <StackPanel>
+                                <TextBlock Text="👤  Gerente" FontSize="15" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Acceso a reportes y configuración" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Grid.Row="12" Text="Nombre" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <TextBox x:Name="NombreGerente" Grid.Row="13" Height="44" Padding="16,0" FontSize="14"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                 BorderThickness="1" VerticalContentAlignment="Center">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                                    <ScrollViewer x:Name="PART_ContentHost"
+                                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsFocused" Value="True">
+                                                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Row="14" Text="Email" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <TextBox x:Name="EmailGerente" Grid.Row="15" Height="44" Padding="16,0" FontSize="14"
+                                 Background="{DynamicResource SurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                 BorderThickness="1" VerticalContentAlignment="Center">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                                    <ScrollViewer x:Name="PART_ContentHost"
+                                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsFocused" Value="True">
+                                                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Row="16" Text="Contraseña" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <Grid Grid.Row="17" Height="44">
+                            <PasswordBox x:Name="PasswordGerenteBox" Padding="16,0" FontSize="14"
+                                         Background="{DynamicResource SurfaceBrush}"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                         BorderThickness="1" VerticalContentAlignment="Center"
+                                         PasswordChanged="PasswordGerenteBox_PasswordChanged">
+                                <PasswordBox.Style>
+                                    <Style TargetType="PasswordBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="PasswordBox">
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                                      Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsFocused" Value="True">
+                                                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                            <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </PasswordBox.Style>
+                            </PasswordBox>
+                        </Grid>
+
+                        <!-- ── Error ── -->
+                        <Border Grid.Row="18" Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}"
+                                Background="#1A0A0A" BorderBrush="{DynamicResource ErrorBrush}"
+                                BorderThickness="1" CornerRadius="10" Padding="14,12" Margin="0,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#x26A0;" FontSize="16" Foreground="{DynamicResource ErrorBrush}"
+                                           Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorBrush}"
+                                           FontSize="14" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── Botón Guardar ── -->
+                        <Button x:Name="GuardarCommand" Grid.Row="19" Content="Crear Usuarios e Iniciar"
+                                Height="52" Margin="0,0,0,0"
+                                Background="{DynamicResource PrimaryBrush}" Foreground="White"
+                                BorderThickness="0" FontSize="16" FontWeight="SemiBold" Cursor="Hand">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                        CornerRadius="12" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="{DynamicResource PrimaryHoverBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="border" Property="Opacity" Value="0.5"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <!-- Loading bar -->
+                        <ProgressBar IsIndeterminate="True" Height="3" Grid.Row="19"
+                                     Foreground="{DynamicResource PrimaryBrush}" BorderThickness="0"
+                                     Background="Transparent" VerticalAlignment="Bottom"
+                                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

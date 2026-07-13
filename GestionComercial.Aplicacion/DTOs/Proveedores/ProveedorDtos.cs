@@ -1,6 +1,6 @@
 namespace GestionComercial.Aplicacion.DTOs.Proveedores
 {
-    /// <summary>DTO liviano para listado y ComboBox.</summary>
+    /// DTO liviano para listado y ComboBox.
     public class ProveedorItemDto
     {
         public int IdProveedor { get; set; }
@@ -12,7 +12,7 @@ namespace GestionComercial.Aplicacion.DTOs.Proveedores
         public string Inicial => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
     }
 
-    /// <summary>DTO completo para el formulario de detalle.</summary>
+    /// DTO completo para el formulario de detalle.
     public class ProveedorDto
     {
         public int    IdProveedor  { get; set; }
@@ -24,7 +24,7 @@ namespace GestionComercial.Aplicacion.DTOs.Proveedores
         public int    TotalCompras { get; set; }
     }
 
-    /// <summary>DTO para crear un proveedor nuevo.</summary>
+    /// DTO para crear un proveedor nuevo.
     public class ProveedorCrearDto
     {
         public string Nombre    { get; set; } = string.Empty;
@@ -33,7 +33,7 @@ namespace GestionComercial.Aplicacion.DTOs.Proveedores
         public int    IdEmpresa { get; set; }
     }
 
-    /// <summary>DTO para actualizar un proveedor existente.</summary>
+    /// DTO para actualizar un proveedor existente.
     public class ProveedorActualizarDto
     {
         public int    IdProveedor { get; set; }

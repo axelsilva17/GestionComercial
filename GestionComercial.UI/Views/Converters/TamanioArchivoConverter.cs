@@ -4,9 +4,7 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un long (bytes) a un string legible (B, KB, MB, GB, TB).
-    /// </summary>
+    ///     /// Convierte un long (bytes) a un string legible (B, KB, MB, GB, TB).
     public class TamanioArchivoConverter : IValueConverter
     {
         private static readonly string[] Sufijos = { "B", "KB", "MB", "GB", "TB" };

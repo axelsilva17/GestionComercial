@@ -2,6 +2,8 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
+using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.ViewModels.Reportes;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -192,6 +194,13 @@ namespace GestionComercial.UI.ViewModels.Cajas
                 LogHelper.Log($"[CajaTurnos] Error al eliminar caja: {ex.Message}");
                 MessageBox.Show($"Error al eliminar caja: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // ── Volver a Reportes ──────────────────────────────────────────────────
+        public async Task Volver()
+        {
+            var reportes = IoC.Get<Reportes.ReporteAdminViewModel>();
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(reportes, CancellationToken.None);
         }
     }
 }

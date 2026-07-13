@@ -326,7 +326,7 @@ namespace GestionComercial.UI.ViewModels.Compras
             NotifyOfPropertyChange(() => CanGuardar);
         }
 
-        private void SumarCantidad(CompraItemDto item)
+        private void SumarCantidad(CompraItemDto? item)
         {
             if (item == null) return;
             item.Cantidad++;
@@ -336,7 +336,7 @@ namespace GestionComercial.UI.ViewModels.Compras
             NotifyOfPropertyChange(() => CanGuardar);
         }
 
-        private void RestarCantidad(CompraItemDto item)
+        private void RestarCantidad(CompraItemDto? item)
         {
             if (item == null) return;
             if (item.Cantidad > 1)
@@ -349,7 +349,7 @@ namespace GestionComercial.UI.ViewModels.Compras
             NotifyOfPropertyChange(() => CanGuardar);
         }
 
-        private void QuitarItem(CompraItemDto item)
+        private void QuitarItem(CompraItemDto? item)
         {
             if (item == null) return;
             Items.Remove(item);

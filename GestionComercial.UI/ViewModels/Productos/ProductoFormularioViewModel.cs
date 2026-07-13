@@ -17,9 +17,9 @@ namespace GestionComercial.UI.ViewModels.Productos
     {
         private readonly IProductoServicio _productoServicio;
         private readonly ShellViewModel _shell;
-        private readonly ILogger<ProductoFormularioViewModel> _logger;
+        private readonly ILogger<ProductoFormularioViewModel>? _logger;
 
-        public ProductoFormularioViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoFormularioViewModel> logger)
+        public ProductoFormularioViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoFormularioViewModel>? logger = null)
         {
             _productoServicio = productoServicio;
             _shell = shell;
@@ -42,7 +42,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
         }
 
-        /// <summary>El botón "Importar desde Excel" solo se muestra en modo Crear.</summary>
+        /// El botón "Importar desde Excel" solo se muestra en modo Crear.
         public bool MostrarBotonImportar => !IsEditMode;
 
         public string TituloFormulario    => IsEditMode ? "Editar Producto"  : "Nuevo Producto";
@@ -167,7 +167,7 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         // ── Inicialización ────────────────────────────────────────────────────
 
-        /// <summary>Configura el formulario en modo Crear (campos vacíos).</summary>
+        /// Configura el formulario en modo Crear (campos vacíos).
         public void InicializarParaCrear()
         {
             IsEditMode = false;
@@ -185,7 +185,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             _ = CargarReferenciasAsync();
         }
 
-        /// <summary>Configura el formulario en modo Editar cargando el producto indicado.</summary>
+        /// Configura el formulario en modo Editar cargando el producto indicado.
         public void InicializarParaEditar(int idProducto)
         {
             IsEditMode = true;
@@ -207,7 +207,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error cargando referencias");
+                _logger?.LogError(ex, "Error cargando referencias");
             }
         }
 
@@ -233,7 +233,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error cargando producto");
+                _logger?.LogError(ex, "Error cargando producto");
                 MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -247,6 +247,25 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             // TODO: SKU = await _skuServicio.GenerarAsync();
             SKU = $"SKU-{System.DateTime.Now:yyMMddHHmm}";
+        }
+
+        public void GenerarCodigoBarra()
+        {
+            var rng = new Random();
+            var digits = new char[13];
+            // Prefijo fijo 779 (Argentina) + 10 dígitos aleatorios
+            digits[0] = '7';
+            digits[1] = '7';
+            digits[2] = '9';
+            for (int i = 3; i < 12; i++)
+                digits[i] = (char)('0' + rng.Next(0, 10));
+            // Dígito verificador simple
+            int suma = 0;
+            for (int i = 0; i < 12; i++)
+                suma += (i % 2 == 0) ? (digits[i] - '0') : (digits[i] - '0') * 3;
+            int digitoVerificador = (10 - (suma % 10)) % 10;
+            digits[12] = (char)('0' + digitoVerificador);
+            CodigoBarra = new string(digits);
         }
 
         public async Task<bool> Guardar()
@@ -290,7 +309,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error guardando producto");
+                _logger?.LogError(ex, "Error guardando producto");
                 MessageBox.Show("Error al guardar: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
@@ -306,7 +325,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             await _shell.ActivateItemAsync(listado, CancellationToken.None);
         }
 
-        /// <summary>Navega a la vista de importación masiva desde Excel.</summary>
+        /// Navega a la vista de importación masiva desde Excel.
         public async Task IrAImportacion()
         {
             var importacionVm = IoC.Get<ImportacionProductosViewModel>();

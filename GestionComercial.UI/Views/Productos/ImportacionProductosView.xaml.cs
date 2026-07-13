@@ -51,9 +51,17 @@ namespace GestionComercial.UI.Views.Productos
         private void EjecutarImportacion_Click(object sender, RoutedEventArgs e)
             => VM?.EjecutarImportacion();
 
+        // ── Volver al listado de productos ─────────────────────────────────────
+        private async void Volver_Click(object sender, RoutedEventArgs e)
+            => await VM?.Volver();
+
         // ── Cancelar (vuelve al estado anterior) ──────────────────────────────
         private void Cancelar_Click(object sender, RoutedEventArgs e)
             => VM?.Cancelar();
+
+        // ── Toggle collapsible de lista preview ──────────────────────────────
+        private void ToggleLista_Click(object sender, RoutedEventArgs e)
+            => VM?.ToggleLista();
 
         // ── Cambiar archivo (vuelve al paso 1) ───────────────────────────────
         private void Reiniciar_Click(object sender, RoutedEventArgs e)

@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using GestionComercial.Dominio.DTOs.Infraestructura;
 using GestionComercial.UI.ViewModels.Base;
 using System.Collections.ObjectModel;
 using System.Linq;

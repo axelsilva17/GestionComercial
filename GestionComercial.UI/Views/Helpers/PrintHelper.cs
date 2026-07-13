@@ -10,14 +10,12 @@ using System.Windows.Media;
 
 namespace GestionComercial.UI.Helpers
 {
-    /// <summary>
-    /// Helper de impresión para tickets de venta y reportes básicos.
+    ///     /// Helper de impresión para tickets de venta y reportes básicos.
     /// Usa el sistema de impresión nativo de WPF (System.Printing).
     ///
     /// Uso desde ViewModel:
     ///   PrintHelper.ImprimirTicket(venta, sesion);
     ///   PrintHelper.ImprimirResumenCaja(movimientos, montoInicial, montoFinal);
-    /// </summary>
     public static class PrintHelper
     {
         // ── Ticket de venta ──────────────────────────────────────────────────

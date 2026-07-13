@@ -15,6 +15,10 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     {
         Task<IEnumerable<Categoria>> ObtenerPorEmpresaAsync(int idEmpresa);
         Task<IEnumerable<Categoria>> ObtenerRaicesAsync(int idEmpresa);
+
+        // Nuevos métodos para eliminar dependencias EF Core de la capa Aplicacion
+        Task<List<Categoria>> ObtenerSubCategoriasAsync(int idCategoria);
+        Task<Categoria?> ObtenerPorNombreAsync(string nombre, int idEmpresa);
     }
 
 

@@ -2,42 +2,28 @@ using System;
 
 namespace GestionComercial.Aplicacion.DTOs.Auditoria
 {
-    /// <summary>
-    /// DTO para KPIs de prevención de fraude en caja.
-    /// </summary>
+    ///     /// DTO para KPIs de prevención de fraude en caja.
     public class KpiFraudeDto
     {
-        /// <summary>
-        /// Caja con mayor diferencia entre ventas registradas y cobrado.
-        /// </summary>
+        ///         /// Caja con mayor diferencia entre ventas registradas y cobrado.
         public CajaMayorDiferenciaDto? CajaMayorDiferencia { get; set; }
 
-        /// <summary>
-        /// Ventas anuladas agrupadas por usuario.
-        /// </summary>
+        ///         /// Ventas anuladas agrupadas por usuario.
         public List<VentaAnuladaDto> VentasAnuladasPorUsuario { get; set; } = new();
 
-        /// <summary>
-        /// Movimientos registrados fuera del horario laboral (antes 8am, después 10pm).
-        /// </summary>
+        ///         /// Movimientos registrados fuera del horario laboral (antes 8am, después 10pm).
         public List<MovimientoFueraHorarioDto> MovimientosFueraHorario { get; set; } = new();
 
-        /// <summary>
-        /// Desglose de formas de pago por vendedor.
-        /// </summary>
+        ///         /// Desglose de formas de pago por vendedor.
         public List<FormaPagoVendedorDto> FormasPagoPorVendedor { get; set; } = new();
 
-        /// <summary>
-        /// Resumen general de alertas.
-        /// </summary>
+        ///         /// Resumen general de alertas.
         public int TotalAlertas => (CajaMayorDiferencia != null ? 1 : 0)
                                  + VentasAnuladasPorUsuario.Sum(v => v.Cantidad)
                                  + MovimientosFueraHorario.Count;
     }
 
-    /// <summary>
-    /// Información de la caja con mayor diferencia.
-    /// </summary>
+    ///     /// Información de la caja con mayor diferencia.
     public class CajaMayorDiferenciaDto
     {
         public int IdCaja { get; set; }
@@ -50,9 +36,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
         public string NivelAlerta { get; set; } = "Normal"; // Normal | Warning | Critical
     }
 
-    /// <summary>
-    /// Ventas anuladas por usuario.
-    /// </summary>
+    ///     /// Ventas anuladas por usuario.
     public class VentaAnuladaDto
     {
         public int IdUsuario { get; set; }
@@ -62,9 +46,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
         public string PorcentajeDelTotal { get; set; } = "0%";
     }
 
-    /// <summary>
-    /// Movimiento fuera del horario laboral.
-    /// </summary>
+    ///     /// Movimiento fuera del horario laboral.
     public class MovimientoFueraHorarioDto
     {
         public int Id { get; set; }
@@ -78,9 +60,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
         public string Razon { get; set; } = string.Empty; // "Antes de 8am" | "Después de 10pm"
     }
 
-    /// <summary>
-    /// Forma de pago utilizada por cada vendedor.
-    /// </summary>
+    ///     /// Forma de pago utilizada por cada vendedor.
     public class FormaPagoVendedorDto
     {
         public int IdUsuario { get; set; }

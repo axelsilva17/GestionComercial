@@ -2,40 +2,38 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.Views.Servicios
 {
-    /// <summary>
-    /// Servicio de navegación entre secciones de la aplicación.
+    ///     /// Servicio de navegación entre secciones de la aplicación.
     /// Los ViewModels lo usan para navegar sin conocer la UI directamente.
-    /// </summary>
     public interface INavigationService
     {
-        /// <summary>Navega a la sección Dashboard.</summary>
+        /// Navega a la sección Dashboard.
         Task IrDashboardAsync();
 
-        /// <summary>Navega a la sección Ventas (Listado/Historial).</summary>
+        /// Navega a la sección Ventas (Listado/Historial).
         Task IrVentasAsync();
 
-        /// <summary>Navega a la sección Nueva Venta.</summary>
+        /// Navega a la sección Nueva Venta.
         Task IrNuevaVentaAsync();
 
-        /// <summary>Navega a la sección Compras.</summary>
+        /// Navega a la sección Compras.
         Task IrComprasAsync();
 
-        /// <summary>Navega a la sección Caja.</summary>
+        /// Navega a la sección Caja.
         Task IrCajaAsync();
 
-        /// <summary>Navega a la sección Productos.</summary>
+        /// Navega a la sección Productos.
         Task IrProductosAsync();
 
-        /// <summary>Navega a la sección Clientes.</summary>
+        /// Navega a la sección Clientes.
         Task IrClientesAsync();
 
-        /// <summary>Navega a la sección Proveedores.</summary>
+        /// Navega a la sección Proveedores.
         Task IrProveedoresAsync();
 
-        /// <summary>Navega a la sección Reportes.</summary>
+        /// Navega a la sección Reportes.
         Task IrReportesAsync();
 
-        /// <summary>Navega a la sección Configuración.</summary>
+        /// Navega a la sección Configuración.
         Task IrConfiguracionAsync();
     }
 }

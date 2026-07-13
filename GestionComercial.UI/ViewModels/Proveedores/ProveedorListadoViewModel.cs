@@ -232,11 +232,7 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             
             if (proveedorEnCompras != null)
             {
-                // Aplicar el filtro directamente (sin await para evitar deadlock)
-                _ = Task.Run(async () => 
-                {
-                    compraListado.ProveedorFiltro = proveedorEnCompras;
-                });
+                compraListado.ProveedorFiltro = proveedorEnCompras;
             }
             
             await _shell.ActivateItemAsync(compraListado, CancellationToken.None);

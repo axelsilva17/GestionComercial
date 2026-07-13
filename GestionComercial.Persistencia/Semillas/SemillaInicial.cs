@@ -1,16 +1,10 @@
 using GestionComercial.Dominio.Entidades.Organizacion;
-using GestionComercial.Dominio.Entidades.Seguridad;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Persistencia.Semillas
 {
     public static class SemillaInicial
     {
-        // Hashes generados con BCrypt.Net-Next workFactor 12
-        private const string AdminHash    = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy";
-        private const string GerenteHash  = "$2a$12$WDfsTRGXXJUgkt/2ETwMb.IHj4pLKMzg.uthmji/O8u7QFzv.kpw2"; // gerente2026
-        private const string VendedorHash = "$2a$12$zSKdkIO6EG0FVBmfvc8L9uSkHz35E5ENyP7v/JSElqAAAXuSZtnLG"; // vendedor2026
-
         public static void Sembrar(ModelBuilder builder)
         {
             builder.Entity<Empresa>().HasData(
@@ -35,42 +29,6 @@ namespace GestionComercial.Persistencia.Semillas
                     Telefono   = "3794000000",
                     Activo    = true,
                     Id_empresa = 1,
-                }
-            );
-
-            builder.Entity<Usuario>().HasData(
-                new Usuario
-                {
-                    Id           = 1,
-                    Nombre       = "Administrador",
-                    Apellido     = "Sistema",
-                        Email     = "admin@miempresa.com",
-                    PasswordHash = AdminHash,
-                    Activo       = true,
-                    Id_sucursal  = 1,
-                    Id_rol       = 2, // Administrador
-                },
-                new Usuario
-                {
-                    Id           = 2,
-                    Nombre       = "Gerente",
-                    Apellido     = "General",
-                        Email        = "gerente@miempresa.com",
-                    PasswordHash = GerenteHash,
-                    Activo       = true,
-                    Id_sucursal  = 1,
-                    Id_rol       = 1, // Gerente
-                },
-                new Usuario
-                {
-                    Id           = 3,
-                    Nombre       = "Vendedor",
-                    Apellido     = "Sistema",
-                        Email        = "vendedor@miempresa.com",
-                    PasswordHash = VendedorHash,
-                    Activo       = true,
-                    Id_sucursal  = 1,
-                    Id_rol       = 3, // Vendedor
                 }
             );
         }

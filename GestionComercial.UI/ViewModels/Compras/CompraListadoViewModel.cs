@@ -172,9 +172,7 @@ public string TextoBusqueda
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
             => await CargarAsync();
 
-        /// <summary>
-        /// Método público para precargar proveedores desde otro ViewModel.
-        /// </summary>
+        ///         /// Método público para precargar proveedores desde otro ViewModel.
         public async Task<IEnumerable<ProveedorItemDto>> CargarProveedoresAsync()
         {
             if (Proveedores != null && Proveedores.Count > 0)

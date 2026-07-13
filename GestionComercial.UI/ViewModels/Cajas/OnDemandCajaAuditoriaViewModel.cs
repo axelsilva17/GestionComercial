@@ -5,6 +5,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -186,15 +187,15 @@ namespace GestionComercial.UI.ViewModels.Cajas
                 
                 var movDto = movimientos.Select(m => new MovimientoAuditoriaDto
                 {
-                    TipoOperacion = m.Tipo == 1 ? "Apertura" : 
-                                   m.Tipo == 2 ? "Ingreso" : 
-                                   m.Tipo == 3 ? "Egreso" : "Cierre",
+                    TipoOperacion = m.Tipo == 1 ? "Ingreso" : 
+                                   m.Tipo == 2 ? "Egreso" : 
+                                   m.Tipo == 3 ? "Apertura" : "Cierre",
                     Descripcion   = m.Concepto ?? "-",
                     Monto         = m.Monto,
                     Fecha         = m.Fecha.ToString("dd/MM HH:mm"),
                     Usuario       = m.Usuario?.Nombre ?? "Sistema",
-                    Icono         = m.Tipo == 2 ? "↑" : m.Tipo == 3 ? "↓" : "•",
-                    EsIngreso     = m.Tipo == 2
+                    Icono         = m.Tipo == 1 ? "↑" : m.Tipo == 2 ? "↓" : "•",
+                    EsIngreso     = m.Tipo == 1
                 }).ToList();
 
                 Movimientos = new ObservableCollection<MovimientoAuditoriaDto>(movDto);
@@ -205,7 +206,14 @@ namespace GestionComercial.UI.ViewModels.Cajas
             }
         }
 
-        public async Task ExportarAuditoria()
+        // ── Volver al Dashboard ────────────────────────────────────────────────
+        public async Task Volver()
+        {
+            var dashboard = IoC.Get<DashboardViewModel>();
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(dashboard, CancellationToken.None);
+        }
+
+        public void ExportarAuditoria()
         {
             if (Cajas == null || !Cajas.Any())
             {

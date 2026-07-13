@@ -4,8 +4,7 @@ using System.Windows.Media;
 
 namespace GestionComercial.UI.Controles
 {
-    /// <summary>
-    /// Tarjeta KPI reutilizable. Uso en XAML:
+    ///     /// Tarjeta KPI reutilizable. Uso en XAML:
     ///
     ///   <controles:TarjetaResumen
     ///       Icono="💰" Titulo="VENTAS"
@@ -13,7 +12,6 @@ namespace GestionComercial.UI.Controles
     ///       Subtitulo="▲ 27.5% vs anterior"
     ///       AcentoFondo="#1A3B82F6"
     ///       ColorValor="{DynamicResource TextPrimaryBrush}"/>
-    /// </summary>
     public partial class TarjetaResumen : UserControl
     {
         public static readonly DependencyProperty IconoProperty =

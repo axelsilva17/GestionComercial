@@ -4,7 +4,7 @@ using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
 
-namespace GestionComercial.Dominio.Repositorio
+namespace GestionComercial.Persistencia.Repositorio
 {
     public class UnitOfWork : IUnitOfWork
     {

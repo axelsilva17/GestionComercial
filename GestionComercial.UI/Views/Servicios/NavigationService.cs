@@ -13,11 +13,9 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.Views.Servicios
 {
-    /// <summary>
-    /// Implementación de INavigationService.
+    ///     /// Implementación de INavigationService.
     /// Delega la navegación al ShellViewModel (Conductor) de Caliburn.
     /// Los ViewModels inyectan esta interfaz en lugar de depender del Shell directamente.
-    /// </summary>
     public class NavigationService : INavigationService
     {
         private readonly ShellViewModel _shell;

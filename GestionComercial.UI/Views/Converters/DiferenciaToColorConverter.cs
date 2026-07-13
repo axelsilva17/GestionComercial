@@ -4,10 +4,8 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Returns "Positivo", "Negativo", or "Cero" based on the sign of the decimal value.
+    ///     /// Returns "Positivo", "Negativo", or "Cero" based on the sign of the decimal value.
     /// Used for DataTrigger in XAML.
-    /// </summary>
     public class DiferenciaToColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

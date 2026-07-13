@@ -22,7 +22,6 @@ namespace GestionComercial.UI.ViewModels.Productos
         private readonly ShellViewModel _shell;
         private readonly ILogger<ProductoListadoViewModel>? _logger;
         private readonly SemaphoreSlim _lock = new(1, 1);
-        private bool _isInitializing = true;
 
         public ProductoListadoViewModel(
             IProductoServicio productoServicio,
@@ -110,14 +109,24 @@ namespace GestionComercial.UI.ViewModels.Productos
         public CategoriaItemDto CategoriaSeleccionada
         {
             get => _categoriaSeleccionada;
-            set { _categoriaSeleccionada = value; NotifyOfPropertyChange(() => CategoriaSeleccionada); }
+            set
+            {
+                _categoriaSeleccionada = value;
+                NotifyOfPropertyChange(() => CategoriaSeleccionada);
+                _ = BuscarConCatch(); // Filtrar automaticamente al cambiar categoria
+            }
         }
 
         private int _filtroActivo;
         public int FiltroActivo
         {
             get => _filtroActivo;
-            set { _filtroActivo = value; NotifyOfPropertyChange(() => FiltroActivo); }
+            set
+            {
+                _filtroActivo = value;
+                NotifyOfPropertyChange(() => FiltroActivo);
+                _ = BuscarConCatch();
+            }
         }
 
         // ── Paginación ────────────────────────────────────────────────
@@ -144,6 +153,20 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         // ── Ajuste Masivo de Precios ───────────────────────────────────────────
         private bool _mostrarPopupAjuste;
+
+        // ── Ajuste Masivo - Filtro por categoría ──
+        private CategoriaItemDto _categoriaAjuste;
+        public CategoriaItemDto CategoriaAjuste
+        {
+            get => _categoriaAjuste;
+            set
+            {
+                _categoriaAjuste = value;
+                NotifyOfPropertyChange(() => CategoriaAjuste);
+                if (MostrarPopupAjuste)
+                    GenerarPreviewAjuste();
+            }
+        }
         public bool MostrarPopupAjuste
         {
             get => _mostrarPopupAjuste;
@@ -185,7 +208,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _aplicarAPrecioVenta = value; NotifyOfPropertyChange(() => AplicarAPrecioVenta); }
         }
 
-        private bool _aplicarAPrecioCosto = false;
+        private bool _aplicarAPrecioCosto = true;
         public bool AplicarAPrecioCosto
         {
             get => _aplicarAPrecioCosto;
@@ -197,6 +220,18 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             get => _productosActualizados;
             set { _productosActualizados = value; NotifyOfPropertyChange(() => ProductosActualizados); }
+        }
+
+        // ── Flag para stock crítico (desde dashboard) ──────────────────
+        private bool _mostrarSoloStockCritico;
+        public bool MostrarSoloStockCritico
+        {
+            get => _mostrarSoloStockCritico;
+            set
+            {
+                _mostrarSoloStockCritico = value;
+                NotifyOfPropertyChange(() => MostrarSoloStockCritico);
+            }
         }
 
         // ── Lifecycle ─────────────────────────────────────────────────
@@ -211,8 +246,17 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             try
             {
-                var categorias = await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual);
-                Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
+                var categorias = (await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual)).ToList();
+
+                // Insertar opción "Todas las categorías" al inicio
+                var lista = new List<CategoriaItemDto>(categorias.Count + 1);
+                lista.Add(new CategoriaItemDto { IdCategoria = 0, Nombre = "Todos" });
+                lista.AddRange(categorias);
+
+                Categorias = new ObservableCollection<CategoriaItemDto>(lista);
+
+                // Seleccionar "Todos" por defecto
+                CategoriaSeleccionada = lista[0];
             }
             catch (Exception ex)
             {
@@ -241,8 +285,8 @@ namespace GestionComercial.UI.ViewModels.Productos
                         (p.CodigoBarra?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
                 }
 
-                // Filtro por categoría
-                if (CategoriaSeleccionada != null)
+                // Filtro por categoría (IdCategoria == 0 = "Todos")
+                if (CategoriaSeleccionada?.IdCategoria > 0)
                 {
                     filtrados = filtrados.Where(p => p.IdCategoria == CategoriaSeleccionada.IdCategoria);
                 }
@@ -252,6 +296,13 @@ namespace GestionComercial.UI.ViewModels.Productos
                     filtrados = filtrados.Where(p => p.Activo);
                 else if (FiltroActivo == 2)
                     filtrados = filtrados.Where(p => !p.Activo);
+
+                // Filtro stock crítico (desde dashboard "Ver todos")
+                if (MostrarSoloStockCritico)
+                {
+                    var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_shell.IdEmpresaActual);
+                    filtrados = filtrados.Where(p => p.StockActual <= umbral);
+                }
 
                 var filtradosList = filtrados.ToList();
                 Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);
@@ -285,7 +336,21 @@ namespace GestionComercial.UI.ViewModels.Productos
             finally
             {
                 _lock.Release();
-                _isInitializing = false;
+            }
+        }
+
+        ///         /// Wrapper fire-and-forget seguro para Buscar() desde setters de propiedades.
+        /// Engulle cualquier excepción para evitar unobserved task exceptions.
+        private async Task BuscarConCatch()
+        {
+            try
+            {
+                await Buscar();
+            }
+            catch
+            {
+                // Buscar() ya maneja errores internamente via CargarAsync();
+                // este catch solo protege contra unobserved task exceptions.
             }
         }
 
@@ -297,6 +362,165 @@ namespace GestionComercial.UI.ViewModels.Productos
             await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
         }
 
+        // ── Popup: Crear / Eliminar Categoría ──────────────────────────
+        private bool _mostrarPopupCategoria;
+        public bool MostrarPopupCategoria
+        {
+            get => _mostrarPopupCategoria;
+            set { _mostrarPopupCategoria = value; NotifyOfPropertyChange(() => MostrarPopupCategoria); }
+        }
+
+        private string _nombreNuevaCategoria = string.Empty;
+        public string NombreNuevaCategoria
+        {
+            get => _nombreNuevaCategoria;
+            set { _nombreNuevaCategoria = value; NotifyOfPropertyChange(() => NombreNuevaCategoria); }
+        }
+
+        private ObservableCollection<CategoriaItemDto> _categoriasGestion = new();
+        public ObservableCollection<CategoriaItemDto> CategoriasGestion
+        {
+            get => _categoriasGestion;
+            set { _categoriasGestion = value; NotifyOfPropertyChange(() => CategoriasGestion); }
+        }
+
+        public async Task AbrirPopupCategorias()
+        {
+            NombreNuevaCategoria = string.Empty;
+            MostrarPopupCategoria = true;
+            await CargarCategoriasGestionAsync();
+        }
+
+        private async Task CargarCategoriasGestionAsync()
+        {
+            var categorias = (await _productoServicio.ObtenerCategoriasAsync(_shell.IdEmpresaActual)).ToList();
+            CategoriasGestion = new ObservableCollection<CategoriaItemDto>(categorias);
+        }
+
+        public async Task CrearCategoria()
+        {
+            if (string.IsNullOrWhiteSpace(NombreNuevaCategoria)) return;
+
+            try
+            {
+                await _productoServicio.CrearCategoriaAsync(_shell.IdEmpresaActual, NombreNuevaCategoria);
+                NombreNuevaCategoria = string.Empty;
+                await CargarCategoriasGestionAsync();
+                await CargarCategoriasAsync();
+                await Buscar();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al crear categoría");
+                MessageBox.Show($"Error al crear categoría: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ── Renombrar categoría ──────────────────────────────────────────
+        public async Task RenombrarCategoria(CategoriaItemDto categoria)
+        {
+            if (categoria == null || categoria.IdCategoria <= 0) return;
+
+            var nuevoNombre = Microsoft.VisualBasic.Interaction.InputBox(
+                "Nuevo nombre para la categoría:",
+                "Renombrar categoría",
+                categoria.Nombre);
+
+            if (string.IsNullOrWhiteSpace(nuevoNombre) || nuevoNombre.Trim() == categoria.Nombre)
+                return;
+
+            try
+            {
+                await _productoServicio.ActualizarCategoriaAsync(categoria.IdCategoria, nuevoNombre.Trim());
+                await CargarCategoriasGestionAsync();
+                await CargarCategoriasAsync();
+                await Buscar();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al renombrar categoría");
+                MessageBox.Show($"Error al renombrar: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ── Borrar todos los productos de una categoría ──────────────────
+        public async Task EliminarTodosLosProductos(CategoriaItemDto categoria)
+        {
+            if (categoria == null || categoria.IdCategoria <= 0) return;
+
+            var confirm = MessageBox.Show(
+                $"¿Estás SEGURO de eliminar TODOS los productos de la categoría \"{categoria.Nombre}\"?\n\n" +
+                "Esta acción NO se puede deshacer.",
+                "Eliminar todos los productos", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var cantidad = await _productoServicio.EliminarProductosPorCategoriaAsync(categoria.IdCategoria);
+                if (cantidad > 0)
+                {
+                    MessageBox.Show($"Se eliminaron {cantidad} producto(s) de la categoría \"{categoria.Nombre}\".",
+                        "Productos eliminados", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await CargarCategoriasGestionAsync();
+                    await CargarCategoriasAsync();
+                    await Buscar();
+                }
+                else
+                {
+                    MessageBox.Show("No hay productos en esta categoría.",
+                        "Sin productos", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al eliminar productos por categoría");
+                MessageBox.Show($"Error al eliminar productos: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task EliminarCategoria(CategoriaItemDto categoria)
+        {
+            if (categoria == null || categoria.IdCategoria <= 0) return;
+
+            var confirm = MessageBox.Show(
+                $"¿Estás seguro de eliminar la categoría \"{categoria.Nombre}\"?\n\n" +
+                "Los productos se moverán a una nueva categoría \"Sin Categoría\" que podés renombrar después.",
+                "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var resultado = await _productoServicio.EliminarCategoriaAsync(categoria.IdCategoria);
+                if (resultado)
+                {
+                    await CargarCategoriasGestionAsync();
+                    await CargarCategoriasAsync();
+                    await Buscar();
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "No se puede eliminar", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error al eliminar categoría");
+                var inner = ex.InnerException?.Message ?? "";
+                var mensaje = inner != ""
+                    ? $"Error al eliminar categoría:\n{ex.Message}\n\nDetalle: {inner}"
+                    : $"Error al eliminar categoría: {ex.Message}";
+                MessageBox.Show(mensaje, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void CerrarPopupCategorias()
+        {
+            NombreNuevaCategoria = string.Empty;
+            MostrarPopupCategoria = false;
+        }
+
         // ── Ajuste Masivo de Precios ─────────────────────────────────
         public void AbrirAjusteMasivo()
         {
@@ -304,6 +528,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             PorcentajeAjuste = 0;
             MontoFijo = 0;
             TipoAjuste = "porcentaje";
+            CategoriaAjuste = Categorias.FirstOrDefault(); // "Todos" por defecto
             // Pre-cargar preview con todos los productos visibles
             _productosPreview = new ObservableCollection<ProductoListadoDto>(Productos);
             NotifyOfPropertyChange(() => ProductosPreview);
@@ -354,11 +579,16 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             // Generar preview sin modificar la base de datos
             var preview = new ObservableCollection<ProductoListadoDto>();
-            
-            // Si no hay valor, mostrar todos los productos actuales
+
+            // Filtrar por categoría si se eligió una específica en el popup
+            var fuente = Productos.AsEnumerable();
+            if (CategoriaAjuste?.IdCategoria > 0)
+                fuente = fuente.Where(p => p.IdCategoria == CategoriaAjuste.IdCategoria);
+
+            // Si no hay valor, mostrar todos los productos actuales (filtrados por categoría)
             if (PorcentajeAjuste == 0 && MontoFijo == 0)
             {
-                foreach (var p in Productos)
+                foreach (var p in fuente)
                 {
                     var copia = new ProductoListadoDto
                     {
@@ -377,7 +607,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                 return;
             }
             
-            foreach (var p in Productos)
+            foreach (var p in fuente)
             {
                 decimal nuevoVenta = p.PrecioVentaActual;
                 decimal nuevoCosto = p.PrecioCostoActual;
@@ -424,7 +654,10 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
 
             var result = MessageBox.Show(
-                $"Se actualizarán {ProductosActualizados} productos.\n\nPrecio de venta: {(AplicarAPrecioVenta ? "✓ SÍ" : "✗ NO")}\nPorcentaje: {PorcentajeAjuste}%\n\n¿Continuar?",
+                $"Se actualizarán {ProductosActualizados} productos.\n\n" +
+                $"Precio venta: {(AplicarAPrecioVenta ? "✓ SÍ" : "✗ NO")}\n" +
+                $"Precio costo: {(AplicarAPrecioCosto ? "✓ SÍ" : "✗ NO")}\n" +
+                $"Tipo: {TipoAjuste}  Valor: {(TipoAjuste == "porcentaje" ? PorcentajeAjuste.ToString("0.#") + "%" : MontoFijo.ToString("C0"))}\n\n¿Continuar?",
                 "Confirmar Ajuste Masivo",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -444,8 +677,8 @@ namespace GestionComercial.UI.ViewModels.Productos
                     {
                         if (AplicarAPrecioVenta)
                             producto.PrecioVentaActual = p.PrecioVentaNuevo ?? producto.PrecioVentaActual;
-                        else
-                            producto.PrecioCostoActual = p.PrecioVentaNuevo ?? producto.PrecioCostoActual;
+                        if (AplicarAPrecioCosto)
+                            producto.PrecioCostoActual = p.PrecioCostoNuevo ?? producto.PrecioCostoActual;
 
                         // Map to DTO
                         var dto = new ProductoActualizarDto

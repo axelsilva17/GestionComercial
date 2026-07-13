@@ -266,6 +266,7 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -301,6 +302,14 @@
                                     <TextBlock Text="TELÉFONO" Style="{StaticResource FormLabel}"/>
                                     <TextBlock Text="{Binding Empresa.Empresa.Telefono, TargetNullValue='—'}" FontSize="14"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                                    <TextBlock Text="STOCK CRÍTICO (umbral global)" Style="{StaticResource FormLabel}"/>
+                                    <TextBlock FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}">
+                                        <Run Text="Menor a "/>
+                                        <Run Text="{Binding Empresa.Empresa.UmbralStockCritico}"/>
+                                        <Run Text=" unidades"/>
+                                    </TextBlock>
                                 </StackPanel>
                             </Grid>
                         </Grid>
@@ -913,6 +922,36 @@
                         <TextBlock Text="TELÉFONO" Style="{StaticResource FormLabel}"/>
                         <TextBox Text="{Binding Empresa.EditTelefono, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="UMBRAL STOCK CRÍTICO" Style="{StaticResource FormLabel}"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,0,0,6">
+                            Mostrar alerta cuando el stock sea menor a esta cantidad.
+                        </TextBlock>
+                        <Border Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="12,0" Height="40" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="&lt;" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Empresa.EditUmbralStockCritico, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent" BorderThickness="0"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         FontSize="14" FontWeight="Bold"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="unidades" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
 
                         <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8"
                                 Visibility="{Binding Empresa.TieneError, Converter={StaticResource BoolToVisibility}}">

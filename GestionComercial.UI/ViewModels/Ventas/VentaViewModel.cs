@@ -197,9 +197,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public RelayCommand TestBarcodeCommand { get; }
 
-        /// <summary>
-        /// Maneja atajos de teclado globales en la vista de venta.
-        /// </summary>
+        ///         /// Maneja atajos de teclado globales en la vista de venta.
         public void HandleKeyDown(Key key, ModifierKeys modifiers)
         {
             // Ignorar si hay ctrl/alt/shift presionados (excepto Ctrl+N para nueva venta)
@@ -261,15 +259,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public RelayCommand CerrarPopupAnulacionCommand { get; }
         public RelayCommand AnularVentaCommand { get; }
 
-        /// <summary>
-        /// Agrega un ítem con descuento por porcentaje.
+        ///         /// Agrega un ítem con descuento por porcentaje.
         /// El descuento se calcula sobre el subtotal del ítem.
-        /// </summary>
         public RelayCommand<DescuentoItemParam> AgregarItemDescuentoCommand { get; }
 
-        /// <summary>
-        /// Registra un pago y abre el popup de anulación si corresponde.
-        /// </summary>
+        ///         /// Registra un pago y abre el popup de anulación si corresponde.
         public async Task AnularVentaAsync()
         {
             if (string.IsNullOrWhiteSpace(MotivoAnulacion))
@@ -304,10 +298,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Feature 4: Anula una venta desde el historial.
+        ///         /// Feature 4: Anula una venta desde el historial.
         /// Muestra confirmación y luego el popup para ingresar el motivo.
-        /// </summary>
         public void AnularVentaDesdeHistorial(VentaResumenDto? ventaResumen)
         {
             if (ventaResumen == null) return;
@@ -466,10 +458,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Procesa un código de barras escaneado rápidamente.
+        ///         /// Procesa un código de barras escaneado rápidamente.
         /// Busca por código exacto y agrega el producto si existe.
-        /// </summary>
         private async Task ProcesarBarcodeEscaneadoAsync(string barcode)
         {
             if (string.IsNullOrWhiteSpace(barcode)) return;
@@ -558,10 +548,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public RelayCommand<ProductoListadoDto> SeleccionarProductoCommand { get; }
         public RelayCommand CerrarPopupBusquedaCommand { get; }
 
-        /// <summary>
-        /// Busca productos con debounce de 300ms para autocompletado.
+        ///         /// Busca productos con debounce de 300ms para autocompletado.
         /// Primero usa cache local, luego consulta servicio si no hay cache.
-        /// </summary>
         private async Task BuscarProductosAsync(string texto, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(texto) || texto.Length < 3)
@@ -629,9 +617,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Selecciona un producto del popup de autocompletado y lo agrega al carrito.
-        /// </summary>
+        ///         /// Selecciona un producto del popup de autocompletado y lo agrega al carrito.
         public void SeleccionarProductoDelPopup(ProductoListadoDto? producto)
         {
             if (producto == null) return;
@@ -676,44 +662,19 @@ namespace GestionComercial.UI.ViewModels.Ventas
             NotificarCanIrACobrar();
         }
 
-        /// <summary>
-        /// Cierra el popup de búsqueda y limpia el campo.
-        /// </summary>
+        ///         /// Cierra el popup de búsqueda y limpia el campo.
         public void CerrarPopupBusqueda()
         {
             MostrarPopupBusqueda = false;
             ResultadosBusqueda?.Clear();
         }
 
-        /// <summary>
-        /// Refresca los productos según el filtro de categoría seleccionado.
+        ///         /// Refresca los productos según el filtro de categoría seleccionado.
         /// Llamado desde el SelectionChanged del ComboBox de categorías.
-        /// </summary>
         public Task RefrescarProductosPorCategoriaAsync()
         {
             // Feature 2 disabled - category filter removed per change cierre-caja-sin-estres
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Refresca el cache de productos desde el servidor.
-        /// </summary>
-        private async Task RefrescarCacheProductosAsync()
-        {
-            try
-            {
-                var productos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                _productosCache.Clear();
-                foreach (var p in productos)
-                {
-                    _productosCache.Add(p);
-                }
-                System.Diagnostics.Debug.WriteLine($"[VentaVM] Cache de productos refrescado: {_productosCache.Count} productos");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[VentaVM] Error refrescando cache: {ex.Message}");
-            }
         }
 
         // ── Items del carrito ─────────────────────────────────────────────────
@@ -775,11 +736,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
             await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
         }
 
-        /// <summary>
-        /// Busca por nombre O por código de barras exacto.
+        ///         /// Busca por nombre O por código de barras exacto.
         /// El escáner físico envía el código como texto + Enter,
         /// así que este método se llama igual desde el botón o desde KeyDown Enter.
-        /// </summary>
         public async Task AgregarProducto()
         {
             if (string.IsNullOrWhiteSpace(BusquedaProducto)) return;
@@ -845,11 +804,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
             finally { IsLoading = false; }
         }
 
-        /// <summary>
-        /// Crea la venta como Pendiente en BD y navega a PagoViewModel.
+        ///         /// Crea la venta como Pendiente en BD y navega a PagoViewModel.
         /// El stock ya se descuenta al crear — si el pago falla/cancela,
         /// el operador puede anular la venta y el stock se repone.
-        /// </summary>
         public async Task IrACobrar()
         {
             try
@@ -956,7 +913,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             finally { IsLoading = false; }
         }
 
-        /// <summary>Resetea el formulario para una nueva venta.</summary>
+        /// Resetea el formulario para una nueva venta.
         public void NuevaVenta()
         {
             Items            = new();
@@ -978,7 +935,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         // ── Lógica interna ────────────────────────────────────────────────────
-        private void SumarCantidad(VentaItemDto item)
+        private void SumarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
             var idx = Items.IndexOf(item);
@@ -990,7 +947,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             NotificarCanIrACobrar();
         }
 
-        private void RestarCantidad(VentaItemDto item)
+        private void RestarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
             if (item.Cantidad <= 1) { QuitarItem(item); return; }
@@ -1003,7 +960,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             NotificarCanIrACobrar();
         }
 
-        private void QuitarItem(VentaItemDto item)
+        private void QuitarItem(VentaItemDto? item)
         {
             if (item == null) return;
             Items.Remove(item);
@@ -1017,12 +974,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
             // Incluir descuentos por ítem + descuento general
             var descuentoPorItem = Items.Sum(i => i.DescuentoPorItem);
             decimal pct = 0;
-            string? errorDescuento = null;
 
             if (decimal.TryParse(DescuentoManual, out var d))
             {
-                // Validar límite según rol - ELIMINAR EL TOPE PARA PERMITIR CUALQUIER %
-                // El usuario puede poner el % que quiera (ej: 50%)
                 pct = Math.Clamp(d, 0, 100);
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Descuento aplicado: {pct}% sobre TotalBruto={TotalBruto}");
             }
@@ -1031,11 +985,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             TotalDescuento = descuentoPorItem + descuentoGeneral;
             TotalFinal     = TotalBruto - TotalDescuento;
 
-            // Mostrar error de descuento si corresponde
-            if (errorDescuento != null)
-                MostrarError(errorDescuento);
-            else
-                LimpiarError();
+            LimpiarError();
 
             NotifyOfPropertyChange(() => CanIrACobrar);
         }
@@ -1095,17 +1045,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Feature 3: Filtra el historial aplicando los filtros activos.
-        /// </summary>
+        ///         /// Feature 3: Filtra el historial aplicando los filtros activos.
         public void FiltrarHistorial()
         {
             _ = CargarHistorialAsync();
         }
 
-        /// <summary>
-        /// Feature 7: Test barcode - procesa el código de barras del input de test.
-        /// </summary>
+        ///         /// Feature 7: Test barcode - procesa el código de barras del input de test.
         public async void TestBarcodeKeyDown()
         {
             try
@@ -1157,9 +1103,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
     }
 
-    /// <summary>
-    /// Parámetros para agregar un ítem con descuento.
-    /// </summary>
+    ///     /// Parámetros para agregar un ítem con descuento.
     public class DescuentoItemParam
     {
         public ProductoDto Producto { get; set; } = null!;

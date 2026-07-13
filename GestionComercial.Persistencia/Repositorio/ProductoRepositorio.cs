@@ -43,11 +43,14 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
 
         public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa)
-            => await _dbSet
+        {
+            // Materializar primero y ordenar en memoria porque SQLite no soporta ORDER BY con decimal
+            var productos = await _dbSet
                 .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
                 .Include(p => p.Categoria)
-                .OrderBy(p => p.StockActual)
                 .ToListAsync();
+            return productos.OrderBy(p => p.StockActual);
+        }
 
         public async Task<Producto?> ObtenerPorIdConDetallesAsync(int id)
             => await _dbSet
@@ -55,9 +58,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(p => p.UnidadMedida)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
-        /// <summary>
-        /// Agrega muchos productos en una sola operación, optimizado para importación masiva.
-        /// </summary>
+        ///         /// Agrega muchos productos en una sola operación, optimizado para importación masiva.
         public async Task AgregarRangoMasivoAsync(IEnumerable<Producto> productos, bool disableTracking = true)
         {
             if (disableTracking)
@@ -74,5 +75,45 @@ namespace GestionComercial.Persistencia.Repositorio
                 _context.ChangeTracker.AutoDetectChangesEnabled = true;
             }
         }
+
+        // ── Nuevos métodos para eliminar dependencias EF Core de la capa Aplicacion ──
+
+        public async Task<List<UnidadMedida>> ObtenerUnidadesMedidaDistintasAsync()
+            => await _dbSet
+                .Include(p => p.UnidadMedida)
+                .Select(p => p.UnidadMedida)
+                .Where(u => u != null)
+                .Distinct()
+                .ToListAsync()!;
+
+        public async Task<List<Producto>> ObtenerPorCategoriaAsync(int idCategoria)
+            => await _dbSet
+                .Where(p => p.Id_categoria == idCategoria)
+                .Include(p => p.Categoria)
+                .Include(p => p.UnidadMedida)
+                .ToListAsync();
+
+        public async Task<List<Producto>> ObtenerConCodigoBarraPorEmpresaAsync(int idEmpresa)
+            => await _dbSet
+                .Where(p => p.Id_empresa == idEmpresa && p.CodigoBarra != null)
+                .ToListAsync();
+
+        public async Task<int> ContarProductosConStockBajoAsync(int idEmpresa)
+            => await _dbSet
+                .CountAsync(p => p.Id_empresa == idEmpresa
+                              && p.Activo
+                              && p.StockActual <= p.StockMinimo
+                              && p.StockActual > 0);
+
+        public async Task<List<Producto>> ObtenerConStockBajoConLimiteAsync(int idEmpresa, int limite)
+            => await _dbSet
+                .Where(p => p.Id_empresa == idEmpresa
+                         && p.Activo
+                         && p.StockActual <= p.StockMinimo
+                         && p.StockActual > 0)
+                .Include(p => p.Categoria)
+                .OrderBy(p => p.StockActual)
+                .Take(limite)
+                .ToListAsync();
     }
 }

@@ -4,8 +4,7 @@ using System.Collections.Generic;
 
 namespace GestionComercial.UI.Helpers
 {
-    /// <summary>
-    /// Helper sobre el IEventAggregator de Caliburn para publicar/suscribir
+    ///     /// Helper sobre el IEventAggregator de Caliburn para publicar/suscribir
     /// eventos tipados entre ViewModels sin acoplamiento directo.
     ///
     /// IMPORTANTE: Caliburn ya provee IEventAggregator. Esta clase es un wrapper
@@ -20,7 +19,6 @@ namespace GestionComercial.UI.Helpers
     ///       public Task HandleAsync(VentaRealizadaEvent e, CancellationToken ct) { ... }
     ///   }
     ///   // Y en el constructor: _eventAggregator.SubscribeOnUIThread(this);
-    /// </summary>
     public class EventosHelper
     {
         private readonly IEventAggregator _bus;
@@ -53,21 +51,21 @@ namespace GestionComercial.UI.Helpers
 
     // ══ EVENTOS ══════════════════════════════════════════════════════════════
 
-    /// <summary>Se publica cuando se completa una venta.</summary>
+    /// Se publica cuando se completa una venta.
     public record VentaRealizadaEvent(int IdVenta);
 
-    /// <summary>Se publica cuando cambia el stock de un producto.</summary>
+    /// Se publica cuando cambia el stock de un producto.
     public record StockActualizadoEvent(int IdProducto);
 
-    /// <summary>Se publica cuando se abre la caja.</summary>
+    /// Se publica cuando se abre la caja.
     public record CajaAbiertaEvent(int IdCaja);
 
-    /// <summary>Se publica cuando se cierra la caja.</summary>
+    /// Se publica cuando se cierra la caja.
     public record CajaCerradaEvent(int IdCaja);
 
-    /// <summary>Se publica cuando el usuario logueado cambia (login/logout).</summary>
+    /// Se publica cuando el usuario logueado cambia (login/logout).
     public record SesionCambiadaEvent();
 
-    /// <summary>Se publica para navegar a una sección del shell.</summary>
+    /// Se publica para navegar a una sección del shell.
     public record NavegarEvent(string Destino);
 }

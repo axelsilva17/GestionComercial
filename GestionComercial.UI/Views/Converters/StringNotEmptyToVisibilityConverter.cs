@@ -5,9 +5,7 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un string a visibilidad: Visible si no está vacío, Collapsed si está vacío o null.
-    /// </summary>
+    ///     /// Convierte un string a visibilidad: Visible si no está vacío, Collapsed si está vacío o null.
     public class StringNotEmptyToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

@@ -34,6 +34,9 @@ namespace GestionComercial.UI.Views.Productos
         private void GenerarSKU_Click(object sender, RoutedEventArgs e)
             => ViewModel?.GenerarSKU();
 
+        private void GenerarCodigoBarra_Click(object sender, RoutedEventArgs e)
+            => ViewModel?.GenerarCodigoBarra();
+
         // Navega a ImportacionProductosViewModel
         private async void ImportarExcel_Click(object sender, RoutedEventArgs e)
         {

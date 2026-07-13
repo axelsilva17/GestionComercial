@@ -1,7 +1,7 @@
-﻿using LiveChartsCore;
+using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using System;
-using GestionComercial.Aplicacion.Interfaces.Autenticacion;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using System.Windows;
 
@@ -10,7 +10,7 @@ namespace GestionComercial.UI
     public partial class App : Application
     {
         private readonly Bootstrapper _bootstrapper;
-        private IAuthService _authService;
+        private IAutenticacionServicio _authService;
         public bool IsCurrentUserAdmin => _authService?.IsCurrentUserAdmin() ?? false;
 
         public App()

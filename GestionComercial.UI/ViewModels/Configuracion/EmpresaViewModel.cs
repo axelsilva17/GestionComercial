@@ -23,6 +23,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         private string _editDireccion  = string.Empty;
         private string _editEmail      = string.Empty;
         private string _editTelefono   = string.Empty;
+        private int    _editUmbralStockCritico = 10;
 
         public string EditNombre
         {
@@ -43,6 +44,11 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         {
             get => _editTelefono;
             set { _editTelefono = value; NotifyOfPropertyChange(() => EditTelefono); }
+        }
+        public int EditUmbralStockCritico
+        {
+            get => _editUmbralStockCritico;
+            set { _editUmbralStockCritico = value; NotifyOfPropertyChange(() => EditUmbralStockCritico); }
         }
 
         // ── Panel slide ──────────────────────────────────────────────────────
@@ -69,14 +75,15 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 {
                     Empresa = new EmpresaDto
                     {
-                        IdEmpresa = empresa.Id,
-                        Nombre    = empresa.Nombre,
-                        CUIT      = empresa.CUIT,
-                        Direccion = empresa.Direccion,
-                        Email     = empresa.Email,
-                        Telefono  = empresa.Telefono,
-                        LogoUrl   = empresa.LogoUrl,
-                        Activa    = empresa.Activo
+                        IdEmpresa         = empresa.Id,
+                        Nombre            = empresa.Nombre,
+                        CUIT              = empresa.CUIT,
+                        Direccion         = empresa.Direccion,
+                        Email             = empresa.Email,
+                        Telefono          = empresa.Telefono,
+                        LogoUrl           = empresa.LogoUrl,
+                        Activa            = empresa.Activo,
+                        UmbralStockCritico = empresa.UmbralStockCritico
                     };
                 }
             }
@@ -86,11 +93,12 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
         public void AbrirEdicion()
         {
-            EditNombre    = Empresa.Nombre;
-            EditDireccion = Empresa.Direccion;
-            EditEmail     = Empresa.Email ?? string.Empty;
-            EditTelefono  = Empresa.Telefono ?? string.Empty;
-            PanelVisible  = true;
+            EditNombre            = Empresa.Nombre;
+            EditDireccion         = Empresa.Direccion;
+            EditEmail             = Empresa.Email ?? string.Empty;
+            EditTelefono          = Empresa.Telefono ?? string.Empty;
+            EditUmbralStockCritico = Empresa.UmbralStockCritico;
+            PanelVisible          = true;
         }
 
         public void CerrarPanel() => PanelVisible = false;
@@ -106,10 +114,11 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 if (empresa != null)
                 {
                     // Actualizar campos editables (CUIT NO se modifica)
-                    empresa.Nombre    = EditNombre;
-                    empresa.Direccion = EditDireccion;
-                    empresa.Email     = string.IsNullOrWhiteSpace(EditEmail) ? null : EditEmail.Trim().ToLower();
-                    empresa.Telefono  = string.IsNullOrWhiteSpace(EditTelefono) ? null : EditTelefono.Trim();
+                    empresa.Nombre            = EditNombre;
+                    empresa.Direccion         = EditDireccion;
+                    empresa.Email             = string.IsNullOrWhiteSpace(EditEmail) ? null : EditEmail.Trim().ToLower();
+                    empresa.Telefono          = string.IsNullOrWhiteSpace(EditTelefono) ? null : EditTelefono.Trim();
+                    empresa.UmbralStockCritico = EditUmbralStockCritico;
 
                     _uow.Empresas.Actualizar(empresa);
                 }
@@ -123,14 +132,15 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
                 Empresa = new EmpresaDto
                 {
-                    IdEmpresa = empresa.Id,
-                    Nombre    = empresa.Nombre,
-                    CUIT      = empresa.CUIT,
-                    Direccion = empresa.Direccion,
-                    Email     = empresa.Email,
-                    Telefono  = empresa.Telefono,
-                    LogoUrl   = empresa.LogoUrl,
-                    Activa    = empresa.Activo
+                    IdEmpresa         = empresa.Id,
+                    Nombre            = empresa.Nombre,
+                    CUIT              = empresa.CUIT,
+                    Direccion         = empresa.Direccion,
+                    Email             = empresa.Email,
+                    Telefono          = empresa.Telefono,
+                    LogoUrl           = empresa.LogoUrl,
+                    Activa            = empresa.Activo,
+                    UmbralStockCritico = empresa.UmbralStockCritico
                 };
                 PanelVisible = false;
             }

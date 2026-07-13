@@ -80,7 +80,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 );
             }
 
-            // ── Persistir ──
             await _uow.Compras.AgregarAsync(compra);
             await _uow.GuardarCambiosAsync();
 

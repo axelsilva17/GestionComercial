@@ -1,4 +1,5 @@
 using GestionComercial.Dominio.Interfaces.Servicios;
+using GestionComercial.Dominio.DTOs.Infraestructura;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;

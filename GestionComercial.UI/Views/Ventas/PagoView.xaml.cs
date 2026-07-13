@@ -16,9 +16,7 @@ namespace GestionComercial.UI.Views.Ventas
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Maneja el clic en el botón "Ver Historial" para navegar al historial de ventas.
-        /// </summary>
+        ///         /// Maneja el clic en el botón "Ver Historial" para navegar al historial de ventas.
         private async void VerHistorial_Click(object sender, RoutedEventArgs e)
         {
             var shell = IoC.Get<GestionComercial.UI.ViewModels.Main.ShellViewModel>();
@@ -39,10 +37,8 @@ namespace GestionComercial.UI.Views.Ventas
             e.Handled = true;
         }
 
-        /// <summary>
-        /// Valida que solo se permitan dígitos y separadores decimales (coma/punto).
+        ///         /// Valida que solo se permitan dígitos y separadores decimales (coma/punto).
         /// Esto evita que caracteres inválidos entren en el campo de monto.
-        /// </summary>
         private void MontoIngresado_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !IsTextAllowed(e.Text);
@@ -53,9 +49,7 @@ namespace GestionComercial.UI.Views.Ventas
             return text.All(c => char.IsDigit(c) || c == ',' || c == '.');
         }
 
-        /// <summary>
-        /// Maneja KeyDown en el campo de monto - solo agrega pago si es Enter.
-        /// </summary>
+        ///         /// Maneja KeyDown en el campo de monto - solo agrega pago si es Enter.
         private void MontoIngresado_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && DataContext is PagoViewModel vm)

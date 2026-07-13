@@ -2,12 +2,10 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace GestionComercial.Infraestructura.Utilidades
+namespace GestionComercial.Dominio.Utilidades
 {
-    /// <summary>
-    /// Validador de CUIT/CUIL argentino.
+    ///     /// Validador de CUIT/CUIL argentino.
     /// Valida formato y dígito verificador.
-    /// </summary>
     public static class ValidadorCUIT
     {
         private static readonly Regex FormatoCUIT = new(
@@ -22,9 +20,7 @@ namespace GestionComercial.Infraestructura.Utilidades
         // Cuando se lee de izquierda a derecha, la serie es: 5,4,3,2,7,6,5,4,3,2
         private static readonly int[] Serie = { 5, 4, 3, 2, 7, 6, 5, 4, 3, 2 };
 
-        /// <summary>
-        /// Valida un CUIT con o sin guiones.
-        /// </summary>
+        ///         /// Valida un CUIT con o sin guiones.
         /// <param name="cuit">CUIT en formato XX-XXXXXXXX-X o XXXXXXXXXXX</param>
         /// <returns>True si el CUIT es válido</returns>
         public static bool EsValido(string? cuit)
@@ -54,9 +50,7 @@ namespace GestionComercial.Infraestructura.Utilidades
             return digitos[10] == digitoEsperado;
         }
 
-        /// <summary>
-        /// Formatea un CUIT sin guiones al formato XX-XXXXXXXX-X.
-        /// </summary>
+        ///         /// Formatea un CUIT sin guiones al formato XX-XXXXXXXX-X.
         /// <param name="cuitSinGuiones">CUIT de 11 dígitos</param>
         /// <returns>CUIT formateado, o el valor original si no es válido</returns>
         public static string Formatear(string? cuitSinGuiones)
@@ -72,10 +66,8 @@ namespace GestionComercial.Infraestructura.Utilidades
             return $"{soloDigitos.Substring(0, 2)}-{soloDigitos.Substring(2, 8)}-{soloDigitos.Substring(10, 1)}";
         }
 
-        /// <summary>
-        /// Calcula el dígito verificador de un CUIT.
+        ///         /// Calcula el dígito verificador de un CUIT.
         /// Algoritmo: Módulo 11 con la serie 5,4,3,2,7,6,5,4,3,2
-        /// </summary>
         /// <param name="primerosDiez">Primeros 10 dígitos del CUIT</param>
         /// <returns>Dígito verificador</returns>
         private static int CalcularDigitoVerificador(int[] primerosDiez)

@@ -1,20 +1,18 @@
 namespace GestionComercial.UI.Views.Servicios
 {
-    /// <summary>
-    /// Servicio para mostrar notificaciones/toasts no bloqueantes en la UI.
-    /// </summary>
+    ///     /// Servicio para mostrar notificaciones/toasts no bloqueantes en la UI.
     public interface INotificationService
     {
-        /// <summary>Muestra una notificación de éxito (verde).</summary>
+        /// Muestra una notificación de éxito (verde).
         void MostrarExito(string mensaje);
 
-        /// <summary>Muestra una notificación de error (roja).</summary>
+        /// Muestra una notificación de error (roja).
         void MostrarError(string mensaje);
 
-        /// <summary>Muestra una notificación de advertencia (amarilla).</summary>
+        /// Muestra una notificación de advertencia (amarilla).
         void MostrarAdvertencia(string mensaje);
 
-        /// <summary>Muestra una notificación informativa (azul).</summary>
+        /// Muestra una notificación informativa (azul).
         void MostrarInfo(string mensaje);
     }
 }

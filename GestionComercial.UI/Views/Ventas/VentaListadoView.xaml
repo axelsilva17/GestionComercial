@@ -281,6 +281,38 @@
 
         <!-- Botones de acción sobre la venta seleccionada -->
         <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
+            <!-- Cobrar venta pendiente (solo visible cuando el estado es Pendiente) -->
+            <Button x:Name="CobrarVenta"
+                    Height="40" Padding="18,0" FontSize="13" Margin="0,0,10,0"
+                    IsEnabled="{Binding PuedeCobrar}"
+                    ToolTip="Cobrar venta pendiente en efectivo">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+                        <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Cursor"          Value="Hand"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="8" Opacity="{TemplateBinding IsEnabled, Converter={StaticResource BoolToOpacity}}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18,0"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="💵" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Cobrar" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
             <Button x:Name="VerDetalle"
                     Height="40" Padding="18,0" FontSize="13" Margin="0,0,10,0"
                     IsEnabled="{Binding PuedeVerDetalle}"

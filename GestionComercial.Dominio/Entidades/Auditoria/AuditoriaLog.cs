@@ -3,25 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GestionComercial.Dominio.Entidades.Auditoria
 {
-    /// <summary>
-    /// Representa un registro de auditoría que captura cambios en las entidades del sistema.
-    /// </summary>
+    ///     /// Representa un registro de auditoría que captura cambios en las entidades del sistema.
     public class AuditoriaLog
     {
-        // ── Backing fields ──
         private string _nombreTabla = string.Empty;
         private string? _nombreUsuario;
         private string? _valoresAnteriores;
         private string? _valoresNuevos;
         private string? _workstation;
 
-        // ── Propiedades con validación ──
         [Key]
         public int Id { get; set; }  // Para EF Core
 
-        /// <summary>
-        /// Nombre de la tabla que fue modificada.
-        /// </summary>
+        ///         /// Nombre de la tabla que fue modificada.
         [Required]
         [MaxLength(100)]
         public string NombreTabla 
@@ -30,24 +24,16 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             set => _nombreTabla = value ?? string.Empty; 
         }
 
-        /// <summary>
-        /// Identificador de la fila afectada.
-        /// </summary>
+        ///         /// Identificador de la fila afectada.
         public int RegistroId { get; set; }
 
-        /// <summary>
-        /// Tipo de operación: Insert, Update, Delete.
-        /// </summary>
+        ///         /// Tipo de operación: Insert, Update, Delete.
         public int TipoOperacion { get; set; }
 
-        /// <summary>
-        /// Nombre del usuario que realizó el cambio.
-        /// </summary>
+        ///         /// Nombre del usuario que realizó el cambio.
         public int? IdUsuario { get; set; }
 
-        /// <summary>
-        /// Nombre de usuario (opcional, para consultas rápidas sin join).
-        /// </summary>
+        ///         /// Nombre de usuario (opcional, para consultas rápidas sin join).
         [MaxLength(100)]
         public string? NombreUsuario 
         { 
@@ -55,32 +41,24 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             set => _nombreUsuario = value; 
         }
 
-        /// <summary>
-        /// Fecha y hora del cambio.
-        /// </summary>
+        ///         /// Fecha y hora del cambio.
         public DateTime FechaOperacion { get; set; } = DateTime.Now;
 
-        /// <summary>
-        /// Estado anterior del registro (serializado como JSON).
-        /// </summary>
+        ///         /// Estado anterior del registro (serializado como JSON).
         public string? ValoresAnteriores 
         { 
             get => _valoresAnteriores; 
             set => _valoresAnteriores = value; 
         }
 
-        /// <summary>
-        /// Estado nuevo del registro (serializado como JSON).
-        /// </summary>
+        ///         /// Estado nuevo del registro (serializado como JSON).
         public string? ValoresNuevos 
         { 
             get => _valoresNuevos; 
             set => _valoresNuevos = value; 
         }
 
-        /// <summary>
-        /// IP o identificación de la workstation desde donde se hizo el cambio.
-        /// </summary>
+        ///         /// IP o identificación de la workstation desde donde se hizo el cambio.
         [MaxLength(50)]
         public string? Workstation 
         { 
@@ -88,14 +66,10 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             set => _workstation = value; 
         }
 
-        /// <summary>
-        /// Identificador de la empresa (para multi-tenant).
-        /// </summary>
+        ///         /// Identificador de la empresa (para multi-tenant).
         public int? IdEmpresa { get; set; }
 
-        /// <summary>
-        /// Identificador de la sucursal donde se hizo el cambio.
-        /// </summary>
+        ///         /// Identificador de la sucursal donde se hizo el cambio.
         public int? IdSucursal { get; set; }
 
         // Navegación
@@ -111,11 +85,7 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
         // ── Constructor vacío (para EF Core) ──
         public AuditoriaLog() { }
 
-        // ── Factory methods ──
-
-        /// <summary>
-        /// Crea un log de inserción.
-        /// </summary>
+        ///         /// Crea un log de inserción.
         public static AuditoriaLog Insert(string tabla, int registroId, int? idUsuario, 
             string? nombreUsuario = null, int? idEmpresa = null, int? idSucursal = null,
             string? workstation = null, string? valoresNuevos = null)
@@ -136,9 +106,7 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             };
         }
 
-        /// <summary>
-        /// Crea un log de actualización.
-        /// </summary>
+        ///         /// Crea un log de actualización.
         public static AuditoriaLog Update(string tabla, int registroId, int? idUsuario,
             string? nombreUsuario = null, int? idEmpresa = null, int? idSucursal = null,
             string? workstation = null, string? valoresAnteriores = null, string? valoresNuevos = null)
@@ -159,9 +127,7 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             };
         }
 
-        /// <summary>
-        /// Crea un log de eliminación.
-        /// </summary>
+        ///         /// Crea un log de eliminación.
         public static AuditoriaLog Delete(string tabla, int registroId, int? idUsuario,
             string? nombreUsuario = null, int? idEmpresa = null, int? idSucursal = null,
             string? workstation = null, string? valoresAnteriores = null)
@@ -182,7 +148,6 @@ namespace GestionComercial.Dominio.Entidades.Auditoria
             };
         }
 
-        // ── Propiedades computed ──
         public bool EsInsert => TipoOperacion == 1;
         public bool EsUpdate => TipoOperacion == 2;
         public bool EsDelete => TipoOperacion == 3;

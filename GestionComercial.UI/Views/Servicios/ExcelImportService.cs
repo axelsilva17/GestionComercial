@@ -11,8 +11,7 @@ using System.IO;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
-    /// <summary>
-    /// Lee un archivo Excel y retorna filas para previsualizar/importar.
+    ///     /// Lee un archivo Excel y retorna filas para previsualizar/importar.
     ///
     /// Columnas esperadas en la planilla (en cualquier orden, por nombre de encabezado):
     ///   Nombre         → obligatorio
@@ -23,7 +22,6 @@ namespace GestionComercial.Aplicacion.Servicios
     ///   StockMinimo    → opcional (default 0)
     ///   Categoria      → opcional
     ///   UnidadMedida   → opcional (default "Unidad")
-    /// </summary>
     public static class ExcelImportService
     {
         public static List<FilaImportacionDto> LeerProductos(string rutaArchivo)
@@ -197,10 +195,8 @@ namespace GestionComercial.Aplicacion.Servicios
 {
     public static class CsvImportService
     {
-        /// <summary>
-        /// Lee un CSV simple como alternativa al Excel.
+        ///         /// Lee un CSV simple como alternativa al Excel.
         /// Formato esperado: Nombre;CodigoBarra;PrecioVenta;PrecioCosto;StockActual;StockMinimo;Categoria;UnidadMedida
-        /// </summary>
         public static System.Collections.Generic.List<GestionComercial.UI.ViewModels.Productos.FilaImportacionDto>
             LeerCsv(string rutaArchivo, char separador = ';')
         {

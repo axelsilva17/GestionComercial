@@ -206,8 +206,6 @@
                         <ColumnDefinition Width="130"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
@@ -221,10 +219,11 @@
                             <TextBlock Text="🔍" FontSize="13" Margin="10,0,6,0"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBox Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                     Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
-                                     Foreground="{DynamicResource TextPrimaryBrush}"
-                                     FontSize="13" VerticalContentAlignment="Center" Padding="0,0,10,0"/>
+                             <TextBox Grid.Column="1" Background="Transparent" BorderThickness="0"
+                                      Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      FontSize="13" VerticalContentAlignment="Center" Padding="0,0,10,0"
+                                      KeyDown="TextoBusqueda_KeyDown"/>
                         </Grid>
                     </Border>
 
@@ -235,12 +234,7 @@
                         <ComboBoxItem Content="Inactivos"/>
                     </ComboBox>
 
-                    <Button Grid.Column="4" Content="Buscar"
-                            Height="38" Padding="18,0" FontSize="13"
-                            Style="{StaticResource PrimaryButton}"
-                            Click="Buscar_Click"/>
-
-                    <Button Grid.Column="6" Height="38" Padding="18,0" FontSize="13"
+                    <Button Grid.Column="4" Height="38" Padding="18,0" FontSize="13"
                             Style="{StaticResource PrimaryButton}"
                             Click="NuevoCliente_Click">
                         <StackPanel Orientation="Horizontal">

@@ -17,11 +17,19 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Volver -->
+        <Button Grid.Row="0" x:Name="Volver" Content="← Volver"
+                Background="Transparent" BorderThickness="0"
+                Foreground="{DynamicResource TextSecondaryBrush}"
+                FontSize="13" Cursor="Hand" HorizontalAlignment="Left"
+                Margin="0,0,0,12"/>
+
         <!-- Header: Crear nueva caja -->
-        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,16">
+        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Nuevo Turno:" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding Turnos}" SelectedItem="{Binding TurnoNuevo}" 
@@ -71,7 +79,8 @@
                       AutoGenerateColumns="False" CanUserAddRows="False"
                       GridLinesVisibility="None" HeadersVisibility="Column"
                       Background="Transparent" BorderThickness="0"
-                      FontSize="12" RowHeight="38" ColumnHeaderHeight="38">
+                      FontSize="12" RowHeight="38" ColumnHeaderHeight="38"
+                      IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
                     <DataGridTextColumn Header="Turno" Binding="{Binding Turno}" Width="120"/>
@@ -79,8 +88,7 @@
                     <DataGridTextColumn Header="Cierre" Binding="{Binding FechaCierre, StringFormat='dd/MM HH:mm'}" Width="130"/>
                     <DataGridTextColumn Header="Monto Inicial" Binding="{Binding MontoInicial, StringFormat='C0'}" Width="110"/>
                     <DataGridTextColumn Header="Monto Final" Binding="{Binding MontoFinal, StringFormat='C0'}" Width="110"/>
-                     <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
-                 </DataGrid.Columns>
+                  </DataGrid.Columns>
             </DataGrid>
         </Border>
     </Grid>

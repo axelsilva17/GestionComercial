@@ -3,6 +3,7 @@ using GestionComercial.UI.ViewModels.Inventario;
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -124,6 +125,14 @@ namespace GestionComercial.UI.Views.Inventario
                 btn.ClearValue(Button.BorderBrushProperty);
                 btn.ClearValue(Button.ForegroundProperty);
             }
+        }
+
+        // ── Buscar con Enter ──────────────────────────────────────────────────
+
+        private async void TxtBusqueda_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && VM != null)
+                await VM.Buscar();
         }
 
         // ── BuscadorProducto → ViewModel ─────────────────────────────────────

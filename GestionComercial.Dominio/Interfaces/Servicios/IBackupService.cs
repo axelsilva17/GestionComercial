@@ -1,40 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GestionComercial.Dominio.DTOs.Infraestructura;
 
 namespace GestionComercial.Dominio.Interfaces.Servicios
 {
-    /// <summary>
-    /// Información de un archivo de backup existente.
-    /// </summary>
-    public class BackupInfo
-    {
-        public string FileName { get; set; } = string.Empty;
-        public string FullPath { get; set; } = string.Empty;
-        public long FileSizeBytes { get; set; }
-        public System.DateTime CreatedAt { get; set; }
-    }
-
-    /// <summary>
-    /// Configuración para backup automático.
-    /// </summary>
-    public class BackupAutoConfig
-    {
-        public bool Enabled { get; set; }
-        public int CantidadMaximaBackups { get; set; } = 7;
-        public string? CarpetaDestino { get; set; }
-    }
-
-    /// <summary>
-    /// Resultado de una operación de backup.
-    /// </summary>
-    public class BackupResult
-    {
-        public bool Success { get; set; }
-        public string? ErrorMessage { get; set; }
-        public string? RutaBackup { get; set; }
-        public long? TamanoBytes { get; set; }
-    }
-
     /// <summary>
     /// Servicio de backup y restauración de la base de datos.
     /// Implementación en Infraestructura (SQLite).

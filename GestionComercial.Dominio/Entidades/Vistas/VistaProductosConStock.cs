@@ -1,9 +1,7 @@
 namespace GestionComercial.Dominio.Entidades.Vistas
 {
-    /// <summary>
-    /// Entidad de solo lectura para la vista VistaProductosConStock.
+    ///     /// Entidad de solo lectura para la vista VistaProductosConStock.
     /// Mapea a: CREATE VIEW VistaProductosConStock AS ...
-    /// </summary>
     public class VistaProductosConStock
     {
         public int Id { get; set; }

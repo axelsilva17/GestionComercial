@@ -4,9 +4,7 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un decimal a formato moneda argentina: $ 1.234,56
-    /// </summary>
+    ///     /// Convierte un decimal a formato moneda argentina: $ 1.234,56
     public class DecimalToMonedaConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

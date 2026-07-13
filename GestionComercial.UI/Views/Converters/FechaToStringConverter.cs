@@ -4,12 +4,10 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte DateTime a string formateado.
+    ///     /// Convierte DateTime a string formateado.
     /// Por defecto: "dd/MM/yyyy"
     /// Pasá el formato como ConverterParameter si necesitás otro.
     /// Ej: ConverterParameter=dd/MM/yyyy HH:mm
-    /// </summary>
     public class FechaToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

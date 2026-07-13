@@ -4,10 +4,8 @@ using System.Windows.Media;
 
 namespace GestionComercial.UI.Views.Behaviors
 {
-    /// <summary>
-    /// Behavior que hace responsive cualquier elemento de búsqueda o toolbar
+    ///     /// Behavior que hace responsive cualquier elemento de búsqueda o toolbar
     /// detectando el tamaño de la ventana y ajustando anchos automáticamente
-    /// </summary>
     public static class ResponsiveBehavior
     {
         // DependencyProperty para habilitar responsive
@@ -158,9 +156,7 @@ namespace GestionComercial.UI.Views.Behaviors
         }
     }
 
-    /// <summary>
-    /// Behavior específico para toolbar de búsqueda y botones
-    /// </summary>
+    ///     /// Behavior específico para toolbar de búsqueda y botones
     public static class SearchBarResponsiveBehavior
     {
         public static readonly DependencyProperty EnableProperty =
@@ -215,9 +211,7 @@ namespace GestionComercial.UI.Views.Behaviors
         }
     }
 
-    /// <summary>
-    /// Behavior para toolbar completa (search + buttons + combos)
-    /// </summary>
+    ///     /// Behavior para toolbar completa (search + buttons + combos)
     public static class ToolbarResponsiveBehavior
     {
         public static readonly DependencyProperty EnableProperty =

@@ -147,6 +147,7 @@ namespace GestionComercial.UI.ViewModels.Clientes
                 TotalClientes = Clientes.Count;
                 ClientesActivos = clientes.Count(c => c.Activo);
                 ClientesInactivos = clientes.Count(c => !c.Activo);
+                ClientesConVentas = await _clienteServicio.ContarClientesConVentasAsync(_shell.IdEmpresaActual);
             }
             catch (Exception ex)
             {

@@ -5,11 +5,9 @@ using System.Windows.Media;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un bool (Activo) a color de fondo o texto de estado.
+    ///     /// Convierte un bool (Activo) a color de fondo o texto de estado.
     /// true  → verde  / "Activo"
     /// false → rojo   / "Inactivo"
-    /// </summary>
     public class EstadoToColorConverter : IValueConverter
     {
         private static readonly SolidColorBrush VerdeActivo  = new SolidColorBrush(Color.FromRgb(34, 197, 94));   // #22C55E
