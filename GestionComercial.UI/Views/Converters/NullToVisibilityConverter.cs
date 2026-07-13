@@ -5,9 +5,7 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte null a Collapsed y no-null a Visible (y viceversa con InvertirValor).
-    /// </summary>
+    ///     /// Convierte null a Collapsed y no-null a Visible (y viceversa con InvertirValor).
     public class NullToVisibilityConverter : IValueConverter
     {
         public bool InvertirValor { get; set; } = false;

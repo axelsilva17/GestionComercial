@@ -6,15 +6,12 @@ using GestionComercial.Dominio.Enumeraciones;
 
 namespace GestionComercial.Dominio.Entidades.Compras
 {
-    /// <summary>
-    /// Entidad Compra con patrón DDD.
+    ///     /// Entidad Compra con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var compra = Compra.Crear(idProveedor, idSucursal, idUsuario);
-    /// </summary>
     public class Compra : EntidadBase
     {
-        // ── Backing fields ──
         private DateTime _fecha = DateTime.Now;
         private decimal _total;
         private int _estado = 1;
@@ -23,7 +20,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
         private int _id_sucursal;
         private int _id_usuario;
 
-        // ── Propiedades con validación ──
         public DateTime Fecha 
         { 
             get => _fecha; 
@@ -57,7 +53,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
         // ── Constructor vacío (para EF Core) ──
         public Compra() { }
 
-        // ── Factory method ──
         public static Compra Crear(int idProveedor, int idSucursal, int idUsuario, string? observacion = null)
         {
             if (idProveedor <= 0)
@@ -80,11 +75,7 @@ namespace GestionComercial.Dominio.Entidades.Compras
             };
         }
 
-        // ── Métodos de dominio ──
-
-        /// <summary>
-        /// Añade un ítem a la compra y actualiza el total.
-        /// </summary>
+        ///         /// Añade un ítem a la compra y actualiza el total.
         public void AgregarDetalle(CompraDetalle detalle)
         {
             if (detalle == null)
@@ -99,9 +90,7 @@ namespace GestionComercial.Dominio.Entidades.Compras
             RecalcularTotal();
         }
 
-        /// <summary>
-        /// Quita un ítem y recalcula el total.
-        /// </summary>
+        ///         /// Quita un ítem y recalcula el total.
         public void QuitarDetalle(int detalleId)
         {
             if (_estado == (int)EstadoCompraEnum.Recibida)
@@ -117,17 +106,13 @@ namespace GestionComercial.Dominio.Entidades.Compras
             }
         }
 
-        /// <summary>
-        /// Recalcula el total desde los detalles.
-        /// </summary>
+        ///         /// Recalcula el total desde los detalles.
         public void RecalcularTotal()
         {
             _total = Detalles.Sum(d => d.Subtotal);
         }
 
-        /// <summary>
-        /// Marca como recibida. Solo si está pendiente.
-        /// </summary>
+        ///         /// Marca como recibida. Solo si está pendiente.
         public void MarcarRecibida()
         {
             if (_estado != (int)EstadoCompraEnum.Pendiente)
@@ -137,9 +122,7 @@ namespace GestionComercial.Dominio.Entidades.Compras
             _estado = (int)EstadoCompraEnum.Recibida;
         }
 
-        /// <summary>
-        /// Anula la compra. Solo si está pendiente.
-        /// </summary>
+        ///         /// Anula la compra. Solo si está pendiente.
         public void Anular(string motivo)
         {
             if (string.IsNullOrWhiteSpace(motivo))
@@ -153,7 +136,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
             _observacion = $"ANULADA: {motivo}";
         }
 
-        // ── Propiedades computed ──
         public bool EsPendiente => _estado == (int)EstadoCompraEnum.Pendiente;
         public bool EsRecibida  => _estado == (int)EstadoCompraEnum.Recibida;
         public bool EsAnulada   => _estado == (int)EstadoCompraEnum.Anulada;

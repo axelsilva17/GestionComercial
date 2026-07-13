@@ -106,7 +106,6 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _confirmarRespuesta = value; NotifyOfPropertyChange(() => ConfirmarRespuesta); }
         }
 
-        // Indica si el usuario ya tiene configurada la pregunta
         private bool _tienePreguntaConfigurada;
         public bool TienePreguntaConfigurada
         {

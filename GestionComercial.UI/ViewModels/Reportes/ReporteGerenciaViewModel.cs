@@ -186,8 +186,11 @@ namespace GestionComercial.UI.ViewModels.Reportes
             {
                 var desde = FechaDesde;
                 var hasta = FechaHasta;
+                // Normalizar hasta al fin del día para incluir todo el día actual
+                if (hasta.TimeOfDay == TimeSpan.Zero)
+                    hasta = hasta.Date.AddDays(1).AddSeconds(-1);
 
-                LogHelper.Log($"[ReporteGerencia] Filtro: desde={desde:yyyy-MM-dd} hasta={hasta:yyyy-MM-dd}");
+                LogHelper.Log($"[ReporteGerencia] Filtro: desde={desde:yyyy-MM-dd HH:mm} hasta={hasta:yyyy-MM-dd HH:mm}");
 
                 // Ventas del período
                 sw.Restart();

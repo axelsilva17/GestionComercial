@@ -6,80 +6,54 @@ using System.Text.Json;
 
 namespace GestionComercial.Aplicacion.DTOs.Auditoria
 {
-    /// <summary>
-    /// DTO para mostrar registros de auditoría en la UI.
+    ///     /// DTO para mostrar registros de auditoría en la UI.
     /// Deserializa JSON de ValoresAnteriores/ValoresNuevos para mostrar cambios legibles.
     /// Incluye propiedades calculadas para visualización financiera en prevención de fraude.
-    /// </summary>
     public class AuditoriaLogDto
     {
         public int Id { get; set; }
 
-        /// <summary>
-        /// Nombre de la tabla afectada ("Cajas" | "MovimientosCaja").
-        /// </summary>
+        ///         /// Nombre de la tabla afectada ("Cajas" | "MovimientosCaja").
         public string NombreTabla { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Identificador del registro afectado.
-        /// </summary>
+        ///         /// Identificador del registro afectado.
         public int RegistroId { get; set; }
 
-        /// <summary>
-        /// Tipo de operación localized ("Creación" | "Modificación" | "Eliminación").
-        /// </summary>
+        ///         /// Tipo de operación localized ("Creación" | "Modificación" | "Eliminación").
         public string TipoOperacion { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Nombre del usuario que realizó la operación.
-        /// </summary>
+        ///         /// Nombre del usuario que realizó la operación.
         public string Usuario { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Fecha y hora de la operación.
-        /// </summary>
+        ///         /// Fecha y hora de la operación.
         public DateTime FechaOperacion { get; set; }
 
-        /// <summary>
-        /// Estado anterior del registro (JSON serializado).
-        /// </summary>
+        ///         /// Estado anterior del registro (JSON serializado).
         public string? ValoresAnteriores { get; set; }
 
-        /// <summary>
-        /// Estado nuevo del registro (JSON serializado).
-        /// </summary>
+        ///         /// Estado nuevo del registro (JSON serializado).
         public string? ValoresNuevos { get; set; }
 
-        /// <summary>
-        /// ValoresAnteriores deserializados como diccionario para mostrar de forma legible.
-        /// </summary>
+        ///         /// ValoresAnteriores deserializados como diccionario para mostrar de forma legible.
         public Dictionary<string, object?>? ValoresAnterioresDeserializados { get; set; }
 
-        /// <summary>
-        /// ValoresNuevos deserializados como diccionario para mostrar de forma legible.
-        /// </summary>
+        ///         /// ValoresNuevos deserializados como diccionario para mostrar de forma legible.
         public Dictionary<string, object?>? ValoresNuevosDeserializados { get; set; }
 
-        /// <summary>
-        /// Cambios detectados entre valores anteriores y nuevos (para auditoría de caja).
-        /// </summary>
+        ///         /// Cambios detectados entre valores anteriores y nuevos (para auditoría de caja).
         public List<CambioAuditoriaDto>? Cambios { get; set; }
 
         // ═══════════════════════════════════════════════════════════════════════════
         // PROPIEDADES CALCULADAS PARA PREVENCIÓN DE FRAUDE
         // ═══════════════════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// Resumen de todos los cambios detectados en formato legible.
+        ///         /// Resumen de todos los cambios detectados en formato legible.
         /// Usa el campo CAMBIOS del binding en la UI.
-        /// </summary>
         public string DetalleCambios => Cambios != null && Cambios.Any()
             ? string.Join(" | ", Cambios.Select(c => c.Descripcion))
             : "Sin cambios";
 
-        /// <summary>
-        /// Número de caja afectada (extraído del JSON deserializado).
-        /// </summary>
+        ///         /// Número de caja afectada (extraído del JSON deserializado).
         public string? NumeroCaja
         {
             get
@@ -93,10 +67,8 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Monto involucrado en la operación (extraído de ValoresNuevos para creación,
+        ///         /// Monto involucrado en la operación (extraído de ValoresNuevos para creación,
         /// o de Cambios para modificaciones).
-        /// </summary>
         public decimal? MontoMostrar
         {
             get
@@ -129,9 +101,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Valor monetario anterior (antes del cambio).
-        /// </summary>
+        ///         /// Valor monetario anterior (antes del cambio).
         public decimal? ValorAnteriorMostrar
         {
             get
@@ -155,9 +125,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Valor monetario nuevo (después del cambio).
-        /// </summary>
+        ///         /// Valor monetario nuevo (después del cambio).
         public decimal? ValorNuevoMostrar
         {
             get
@@ -174,10 +142,8 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Diferencia monetaria entre ValorNuevo y ValorAnterior.
+        ///         /// Diferencia monetaria entre ValorNuevo y ValorAnterior.
         /// Positivo = aumento, Negativo = disminución.
-        /// </summary>
         public decimal? DiferenciaMonetaria
         {
             get
@@ -201,9 +167,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Indica si la diferencia monetaria es sospechosa (diferencia > 10% del valor original).
-        /// </summary>
+        ///         /// Indica si la diferencia monetaria es sospechosa (diferencia > 10% del valor original).
         public bool EsDiferenciaSospechosa
         {
             get
@@ -219,9 +183,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Tipo de operación de caja derivado (Apertura, Cierre, Movimiento, etc.).
-        /// </summary>
+        ///         /// Tipo de operación de caja derivado (Apertura, Cierre, Movimiento, etc.).
         public string TipoOperacionCaja
         {
             get
@@ -306,10 +268,8 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             }
         }
 
-        /// <summary>
-        /// Deserializa el JSON de ValoresAnteriores y ValoresNuevos.
+        ///         /// Deserializa el JSON de ValoresAnteriores y ValoresNuevos.
         /// Llamar después de mapear desde la entidad.
-        /// </summary>
         public void DeserializarJson()
         {
             if (!string.IsNullOrWhiteSpace(ValoresAnteriores))
@@ -341,9 +301,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
             DetectarCambios();
         }
 
-        /// <summary>
-        /// Compara valores anteriores y nuevos para detectar qué campos cambiaron.
-        /// </summary>
+        ///         /// Compara valores anteriores y nuevos para detectar qué campos cambiaron.
         private void DetectarCambios()
         {
             if (ValoresAnterioresDeserializados == null || ValoresNuevosDeserializados == null)
@@ -377,18 +335,14 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
         }
     }
 
-    /// <summary>
-    /// Representa un cambio individual detectado en la auditoría.
-    /// </summary>
+    ///     /// Representa un cambio individual detectado en la auditoría.
     public class CambioAuditoriaDto
     {
         public string Campo { get; set; } = string.Empty;
         public string ValorAnterior { get; set; } = string.Empty;
         public string ValorNuevo { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Descripción legible del cambio.
-        /// </summary>
+        ///         /// Descripción legible del cambio.
         public string Descripcion => $"{Campo}: {ValorAnterior} → {ValorNuevo}";
     }
 }

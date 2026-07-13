@@ -3,9 +3,7 @@ using System.Collections.Generic;
 
 namespace GestionComercial.Aplicacion.DTOs.Auditoria
 {
-    /// <summary>
-    /// DTO para filtros de auditoría.
-    /// </summary>
+    ///     /// DTO para filtros de auditoría.
     public class FiltroAuditoriaDto
     {
         public int? IdUsuario { get; set; }
@@ -18,9 +16,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
         public int PaginaActual { get; set; } = 1;
         public int TamanioPagina { get; set; } = 50;
 
-        /// <summary>
-        /// Convierte el filtro de TipoOperacion string a código numérico.
-        /// </summary>
+        ///         /// Convierte el filtro de TipoOperacion string a código numérico.
         public int? TipoOperacionCodigo => TipoOperacion switch
         {
             "Creación" => 1,
@@ -30,9 +26,7 @@ namespace GestionComercial.Aplicacion.DTOs.Auditoria
         };
     }
 
-    /// <summary>
-    /// Resultado de auditoría con filtros aplicados.
-    /// </summary>
+    ///     /// Resultado de auditoría con filtros aplicados.
     public class AuditoriaFiltradaDto
     {
         public List<AuditoriaLogDto> Registros { get; set; } = new();

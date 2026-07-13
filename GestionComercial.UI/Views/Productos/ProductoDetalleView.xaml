@@ -373,10 +373,6 @@
                         <!-- DataGrid movimientos -->
                         <DataGrid Grid.Row="1"
                                   ItemsSource="{Binding UltimosMovimientos}"
-                                  Style="{StaticResource DataGridModerno}"
-                                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderModerno}"
-                                  CellStyle="{StaticResource DataGridCellModerno}"
-                                  RowStyle="{StaticResource DataGridRowModerno}"
                                   Background="Transparent"
                                   BorderThickness="0"
                                   AutoGenerateColumns="False"

@@ -2,9 +2,7 @@ using System;
 
 namespace GestionComercial.Aplicacion.DTOs.Inventario
 {
-    /// <summary>
-    /// Representa un movimiento de stock — usado en InventarioViewModel y Dashboard.
-    /// </summary>
+    ///     /// Representa un movimiento de stock — usado en InventarioViewModel y Dashboard.
     public class MovimientoStockDto
     {
         public int      IdMovimiento    { get; set; }
@@ -33,9 +31,7 @@ namespace GestionComercial.Aplicacion.DTOs.Inventario
 
 namespace GestionComercial.Aplicacion.DTOs.Productos
 {
-    /// <summary>
-    /// DTO liviano para la lista de productos críticos en el Dashboard.
-    /// </summary>
+    ///     /// DTO liviano para la lista de productos críticos en el Dashboard.
     public class ProductoCriticoDash
     {
         public int    IdProducto   { get; set; }

@@ -1,8 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- CS8618: suprimido en DTOs porque se inicializan por deserializacion o mapeo -->
+		<NoWarn>$(NoWarn);CS8618</NoWarn>
 	</PropertyGroup>
 
 	<!-- Aplicacion depende de Dominio -->
@@ -11,7 +13,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 		<PackageReference Include="ClosedXML" Version="0.102.2" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
 	</ItemGroup>

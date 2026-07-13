@@ -8,6 +8,7 @@
         <converters:DecimalToMonedaConverter x:Key="DecimalToMoneda"/>
         <converters:BoolToColorConverter x:Key="BoolToColor"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -25,44 +26,84 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Volver -->
+        <Button Grid.Row="0" x:Name="Volver" Content="← Volver"
+                Background="Transparent" BorderThickness="0"
+                Foreground="{DynamicResource TextSecondaryBrush}"
+                FontSize="13" Cursor="Hand" HorizontalAlignment="Left"
+                Margin="0,0,0,12"/>
+
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+        <StackPanel Grid.Row="1" Margin="0,0,0,20">
             <TextBlock Text="Auditoría de Caja" FontSize="24" FontWeight="Bold" 
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="Historial de cajas, movimientos y diferencias" FontSize="13" 
                        Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
-        <!-- Toolbar: Filtros + KPIs + Acciones -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- Error message -->
+        <Border Grid.Row="2" Background="#EF444430" BorderBrush="#EF4444" BorderThickness="1"
+                CornerRadius="8" Padding="12,8" Margin="0,0,0,8"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyToVisibility}}">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontSize="12"/>
+        </Border>
 
-                <!-- Filtros de fecha -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+        <!-- Toolbar: Filtros + Turno + Crear Caja + KPIs + Acciones -->
+        <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,0,0,16" Padding="16,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Fila 1: Filtros de fecha + Turno + Crear Caja -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Desde:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
                     <DatePicker SelectedDate="{Binding FechaDesde, UpdateSourceTrigger=PropertyChanged}" 
-                                Width="120" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"/>
+                                Style="{StaticResource FilterDatePickerStyle}" Width="120"/>
                     <TextBlock Text="Hasta:" Foreground="{DynamicResource TextSecondaryBrush}" 
-                               VerticalAlignment="Center" Margin="20,0,8,0" FontSize="12"/>
+                               VerticalAlignment="Center" Margin="12,0,8,0" FontSize="12"/>
                     <DatePicker SelectedDate="{Binding FechaHasta, UpdateSourceTrigger=PropertyChanged}" 
-                                Width="120" Background="{DynamicResource SurfaceBrush}"
-                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"/>
+                                Style="{StaticResource FilterDatePickerStyle}" Width="120"/>
+
+                    <Rectangle Width="1" Height="28" Fill="{DynamicResource BorderBrush}" Margin="16,0"/>
+
+                    <TextBlock Text="Turno:" Foreground="{DynamicResource TextSecondaryBrush}" 
+                               VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
+                    <ComboBox ItemsSource="{Binding TurnosDisponibles}" SelectedItem="{Binding TurnoFiltro}"
+                              Width="110" Style="{StaticResource FilterComboBoxStyle}"/>
+
+                    <Rectangle Width="1" Height="28" Fill="{DynamicResource BorderBrush}" Margin="16,0"/>
+
+                    <TextBlock Text="Nueva caja:" Foreground="{DynamicResource TextSecondaryBrush}" 
+                               VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
+                    <ComboBox ItemsSource="{Binding TurnosDisponibles}" 
+                              SelectedItem="{Binding TurnoNuevaCaja}"
+                              Width="100" Style="{StaticResource FilterComboBoxStyle}"/>
+                    <Button Content="+ Crear" cal:Message.Attach="CrearCajaAsync"
+                            Background="{DynamicResource PrimaryBrush}"
+                            Foreground="#0F172A" FontWeight="Bold" FontSize="12"
+                            Padding="12,4" Cursor="Hand" Margin="8,0,0,0" BorderThickness="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </StackPanel>
 
-                <!-- KPIs compactos -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Fila 2: KPIs + Exportar -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" 
                             Padding="12,6" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
@@ -98,17 +139,18 @@
                                        Style="{StaticResource KpiValue}" Foreground="#EF4444"/>
                         </StackPanel>
                     </Border>
-                </StackPanel>
 
-                <!-- Botón exportar -->
-                <Button Grid.Column="2" Content="Exportar Excel" cal:Message.Attach="ExportarExcel"
-                        Padding="14,8" Background="{DynamicResource PrimaryBrush}"
-                        Foreground="White" BorderThickness="0" Cursor="Hand" FontSize="12"/>
+                    <Rectangle Width="1" Height="28" Fill="{DynamicResource BorderBrush}" Margin="16,0"/>
+
+                    <Button Content="Exportar Excel" cal:Message.Attach="ExportarExcel"
+                            Padding="14,8" Background="{DynamicResource PrimaryBrush}"
+                            Foreground="White" BorderThickness="0" Cursor="Hand" FontSize="12"/>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- Contenido principal -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="320"/>
@@ -125,17 +167,14 @@
                     <TextBlock Grid.Row="0" Text="Cajas del período" FontSize="14" FontWeight="SemiBold" 
                                Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
 
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding Cajas}" SelectedItem="{Binding CajaSeleccionada}"
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding CajasFiltradas}" SelectedItem="{Binding CajaSeleccionada}"
                                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                                   Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
                                   RowBackground="Transparent" AlternatingRowBackground="#08FFFFFF"
-                                  HeadersVisibility="Column" FontSize="12"
-                                  Style="{StaticResource DataGridModerno}"
-                                  CellStyle="{StaticResource DataGridCellModerno}"
-                                  RowStyle="{StaticResource DataGridRowModerno}"
-                                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderModerno}">
+                                  HeadersVisibility="Column" FontSize="12">
                             <DataGrid.Columns>
-                            <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="100"/>
+                            <DataGridTextColumn Header="Fecha" Binding="{Binding FechaApertura}" Width="90"/>
+                            <DataGridTextColumn Header="Turno" Binding="{Binding Turno}" Width="60"/>
                             <DataGridTextColumn Header="Hora" Binding="{Binding HoraApertura}" Width="60"/>
                             <DataGridTextColumn Header="Usuario" Binding="{Binding UsuarioApertura}" Width="*"/>
                             <DataGridTextColumn Header="Inicial" Binding="{Binding MontoInicial, Converter={StaticResource DecimalToMoneda}}" Width="90"/>

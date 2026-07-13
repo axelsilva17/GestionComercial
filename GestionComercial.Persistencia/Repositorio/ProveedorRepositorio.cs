@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
-    // ── Proveedor ─────────────────────────────────────────────────────────────
     public class ProveedorRepositorio : RepositorioBase<Proveedor>, IProveedorRepositorio
     {
         public ProveedorRepositorio(GestionComercialContext context) : base(context) { }

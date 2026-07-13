@@ -4,9 +4,7 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte porcentaje (0-100) a ancho fijo en pixeles para barra de progreso.
-    /// </summary>
+    ///     /// Convierte porcentaje (0-100) a ancho fijo en pixeles para barra de progreso.
     public class ProgresoPorcentajeConverter : IValueConverter
     {
         // Ancho máximo de la barra (aproximado, se ajusta en XAML si es necesario)

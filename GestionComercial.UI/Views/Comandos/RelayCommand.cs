@@ -3,10 +3,8 @@ using System.Windows.Input;
 
 namespace GestionComercial.UI.Views.Comandos
 {
-    /// <summary>
-    /// Comando sincrónico reutilizable para bindear acciones en la UI.
+    ///     /// Comando sincrónico reutilizable para bindear acciones en la UI.
     /// Uso: new RelayCommand(() => HacerAlgo(), () => PuedoHacerlo)
-    /// </summary>
     public class RelayCommand : ICommand
     {
         private readonly Action _execute;
@@ -28,15 +26,13 @@ namespace GestionComercial.UI.Views.Comandos
 
         public void Execute(object? parameter) => _execute();
 
-        /// <summary>Fuerza re-evaluación de CanExecute en la UI.</summary>
+        /// Fuerza re-evaluación de CanExecute en la UI.
         public void RaiseCanExecuteChanged() =>
             CommandManager.InvalidateRequerySuggested();
     }
 
-    /// <summary>
-    /// Versión genérica: acepta un parámetro tipado.
+    ///     /// Versión genérica: acepta un parámetro tipado.
     /// Uso: new RelayCommand&lt;Producto&gt;(p => Editar(p))
-    /// </summary>
     
     public class RelayCommand<T> : ICommand
     {

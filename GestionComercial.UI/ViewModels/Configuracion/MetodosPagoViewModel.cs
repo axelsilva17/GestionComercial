@@ -28,7 +28,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         }
 
         private string _editNombre    = string.Empty;
-        private bool   _editEfectivo  = false;
+        private string _editCategoria = "Otro";
         private bool   _esNuevo;
 
         public string EditNombre
@@ -36,10 +36,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             get => _editNombre;
             set { _editNombre = value; NotifyOfPropertyChange(() => EditNombre); }
         }
-        public bool EditEfectivo
+        public string EditCategoria
         {
-            get => _editEfectivo;
-            set { _editEfectivo = value; NotifyOfPropertyChange(() => EditEfectivo); }
+            get => _editCategoria;
+            set { _editCategoria = value; NotifyOfPropertyChange(() => EditCategoria); }
         }
 
         private bool   _panelVisible;
@@ -72,7 +72,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     {
                         IdMetodoPago = m.Id,
                         Nombre       = m.Nombre,
-                        EsEfectivo   = m.EsEfectivo,
+                        Categoria    = m.Categoria ?? "Otro",
                         IdEmpresa    = m.Id_empresa
                     })
                 );
@@ -86,7 +86,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             _esNuevo      = true;
             TituloPanel   = "Nuevo Método de Pago";
             EditNombre    = string.Empty;
-            EditEfectivo  = false;
+            EditCategoria = "Otro";
             PanelVisible  = true;
         }
 
@@ -96,7 +96,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             TituloPanel  = "Editar Método de Pago";
             Seleccionado = item;
             EditNombre   = item.Nombre;
-            EditEfectivo = item.EsEfectivo;
+            EditCategoria = item.Categoria;
             PanelVisible = true;
         }
 
@@ -121,7 +121,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     var metodo = new MetodoPago
                     {
                         Nombre     = EditNombre,
-                        EsEfectivo = EditEfectivo,
+                        Categoria  = EditCategoria,
                         Activo     = true,
                         Id_empresa = empresa.Id
                     };
@@ -133,7 +133,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     {
                         IdMetodoPago = metodo.Id,
                         Nombre       = metodo.Nombre,
-                        EsEfectivo   = metodo.EsEfectivo,
+                        Categoria    = metodo.Categoria ?? "Otro",
                         IdEmpresa    = metodo.Id_empresa
                     });
                 }
@@ -142,13 +142,13 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     var metodo = await _uow.MetodosPago.ObtenerPorIdAsync(Seleccionado.IdMetodoPago);
                     if (metodo != null)
                     {
-                        metodo.Nombre     = EditNombre;
-                        metodo.EsEfectivo = EditEfectivo;
+                        metodo.Nombre    = EditNombre;
+                        metodo.Categoria = EditCategoria;
                         _uow.MetodosPago.Actualizar(metodo);
                         await _uow.GuardarCambiosAsync();
 
-                        Seleccionado.Nombre     = metodo.Nombre;
-                        Seleccionado.EsEfectivo = metodo.EsEfectivo;
+                        Seleccionado.Nombre    = metodo.Nombre;
+                        Seleccionado.Categoria = metodo.Categoria ?? "Otro";
                         var idx = Items.IndexOf(Seleccionado);
                         Items.RemoveAt(idx);
                         Items.Insert(idx, Seleccionado);

@@ -6,6 +6,8 @@ obj/
 .atl/
 nul
 openspec/
+.env
+.pi/
 .engram/
 wt/
 patch-*.patch
@@ -14,3 +16,14 @@ ON_DEMAND_MERGE.md
 # SQLite temporary files
 *.db-shm
 *.db-wal
+
+# Database files
+*.db
+
+# AI config
+opencode.json
+
+# Build logs / temp output
+build_*.txt
+build_*.log
+msbuild.log

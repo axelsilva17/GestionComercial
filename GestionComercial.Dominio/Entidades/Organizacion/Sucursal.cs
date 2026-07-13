@@ -5,21 +5,17 @@ using GestionComercial.Dominio.Entidades.Ventas;
 
 namespace GestionComercial.Dominio.Entidades.Organizacion
 {
-    /// <summary>
-    /// Entidad Sucursal con patrón DDD.
+    ///     /// Entidad Sucursal con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var sucursal = Sucursal.Crear(nombre, direccion, idEmpresa);
-    /// </summary>
     public class Sucursal : EntidadBase
     {
-        // ── Backing fields ──
         private string _nombre = string.Empty;
         private string _direccion = string.Empty;
         private string? _telefono;
         private int _id_empresa;
 
-        // ── Propiedades con validación ──
         public string Nombre 
         { 
             get => _nombre; 
@@ -47,7 +43,6 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
         // ── Constructor vacío (para EF Core) ──
         public Sucursal() { }
 
-        // ── Factory method ──
         public static Sucursal Crear(string nombre, string direccion, int idEmpresa, string? telefono = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -68,11 +63,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             };
         }
 
-        // ── Métodos de dominio ──
-
-        /// <summary>
-        /// Actualiza datos de la sucursal.
-        /// </summary>
+        ///         /// Actualiza datos de la sucursal.
         public void Actualizar(string nombre, string direccion, string? telefono)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -83,7 +74,6 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             _telefono = telefono?.Trim();
         }
 
-        // ── Propiedades computed ──
         public int CantidadUsuarios => Usuarios.Count;
         public int CantidadCajas => Cajas.Count;
         public int CantidadVentas => Ventas.Count;

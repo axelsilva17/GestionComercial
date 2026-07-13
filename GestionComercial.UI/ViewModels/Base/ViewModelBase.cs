@@ -20,14 +20,28 @@ namespace GestionComercial.UI.ViewModels.Base
         public string ErrorMessage
         {
             get => _errorMessage;
-            set { _errorMessage = value; NotifyOfPropertyChange(() => ErrorMessage); }
+            set
+            {
+                _errorMessage = value;
+                NotifyOfPropertyChange(() => ErrorMessage);
+                NotifyOfPropertyChange(() => MensajeError);
+            }
         }
 
         public bool ErrorVisible
         {
             get => _errorVisible;
-            set { _errorVisible = value; NotifyOfPropertyChange(() => ErrorVisible); }
+            set
+            {
+                _errorVisible = value;
+                NotifyOfPropertyChange(() => ErrorVisible);
+                NotifyOfPropertyChange(() => TieneError);
+            }
         }
+
+        // ── Alias en español para bindings XAML existentes ──
+        public string MensajeError => ErrorMessage;
+        public bool TieneError => ErrorVisible;
 
         protected void MostrarError(string mensaje)
         {

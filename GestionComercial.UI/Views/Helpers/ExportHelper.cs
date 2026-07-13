@@ -18,14 +18,12 @@ using System.Windows;
 
 namespace GestionComercial.UI.Helpers
 {
-    /// <summary>
-    /// Helper de exportación a Excel usando ClosedXML.
+    ///     /// Helper de exportación a Excel usando ClosedXML.
     /// NuGet: Install-Package ClosedXML
     ///
     /// Uso desde ViewModel:
     ///   ExportHelper.ExportarVentas(misVentas);
     ///   ExportHelper.ExportarMargen(misMargen);
-    /// </summary>
     public static class ExportHelper
     {
         // ═══ Helper para parsear valores decimal de JSON ═══
@@ -1396,9 +1394,7 @@ namespace GestionComercial.UI.Helpers
 
         private static string Fecha() => DateTime.Now.ToString("yyyyMMdd_HHmm");
 
-        /// <summary>
-        /// Exporta auditoría de caja a Excel con todos los datos relevantes.
-        /// </summary>
+        ///         /// Exporta auditoría de caja a Excel con todos los datos relevantes.
          public static void ExportarAuditoriaCaja(List<CajaAuditoriaItemDto> cajas)
          {
              var wb = new XLWorkbook();

@@ -1,10 +1,8 @@
 namespace GestionComercial.Aplicacion.DTOs.Caja
 {
-    /// <summary>
-    /// Resumen completo de un turno de caja para mostrar en el cierre.
+    ///     /// Resumen completo de un turno de caja para mostrar en el cierre.
     /// Solo VentasEfectivo e Ingresos/Egresos afectan el SaldoEsperado físico.
     /// Los demás métodos son informativos.
-    /// </summary>
     public class ResumenCierreDto
     {
         // ── Efectivo (afecta saldo físico) ────────────────────────────────────
@@ -13,7 +11,7 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
         public decimal IngresosEfectivo  { get; set; }  // movimientos manuales tipo Ingreso
         public decimal EgresosEfectivo   { get; set; }  // movimientos manuales tipo Egreso
 
-        /// <summary>Saldo que debería haber físicamente en caja.</summary>
+        /// Saldo que debería haber físicamente en caja.
         public decimal SaldoEsperado =>
             MontoInicial + VentasEfectivo + IngresosEfectivo - EgresosEfectivo;
 
@@ -24,12 +22,12 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
         public decimal VentasCuentaCte     { get; set; }
         public decimal VentasOtros         { get; set; }
 
-        /// <summary>Total vendido en el turno (todos los métodos).</summary>
+        /// Total vendido en el turno (todos los métodos).
         public decimal TotalVendido =>
             VentasEfectivo + VentasTarjeta + VentasTransferencia +
             VentasQR + VentasCuentaCte + VentasOtros;
 
-        /// <summary>Cantidad de transacciones del turno.</summary>
+        /// Cantidad de transacciones del turno.
         public int CantidadVentas { get; set; }
 
         // ── Desglose libre (para mostrar cada método) ─────────────────────────
@@ -44,6 +42,6 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
         public string  Metodo     { get; set; } = string.Empty;
         public decimal Total      { get; set; }
         public int     Cantidad   { get; set; }
-        public bool    EsEfectivo { get; set; }
+        public string  Categoria  { get; set; } = "Otro";
     }
 }

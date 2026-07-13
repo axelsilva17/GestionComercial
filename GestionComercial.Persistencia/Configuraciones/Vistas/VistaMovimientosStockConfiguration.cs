@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GestionComercial.Persistencia.Configuraciones.Vistas
 {
-    /// <summary>
-    /// Configuración de EF Core para la vista VistaMovimientosStock.
-    /// </summary>
+    ///     /// Configuración de EF Core para la vista VistaMovimientosStock.
     public class VistaMovimientosStockConfiguration : IEntityTypeConfiguration<VistaMovimientosStock>
     {
         public void Configure(EntityTypeBuilder<VistaMovimientosStock> builder)

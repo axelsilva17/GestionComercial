@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Pagos;
+using GestionComercial.Dominio.Entidades.Pagos.Strategies;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
@@ -18,6 +19,7 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly SesionServicio _sesion;
         private readonly IInventarioServicio _inventarioServicio;
         private readonly ILogger<VentaServicio>? _logger;
+        private readonly PaymentStrategyFactory _paymentStrategyFactory;
 
         public VentaServicio(
             IUnitOfWork uow,
@@ -31,18 +33,20 @@ namespace GestionComercial.Aplicacion.Servicios
             _sesion = sesion;
             _inventarioServicio = inventarioServicio;
             _logger = logger;
+            _paymentStrategyFactory = new PaymentStrategyFactory();
         }
 
         public async Task<IEnumerable<VentaResumenDto>> ObtenerPorSucursalAsync(
             int idSucursal, DateTime desde, DateTime hasta)
         {
+            // Normalizar: si hasta es inicio del día, usar fin del día para incluir todo el día
+            if (hasta.TimeOfDay == TimeSpan.Zero)
+                hasta = hasta.Date.AddDays(1).AddSeconds(-1);
             var ventas = await _uow.Ventas.ObtenerPorFechaAsync(desde, hasta, idSucursal);
             return ventas.Select(MapearResumen);
         }
 
-        /// <summary>
-        /// Feature 3: Obtiene ventas con filtros opcionales y combinables.
-        /// </summary>
+        ///         /// Feature 3: Obtiene ventas con filtros opcionales y combinables.
         public async Task<IEnumerable<VentaResumenDto>> ObtenerVentasAsync(
             int idSucursal,
             DateTime? fechaDesde = null,
@@ -155,12 +159,10 @@ namespace GestionComercial.Aplicacion.Servicios
             return MapearDto(ventaResult);
         }
 
-        /// <summary>
-        /// Registra los pagos y recién aquí marca la venta como Pagada.
+        ///         /// Registra los pagos y recién aquí marca la venta como Pagada.
         /// Soporta pagos mixtos (efectivo + tarjeta + QR, etc.).
         /// Para pagos en efectivo, crea automáticamente un movimiento de caja.
         /// El vuelto se registra como egreso en la caja.
-        /// </summary>
         public async Task RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos)
         {
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
@@ -176,58 +178,16 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException(
                     $"El monto pagado (${totalPagado:N2}) es menor al total (${venta.TotalFinal:N2}).");
 
-            // Calcular el total de vuelto de todos los pagos en efectivo
-            decimal totalVuelto = pagos.Where(p => p.EsEfectivo).Sum(p => p.Vuelto);
-
             foreach (var pago in pagos.Where(p => p.Monto > 0))
             {
                 // ── Crear pago usando factory method DDD ──────────────────────
                 var pagoEntity = Pago.Crear(pago.Monto, idVenta, pago.IdMetodoPago);
+                pagoEntity.Vuelto = pago.Vuelto;
 
-                // ── Crear movimiento de caja SOLO para pagos en efectivo ─────────
-                if (pago.EsEfectivo && venta.Id_caja.HasValue)
-                {
-                    // El monto del movimiento es: efectivo recibido - vuelto dado
-                    var montoNeto = pago.Monto - pago.Vuelto;
-
-                    var movimiento = new TipoMovimientoCaja
-                    {
-                        Tipo         = (int)TipoMovimientoCajaEnum.Ingreso,
-                        Monto        = montoNeto,
-                        Concepto     = $"Venta #{venta.Id} (recibido: ${pago.Monto:N2}, vuelto: ${pago.Vuelto:N2})",
-                        ReferenciaId = venta.Id,
-                        Id_venta     = venta.Id,
-                        Id_caja      = venta.Id_caja.Value,
-                        Id_usuario   = venta.Id_usuario,
-                        Fecha        = DateTime.Now,
-                    };
-                    await _uow.MovimientosCaja.AgregarAsync(movimiento);
-                    await _uow.GuardarCambiosAsync();
-                    
-                    // Vincular el pago con el movimiento de caja
-                    pagoEntity.Id_movimientoCaja = movimiento.Id;
-
-                    // ── Registrar monto efectivo para cierre de caja ───────────────
-                    // Guardamos el monto TOTAL recibido (sin restar el vuelto) para el cierre
-                    venta.EfectivoRecibido = (venta.EfectivoRecibido ?? 0) + pago.Monto;
-
-                    // ── Registrar el vuelto como egreso si corresponde ───────────
-                    if (pago.Vuelto > 0)
-                    {
-                        var movimientoVuelto = new TipoMovimientoCaja
-                        {
-                            Tipo         = (int)TipoMovimientoCajaEnum.Egreso,
-                            Monto        = pago.Vuelto,
-                            Concepto     = $"Vuelto venta #{venta.Id}",
-                            ReferenciaId = venta.Id,
-                            Id_venta     = venta.Id,
-                            Id_caja      = venta.Id_caja.Value,
-                            Id_usuario   = venta.Id_usuario,
-                            Fecha        = DateTime.Now,
-                        };
-                        await _uow.MovimientosCaja.AgregarAsync(movimientoVuelto);
-                    }
-                }
+                // ── Delegar procesamiento a strategy ─────────────────────────
+                var metodo = await _uow.MetodosPago.ObtenerPorIdAsync(pago.IdMetodoPago);
+                var strategy = _paymentStrategyFactory.Resolve(metodo?.Categoria ?? "Otro");
+                await strategy.ProcesarPagoAsync(pagoEntity, venta, _uow);
 
                 await _uow.Pagos.AgregarAsync(pagoEntity);
             }
@@ -241,10 +201,38 @@ namespace GestionComercial.Aplicacion.Servicios
             _ = ImprimirTicketAsync(venta.Id);
         }
 
-        /// <summary>
-        /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
+        ///         /// Marca una venta pendiente como pagada usando efectivo como método por defecto.
+        /// Útil para "Cobrar" rápido desde el historial.
+        public async Task CobrarVentaAsync(int idVenta)
+        {
+            var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
+                ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
+
+            if (venta.Estado != (int)EstadoVentaEnum.Pendiente)
+                throw new VentaInvalidaException("Solo se pueden cobrar ventas pendientes.");
+
+            // Buscar método de pago en efectivo
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
+            var metodos = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(sucursal?.Id_empresa ?? 0);
+            var efectivo = metodos.FirstOrDefault(m => m.Categoria == "Efectivo")
+                        ?? metodos.FirstOrDefault()
+                        ?? throw new NegocioException("No hay métodos de pago configurados.");
+
+            // Crear pago único por el total
+            var pagoEntity = Pago.Crear(venta.TotalFinal, idVenta, efectivo.Id);
+            var strategy = _paymentStrategyFactory.Resolve(efectivo.Categoria ?? "Otro");
+            await strategy.ProcesarPagoAsync(pagoEntity, venta, _uow);
+
+            venta.MarcarPagada();
+            await _uow.Pagos.AgregarAsync(pagoEntity);
+            _uow.Ventas.Actualizar(venta);
+            await _uow.GuardarCambiosAsync();
+
+            _ = ImprimirTicketAsync(venta.Id);
+        }
+
+        ///         /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
         /// Los errores de impresión NO deben revertir el pago.
-        /// </summary>
         private async Task ImprimirTicketAsync(int idVenta)
         {
             try
@@ -259,7 +247,7 @@ namespace GestionComercial.Aplicacion.Servicios
                     Monto        = p.Monto,
                     IdMetodoPago = p.Id_metodoPago,
                     MetodoNombre = p.MetodoPago?.Nombre ?? "Desconocido",
-                    EsEfectivo   = p.MetodoPago?.EsEfectivo ?? false,
+                    Categoria    = p.MetodoPago?.Categoria ?? "Otro",
                 }).ToList();
 
                 _servicioImpresion.ImprimirTicket(ventaDto, pagosDto);
@@ -270,12 +258,10 @@ namespace GestionComercial.Aplicacion.Servicios
             }
         }
 
-        /// <summary>
-        /// Anula la venta con motivo obligatorio y devuelve el stock.
+        ///         /// Anula la venta con motivo obligatorio y devuelve el stock.
         /// Los pagos ya registrados quedan en BD como historial.
         /// ObtenerTotalDelDiaAsync filtra solo Estado=Pagada así que
         /// las ventas anuladas no afectan reportes de ingresos.
-        /// </summary>
         /// <param name="id">ID de la venta a anular</param>
         /// <param name="motivo">Motivo obligatorio de la anulación</param>
         /// <exception cref="VentaInvalidaException">Si la venta no existe o ya está anulada</exception>
@@ -318,6 +304,7 @@ namespace GestionComercial.Aplicacion.Servicios
             Fecha         = v.Fecha,
             TotalFinal    = v.TotalFinal,
             Estado        = MapEstado(v.Estado),
+            IdCliente     = v.Id_cliente,
             ClienteNombre = v.Cliente?.Nombre ?? "Consumidor Final",
             UsuarioNombre = v.Usuario != null
                 ? $"{v.Usuario.Nombre} {v.Usuario.Apellido}" : string.Empty,
@@ -330,6 +317,7 @@ namespace GestionComercial.Aplicacion.Servicios
             TotalBruto     = v.TotalBruto,
             TotalDescuento = v.TotalDescuento,
             TotalFinal     = v.TotalFinal,
+            Total          = v.TotalBruto,
             Estado         = MapEstado(v.Estado),
             ClienteNombre  = v.Cliente?.Nombre ?? "Consumidor Final",
             UsuarioNombre  = v.Usuario != null
@@ -344,6 +332,20 @@ namespace GestionComercial.Aplicacion.Servicios
                 CostoUnitario  = d.CostoUnitario,
                 Subtotal       = d.Subtotal,
                 MargenUnitario = d.MargenUnitario,
+            }).ToList(),
+            Pagos = v.Pagos.Select(p => new PagoDto
+            {
+                IdPago       = p.Id,
+                Monto        = p.Monto,
+                IdMetodoPago = p.Id_metodoPago,
+                MetodoNombre = p.MetodoPago?.Nombre ?? "—",
+                Categoria    = p.MetodoPago?.Categoria ?? "Otro",
+                Icono        = (p.MetodoPago?.Categoria) switch
+                {
+                    "Efectivo" => "💵",
+                    "Tarjeta"  => "💳",
+                    _          => "💲",
+                },
             }).ToList(),
         };
 

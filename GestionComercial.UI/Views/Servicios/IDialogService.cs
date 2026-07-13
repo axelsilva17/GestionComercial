@@ -2,21 +2,19 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.Views.Servicios
 {
-    /// <summary>
-    /// Servicio para mostrar diálogos de confirmación, alertas y mensajes desde los ViewModels.
-    /// </summary>
+    ///     /// Servicio para mostrar diálogos de confirmación, alertas y mensajes desde los ViewModels.
     public interface IDialogService
     {
-        /// <summary>Muestra un mensaje informativo.</summary>
+        /// Muestra un mensaje informativo.
         Task MostrarInfoAsync(string titulo, string mensaje);
 
-        /// <summary>Muestra un mensaje de error.</summary>
+        /// Muestra un mensaje de error.
         Task MostrarErrorAsync(string titulo, string mensaje);
 
-        /// <summary>Muestra un diálogo de confirmación. Retorna true si el usuario confirmó.</summary>
+        /// Muestra un diálogo de confirmación. Retorna true si el usuario confirmó.
         Task<bool> ConfirmarAsync(string titulo, string mensaje);
 
-        /// <summary>Muestra un diálogo de advertencia con opción de continuar o cancelar.</summary>
+        /// Muestra un diálogo de advertencia con opción de continuar o cancelar.
         Task<bool> AdvertirAsync(string titulo, string mensaje);
     }
 }

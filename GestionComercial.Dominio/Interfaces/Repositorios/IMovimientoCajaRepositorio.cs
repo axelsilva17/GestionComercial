@@ -7,9 +7,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     {
         Task<IEnumerable<TipoMovimientoCaja>> ObtenerPorCajaAsync(int idCaja);
         
-        /// <summary>
-        /// Obtiene todos los movimientos de caja en un período para análisis de auditoría.
-        /// </summary>
+        ///         /// Obtiene todos los movimientos de caja en un período para análisis de auditoría.
         Task<IEnumerable<TipoMovimientoCaja>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta);
     }
 }

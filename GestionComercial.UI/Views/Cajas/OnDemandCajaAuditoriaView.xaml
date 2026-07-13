@@ -49,6 +49,13 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="24">
+            <!-- Volver -->
+            <Button x:Name="Volver" Content="← Volver"
+                    Background="Transparent" BorderThickness="0"
+                    Foreground="{DynamicResource TextSecondaryBrush}"
+                    FontSize="13" Cursor="Hand" HorizontalAlignment="Left"
+                    Margin="0,0,0,12"/>
+
             <!-- Header -->
             <StackPanel Margin="0,0,0,20">
                 <TextBlock Text="{Binding Titulo}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>

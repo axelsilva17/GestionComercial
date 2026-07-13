@@ -125,10 +125,8 @@ namespace GestionComercial.UI.ViewModels.Caja
             finally { IsLoading = false; }
         }
 
-        /// <summary>
-        /// Carga el último cierre de caja de la sucursal actual.
+        ///         /// Carga el último cierre de caja de la sucursal actual.
         /// Muestra: fecha del último cierre y saldo que quedó en caja.
-        /// </summary>
         private async Task CargarUltimoCierreAsync()
         {
             try

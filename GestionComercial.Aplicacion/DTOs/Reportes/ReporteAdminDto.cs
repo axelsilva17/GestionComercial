@@ -3,9 +3,7 @@ using System.Collections.Generic;
 
 namespace GestionComercial.Aplicacion.DTOs.Reportes
 {
-    /// <summary>
-    /// DTO para reporte administrativo completo (exportable a Excel).
-    /// </summary>
+    ///     /// DTO para reporte administrativo completo (exportable a Excel).
     public class ReporteAdminDto
     {
         public DateTime FechaGeneracion { get; set; } = DateTime.Now;

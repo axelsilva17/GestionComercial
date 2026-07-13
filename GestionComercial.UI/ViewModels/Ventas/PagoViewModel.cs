@@ -30,9 +30,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Titulo         = "Cobrar Venta";
         }
 
-        /// <summary>
-        /// Maneja atajos de teclado globales en la vista de pago.
-        /// </summary>
+        ///         /// Maneja atajos de teclado globales en la vista de pago.
         public void HandleKeyDown(Key key, ModifierKeys modifiers)
         {
             if (modifiers != ModifierKeys.None) return;
@@ -50,9 +48,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     break;
                 case Key.F4:
                     AgregarQR();
-                    break;
-                case Key.F5:
-                    CompletarConEfectivo();
                     break;
                 case Key.F6:
                     if (PuedeCobrar) _ = Confirmar();
@@ -172,11 +167,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     {
                         IdMetodoPago = m.Id,
                         NombreMetodo = m.Nombre,
-                        EsEfectivo   = m.EsEfectivo == true,
+                        Categoria    = m.Categoria ?? "Otro",
                         Monto        = 0,
                     }));
 
-                MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.EsEfectivo)
+                MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo")
                                   ?? MetodosPago.FirstOrDefault();
 
                 // Precompletar con el total en el campo de monto
@@ -190,7 +185,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>Llamado desde VentaViewModel antes de navegar.</summary>
+        /// Llamado desde VentaViewModel antes de navegar.
         public void InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
         {
             _idVenta       = idVenta;
@@ -219,27 +214,27 @@ namespace GestionComercial.UI.ViewModels.Ventas
             LimpiarError();
 
             // Si el método ya existe, sumar el monto
-            var existente = Pagos.FirstOrDefault(p => p.IdMetodoPago == MetodoSeleccionado.IdMetodoPago);
-            if (existente != null)
-            {
-                var idx = Pagos.IndexOf(existente);
-                Pagos[idx] = new PagoLineaVm
+                var existente = Pagos.FirstOrDefault(p => p.IdMetodoPago == MetodoSeleccionado.IdMetodoPago);
+                if (existente != null)
                 {
-                    IdMetodoPago = existente.IdMetodoPago,
-                    NombreMetodo = existente.NombreMetodo,
-                    EsEfectivo   = existente.EsEfectivo,
-                    Monto        = existente.Monto + monto,
-                };
-            }
-            else
-            {
-                Pagos.Add(new PagoLineaVm
+                    var idx = Pagos.IndexOf(existente);
+                    Pagos[idx] = new PagoLineaVm
+                    {
+                        IdMetodoPago = existente.IdMetodoPago,
+                        NombreMetodo = existente.NombreMetodo,
+                        Categoria    = existente.Categoria,
+                        Monto        = existente.Monto + monto,
+                    };
+                }
+                else
                 {
-                    IdMetodoPago = MetodoSeleccionado.IdMetodoPago,
-                    NombreMetodo = MetodoSeleccionado.NombreMetodo,
-                    EsEfectivo   = MetodoSeleccionado.EsEfectivo,
-                    Monto        = monto,
-                });
+                    Pagos.Add(new PagoLineaVm
+                    {
+                        IdMetodoPago = MetodoSeleccionado.IdMetodoPago,
+                        NombreMetodo = MetodoSeleccionado.NombreMetodo,
+                        Categoria    = MetodoSeleccionado.Categoria,
+                        Monto        = monto,
+                    });
             }
 
             MontoIngresado = string.Empty;
@@ -253,77 +248,58 @@ namespace GestionComercial.UI.ViewModels.Ventas
             RecalcularTotalPagado();
         }
 
-        /// <summary>Agrega la diferencia faltante en efectivo con un clic.</summary>
-        public void CompletarConEfectivo()
-        {
-            if (Faltante <= 0) return;
-            var efectivo = MetodosPago.FirstOrDefault(m => m.EsEfectivo);
-            if (efectivo == null) return;
-            MetodoSeleccionado = efectivo;
-            MontoIngresado     = Faltante.ToString("F2");
-            AgregarPago();
-        }
+		/// 		/// Agrega un pago con el método seleccionado.
+		/// Si hay un monto escrito usa ese, si no completa el faltante automáticamente.
+		private void SeleccionarOCompletar(PagoItemDto metodo)
+		{
+			MetodoSeleccionado = metodo;
 
-        /// <summary>
-        /// Agrega pago en efectivo (botón rápido).
-        /// Usa el total de la venta si no hay pagos, sino usa el faltante.
-        /// </summary>
-        public void AgregarEfectivo()
-        {
-            var efectivo = MetodosPago.FirstOrDefault(m => m.EsEfectivo);
-            if (efectivo == null) { MostrarError("No hay método de pago en efectivo configurado."); return; }
-            MetodoSeleccionado = efectivo;
-            MontoIngresado = Faltante > 0 ? Faltante.ToString("F2") : TotalVenta.ToString("F2");
-            AgregarPago();
-        }
+			// Si el campo está vacío o inválido, completar con faltante o total
+			var texto = (MontoIngresado ?? "").Replace(",", ".");
+			if (!decimal.TryParse(texto,
+					System.Globalization.NumberStyles.Any,
+					System.Globalization.CultureInfo.InvariantCulture,
+					out var monto) || monto <= 0)
+			{
+				MontoIngresado = (Faltante > 0 ? Faltante : TotalVenta).ToString("F2");
+			}
 
-        /// <summary>
-        /// Agrega pago con tarjeta de débito (botón rápido).
-        /// </summary>
-        public void AgregarDebito()
-        {
-            var debito = MetodosPago.FirstOrDefault(m =>
-                m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
-                m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
-            if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
-            MetodoSeleccionado = debito;
-            var monto = Faltante > 0 ? Faltante : TotalVenta;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarDebito: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
-            MontoIngresado = monto.ToString("F2");
-            AgregarPago();
-        }
+			AgregarPago();
+		}
 
-        /// <summary>
-        /// Agrega pago con tarjeta de crédito (botón rápido).
-        /// </summary>
-        public void AgregarCredito()
-        {
-            var credito = MetodosPago.FirstOrDefault(m =>
-                m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
-                m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
-            if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
-            MetodoSeleccionado = credito;
-            var monto = Faltante > 0 ? Faltante : TotalVenta;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarCredito: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
-            MontoIngresado = monto.ToString("F2");
-            AgregarPago();
-        }
+		public void AgregarEfectivo()
+		{
+			var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
+			if (efectivo == null) { MostrarError("No hay método de pago en efectivo configurado."); return; }
+			SeleccionarOCompletar(efectivo);
+		}
 
-        /// <summary>
-        /// Agrega pago con QR (botón rápido).
-        /// </summary>
-        public void AgregarQR()
-        {
-            var qr = MetodosPago.FirstOrDefault(m =>
-                m.NombreMetodo.Contains("QR", StringComparison.OrdinalIgnoreCase) ||
-                m.NombreMetodo.Contains("Transferencia", StringComparison.OrdinalIgnoreCase));
-            if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
-            MetodoSeleccionado = qr;
-            var monto = Faltante > 0 ? Faltante : TotalVenta;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM] AgregarQR: TotalVenta={TotalVenta}, Faltante={Faltante}, monto a pagar={monto}");
-            MontoIngresado = monto.ToString("F2");
-            AgregarPago();
-        }
+		public void AgregarDebito()
+		{
+			var debito = MetodosPago.FirstOrDefault(m =>
+				m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
+				m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
+			if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
+			SeleccionarOCompletar(debito);
+		}
+
+		public void AgregarCredito()
+		{
+			var credito = MetodosPago.FirstOrDefault(m =>
+				m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
+				m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
+			if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
+			SeleccionarOCompletar(credito);
+		}
+
+		public void AgregarQR()
+		{
+			var qr = MetodosPago.FirstOrDefault(m =>
+				m.NombreMetodo.Contains("QR", StringComparison.OrdinalIgnoreCase) ||
+				m.NombreMetodo.Contains("Transferencia", StringComparison.OrdinalIgnoreCase));
+			if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
+			SeleccionarOCompletar(qr);
+		}
 
         public async Task Confirmar()
         {
@@ -340,14 +316,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 {
                     IdMetodoPago = p.IdMetodoPago,
                     Monto        = p.Monto,
-                    EsEfectivo   = p.EsEfectivo,
+                    Categoria    = p.Categoria,
                 }).ToList();
 
                 // Calcular el vuelto total y asignarlo al primer pago en efectivo
                 var hayVuelto = Vuelto > 0;
                 if (hayVuelto)
                 {
-                    var primerEfectivo = pagosDto.FirstOrDefault(p => p.EsEfectivo);
+                    var primerEfectivo = pagosDto.FirstOrDefault(p => p.Categoria == "Efectivo");
                     if (primerEfectivo != null)
                     {
                         primerEfectivo.Vuelto = Vuelto;
@@ -454,9 +430,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { SetProperty(ref _estadoVentaFiltro, value); }
         }
 
-        /// <summary>
-        /// Carga el historial de ventas (reutiliza la lógica de VentaViewModel).
-        /// </summary>
+        ///         /// Carga el historial de ventas (reutiliza la lógica de VentaViewModel).
         public async Task CargarHistorialAsync()
         {
             try
@@ -485,17 +459,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        /// <summary>
-        /// Filtra el historial aplicando los filtros activos.
-        /// </summary>
+        ///         /// Filtra el historial aplicando los filtros activos.
         public void FiltrarHistorial()
         {
             _ = CargarHistorialAsync();
         }
 
-        /// <summary>
-        /// Cierra el popup de historial.
-        /// </summary>
+        ///         /// Cierra el popup de historial.
         public void CerrarHistorial()
         {
             MostrarHistorial = false;
@@ -513,7 +483,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
     {
         public int     IdMetodoPago { get; set; }
         public string  NombreMetodo { get; set; } = string.Empty;
-        public bool    EsEfectivo   { get; set; }
+        public string  Categoria    { get; set; } = "Otro";
         public decimal Monto        { get; set; }
     }
 }

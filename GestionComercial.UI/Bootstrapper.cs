@@ -1,6 +1,7 @@
 using Caliburn.Micro;
 using FluentValidation;
 using GestionComercial.Aplicacion.DTOs.Clientes;
+using Microsoft.Data.Sqlite;
 using GestionComercial.Aplicacion.DTOs.Compras;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.DTOs.Proveedores;
@@ -12,15 +13,18 @@ using GestionComercial.Aplicacion.Validators;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
-using GestionComercial.Dominio.Repositorio;
 using GestionComercial.Infraestructura.Servicios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
 using GestionComercial.UI.Helpers;
+using GestionComercial.Dominio.Entidades.Movimientos;
+using GestionComercial.Dominio.Entidades.Producto;
+using GestionComercial.Dominio.Entidades.Pagos.Strategies;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.Views.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.IO;
 using System.Reflection;
 using System.Windows;
 
@@ -47,6 +51,33 @@ namespace GestionComercial.UI
 
             var connectionString = config.GetConnectionString("DefaultConnection")!;
 
+            // ── Resolver ruta relativa de SQLite ──────────────────────────────
+            var connBuilder = new SqliteConnectionStringBuilder(connectionString);
+            if (!Path.IsPathRooted(connBuilder.DataSource))
+            {
+                var assemblyDir = AppDomain.CurrentDomain.BaseDirectory;
+                var assemblyPath = Path.Combine(assemblyDir, connBuilder.DataSource);
+
+                // Buscar la DB en el directorio del proyecto UI (dev, con datos reales)
+                var uiProjectDir = Path.GetFullPath(Path.Combine(assemblyDir, "..", "..", ".."));
+                var sourcePath = Path.Combine(uiProjectDir, connBuilder.DataSource);
+
+                connBuilder.DataSource = File.Exists(sourcePath) ? sourcePath : assemblyPath;
+            }
+            connectionString = connBuilder.ConnectionString;
+
+            // ── Optimización SQLite: WAL mode + synchronous=NORMAL ────────────
+            //    WAL permite lecturas concurrentes sin bloqueos.
+            //    synchronous=NORMAL reduce fsync (más rápido) sin riesgo de corrupción.
+            var sqliteConn = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+            sqliteConn.Open();
+            using (var cmd = sqliteConn.CreateCommand())
+            {
+                cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
+                cmd.ExecuteNonQuery();
+            }
+            sqliteConn.Close();
+
             _container.Handler<GestionComercialContext>(
                 _ => new GestionComercialContext(
                     new DbContextOptionsBuilder<GestionComercialContext>()
@@ -61,6 +92,7 @@ namespace GestionComercial.UI
             // ── Servicios ─────────────────────────────────────────────────────
             _container.Singleton<SesionServicio>();
             _container.Singleton<IServicioImpresion, ServicioImpresionTermica>();
+            _container.Singleton<PaymentStrategyFactory>();
 
             // Servicios de Dominio (implementados en Infraestructura)
             _container.Singleton<IPasswordHasher, PasswordHasher>();
@@ -109,6 +141,12 @@ namespace GestionComercial.UI
 
             _container.Handler<IValidator<CajaAbrirDto>>(
                 c => new CajaValidator(c.GetInstance<IUnitOfWork>().Cajas));
+
+            _container.Handler<IValidator<ProductoActualizarDto>>(
+                c => new ProductoActualizarValidator(c.GetInstance<IUnitOfWork>().Productos));
+
+            _container.Handler<IValidator<ProductoImportarDto>>(
+                c => new ProductoImportarValidator());
 
             // ── Navigation Service ─────────────────────────────────────────────────
             _container.Singleton<GestionComercial.UI.Views.Servicios.INavigationService, GestionComercial.UI.Views.Servicios.NavigationService>();
@@ -168,64 +206,69 @@ namespace GestionComercial.UI
                 var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
                 
                 // Ejecutar migraciones pendientes (incluye baseline + views + triggers).
-                // Si la BD fue creada con EnsureCreated, el baseline inserta el historial
-                // de migraciones y MigrateAsync no intenta recrear tablas existentes.
                 await context.Database.MigrateAsync();
-                
-                // Check if we need seed data (fallback si HasData no corrió)
+
+                // ── First-run: si no hay usuarios, mostrar configuración inicial ──
                 var tieneUsuarios = await context.Usuarios.AnyAsync();
                 if (!tieneUsuarios)
                 {
-                    // Empresa
-                    var empresa = new GestionComercial.Dominio.Entidades.Organizacion.Empresa
-                    {
-                        Id = 1,
-                        Nombre = "Mi Empresa",
-                        CUIT = "20-12345678-9",
-                        Direccion = "Direccion 123",
-                        Email = "admin@miempresa.com",
-                        Telefono = "3794000000"
-                    };
-                    context.Empresas.Add(empresa);
-                    
-                    // Sucursal - necesaria porque Usuario tiene FK Id_sucursal
-                    var sucursal = new GestionComercial.Dominio.Entidades.Organizacion.Sucursal
-                    {
-                        Id = 1,
-                        Nombre = "Sucursal Principal",
-                        Direccion = "Direccion 123",
-                        Id_empresa = 1
-                    };
-                    context.Sucursales.Add(sucursal);
-
-                    // Rol - Administrador con Id=2 (coherente con SemillaRoles)
-                    context.Roles.Add(new GestionComercial.Dominio.Entidades.Seguridad.Rol
-                    {
-                        Id = 2,
-                        Nombre = "Administrador",
-                        Descripcion = "Acceso total",
-                        Activo = true
-                    });
-                    
-                    // Usuario
-                    var hash = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy";
-                    var usuario = new GestionComercial.Dominio.Entidades.Seguridad.Usuario
-                    {
-                        Id = 1,
-                        Nombre = "Admin",
-                        Apellido = "Sistema",
-                        Email = "admin@miempresa.com",
-                        PasswordHash = hash,
-                        Id_sucursal = 1,
-                        Id_rol = 2,  // Administrador
-                        Activo = true
-                    };
-                    context.Usuarios.Add(usuario);
-                    
-                    await context.SaveChangesAsync();
-                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Seed data created via EF Core");
+                    await DisplayRootViewForAsync<GestionComercial.UI.ViewModels.Configuracion.ConfiguracionInicialViewModel>();
+                    return;
                 }
                 
+                // ── Seed movimientos de stock inicial ─────────────────
+                var tieneMovimientos = await context.MovimientosStock.AnyAsync();
+                if (!tieneMovimientos)
+                {
+                    var productosConStock = await context.Productos
+                        .Where(p => p.StockActual > 0)
+                        .ToListAsync();
+
+                    if (productosConStock.Count > 0)
+                    {
+                        var hoy = DateTime.Now;
+                        var diaBase = hoy.AddDays(-5);
+                        var dias = Enumerable.Range(0, productosConStock.Count)
+                            .Select(i => diaBase.AddMinutes(i * 15))  // 15 min entre cada uno
+                            .ToList();
+
+                        foreach (var prod in productosConStock)
+                        {
+                            var idx = productosConStock.IndexOf(prod);
+                            var mov = MovimientoStock.Ajuste(
+                                cantidad: prod.StockActual,
+                                stockAnterior: 0,
+                                idProducto: prod.Id,
+                                idSucursal: 1,
+                                idUsuario: 1,
+                                observacion: "Stock inicial",
+                                referenciaId: null
+                            );
+                            // Setear fecha explícita para no tener todos iguales
+                            mov.Fecha = dias[idx];
+                            context.MovimientosStock.Add(mov);
+                        }
+
+                        await context.SaveChangesAsync();
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Creados {productosConStock.Count} movimientos de stock inicial");
+                    }
+                }
+
+                // ── Backfill Turno en cajas existentes ────────────────
+                var cajasSinTurno = await context.Cajas
+                    .Where(c => c.Turno == null || c.Turno == "")
+                    .ToListAsync();
+                if (cajasSinTurno.Count > 0)
+                {
+                    var turnos = new[] { "Mañana", "Tarde", "Noche" };
+                    var rng = new Random();
+                    foreach (var caja in cajasSinTurno)
+                        caja.Turno = turnos[rng.Next(turnos.Length)];
+
+                    await context.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Asignados turnos a {cajasSinTurno.Count} cajas");
+                }
+
                 // Verify
                 var count = await context.Usuarios.CountAsync();
                 System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Total usuarios: {count}");

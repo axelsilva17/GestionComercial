@@ -14,13 +14,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace GestionComercial.UI.ViewModels.Reportes
 {
-    /// <summary>
-    /// DTO para mostrar movimientos de caja en la auditoría.
-    /// </summary>
+    ///     /// DTO para mostrar movimientos de caja en la auditoría.
     
 
 public class CajaAuditoriaViewModel : NavigableViewModel
@@ -30,25 +27,37 @@ public class CajaAuditoriaViewModel : NavigableViewModel
         private readonly SesionServicio _sesion;
         private CancellationTokenSource? _ctsCargarDatos;
 
-        // Apertura Caja: selection of Caja and Turno for opening a new sesión
-        public ObservableCollection<CajaOption> AvailableCajas { get; set; } = new();
-        private CajaOption? _selectedCaja;
-        public CajaOption? SelectedCaja
+        // ── Turno filter ──────────────────────────────────────────────
+        public ObservableCollection<string> TurnosDisponibles { get; } = new() { "Todos", "Mañana", "Tarde", "Noche" };
+
+        private string _turnoFiltro = "Todos";
+        public string TurnoFiltro
         {
-            get => _selectedCaja;
-            set { _selectedCaja = value; NotifyOfPropertyChange(() => SelectedCaja); }
-        }
-        public ObservableCollection<TurnoOption> AvailableTurnos { get; set; } = new();
-        private TurnoOption? _selectedTurno;
-        public TurnoOption? SelectedTurno
-        {
-            get => _selectedTurno;
-            set { _selectedTurno = value; NotifyOfPropertyChange(() => SelectedTurno); }
+            get => _turnoFiltro;
+            set
+            {
+                _turnoFiltro = value;
+                NotifyOfPropertyChange(() => TurnoFiltro);
+                AplicarFiltroTurno();
+            }
         }
 
-        public System.Windows.Input.ICommand OpenCajaCommand { get; set; }
+        private ObservableCollection<CajaAuditoriaItemDto> _cajasFiltradas = new();
+        public ObservableCollection<CajaAuditoriaItemDto> CajasFiltradas
+        {
+            get => _cajasFiltradas;
+            set => SetProperty(ref _cajasFiltradas, value);
+        }
 
-        private DateTime _fechaDesde = DateTime.Today.AddDays(-30);
+        // ── Crear caja ─────────────────────────────────────────────────
+        private string _turnoNuevaCaja = "Mañana";
+        public string TurnoNuevaCaja
+        {
+            get => _turnoNuevaCaja;
+            set { _turnoNuevaCaja = value; NotifyOfPropertyChange(() => TurnoNuevaCaja); }
+        }
+
+        private DateTime _fechaDesde = DateTime.Today.AddMonths(-6);
         public DateTime FechaDesde
         {
             get => _fechaDesde;
@@ -145,14 +154,11 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             _sesion       = sesion;
             Titulo = "Auditoría";
             Subtitulo = "Caja — historial y diferencias";
-            // Initialize commands
-            OpenCajaCommand = new AsyncRelayCommand(async _ => await AbrirCajaAsync(), _ => SelectedCaja != null && SelectedTurno != null);
         }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             await CargarDatosAsync();
-            await LoadAperturaOpcionesAsync();
         }
 
     private async Task CargarDatosAsync()
@@ -208,7 +214,8 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             if (token.IsCancellationRequested) return;
 
             Cajas = new ObservableCollection<CajaAuditoriaItemDto>(cajasDto);
-            
+            AplicarFiltroTurno();
+
             // KPIs
             TotalCajas = cajasDto.Count;
             CajasCerradas = cajasDto.Count(c => c.Estado == "Cerrada");
@@ -232,19 +239,29 @@ public class CajaAuditoriaViewModel : NavigableViewModel
         }
     }
 
-        // Load options for Apertura Caja (Caja + Turno) with a basic fallback
-        private async Task LoadAperturaOpcionesAsync()
+        // ── Filter by turno ────────────────────────────────────────────────
+        private void AplicarFiltroTurno()
         {
-            // Provide sane defaults to avoid empty selections in the UI
-            if (AvailableCajas.Count == 0)
+            if (string.IsNullOrEmpty(TurnoFiltro) || TurnoFiltro == "Todos")
+                CajasFiltradas = new ObservableCollection<CajaAuditoriaItemDto>(Cajas);
+            else
+                CajasFiltradas = new ObservableCollection<CajaAuditoriaItemDto>(
+                    Cajas.Where(c => c.Turno == TurnoFiltro));
+        }
+
+        // ── Crear nueva caja ───────────────────────────────────────────────
+        public async Task CrearCajaAsync()
+        {
+            try
             {
-                AvailableCajas.Add(new CajaOption { Id = 1, Nombre = "Caja 1" });
+                await _cajaServicio.AbrirCajaAsync(
+                    _sesion.IdSucursal, _sesion.IdUsuario, 0, turno: TurnoNuevaCaja);
+                await CargarDatosAsync();
             }
-            if (AvailableTurnos.Count == 0)
+            catch (Exception ex)
             {
-                AvailableTurnos.Add(new TurnoOption { Id = 1, Nombre = "Turno 1" });
+                MostrarError($"Error al crear caja: {ex.Message}");
             }
-            await Task.CompletedTask;
         }
 
         private async Task CargarMovimientosAsync(int idCaja)
@@ -255,15 +272,15 @@ public class CajaAuditoriaViewModel : NavigableViewModel
                 
                 var movDto = movimientos.Select(m => new MovimientoAuditoriaDto
                 {
-                    TipoOperacion = m.Tipo == 1 ? "Apertura" : 
-                                   m.Tipo == 2 ? "Ingreso" : 
-                                   m.Tipo == 3 ? "Egreso" : "Cierre",
+                    TipoOperacion = m.Tipo == 1 ? "Ingreso" : 
+                                   m.Tipo == 2 ? "Egreso" : 
+                                   m.Tipo == 3 ? "Apertura" : "Cierre",
                     Descripcion   = m.Concepto ?? "-",
                     Monto         = m.Monto,
                     Fecha         = m.Fecha.ToString("dd/MM HH:mm"),
                     Usuario       = m.Usuario?.Nombre ?? "Sistema",
-                    Icono         = m.Tipo == 2 ? "↑" : m.Tipo == 3 ? "↓" : "•",
-                    EsIngreso     = m.Tipo == 2
+                    Icono         = m.Tipo == 1 ? "↑" : m.Tipo == 2 ? "↓" : "•",
+                    EsIngreso     = m.Tipo == 1
                 }).ToList();
 
                 Movimientos = new ObservableCollection<MovimientoAuditoriaDto>(movDto);
@@ -280,9 +297,9 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             
             Series = new ObservableCollection<ISeries>
             {
-                new ColumnSeries<decimal>
+                new ColumnSeries<double>
                 {
-                    Values = diffs.Select(c => c.DiferenciaConEfectivo).ToArray(),
+                    Values = diffs.Select(c => (double)c.DiferenciaConEfectivo).ToArray(),
                     Fill = new SolidColorPaint(SKColor.Parse("#38BDF8")),
                     Name = "Diferencia ($)"
                 }
@@ -290,7 +307,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
         }
 
         // ── Exportar ──────────────────────────────────────────────────────────
-        public async Task ExportarExcel()
+        public void ExportarExcel()
         {
             try
             {
@@ -307,50 +324,11 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             }
         }
 
-        // Simple DTOs for Caja/Turno selections in Apertura Caja
-        public class CajaOption
+        // ── Volver a Reporte Admin ─────────────────────────────────────────────
+        public async Task Volver()
         {
-            public int Id { get; set; }
-            public string Nombre { get; set; } = string.Empty;
-        }
-        public class TurnoOption
-        {
-            public int Id { get; set; }
-            public string Nombre { get; set; } = string.Empty;
-        }
-
-        // Lightweight async command wrapper for bindable commands in MVVM
-        public class AsyncRelayCommand : ICommand
-        {
-            private readonly Func<object, Task> _execute;
-            private readonly Predicate<object>? _canExecute;
-            public AsyncRelayCommand(Func<object, Task> execute, Predicate<object>? canExecute = null)
-            {
-                _execute = execute;
-                _canExecute = canExecute;
-            }
-            public bool CanExecute(object parameter) => _canExecute?.Invoke(parameter) ?? true;
-            public event EventHandler? CanExecuteChanged { add { } remove { } }
-            public async void Execute(object parameter) => await _execute(parameter);
-        }
-
-        // Action: open caja with selected caja/turno
-        private async Task AbrirCajaAsync()
-        {
-            if (SelectedCaja == null || SelectedTurno == null) return;
-            try
-            {
-                // Get SesionServicio from IoC
-                var sesion = Caliburn.Micro.IoC.Get<GestionComercial.Aplicacion.Servicios.SesionServicio>();
-                // Open caja with default monto inicial 0, in a real app this would come from UI
-                 await _cajaServicio.AbrirCajaAsync(sesion.IdSucursal, sesion.IdUsuario, 0, turno: SelectedTurno?.Nombre);
-                // Refresh data after opening
-                await CargarDatosAsync();
-            }
-            catch (Exception ex)
-            {
-                MostrarError($"Error al abrir caja: {ex.Message}");
-            }
+            var reporteAdmin = Caliburn.Micro.IoC.Get<ReporteAdminViewModel>();
+            await Caliburn.Micro.IoC.Get<ShellViewModel>().ActivateItemAsync(reporteAdmin, CancellationToken.None);
         }
     }
 }

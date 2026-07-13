@@ -5,11 +5,9 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte una colección (Count) a Visibility. 
+    ///     /// Convierte una colección (Count) a Visibility. 
     /// Count > 0 = Visible, Count == 0 = Collapsed
     /// Usa ConverterParameter="Inverse" para invertir la lógica
-    /// </summary>
     public class CountToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

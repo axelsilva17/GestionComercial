@@ -210,7 +210,7 @@ namespace GestionComercial.UI.ViewModels.Caja
 
                 // Desglose libre para lista (excluir efectivo que ya se muestra en la sección principal)
                 Desglose = new ObservableCollection<DesglosePagoDto>(
-                    resumen.DesglosePorMetodo.Where(d => !d.EsEfectivo));
+                    resumen.DesglosePorMetodo.Where(d => d.Categoria != "Efectivo"));
 
                 FechaApertura = resumen.FechaApertura;
                 FechaCierre   = DateTime.Now;
@@ -250,10 +250,8 @@ namespace GestionComercial.UI.ViewModels.Caja
 
         // ── Acciones ──────────────────────────────────────────────────────────
         
-        /// <summary>
-        /// Cierre de caja en modo "Ciego" - sin input manual del usuario.
+        ///         /// Cierre de caja en modo "Ciego" - sin input manual del usuario.
         /// El sistema usa el saldo calculado internamente y guarda la diferencia en auditoría.
-        /// </summary>
         public async Task ConfirmarCiego()
         {
             if (_idCaja == 0)
@@ -290,9 +288,7 @@ namespace GestionComercial.UI.ViewModels.Caja
             finally { IsLoading = false; }
         }
 
-        /// <summary>
-        /// Registra la diferencia del cierre ciego en auditoría para seguridad.
-        /// </summary>
+        ///         /// Registra la diferencia del cierre ciego en auditoría para seguridad.
         private async Task GuardarAuditoriaCierreCiegoAsync(decimal montoFinal, decimal diferencia)
         {
             try
@@ -331,9 +327,7 @@ namespace GestionComercial.UI.ViewModels.Caja
             }
         }
 
-        /// <summary>
-        /// Confirmar original (para compatibilidad) - ahora redirect a ConfirmarCiego.
-        /// </summary>
+        ///         /// Confirmar original (para compatibilidad) - ahora redirect a ConfirmarCiego.
         public async Task Confirmar()
         {
             await ConfirmarCiego();
@@ -346,7 +340,7 @@ namespace GestionComercial.UI.ViewModels.Caja
         }
 
         // ── Exportar a Excel ─────────────────────────────────────────────────
-        public async Task ExportarExcel()
+        public void ExportarExcel()
         {
             try
             {

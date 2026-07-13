@@ -5,22 +5,18 @@ using GestionComercial.Dominio.Entidades.Seguridad;
 
 namespace GestionComercial.Dominio.Entidades.Compras
 {
-    /// <summary>
-    /// Entidad CompraDetalle con patrón DDD.
+    ///     /// Entidad CompraDetalle con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var detalle = CompraDetalle.Crear(producto, cantidad, precioCosto);
-    /// </summary>
     public class CompraDetalle
     {
-        // ── Backing fields ──
         private decimal _cantidad;
         private decimal _precioCosto;
         private decimal _subtotal;
         private int _id_compra;
         private int _id_producto;
 
-        // ── Propiedades con validación ──
         public int Id { get; set; }  // Para EF Core
 
         public decimal Cantidad 
@@ -47,7 +43,6 @@ namespace GestionComercial.Dominio.Entidades.Compras
         // ── Constructor vacío (para EF Core) ──
         public CompraDetalle() { }
 
-        // ── Factory method ──
         public static CompraDetalle Crear(Producto.Producto producto, decimal cantidad, decimal precioCosto)
         {
             if (producto == null)
@@ -70,19 +65,13 @@ namespace GestionComercial.Dominio.Entidades.Compras
             return detalle;
         }
 
-        // ── Métodos de dominio ──
-
-        /// <summary>
-        /// Recalcula el subtotal.
-        /// </summary>
+        ///         /// Recalcula el subtotal.
         public void Recalcular()
         {
             _subtotal = _cantidad * _precioCosto;
         }
 
-        /// <summary>
-        /// Actualiza el precio de costo.
-        /// </summary>
+        ///         /// Actualiza el precio de costo.
         public void ActualizarPrecio(decimal nuevoPrecioCosto)
         {
             if (nuevoPrecioCosto < 0)

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 
 namespace GestionComercial.Aplicacion.DTOs.Reportes
 {
-    /// <summary>
-    /// DTO para reporte gerencial con métricas KPIs y tendencias.
-    /// </summary>
+    ///     /// DTO para reporte gerencial con métricas KPIs y tendencias.
     public class ReporteGerenciaDto
     {
         public DateTime FechaGeneracion { get; set; } = DateTime.Now;

@@ -6,15 +6,12 @@ using GestionComercial.Dominio.Entidades.Seguridad;
 
 namespace GestionComercial.Dominio.Entidades.Organizacion
 {
-    /// <summary>
-    /// Entidad Empresa con patrón DDD.
+    ///     /// Entidad Empresa con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var empresa = Empresa.Crear(nombre, cuit, direccion);
-    /// </summary>
     public class Empresa : EntidadBase
     {
-        // ── Backing fields ──
         private string _nombre = string.Empty;
         private string _cuit = string.Empty;
         private string _direccion = string.Empty;
@@ -22,7 +19,6 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
         private string? _telefono;
         private string? _logoUrl;
 
-        // ── Propiedades con validación ──
         public string Nombre 
         { 
             get => _nombre; 
@@ -54,6 +50,14 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             set => _logoUrl = value; 
         }
 
+        // ── Configuración ──
+        private int _umbralStockCritico = 10;
+        public int UmbralStockCritico
+        {
+            get => _umbralStockCritico;
+            set => _umbralStockCritico = Math.Max(1, value);
+        }
+
         // ── Relaciones ──
         public ICollection<Sucursal>   Sucursales  { get; set; } = new List<Sucursal>();
         public ICollection<Categoria>  Categorias  { get; set; } = new List<Categoria>();
@@ -65,7 +69,6 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
         // ── Constructor vacío (para EF Core) ──
         public Empresa() { }
 
-        // ── Factory method ──
         public static Empresa Crear(string nombre, string cuit, string direccion,
             string? email = null, string? telefono = null, string? logoUrl = null)
         {
@@ -89,11 +92,7 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             };
         }
 
-        // ── Métodos de dominio ──
-
-        /// <summary>
-        /// Actualiza datos de la empresa.
-        /// </summary>
+        ///         /// Actualiza datos de la empresa.
         public void Actualizar(string nombre, string direccion, string? email, string? telefono, string? logoUrl = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -106,13 +105,10 @@ namespace GestionComercial.Dominio.Entidades.Organizacion
             if (logoUrl != null) _logoUrl = logoUrl.Trim();
         }
 
-        /// <summary>
-        /// Valida formato de CUIT (XX-XXXXXXXX-X).
-        /// </summary>
+        ///         /// Valida formato de CUIT (XX-XXXXXXXX-X).
         public bool CUITValido => !string.IsNullOrEmpty(_cuit) 
             && System.Text.RegularExpressions.Regex.IsMatch(_cuit, @"^\d{2}-\d{8}-\d{1}$");
 
-        // ── Propiedades computed ──
         public int CantidadSucursales => Sucursales.Count;
         public int CantidadClientes => Clientes.Count;
         public int CantidadProveedores => Proveedores.Count;

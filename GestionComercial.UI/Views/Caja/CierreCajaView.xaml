@@ -145,7 +145,7 @@
                             <ItemsControl ItemsSource="{Binding Desglose}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="0,0,0,8" Visibility="{Binding EsEfectivo, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
+                                        <Grid Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <StackPanel Orientation="Horizontal">
                                                 <Border Width="8" Height="8" CornerRadius="4"

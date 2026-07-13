@@ -96,6 +96,32 @@
 
                 <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,14"/>
 
+                <!-- Método(s) de pago -->
+                <StackPanel Margin="0,0,0,14"
+                            Visibility="{Binding Pagos.Count, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="MÉTODO(S) DE PAGO" FontSize="10" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding Pagos}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Icono}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding MetodoNombre}" FontSize="13"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Monto, Converter={StaticResource DecimalToMoneda}}"
+                                               FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <!-- Descuento (si aplica) -->
                 <Grid Margin="0,0,0,8"
                       Visibility="{Binding HayDescuento, Converter={StaticResource BoolToVisibility}}">

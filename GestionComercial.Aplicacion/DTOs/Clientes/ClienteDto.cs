@@ -9,6 +9,7 @@ namespace GestionComercial.Aplicacion.DTOs.Clientes
         public string Email     { get; set; }
         public bool   Activo    { get; set; }
         public int    IdEmpresa { get; set; }
+        public int    TotalVentas { get; set; }
         public string Inicial   => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();
     }
 }

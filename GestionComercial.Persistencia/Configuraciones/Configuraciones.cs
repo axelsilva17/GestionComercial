@@ -24,6 +24,7 @@ namespace GestionComercial.Persistencia.Configuraciones
             b.Property(e => e.Direccion).HasMaxLength(200).IsRequired();
             b.Property(e => e.Email).HasMaxLength(100);
             b.Property(e => e.Telefono).HasMaxLength(20);
+            b.Property(e => e.UmbralStockCritico).HasDefaultValue(10);
             b.HasIndex(e => e.CUIT).IsUnique();
         }
     }

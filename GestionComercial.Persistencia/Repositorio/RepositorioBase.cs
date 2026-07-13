@@ -16,8 +16,6 @@ namespace GestionComercial.Persistencia.Repositorio
             _dbSet = context.Set<T>();
         }
 
-        // ── Lectura ───────────────────────────────────────────────────────────
-
         public async Task<T?> ObtenerPorIdAsync(int id)
             => await _dbSet.FindAsync(id);
 
@@ -38,8 +36,6 @@ namespace GestionComercial.Persistencia.Repositorio
                 ? await _dbSet.CountAsync()
                 : await _dbSet.CountAsync(criterio);
 
-        // ── Escritura ─────────────────────────────────────────────────────────
-
         public async Task<T> AgregarAsync(T entidad)
         {
             await _dbSet.AddAsync(entidad);
@@ -57,8 +53,6 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public void EliminarRango(IEnumerable<T> entidades)
             => _dbSet.RemoveRange(entidades);
-
-        // ── Consultas con includes ────────────────────────────────────────────
 
         public IQueryable<T> Consultar()
             => _dbSet.AsQueryable();

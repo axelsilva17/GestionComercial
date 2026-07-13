@@ -3,15 +3,12 @@ using GestionComercial.Dominio.Entidades.Ventas;
 
 namespace GestionComercial.Dominio.Entidades.Cliente
 {
-    /// <summary>
-    /// Entidad Cliente con patrón DDD.
+    ///     /// Entidad Cliente con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var cliente = Cliente.Crear(nombre, documento, idEmpresa);
-    /// </summary>
     public class Cliente : EntidadBase
     {
-        // ── Backing fields ──
         private string _nombre = string.Empty;
         private int _documento;
         private string? _telefono;
@@ -20,7 +17,6 @@ namespace GestionComercial.Dominio.Entidades.Cliente
 
         // Nota: 'Activo' hereda de EntidadBase (backing field compartido)
 
-        // ── Propiedades con validación ──
         public string Nombre 
         { 
             get => _nombre; 
@@ -52,7 +48,6 @@ namespace GestionComercial.Dominio.Entidades.Cliente
         // ── Constructor vacío (para EF Core) ──
         public Cliente() { }
 
-        // ── Factory method ──
         public static Cliente Crear(string nombre, int documento, int idEmpresa, 
             string? telefono = null, string? email = null)
         {
@@ -77,11 +72,7 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             };
         }
 
-        // ── Métodos de dominio ──
-
-        /// <summary>
-        /// Actualiza datos del cliente. Solo si está activo.
-        /// </summary>
+        ///         /// Actualiza los datos de contacto del cliente.
         public void Actualizar(string nombre, int documento, string? telefono, string? email)
         {
             if (!Activo)
@@ -101,9 +92,7 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             _email = email?.Trim().ToLower();
         }
 
-        /// <summary>
-        /// Inactiva el cliente (soft delete).
-        /// </summary>
+        ///         /// Inactiva el cliente (soft delete).
         public override void Inactivar()
         {
             if (!Activo) return;
@@ -116,27 +105,20 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             base.Reactivar();
         }
 
-        /// <summary>
-        /// Busca una venta específica en el historial.
-        /// </summary>
+        ///         /// Busca una venta específica en el historial.
         public Venta? BuscarVenta(int idVenta)
             => Ventas.FirstOrDefault(v => v.Id == idVenta);
 
-        /// <summary>
-        /// Total de compras del cliente.
-        /// </summary>
+        ///         /// Total de compras del cliente.
         public decimal TotalCompras => Ventas
             .Where(v => v.EsPagada)
             .Sum(v => v.TotalFinal);
 
-        /// <summary>
-        /// Cantidad de compras.
-        /// </summary>
+        ///         /// Cantidad de compras.
         public int CantidadCompras => Ventas
             .Where(v => v.EsPagada)
             .Count();
 
-        // ── Propiedades computed ──
         public string Inicial => string.IsNullOrEmpty(_nombre) ? "?" : _nombre[0].ToString().ToUpper();
         
         public bool EsActivo => Activo;

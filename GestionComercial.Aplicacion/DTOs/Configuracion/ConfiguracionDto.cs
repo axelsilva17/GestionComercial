@@ -10,6 +10,7 @@ namespace GestionComercial.Aplicacion.DTOs.Configuracion
         public string? Email     { get; set; }
         public string? Telefono  { get; set; }
         public string? LogoUrl   { get; set; }
+        public int    UmbralStockCritico { get; set; } = 10;
         public bool   Activa     { get; set; }
 
         public bool CUITValido => !string.IsNullOrEmpty(CUIT)
@@ -40,10 +41,22 @@ namespace GestionComercial.Aplicacion.DTOs.Configuracion
     {
         public int    IdMetodoPago { get; set; }
         public string Nombre       { get; set; } = string.Empty;
-        public bool   EsEfectivo   { get; set; }
+        public string Categoria    { get; set; } = "Otro";
         public int    IdEmpresa    { get; set; }
-        public string Icono        => EsEfectivo ? "💵" : "💳";
-        public string TipoTexto    => EsEfectivo ? "Efectivo" : "Electrónico";
+        public string Icono        => Categoria switch
+        {
+            "Efectivo"      => "💵",
+            "Tarjeta"       => "💳",
+            "Transferencia" => "🏦",
+            _               => "💳"
+        };
+        public string TipoTexto    => Categoria switch
+        {
+            "Efectivo"      => "Efectivo",
+            "Tarjeta"       => "Tarjeta",
+            "Transferencia" => "Transferencia",
+            _               => "Otro"
+        };
     }
 
     // ── PERFIL ───────────────────────────────────────────────────────────────

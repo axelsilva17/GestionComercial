@@ -3,7 +3,6 @@ using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
-using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -50,5 +49,11 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public string HashPassword(string password)
             => _passwordHasher.HashPassword(password);
+
+        public bool IsCurrentUserAdmin()
+        {
+            var authService = new AuthService();
+            return authService.IsCurrentUserAdmin();
+        }
     }
 }

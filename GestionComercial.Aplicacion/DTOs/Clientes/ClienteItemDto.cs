@@ -1,6 +1,6 @@
 namespace GestionComercial.Aplicacion.DTOs.Clientes
 {
-    /// <summary>DTO liviano para listado y sidebar. NO duplica ClienteDto.</summary>
+    /// DTO liviano para listado y sidebar. NO duplica ClienteDto.
     public class ClienteItemDto
     {
         public int    IdCliente    { get; set; }

@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GestionComercial.Persistencia.Configuraciones.Vistas
 {
-    /// <summary>
-    /// Configuración de EF Core para la vista VistaVentasResumidas.
-    /// </summary>
+    ///     /// Configuración de EF Core para la vista VistaVentasResumidas.
     public class VistaVentasResumidaConfiguration : IEntityTypeConfiguration<VistaVentasResumida>
     {
         public void Configure(EntityTypeBuilder<VistaVentasResumida> builder)

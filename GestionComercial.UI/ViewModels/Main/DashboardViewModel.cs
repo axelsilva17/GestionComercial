@@ -206,7 +206,7 @@ namespace GestionComercial.UI.ViewModels.Main
             var finMesAnterior    = inicioMes.AddDays(-1);
 
             var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMes, hoy)).ToList();
+                _sesion.IdSucursal, inicioMes, hoy.AddDays(1))).ToList();
 
             TotalVentasMes = ventasMes.Sum(v => v.TotalFinal);
             TicketPromedio = ventasMes.Any() ? TotalVentasMes / ventasMes.Count : 0;
@@ -237,14 +237,16 @@ namespace GestionComercial.UI.ViewModels.Main
             var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
 
             var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMes, hoy)).ToList();
+                _sesion.IdSucursal, inicioMes, hoy.AddDays(1))).ToList();
             CantidadVentasMes = ventasMes.Count;
             VentasPendientes  = ventasMes.Count(v => v.Estado == "Pendiente");
 
-            var stockCritico = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
-            ProductosCriticos = stockCritico.Count;
+            var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
+            var todosProductos = (await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+            var stockBajo = todosProductos.Where(p => p.StockActual <= umbral).ToList();
+            ProductosCriticos = stockBajo.Count;
             ProductosCriticosList = new ObservableCollection<ProductoCriticoDash>(
-                stockCritico.Take(8).Select(p => new ProductoCriticoDash
+                stockBajo.Take(8).Select(p => new ProductoCriticoDash
                 {
                     Nombre      = p.Nombre,
                     StockActual = p.StockActual,
@@ -278,7 +280,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 if (caja != null)
                 {
                     CajaAbierta      = true;
-                    SaldoCaja        = (decimal)caja.MontoFinal;
+                    SaldoCaja        = caja.MontoFinal ?? caja.MontoInicial;
                     HoraAperturaCaja = caja.FechaApertura.ToString("HH:mm");
                 }
                 else
@@ -289,9 +291,9 @@ namespace GestionComercial.UI.ViewModels.Main
                 }
 
                 // Ventas de hoy del vendedor
-                var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
-                        _sesion.IdSucursal, hoy, hoy))
-                    .Where(v => v.UsuarioNombre.Contains(
+            var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, hoy, hoy.AddDays(1)))
+                    .Where(v => v.UsuarioNombre != null && v.UsuarioNombre.Contains(
                         _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
@@ -321,7 +323,7 @@ namespace GestionComercial.UI.ViewModels.Main
 
         // ── Navegación rápida ─────────────────────────────────────────────────
         public async void IrVentasCompleto() { try { await Shell.IrVentas(); } catch (Exception ex) { MostrarError(ex.Message); } }
-        public async void IrProductosStock() { try { await Shell.IrProductos(); } catch (Exception ex) { MostrarError(ex.Message); } }
+        public async void IrProductosStock() { try { await Shell.IrProductosStockCritico(); } catch (Exception ex) { MostrarError(ex.Message); } }
         public async void IrCompras()        { try { await Shell.IrCompras(); } catch (Exception ex) { MostrarError(ex.Message); } }
         public async void IrReportes()       { try { await Shell.IrReportes(); } catch (Exception ex) { MostrarError(ex.Message); } }
     }

@@ -26,7 +26,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
     {
         public string Nombre      { get; set; } = string.Empty;
         public int    StockActual { get; set; }
-        public int    StockMinimo { get; set; }
+        public int    Umbral      { get; set; }
         public string Estado      => StockActual == 0 ? "Sin stock" : "Crítico";
     }
 
@@ -154,14 +154,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _ventasPendientes = value; NotifyOfPropertyChange(() => VentasPendientes); }
         }
 
-        // ── Panel de Auditoría ────────────────────────────────────────────────
-        private bool _mostrarPanelAuditoria;
-        public bool MostrarPanelAuditoria
-        {
-            get => _mostrarPanelAuditoria;
-            set { _mostrarPanelAuditoria = value; NotifyOfPropertyChange(() => MostrarPanelAuditoria); }
-        }
-
         // ── Filtros ───────────────────────────────────────────────────────────
         private DateTime _fechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         public DateTime FechaDesde
@@ -190,8 +182,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
         public ObservableCollection<ReporteCompraRecienteDto> ComprasRecientes { get; set; } = new();
         public ObservableCollection<CajaHistorialDto>        HistorialCajas   { get; set; } = new();
         public ObservableCollection<MovimientoCajaHistorialDto> MovimientosCaja { get; set; } = new();
-        public ObservableCollection<AuditoriaLogDto>        AuditoriaCajas       { get; set; } = new();
-        public ObservableCollection<AuditoriaLogDto>        AuditoriaMovimientos { get; set; } = new();
 
         // ── KPIs de caja ───────────────────────────────────────────────────────
         private int _totalCajas;
@@ -318,224 +308,236 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 LogHelper.Log($"[ReporteAdmin] Filtro: desde={desde:yyyy-MM-dd HH:mm} hasta={hasta:yyyy-MM-dd HH:mm}");
 
                 var swTotal = Stopwatch.StartNew();
+                var sw = new Stopwatch();
 
-                // Ejecutar todas las consultas en background thread
-                await Task.Run(async () =>
+                // ── KPIs básicos (solo lo esencial) ───────────────────────────────
+                sw.Restart();
+                var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteAdmin] Ventas: {ventasPeriodo.Count} registros en {sw.ElapsedMilliseconds}ms");
+
+                // Stock crítico (usa umbral configurable de empresa)
+                sw.Restart();
+                var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
+                var todosProductos = (await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+                var criticos = todosProductos.Where(p => p.StockActual <= umbral).ToList();
+                LogHelper.Log($"[ReporteAdmin] Stock crítico (umbral ≤ {umbral}): {criticos.Count} en {sw.ElapsedMilliseconds}ms");
+
+                // Clientes nuevos
+                sw.Restart();
+                var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
+                    _sesion.IdEmpresa, desde, hasta.AddDays(1));
+                var clientesCount = clientesNuevos.Count();
+                LogHelper.Log($"[ReporteAdmin] Clientes nuevos: {clientesCount} en {sw.ElapsedMilliseconds}ms");
+
+                // Compras del período
+                sw.Restart();
+                var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
+                    .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
+                LogHelper.Log($"[ReporteAdmin] Compras: {comprasPeriodo.Count} en {sw.ElapsedMilliseconds}ms");
+
+                // Cajas
+                sw.Restart();
+                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteAdmin] Cajas: {cajas.Count} en {sw.ElapsedMilliseconds}ms");
+
+                // Métodos de pago
+                sw.Restart();
+                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
+                    _sesion.IdSucursal, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteAdmin] Métodos pago: {metodosPago.Count} en {sw.ElapsedMilliseconds}ms");
+
+                // Top 3 Productos
+                sw.Restart();
+                var topProductos = (await _reporteServicio.TopProductosAsync(
+                    _sesion.IdSucursal, desde, hasta, 3)).ToList();
+                LogHelper.Log($"[ReporteAdmin] Top productos: {topProductos.Count} en {sw.ElapsedMilliseconds}ms");
+
+                // ── Gráfico línea simple: ventas por día (solo si rango <= 31 días) ──
+                int diasRango = (hasta - desde).Days + 1;
+                string[] labelsLinea;
+                double[] valoresLinea;
+
+                if (diasRango <= 31)
                 {
-                    var sw = Stopwatch.StartNew();
-
-                    // ── KPIs básicos (solo lo esencial) ───────────────────────────────
-                    sw.Restart();
-                    var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
-                        _sesion.IdSucursal, desde, hasta)).ToList();
-                    LogHelper.Log($"[ReporteAdmin] Ventas: {ventasPeriodo.Count} registros en {sw.ElapsedMilliseconds}ms");
-
-                    // Stock crítico (solo contar, no cargar detalles)
-                    sw.Restart();
-                    var criticos = (await _productoServicio.ObtenerStockCriticoAsync(_sesion.IdEmpresa)).ToList();
-                    LogHelper.Log($"[ReporteAdmin] Stock crítico: {criticos.Count} en {sw.ElapsedMilliseconds}ms");
-
-                    // Clientes nuevos
-                    sw.Restart();
-                    var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
-                        _sesion.IdEmpresa, desde, hasta.AddDays(1));
-                    var clientesCount = clientesNuevos.Count();
-                    LogHelper.Log($"[ReporteAdmin] Clientes nuevos: {clientesCount} en {sw.ElapsedMilliseconds}ms");
-
-                    // Compras del período
-                    sw.Restart();
-                    var comprasPeriodo = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                        .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
-                    LogHelper.Log($"[ReporteAdmin] Compras: {comprasPeriodo.Count} en {sw.ElapsedMilliseconds}ms");
-
-                    // Cajas
-                    sw.Restart();
-                    var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
-                    LogHelper.Log($"[ReporteAdmin] Cajas: {cajas.Count} en {sw.ElapsedMilliseconds}ms");
-
-                    // Métodos de pago
-                    sw.Restart();
-                    var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
-                        _sesion.IdSucursal, desde, hasta)).ToList();
-                    LogHelper.Log($"[ReporteAdmin] Métodos pago: {metodosPago.Count} en {sw.ElapsedMilliseconds}ms");
-
-                    // Top 3 Productos
-                    sw.Restart();
-                    var topProductos = (await _reporteServicio.TopProductosAsync(
-                        _sesion.IdSucursal, desde, hasta, 3)).ToList();
-                    LogHelper.Log($"[ReporteAdmin] Top productos: {topProductos.Count} en {sw.ElapsedMilliseconds}ms");
-
-                    // ── Gráfico línea simple: ventas por día (solo si rango <= 31 días) ──
-                    int diasRango = (hasta - desde).Days + 1;
-                    string[] labelsLinea;
-                    double[] valoresLinea;
-
-                    if (diasRango <= 31)
+                    labelsLinea = Enumerable.Range(0, diasRango)
+                        .Select(d => desde.AddDays(d).ToString("dd/MM"))
+                        .ToArray();
+                    valoresLinea = Enumerable.Range(0, diasRango).Select(d =>
                     {
-                        labelsLinea = Enumerable.Range(0, diasRango)
-                            .Select(d => desde.AddDays(d).ToString("dd/MM"))
-                            .ToArray();
-                        valoresLinea = Enumerable.Range(0, diasRango).Select(d =>
-                        {
-                            var dia = desde.AddDays(d).Date;
-                            return (double)ventasPeriodo
-                                .Where(v => v.Fecha.Date == dia)
-                                .Sum(v => v.TotalFinal);
-                        }).ToArray();
+                        var dia = desde.AddDays(d).Date;
+                        return (double)ventasPeriodo
+                            .Where(v => v.Fecha.Date == dia)
+                            .Sum(v => v.TotalFinal);
+                    }).ToArray();
+                }
+                else
+                {
+                    // Por mes si es rango largo
+                    var cursor = new DateTime(desde.Year, desde.Month, 1);
+                    var finMes = new DateTime(hasta.Year, hasta.Month, 1);
+                    var labelsList = new System.Collections.Generic.List<string>();
+                    var valoresList = new System.Collections.Generic.List<double>();
+                    while (cursor <= finMes)
+                    {
+                        var ini = cursor;
+                        var fin = cursor.AddMonths(1).AddDays(-1);
+                        labelsList.Add(cursor.ToString("MMM yy"));
+                        valoresList.Add((double)ventasPeriodo
+                            .Where(v => v.Fecha >= ini && v.Fecha <= fin)
+                            .Sum(v => v.TotalFinal));
+                        cursor = cursor.AddMonths(1);
                     }
-                    else
-                    {
-                        // Por mes si es rango largo
-                        var cursor = new DateTime(desde.Year, desde.Month, 1);
-                        var finMes = new DateTime(hasta.Year, hasta.Month, 1);
-                        var labelsList = new System.Collections.Generic.List<string>();
-                        var valoresList = new System.Collections.Generic.List<double>();
-                        while (cursor <= finMes)
-                        {
-                            var ini = cursor;
-                            var fin = cursor.AddMonths(1).AddDays(-1);
-                            labelsList.Add(cursor.ToString("MMM yy"));
-                            valoresList.Add((double)ventasPeriodo
-                                .Where(v => v.Fecha >= ini && v.Fecha <= fin)
-                                .Sum(v => v.TotalFinal));
-                            cursor = cursor.AddMonths(1);
-                        }
-                        labelsLinea = labelsList.ToArray();
-                        valoresLinea = valoresList.ToArray();
-                    }
+                    labelsLinea = labelsList.ToArray();
+                    valoresLinea = valoresList.ToArray();
+                }
 
-                    // ── Datos simples para tablas (solo últimos 5) ─────────────────
-                    var stockCriticoData = criticos.Take(5).Select(p => new ReporteStockCriticoDto
+                // ── Datos simples para tablas (solo últimos 5) ─────────────────
+                var stockCriticoData = criticos.Take(5).Select(p => new ReporteStockCriticoDto
+                {
+                    Nombre = p.Nombre,
+                    StockActual = p.StockActual,
+                    Umbral = umbral,
+                }).ToList();
+
+                var comprasRecientesData = comprasPeriodo
+                    .OrderByDescending(c => c.Fecha)
+                    .Take(5)
+                    .Select(c => new ReporteCompraRecienteDto
                     {
-                        Nombre = p.Nombre,
-                        StockActual = p.StockActual,
-                        StockMinimo = p.StockMinimo,
+                        Proveedor = c.ProveedorNombre,
+                        Fecha = c.Fecha.ToString("dd/MM/yyyy"),
+                        Total = c.Total,
                     }).ToList();
 
-                    var comprasRecientesData = comprasPeriodo
-                        .OrderByDescending(c => c.Fecha)
-                        .Take(5)
-                        .Select(c => new ReporteCompraRecienteDto
-                        {
-                            Proveedor = c.ProveedorNombre,
-                            Fecha = c.Fecha.ToString("dd/MM/yyyy"),
-                            Total = c.Total,
-                        }).ToList();
+                // ── Historial de cajas (solo últimos 5) ───────────────────────
+                var historialList = new List<CajaHistorialDto>();
+                foreach (var caja in cajas.Take(5))
+                {
+                    // Materializar Ventas para evitar problemas con IQueryable o proxies de EF
+                    var ventasCaja = caja.Ventas?.ToList();
+                    var totalVentas = ventasCaja?.Sum(v => (decimal?)v.TotalFinal) ?? 0;
+                    
+                    var diff = caja.MontoFinal.HasValue
+                        ? caja.MontoFinal.Value - (caja.MontoInicial + totalVentas)
+                        : (decimal?)null;
 
-                    // ── Historial de cajas (solo últimos 5) ───────────────────────
-                    var historialList = new List<CajaHistorialDto>();
-                    foreach (var caja in cajas.Take(5))
+                    historialList.Add(new CajaHistorialDto
                     {
-                        // Materializar Ventas para evitar problemas con IQueryable o proxies de EF
-                        var ventasCaja = caja.Ventas?.ToList();
-                        var totalVentas = ventasCaja?.Sum(v => (decimal?)v.TotalFinal) ?? 0;
-                        
-                        var diff = caja.MontoFinal.HasValue
-                            ? caja.MontoFinal.Value - (caja.MontoInicial + totalVentas)
-                            : (decimal?)null;
+                        Id = caja.Id,
+                        FechaApertura = caja.FechaApertura.ToString("dd/MM HH:mm"),
+                        FechaCierre = caja.FechaCierre?.ToString("dd/MM HH:mm"),
+                        MontoInicial = caja.MontoInicial,
+                        MontoFinal = caja.MontoFinal,
+                        Diferencia = diff,
+                        TipoDiferencia = diff.HasValue ? (diff.Value > 0 ? "Positivo" : diff.Value < 0 ? "Negativo" : "Cero") : "—",
+                        UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
+                        UsuarioCierre = caja.UsuarioCierre?.Nombre,
+                        Estado = caja.Estado == 1 ? "Abierta" : "Cerrada",
+                    });
+                }
 
-                        historialList.Add(new CajaHistorialDto
-                        {
-                            Id = caja.Id,
-                            FechaApertura = caja.FechaApertura.ToString("dd/MM HH:mm"),
-                            FechaCierre = caja.FechaCierre?.ToString("dd/MM HH:mm"),
-                            MontoInicial = caja.MontoInicial,
-                            MontoFinal = caja.MontoFinal,
-                            Diferencia = diff,
-                            TipoDiferencia = diff.HasValue ? (diff.Value > 0 ? "Positivo" : diff.Value < 0 ? "Negativo" : "Cero") : "—",
-                            UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
-                            UsuarioCierre = caja.UsuarioCierre?.Nombre,
-                            Estado = caja.Estado == 1 ? "Abierta" : "Cerrada",
-                        });
-                    }
-
-                    // KPIs de caja
-                    decimal totalIng = 0, totalEgr = 0;
-                    foreach (var caja in cajas)
+                // KPIs de caja
+                decimal totalIng = 0, totalEgr = 0;
+                foreach (var caja in cajas)
+                {
+                    if (caja.Movimientos != null)
                     {
                         foreach (var mov in caja.Movimientos)
                         {
                             if (mov.Tipo == 1) totalIng += mov.Monto; else totalEgr += mov.Monto;
                         }
                     }
+                }
 
-                    // ═══════════════════════════════════════════════════════════════
-                    // Actualizar UI en el thread correcto usando Dispatcher
-                    // ═══════════════════════════════════════════════════════════════
-                    Application.Current.Dispatcher.Invoke(() =>
+                // ═══════════════════════════════════════════════════════════════
+                // Actualizar propiedades UI
+                // ═══════════════════════════════════════════════════════════════
+
+                // KPIs básicos
+                CantidadVentasMes = ventasPeriodo.Count;
+                VentasPendientes = ventasPeriodo.Count(v => v.Estado == "Pendiente");
+                ProductosStockCritico = criticos.Count;
+                ClientesNuevos = clientesNuevos.Count();
+                ComprasDelMes = comprasPeriodo.Count;
+
+                // Gráfico línea ventas por día
+                BuildLineaVentas(labelsLinea, valoresLinea);
+
+                // Gráfico dona: Métodos de Pago
+                if (metodosPago.Any())
+                {
+                    SeriesMetodosPago = metodosPago.Select((m, i) => new PieSeries<double>
                     {
-                        // KPIs básicos
-                        CantidadVentasMes = ventasPeriodo.Count;
-                        VentasPendientes = ventasPeriodo.Count(v => v.Estado == "Pendiente");
-                        ProductosStockCritico = criticos.Count;
-                        ClientesNuevos = clientesNuevos.Count();
-                        ComprasDelMes = comprasPeriodo.Count;
+                        Name = m.Metodo,
+                        Values = new[] { (double)m.Total },
+                        Fill = new SolidColorPaint(ColoresGrafico[i % ColoresGrafico.Length]),
+                    } as ISeries).ToArray();
+                }
+                else
+                {
+                    SeriesMetodosPago = new ISeries[]
+                    {
+                        new PieSeries<double> { Values = new double[] { 1 }, Name = "Sin datos" }
+                    };
+                }
 
-                        // Gráfico línea ventas por día
-                        BuildLineaVentas(labelsLinea, valoresLinea);
+                // Top 3 Productos
+                if (topProductos.Any())
+                {
+                    var top3 = topProductos.Take(3).ToList();
+                    var nombresTop = top3.Select(p => p.ProductoNombre.Length > 8
+                        ? p.ProductoNombre[..8] + "…"
+                        : p.ProductoNombre).ToArray();
+                    var cantidades = top3.Select(p => (double)p.CantidadVendida).ToArray();
 
-                        // Gráfico dona: Métodos de Pago
-                        if (metodosPago.Any() && metodosPago.Count < 6)
+                    SeriesTopProductos = new ISeries[]
+                    {
+                        new ColumnSeries<double>
                         {
-                            SeriesMetodosPago = metodosPago.Select((m, i) => new PieSeries<double>
-                            {
-                                Name = m.Metodo,
-                                Values = new[] { (double)m.Total },
-                                Fill = new SolidColorPaint(ColoresGrafico[i % ColoresGrafico.Length]),
-                            } as ISeries).ToArray();
-                        }
+                            Name = "Vendidos",
+                            Values = cantidades,
+                            Fill = new SolidColorPaint(Col_Primary),
+                            MaxBarWidth = 50,
+                        },
+                    };
 
-                        // Top 3 Productos
-                        if (topProductos.Any())
+                    EjeXTopProductos = new[]
+                    {
+                        new Axis
                         {
-                            var top3 = topProductos.Take(3).ToList();
-                            var nombresTop = top3.Select(p => p.ProductoNombre.Length > 8
-                                ? p.ProductoNombre[..8] + "…"
-                                : p.ProductoNombre).ToArray();
-                            var cantidades = top3.Select(p => (double)p.CantidadVendida).ToArray();
-
-                            SeriesTopProductos = new ISeries[]
-                            {
-                                new ColumnSeries<double>
-                                {
-                                    Name = "Vendidos",
-                                    Values = cantidades,
-                                    Fill = new SolidColorPaint(Col_Primary),
-                                    MaxBarWidth = 50,
-                                },
-                            };
-
-                            EjeXTopProductos = new[]
-                            {
-                                new Axis
-                                {
-                                    Labels = nombresTop,
-                                    LabelsPaint = new SolidColorPaint(Col_TextSec),
-                                    LabelsRotation = 0,
-                                }
-                            };
+                            Labels = nombresTop,
+                            LabelsPaint = new SolidColorPaint(Col_TextSec),
+                            LabelsRotation = 0,
                         }
+                    };
+                }
+                else
+                {
+                    SeriesTopProductos = new ISeries[]
+                    {
+                        new ColumnSeries<double> { Values = new double[] { 0 }, Name = "Sin datos" }
+                    };
+                }
 
-                        // Tabla stock crítico
-                        StockCritico = new ObservableCollection<ReporteStockCriticoDto>(stockCriticoData);
+                // Tabla stock crítico
+                StockCritico = new ObservableCollection<ReporteStockCriticoDto>(stockCriticoData);
 
-                        // Compras recientes
-                        ComprasRecientes = new ObservableCollection<ReporteCompraRecienteDto>(comprasRecientesData);
+                // Compras recientes
+                ComprasRecientes = new ObservableCollection<ReporteCompraRecienteDto>(comprasRecientesData);
 
-                        // Historial de cajas
-                        TotalCajas = cajas.Count;
-                        CajasCerradas = cajas.Count(c => c.Estado == 2);
-                        HistorialCajas = new ObservableCollection<CajaHistorialDto>(historialList);
-                        TotalIngresos = totalIng;
-                        TotalEgresos = totalEgr;
-                    });
+                // Historial de cajas
+                TotalCajas = cajas.Count;
+                CajasCerradas = cajas.Count(c => c.Estado == 2);
+                HistorialCajas = new ObservableCollection<CajaHistorialDto>(historialList);
+                TotalIngresos = totalIng;
+                TotalEgresos = totalEgr;
 
-                    LogHelper.Log($"[ReporteAdmin] ✓ Carga total: {swTotal.ElapsedMilliseconds}ms");
-                });
+                LogHelper.Log($"[ReporteAdmin] ✓ Carga total: {swTotal.ElapsedMilliseconds}ms");
             }
             catch (Exception ex)
             {
-                LogHelper.Log($"[ReporteAdmin] Error: {ex.Message}");
+                LogHelper.Log($"[ReporteAdmin] Error: {ex.Message}\n{ex.StackTrace}");
                 MostrarError($"Error al cargar: {ex.Message}");
             }
             finally
@@ -571,66 +573,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     SeparatorsPaint = new SolidColorPaint(Col_Sep),
                 }
             };
-        }
-
-        // ── Acciones de Auditoría ─────────────────────────────────────────────
-        public void MostrarAuditoria()
-        {
-            try
-            {
-                MostrarPanelAuditoria = true;
-                _ = CargarAuditoriaAsync();
-            }
-            catch (Exception ex)
-            {
-                MostrarError(ex.Message);
-            }
-        }
-
-        public void CargarAuditoria()
-        {
-            try
-            {
-                _ = CargarAuditoriaAsync();
-            }
-            catch (Exception ex)
-            {
-                MostrarError(ex.Message);
-            }
-        }
-
-        public void OcultarAuditoria()
-        {
-            MostrarPanelAuditoria = false;
-        }
-
-        public async Task CargarAuditoriaAsync()
-        {
-            if (!MostrarPanelAuditoria) return;
-
-            IsLoading = true;
-            LimpiarError();
-            try
-            {
-                var desde = FechaDesde.Date;
-                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
-
-                var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
-                var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
-
-                // Deserializar JSON para mostrar montos correctamente
-                foreach (var a in auditoriaCajas) a.DeserializarJson();
-                foreach (var a in auditoriaMovimientos) a.DeserializarJson();
-
-                LogHelper.Log($"[ReporteAdmin] AuditoriaCajas: {auditoriaCajas.Count}, AuditoriaMovimientos: {auditoriaMovimientos.Count}");
-                AuditoriaCajas = new ObservableCollection<AuditoriaLogDto>(auditoriaCajas);
-                AuditoriaMovimientos = new ObservableCollection<AuditoriaLogDto>(auditoriaMovimientos);
-
-                NotifyOfPropertyChange(() => AuditoriaCajas);
-                NotifyOfPropertyChange(() => AuditoriaMovimientos);
-            }
-            catch (Exception ex) { MostrarError(ex.Message); }
-            finally { IsLoading = false; }
         }
 
         // ── Acciones filtro ───────────────────────────────────────────────────
@@ -696,8 +638,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
                 var historialCajas = cajas.Select(caja =>
                 {
+                    var totalVentasCaja = caja.Ventas?.Sum(v => v.TotalFinal) ?? 0;
                     var diff = caja.MontoFinal.HasValue
-                        ? caja.MontoFinal.Value - (caja.MontoInicial + caja.Ventas.Sum(v => v.TotalFinal))
+                        ? caja.MontoFinal.Value - (caja.MontoInicial + totalVentasCaja)
                         : (decimal?)null;
                     return new CajaHistorialDto
                     {
@@ -717,10 +660,11 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 // ── Ventas por caja ────────────────────────────────────────────────
                 var ventasPorCaja = cajas
-                    .SelectMany(caja => caja.Ventas.Select(venta => new VentaResumenCajaDto
+                    .Where(c => c.Ventas != null)
+                    .SelectMany(c => c.Ventas!.Select(venta => new VentaResumenCajaDto
                     {
-                        CajaId = caja.Id,
-                        NumeroCaja = $"Caja {caja.Id}",
+                        CajaId = c.Id,
+                        NumeroCaja = $"Caja {c.Id}",
                         FechaVenta = venta.Fecha.ToString("dd/MM/yyyy HH:mm"),
                         Total = venta.TotalFinal,
                         MetodoPago = venta.Pagos?.FirstOrDefault()?.MetodoPago?.Nombre ?? "—",
@@ -822,14 +766,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             public decimal Total { get; set; }
         }
 
-        // ── Navegar a Caja Turnos ─────────────────────────────────────────────
-        public async Task MostrarTurnos()
-        {
-            await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
-                .ActivateItemAsync(Caliburn.Micro.IoC.Get<Cajas.CajaTurnosViewModel>(),
-                    System.Threading.CancellationToken.None);
-        }
-
         // ── Navegar a Caja Auditoría ───────────────────────────────────────────
         public async Task IrCajaAuditoria()
         {
@@ -840,9 +776,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
         }
     }
 
-    /// <summary>
-    /// DTO para ventas por caja en export.
-    /// </summary>
+    ///     /// DTO para ventas por caja en export.
     public class VentaResumenCajaDto
     {
         public int CajaId { get; set; }

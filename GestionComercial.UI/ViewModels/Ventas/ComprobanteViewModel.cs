@@ -21,6 +21,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public decimal Subtotal       { get; set; }
     }
 
+    public class ComprobantePagoVm
+    {
+        public string  MetodoNombre { get; set; } = string.Empty;
+        public decimal Monto        { get; set; }
+        public string  Icono        { get; set; } = string.Empty;
+    }
+
     public class ComprobanteViewModel : NavigableViewModel
     {
         private readonly IVentaServicio _ventaServicio;
@@ -92,6 +99,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             set { _estado = value; NotifyOfPropertyChange(() => Estado); }
         }
 
+        public ObservableCollection<ComprobantePagoVm> Pagos { get; set; } = new();
+
         private ObservableCollection<ComprobanteItemVm> _items = new();
         public ObservableCollection<ComprobanteItemVm> Items
         {
@@ -125,6 +134,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 TotalDescuento = venta.TotalDescuento;
                 Estado         = venta.Estado;
 
+                Pagos = new ObservableCollection<ComprobantePagoVm>(
+                    venta.Pagos?.Select(p => new ComprobantePagoVm
+                    {
+                        MetodoNombre = p.MetodoNombre,
+                        Monto        = p.Monto,
+                        Icono        = p.Icono,
+                    }) ?? Enumerable.Empty<ComprobantePagoVm>());
+
                 Items = new ObservableCollection<ComprobanteItemVm>(
                     venta.Items.Select(i => new ComprobanteItemVm
                     {
@@ -156,8 +173,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             => await IoC.Get<ShellViewModel>()
                         .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
 
-        /// <summary>
-        /// Genera un HTML del comprobante y lo abre en el navegador.
+        ///         /// Genera un HTML del comprobante y lo abre en el navegador.
         /// El botón 🖨️ Imprimir del HTML usa window.print().
         ///
         /// Para impresora térmica (58mm o 80mm):
@@ -167,7 +183,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
         ///
         /// Para probar sin impresora:
         ///   Ctrl+P en el navegador → "Guardar como PDF"
-        /// </summary>
         public async Task GenerarComprobante()
         {
             IsLoading = true;
@@ -194,6 +209,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             var descuentoFila = HayDescuento
                 ? $"<tr class='desc'><td colspan='3'>Descuento</td><td class='r'>-${TotalDescuento:N2}</td></tr>"
+                : string.Empty;
+
+            var metodosPagoHtml = Pagos.Any()
+                ? $"<div class='ln'></div>\n<p><strong>Método(s) de pago:</strong></p>\n"
+                  + string.Join("\n", Pagos.Select(p =>
+                    $"<p style='margin-left:8px; font-size:13px;'>{p.Icono} {HtmlEnc(p.MetodoNombre)}: <strong>${p.Monto:N2}</strong></p>"))
+                  + "\n<div class='ln'></div>"
                 : string.Empty;
 
             var vueltoBadge = HayVuelto
@@ -256,7 +278,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
   <p><strong>Fecha:</strong> {Fecha:dd/MM/yyyy HH:mm}</p>
   <p><strong>Cliente:</strong> {HtmlEnc(ClienteNombre)}</p>
   <p><strong>Vendedor:</strong> {HtmlEnc(VendedorNombre)}</p>
-  <div class='ln'></div>
+  {metodosPagoHtml}
   <table>
     <thead>
       <tr><th>Descripción</th><th class='c'>Cant</th><th class='r'>P.U.</th><th class='r'>Sub.</th></tr>

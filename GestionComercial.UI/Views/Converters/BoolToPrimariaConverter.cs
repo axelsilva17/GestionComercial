@@ -4,11 +4,9 @@ using System.Windows.Data;
 
 namespace GestionComercial.UI.Views.Converters
 {
-    /// <summary>
-    /// Convierte un bool (EsPrimaria) a texto descriptivo.
+    ///     /// Convierte un bool (EsPrimaria) a texto descriptivo.
     /// true → "⭐ Principal"
     /// false → "Secundaria"
-    /// </summary>
     public class BoolToPrimariaConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

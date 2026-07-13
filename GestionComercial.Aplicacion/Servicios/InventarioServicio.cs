@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using GestionComercial.Aplicacion.DTOs;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
@@ -20,7 +21,7 @@ namespace GestionComercial.Aplicacion.Servicios
             _logger = logger;
         }
 
-        public async Task<(IEnumerable<MovimientoStockDto> Movimientos, int Total)> ObtenerMovimientosAsync(
+        public async Task<PagedResult<MovimientoStockDto>> ObtenerMovimientosAsync(
             string? textoBusqueda,
             string? filtroTipo,
             string? filtroUsuario,
@@ -31,70 +32,30 @@ namespace GestionComercial.Aplicacion.Servicios
             int itemsPorPagina,
             int idEmpresa)
         {
-            // Obtener todos los movimientos del período
-            var movimientos = await _uow.MovimientosStock.ObtenerPorFechaAsync(fechaDesde, fechaHasta.AddDays(1), null);
+            // Delegar la consulta paginada al repositorio (elimina dependencia de EF Core)
+            var (movimientos, total) = await _uow.MovimientosStock.ObtenerPaginadoAsync(
+                textoBusqueda, filtroTipo, filtroUsuario, filtroSucursal,
+                fechaDesde, fechaHasta, pagina, itemsPorPagina);
 
-            // Filtrar por tipo
-            if (!string.IsNullOrWhiteSpace(filtroTipo) && filtroTipo != "Todos")
+            // Mapear a DTOs en memoria (ya materializados por el repositorio)
+            var items = movimientos.Select(m => new MovimientoStockDto
             {
-                var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>(filtroTipo, ignoreCase: true);
-                movimientos = movimientos.Where(m => m.TipoMovimiento == (int)tipoEnum);
-            }
+                IdMovimiento = m.Id,
+                TipoMovimiento = ((TipoMovimientoStockEnum)m.TipoMovimiento).ToString(),
+                Observacion = m.Observacion ?? string.Empty,
+                Cantidad = (int)m.Cantidad,
+                Fecha = m.Fecha,
+                IdProducto = m.Id_producto,
+                ProductoNombre = m.Producto != null ? m.Producto.Nombre : "Sin producto",
+                CodigoBarra = m.Producto != null ? m.Producto.CodigoBarra ?? string.Empty : string.Empty,
+                CategoriaNombre = m.Producto != null && m.Producto.Categoria != null ? m.Producto.Categoria.Nombre : "Sin categoría",
+                SucursalNombre = m.Sucursal != null ? m.Sucursal.Nombre : "Sin sucursal",
+                UsuarioNombre = m.Usuario != null ? $"{m.Usuario.Nombre} {m.Usuario.Apellido}" : "Sistema"
+            }).ToList();
 
-            // Filtrar por usuario
-            if (!string.IsNullOrWhiteSpace(filtroUsuario) && filtroUsuario != "Todos")
-            {
-                var termino = filtroUsuario.ToLower();
-                movimientos = movimientos.Where(m =>
-                    m.Usuario != null &&
-                    (m.Usuario.Nombre.ToLower().Contains(termino) ||
-                     m.Usuario.Apellido.ToLower().Contains(termino)));
-            }
+            _logger?.LogDebug("Obtenidos {Count} movimientos de {Total} total", items.Count, total);
 
-            // Filtrar por búsqueda (producto o código)
-            if (!string.IsNullOrWhiteSpace(textoBusqueda))
-            {
-                var termino = textoBusqueda.ToLower();
-                movimientos = movimientos.Where(m =>
-                    (m.Producto?.Nombre?.ToLower().Contains(termino) ?? false) ||
-                    (m.Producto?.CodigoBarra?.ToLower().Contains(termino) ?? false));
-            }
-
-            // Filtrar por sucursal
-            if (!string.IsNullOrWhiteSpace(filtroSucursal) && filtroSucursal != "Todas")
-            {
-                movimientos = movimientos.Where(m => m.Sucursal?.Nombre == filtroSucursal);
-            }
-
-            var listaOrdenada = movimientos
-                .OrderByDescending(m => m.Fecha)
-                .ToList();
-
-            var total = listaOrdenada.Count;
-
-            // Paginación
-            var paginados = listaOrdenada
-                .Skip((pagina - 1) * itemsPorPagina)
-                .Take(itemsPorPagina)
-                .Select(m => new MovimientoStockDto
-                {
-                    IdMovimiento = m.Id,
-                    TipoMovimiento = ((TipoMovimientoStockEnum)m.TipoMovimiento).ToString(),
-                    Observacion = m.Observacion ?? string.Empty,
-                    Cantidad = (int)m.Cantidad,
-                    Fecha = m.Fecha,
-                    IdProducto = m.Id_producto,
-                    ProductoNombre = m.Producto?.Nombre ?? "Sin producto",
-                    CodigoBarra = m.Producto?.CodigoBarra ?? string.Empty,
-                    CategoriaNombre = m.Producto?.Categoria?.Nombre ?? "Sin categoría",
-                    SucursalNombre = m.Sucursal?.Nombre ?? "Sin sucursal",
-                    UsuarioNombre = m.Usuario != null ? $"{m.Usuario.Nombre} {m.Usuario.Apellido}" : "Sistema"
-                })
-                .ToList();
-
-            _logger?.LogDebug("Obtenidos {Count} movimientos de {Total} total", paginados.Count, total);
-
-            return (paginados, total);
+            return PagedResult<MovimientoStockDto>.Create(items, total, pagina, itemsPorPagina);
         }
 
         public async Task<byte[]> ExportarAExcelAsync(
@@ -107,16 +68,15 @@ namespace GestionComercial.Aplicacion.Servicios
             int idEmpresa)
         {
             // Obtener todos los movimientos sin paginación
-            var (movimientos, _) = await ObtenerMovimientosAsync(
+            var resultado = await ObtenerMovimientosAsync(
                 textoBusqueda, filtroTipo, filtroUsuario, filtroSucursal,
                 fechaDesde, fechaHasta, 1, int.MaxValue, idEmpresa);
 
-            var lista = movimientos.ToList();
+            var lista = resultado.Items;
 
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Inventario");
 
-            // ── Header ─
             var headerRow = ws.Row(1);
             headerRow.Style.Font.Bold = true;
             headerRow.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E79");
@@ -128,7 +88,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 ws.Cell(1, i + 1).Value = headers[i];
             }
 
-            // ── Data ─
             int row = 2;
             foreach (var m in lista)
             {
@@ -154,7 +113,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 row++;
             }
 
-            // ── Ajustar ancho columnas ─
             ws.Columns().AdjustToContents();
 
             using var stream = new MemoryStream();

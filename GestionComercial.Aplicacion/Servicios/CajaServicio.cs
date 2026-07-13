@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Excepciones;
@@ -73,7 +72,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de caja guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de caja", ex);
                 // Continuar aunque falle la auditoría
@@ -119,7 +118,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de movimiento guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de movimiento", ex);
                 // Continuar aunque falle la auditoría
@@ -132,7 +131,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] TODO EXITOSO!");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-AbrirCaja] Fallo al guardar movimiento", ex);
                 throw;
@@ -195,7 +194,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de caja guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de caja", ex);
             }
@@ -240,7 +239,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de movimiento guardada OK");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de movimiento", ex);
             }
@@ -252,7 +251,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] TODO EXITOSO!");
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 LogHelper.LogError("[ERROR-CerrarCaja] Fallo al guardar movimiento", ex);
                 throw;
@@ -366,36 +365,37 @@ namespace GestionComercial.Aplicacion.Servicios
             var metodosPago = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(
                 await ObtenerIdEmpresaDeSucursalAsync(caja.Id_sucursal));
 
-            var metodosDict = metodosPago.ToDictionary(m => m.Nombre, m => m.EsEfectivo);
+            var metodosDict = metodosPago.ToDictionary(m => m.Nombre, m => m.Categoria);
 
             foreach (var (metodo, total) in pagosDelTurno)
             {
-                var esEfectivo = metodosDict.TryGetValue(metodo, out var ef) && ef == true;
+                var categoria = metodosDict.TryGetValue(metodo, out var cat) ? cat : "Otro";
                 var cantidad   = 0; // se puede extender si el repo devuelve cantidad
 
                 resumen.DesglosePorMetodo.Add(new DesglosePagoDto
                 {
                     Metodo     = metodo,
                     Total      = total,
-                    EsEfectivo = esEfectivo,
+                    Categoria  = categoria,
                 });
 
-                if (esEfectivo)
+                if (categoria == "Efectivo")
                     resumen.VentasEfectivo += total;
                 else
                 {
-                    // Clasificar por nombre para mostrar en UI
-                    var nombreUpper = metodo.ToUpper();
-                    if (nombreUpper.Contains("TARJETA") || nombreUpper.Contains("DEBITO") || nombreUpper.Contains("CRÉDITO"))
-                        resumen.VentasTarjeta += total;
-                    else if (nombreUpper.Contains("TRANSFER"))
-                        resumen.VentasTransferencia += total;
-                    else if (nombreUpper.Contains("QR") || nombreUpper.Contains("MERCADO") || nombreUpper.Contains("MP"))
-                        resumen.VentasQR += total;
-                    else if (nombreUpper.Contains("CUENTA") || nombreUpper.Contains("CTE") || nombreUpper.Contains("CORRIENTE"))
-                        resumen.VentasCuentaCte += total;
-                    else
-                        resumen.VentasOtros += total;
+                    // Clasificar por categoría
+                    switch (categoria)
+                    {
+                        case "Tarjeta":
+                            resumen.VentasTarjeta += total;
+                            break;
+                        case "Transferencia":
+                            resumen.VentasTransferencia += total;
+                            break;
+                        default:
+                            resumen.VentasOtros += total;
+                            break;
+                    }
                 }
             }
 
@@ -404,17 +404,16 @@ namespace GestionComercial.Aplicacion.Servicios
             resumen.CantidadVentas = resumen.DesglosePorMetodo.Sum(d => d.Cantidad > 0 ? d.Cantidad : 1);
 
             // ── Movimientos manuales de caja (ingresos/egresos) ───────────────
-            // IMPORTANTE: Solo incluir movimientos MANUALES, NO los de ventas
-            // Los movimientos de ventas ya están incluidos en VentasEfectivo (desde los pagos)
-            // El vuelto de ventas ya está incluido en EgresosEfectivo (desde los pagos)
+            // Los movimientos de Ingreso por venta ya están en VentasEfectivo (desde los pagos)
+            // Los movimientos de Egreso INCLUYEN el vuelto (tiene Id_venta) y egresos manuales
+            // Apertura/Cierre son operativos y no afectan el saldo físico
             var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
             foreach (var mov in movimientos)
             {
-                // Solo incluir Ingreso y Egreso MANUAL (los de ventas tienen Id_venta)
-                // Apertura/Cierre son operativos y no afectan el saldo físico
                 if (mov.Tipo == (int)TipoMovimientoCajaEnum.Ingreso && mov.Id_venta == null)
                     resumen.IngresosEfectivo += mov.Monto;
-                else if (mov.Tipo == (int)TipoMovimientoCajaEnum.Egreso && mov.Id_venta == null)
+                else if (mov.Tipo == (int)TipoMovimientoCajaEnum.Egreso
+                      && mov.Tipo != (int)TipoMovimientoCajaEnum.Cierre)
                     resumen.EgresosEfectivo += mov.Monto;
             }
 
@@ -431,9 +430,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
             => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta);
 
-        /// <summary>
-        /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
-        /// </summary>
+        ///         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
         public async Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia)
         {
             try
@@ -461,10 +458,8 @@ namespace GestionComercial.Aplicacion.Servicios
             }
         }
 
-        /// <summary>
-        /// Obtiene el total de efectivo recibido por caja desde las ventas.
+        ///         /// Obtiene el total de efectivo recibido por caja desde las ventas.
         /// Usado para cierre automático de caja.
-        /// </summary>
         public async Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja)
         {
             var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);

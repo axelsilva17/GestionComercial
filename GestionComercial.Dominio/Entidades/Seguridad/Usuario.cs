@@ -2,15 +2,12 @@ using GestionComercial.Dominio.Entidades.Organizacion;
 
 namespace GestionComercial.Dominio.Entidades.Seguridad
 {
-    /// <summary>
-    /// Entidad Usuario con patrón DDD.
+    ///     /// Entidad Usuario con patrón DDD.
     /// 
     /// Preferir factory method Crear():
     ///   var usuario = Usuario.Crear(nombre, apellido, email, passwordHash, idSucursal, idRol);
-    /// </summary>
     public class Usuario : EntidadBase
     {
-        // ── Backing fields ──
         private string _nombre = string.Empty;
         private string _apellido = string.Empty;
         private string _email = string.Empty;
@@ -22,7 +19,6 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
         private int _id_sucursal;
         private int _id_rol;
 
-        // ── Propiedades con validación/encapsulamiento ──
         public string Nombre 
         { 
             get => _nombre; 
@@ -76,7 +72,6 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
         // ── Constructor vacío (para EF Core) ──
         public Usuario() { }
 
-        // ── Factory method ──
         public static Usuario Crear(string nombre, string apellido, string email, string passwordHash,
             int idSucursal, int idRol, string? preguntaSecreta = null, string? respuestaHash = null)
         {
@@ -109,11 +104,7 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
             };
         }
 
-        // ── Métodos de dominio ──
-
-        /// <summary>
-        /// Registra un intento de login exitoso.
-        /// </summary>
+        ///         /// Verifica la contraseña contra el hash almacenado.
         public void RegistrarAccesoExitoso()
         {
             _intentosFallidos = 0;
@@ -121,9 +112,7 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
             UltimoAcceso = DateTime.Now;
         }
 
-        /// <summary>
-        /// Registra un intento de login fallido. Bloquea tras 3 intentos.
-        /// </summary>
+        ///         /// Registra un intento de login fallido. Bloquea tras 3 intentos.
         public void RegistrarAccesoFallido(int maxIntentos = 3, TimeSpan? duracionBloqueo = null)
         {
             _intentosFallidos++;
@@ -134,18 +123,14 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
             }
         }
 
-        /// <summary>
-        /// Desbloquea el usuario manualmente.
-        /// </summary>
+        ///         /// Desbloquea el usuario manualmente.
         public void Desbloquear()
         {
             _intentosFallidos = 0;
             _bloqueadoHasta = null;
         }
 
-        /// <summary>
-        /// Actualiza el password.
-        /// </summary>
+        ///         /// Actualiza el password.
         public void ActualizarPassword(string nuevoPasswordHash)
         {
             if (string.IsNullOrWhiteSpace(nuevoPasswordHash))
@@ -156,9 +141,7 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
             _bloqueadoHasta = null;
         }
 
-        /// <summary>
-        /// Actualiza datos del usuario.
-        /// </summary>
+        ///         /// Actualiza datos del usuario.
         public void Actualizar(string nombre, string apellido, string email, int idSucursal, int idRol)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -173,9 +156,7 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
             _id_rol = idRol;
         }
 
-        /// <summary>
-        /// Inactiva el usuario (override con track de auditoría).
-        /// </summary>
+        ///         /// Inactiva el usuario (override con track de auditoría).
         public override void Inactivar()
         {
             // No permitir inactivarse a uno mismo si es el único activo
@@ -184,7 +165,6 @@ namespace GestionComercial.Dominio.Entidades.Seguridad
             _bloqueadoHasta = null;  // Desbloquear al inactivar
         }
 
-        // ── Propiedades computed ──
         public string NombreCompleto => $"{_nombre} {_apellido}".Trim();
         
         public string Inicial => string.IsNullOrEmpty(_nombre) ? "?" : _nombre[0].ToString().ToUpper();
