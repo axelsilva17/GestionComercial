@@ -10,16 +10,18 @@
 
 ## Funcionalidades
 
-| Módulo | Descripción |
-|--------|-------------|
-| **Ventas** | Registro con múltiples métodos de pago, descuentos por item, selección de productos con búsqueda |
-| **Compras** | Control de proveedores, ingreso de mercadería, cálculo automático de costos |
-| **Inventario** | Stock por producto, ajuste masivo de precios, stock crítico configurable |
-| **Caja** | Apertura / cierre / movimientos, control de turnos, auditoría |
-| **Clientes** | Catálogo con historial de ventas |
-| **Proveedores** | Catálogo con historial de compras |
-| **Reportes** | Dashboard con gráficos, reporte diario, stock crítico |
-| **Seguridad** | Autenticación por email + BCrypt, roles (Admin / Vendedor) |
+| Módulo | Funciones clave |
+|--------|----------------|
+| **Ventas** | Nueva venta con búsqueda de productos, cobro dividido en múltiples métodos de pago (efectivo, tarjeta, transferencia, otros), descuentos por ítem, historial con detalle, anulación con motivo, comprobante |
+| **Compras** | Registro de compras con selección de proveedor, ingreso de mercadería con precio de costo, cálculo automático de subtotales, historial |
+| **Productos** | CRUD completo, categorías, código de barras, stock mínimo configurable, ajuste masivo de precios por categoría, importación desde Excel |
+| **Inventario** | Stock por producto con movimientos (entrada/salida/ajuste), filtros por tipo y fecha, vista de stock crítico, paginación |
+| **Caja** | Apertura y cierre con saldo inicial/final, control de turnos, movimientos de ingresos y egresos, auditoría con indicadores |
+| **Clientes** | CRUD completo, historial de ventas asociado |
+| **Proveedores** | CRUD completo, historial de compras asociado |
+| **Reportes** | Dashboard ejecutivo con gráficos de torta y barras (ventas diarias/semanales), reporte diario de ventas, stock crítico, exportación a Excel |
+| **Seguridad** | Autenticación por email con BCrypt, dos roles (Admin / Vendedor), sesión por empresa |
+| **Configuración** | Datos de la empresa, métodos de pago (categoría y cuenta contable), backup y restauración de base de datos, perfil de usuario, cambio de contraseña |
 
 ---
 
