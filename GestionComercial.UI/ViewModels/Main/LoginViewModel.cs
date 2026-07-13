@@ -34,13 +34,13 @@ namespace GestionComercial.UI.ViewModels.Main
         }
 
         private string _errorMessage = string.Empty;
-        public string ErrorMessage
+        public new string ErrorMessage
         {
             get => _errorMessage;
             set { _errorMessage = value; NotifyOfPropertyChange(() => ErrorMessage); NotifyOfPropertyChange(() => ErrorVisible); }
         }
 
-        public bool ErrorVisible => !string.IsNullOrEmpty(ErrorMessage);
+        public new bool ErrorVisible => !string.IsNullOrEmpty(ErrorMessage);
         public void SetPassword(string password) => Password = password;
         public bool CanLoginCommand =>
             !string.IsNullOrWhiteSpace(Usuario) &&

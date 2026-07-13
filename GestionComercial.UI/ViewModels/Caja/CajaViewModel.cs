@@ -207,7 +207,7 @@ namespace GestionComercial.UI.ViewModels.Caja
             await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
         }
 
-        public async Task RegistrarIngreso() { /* TODO */ }
+        public Task RegistrarIngreso() { /* TODO */ return Task.CompletedTask; }
 
         public async Task Actualizar() => await CargarAsync();
 

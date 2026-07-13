@@ -3,6 +3,8 @@
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- CS8618: suprimido en Migrations (codigo generado) y entidades con navegacion lazy -->
+		<NoWarn>$(NoWarn);CS8618</NoWarn>
 	</PropertyGroup>
 
 	<!-- Persistencia depende solo de Dominio (regla arquitectonica) -->

@@ -307,7 +307,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
         }
 
         // ── Exportar ──────────────────────────────────────────────────────────
-        public async Task ExportarExcel()
+        public void ExportarExcel()
         {
             try
             {

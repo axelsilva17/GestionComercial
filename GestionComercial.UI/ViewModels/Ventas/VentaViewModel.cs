@@ -935,7 +935,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         // ── Lógica interna ────────────────────────────────────────────────────
-        private void SumarCantidad(VentaItemDto item)
+        private void SumarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
             var idx = Items.IndexOf(item);
@@ -947,7 +947,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             NotificarCanIrACobrar();
         }
 
-        private void RestarCantidad(VentaItemDto item)
+        private void RestarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
             if (item.Cantidad <= 1) { QuitarItem(item); return; }
@@ -960,7 +960,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             NotificarCanIrACobrar();
         }
 
-        private void QuitarItem(VentaItemDto item)
+        private void QuitarItem(VentaItemDto? item)
         {
             if (item == null) return;
             Items.Remove(item);

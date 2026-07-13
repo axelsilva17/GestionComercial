@@ -129,7 +129,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
                 // Navigate to login
                 var login = IoC.Get<LoginViewModel>();
-                _windowManager.ShowWindowAsync(login);
+                await _windowManager.ShowWindowAsync(login);
                 await TryCloseAsync();
             }
             catch (Exception ex)

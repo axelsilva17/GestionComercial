@@ -183,14 +183,14 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         // ── Error visible en dropzone ─────────────────────────────────────────
         private bool _tieneError;
-        public bool TieneError
+        public new bool TieneError
         {
             get => _tieneError;
             set { _tieneError = value; NotifyOfPropertyChange(() => TieneError); }
         }
 
         private string _mensajeError = string.Empty;
-        public string MensajeError
+        public new string MensajeError
         {
             get => _mensajeError;
             set { _mensajeError = value; NotifyOfPropertyChange(() => MensajeError); }

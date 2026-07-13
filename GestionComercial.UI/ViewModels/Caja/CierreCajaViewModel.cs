@@ -340,7 +340,7 @@ namespace GestionComercial.UI.ViewModels.Caja
         }
 
         // ── Exportar a Excel ─────────────────────────────────────────────────
-        public async Task ExportarExcel()
+        public void ExportarExcel()
         {
             try
             {

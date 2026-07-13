@@ -22,3 +22,8 @@ ON_DEMAND_MERGE.md
 
 # AI config
 opencode.json
+
+# Build logs / temp output
+build_*.txt
+build_*.log
+msbuild.log

@@ -113,7 +113,7 @@ namespace GestionComercial.UI.Views.Productos
             ViewModel?.GenerarPreviewAjuste();
         }
 
-        private async void CancelarAjuste_Click(object sender, RoutedEventArgs e)
+        private void CancelarAjuste_Click(object sender, RoutedEventArgs e)
         {
             ViewModel?.CancelarAjusteMasivo();
         }

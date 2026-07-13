@@ -213,7 +213,7 @@ namespace GestionComercial.UI.ViewModels.Cajas
             await IoC.Get<ShellViewModel>().ActivateItemAsync(dashboard, CancellationToken.None);
         }
 
-        public async Task ExportarAuditoria()
+        public void ExportarAuditoria()
         {
             if (Cajas == null || !Cajas.Any())
             {
