@@ -39,29 +39,7 @@
 
 ---
 
-## Requisitos
-
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- Windows (la app es WPF, solo Windows)
-- Visual Studio 2022, VS Code, o Rider
-
----
-
-## Configuración rápida
-
-```bash
-# Clonar
-git clone <repo>
-cd GestionComercial
-
-# Compilar y ejecutar
-dotnet build
-dotnet run --project GestionComercial.UI
-```
-
-La base de datos SQLite se crea automáticamente en la primera ejecución con las migraciones de EF Core aplicadas.
-
-> **Nota:** El usuario administrador se crea automáticamente en la primera ejecución del sistema junto con la empresa y sucursal por defecto a través del asistente de configuración inicial.
+> La base de datos SQLite se crea automáticamente en la primera ejecución con las migraciones de EF Core aplicadas. El usuario administrador se genera junto con la empresa y sucursal por defecto mediante el asistente de configuración inicial.
 
 ---
 
