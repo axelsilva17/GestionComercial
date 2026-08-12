@@ -178,7 +178,7 @@ namespace GestionComercial.UI.ViewModels.Caja
                 TotalIngresos = movimientos.Where(m => m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
                 TotalEgresos  = movimientos.Where(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
                 CantidadIngresos = movimientos.Count(m => m.EsIngreso && !m.EsApertura);
-                CantidadEgresos  = movimientos.Count(m => !m.EsIngreso && !m.EsApertura);
+                CantidadEgresos  = movimientos.Count(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre"));
 
                 // Calcular ventas del día
                 var ventasDia = await _cajaServicio.ObtenerVentasDelDiaAsync(caja.Id);

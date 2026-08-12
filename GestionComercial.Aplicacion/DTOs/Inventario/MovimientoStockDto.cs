@@ -19,6 +19,8 @@ namespace GestionComercial.Aplicacion.DTOs.Inventario
 
         // Para UI
         public bool   EsEntrada  => TipoMovimiento == "Entrada";
+        public bool   EsSalida   => TipoMovimiento == "Salida";
+        public bool   EsAjuste   => TipoMovimiento == "Ajuste";
         public string TipoIcono  => TipoMovimiento switch
         {
             "Entrada" => "↑",

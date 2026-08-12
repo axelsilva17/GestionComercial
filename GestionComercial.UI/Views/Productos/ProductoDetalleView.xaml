@@ -410,10 +410,10 @@
                                 </DataGridTemplateColumn>
 
                                 <DataGridTextColumn Header="Sucursal" Width="140"
-                                                    Binding="{Binding Sucursal.Nombre}"/>
+                                                     Binding="{Binding SucursalNombre}"/>
 
                                 <DataGridTextColumn Header="Usuario" Width="140"
-                                                    Binding="{Binding Usuario.Nombre}"/>
+                                                     Binding="{Binding UsuarioNombre}"/>
 
                                 <DataGridTextColumn Header="Observación" Width="*"
                                                     Binding="{Binding Observacion}"/>

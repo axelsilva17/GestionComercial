@@ -153,8 +153,6 @@ namespace GestionComercial.Dominio.Entidades.Caja
         }
 
         ///         /// Obtiene el monto actual en caja.
-        public decimal MontoActual => _montoInicial + (Ventas.Sum(v => v.TotalFinal) - Ventas.Sum(v => v.TotalPagado));
-
         public bool EstaAbierta => _estado == (int)EstadoCajaEnum.Abierta;
         
         public bool EstaCerrada => _estado == (int)EstadoCajaEnum.Cerrada;
