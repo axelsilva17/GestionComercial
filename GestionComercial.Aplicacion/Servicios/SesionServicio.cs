@@ -18,16 +18,27 @@ namespace GestionComercial.Aplicacion.Servicios
         // IdCaja se setea cuando se abre caja
         public int? IdCajaActual { get; set; }
 
+        // Turno se setea junto con IdCajaActual al abrir caja
+        public string? TurnoActual { get; set; }
+
+        /// <summary>
+        /// Verifica si el usuario logueado tiene un permiso específico (por código).
+        /// </summary>
+        public bool HasPermission(string codigoPermiso)
+            => _sesion.Permisos?.Contains(codigoPermiso) == true;
+
         public void IniciarSesion(UsuarioSesionDto sesion)
         {
             _sesion      = sesion;
             IdCajaActual = null;
+            TurnoActual  = null;
         }
 
         public void CerrarSesion()
         {
             _sesion      = new();
             IdCajaActual = null;
+            TurnoActual  = null;
         }
 
         public UsuarioSesionDto ObtenerSesion() => _sesion;

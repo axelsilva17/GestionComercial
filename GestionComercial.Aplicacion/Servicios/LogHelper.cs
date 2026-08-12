@@ -1,43 +1,21 @@
 using System;
-using System.IO;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
+    /// <summary>
+    /// Log de depuración temporal. Se mantiene la API para no romper call sites,
+    /// pero ya no escribe en disco (no crea archivos).
+    /// </summary>
     public static class LogHelper
     {
-        private static readonly string LogPath;
-
-        static LogHelper()
-        {
-            // Escribe en el escritorio del usuario
-            var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            LogPath = Path.Combine(desktopPath, "caja-debug.log");
-        }
-
         public static void Log(string mensaje)
         {
-            try
-            {
-                var linea = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensaje}";
-                File.AppendAllText(LogPath, linea + Environment.NewLine);
-            }
-            catch
-            {
-                // Ignora errores de logging
-            }
+            // No-op: el logging de depuración ya no es necesario
         }
 
         public static void LogError(string mensaje, Exception ex)
         {
-            var linea = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [ERROR] {mensaje}: {ex.InnerException?.Message ?? ex.Message}";
-            try
-            {
-                File.AppendAllText(LogPath, linea + Environment.NewLine);
-            }
-            catch
-            {
-                // Ignora errores de logging
-            }
+            // No-op: el logging de depuración ya no es necesario
         }
     }
 }

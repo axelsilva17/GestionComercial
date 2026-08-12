@@ -554,7 +554,7 @@
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🔑" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="Roles" VerticalAlignment="Center"/>
+                            <TextBlock Text="Roles y Permisos" VerticalAlignment="Center"/>
                         </StackPanel>
                     </TabItem.Header>
                     <Border Background="{DynamicResource CardBrush}"
@@ -565,6 +565,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
+
+                            <!-- Fila 0: Header -->
                             <Grid Margin="20,16,20,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -580,12 +582,30 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding Roles.Items}" Margin="12,0,12,12">
-                                    <ItemsControl.ItemTemplate>
+
+                            <!-- Fila 1: Split roles (izquierda) + permisos (derecha) -->
+                            <Grid Grid.Row="1" Margin="12,0,12,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Col 0: Lista de roles (ListBox con SelectionChanged) -->
+                                <ListBox Grid.Column="0"
+                                         ItemsSource="{Binding Roles.Items}"
+                                         Background="Transparent" BorderThickness="0"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                         SelectionChanged="RolesListBox_SelectionChanged">
+                                    <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}"
-                                                    CornerRadius="10" Margin="0,0,0,8" Padding="16,14">
+                                                    CornerRadius="10" Margin="0,0,0,8" Padding="14,12"
+                                                    BorderBrush="Transparent" BorderThickness="2"
+                                                    Cursor="Hand">
+                                                <Border.Style>
+                                                    <Style TargetType="Border"/>
+                                                </Border.Style>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
@@ -594,14 +614,21 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <Border Width="36" Height="36" CornerRadius="8"
-                                                            Background="#1A3B82F6" Margin="0,0,14,0">
+                                                            Background="#1A3B82F6" Margin="0,0,12,0">
                                                         <TextBlock Text="🔑" FontSize="16"
                                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                                    <Button Grid.Column="2" Content="✏️ Editar"
-                                                            Style="{StaticResource AccionBtn}" Margin="0,0,6,0"
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Nombre}" FontSize="13" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                        <TextBlock FontSize="10"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0">
+                                                            <Run Text="{Binding CantidadPermisos}"/>
+                                                            <Run Text=" permisos"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="2" Content="✏️"
+                                                            Style="{StaticResource AccionBtn}"
                                                             Tag="{Binding}" Click="EditarRol_Click"/>
                                                     <Button Grid.Column="3" Content="🗑️"
                                                             Style="{StaticResource AccionBtn}"
@@ -609,9 +636,121 @@
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <!-- Col 2: Toggles de módulos para el rol seleccionado -->
+                                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                                              Visibility="{Binding Roles.MostrarPermisos, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock FontSize="16" FontWeight="Bold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}">
+                                                    <Run Text="Módulos para "/>
+                                                    <Run Text="{Binding Roles.Seleccionado.Nombre}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="Activá o desactivá módulos para este rol"
+                                                           FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    Height="36" Padding="16,0" FontSize="12"
+                                                    IsEnabled="{Binding Roles.PuedeGuardarPermisos}"
+                                                    Click="GuardarPermisos_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="💾" FontSize="13" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="Guardar"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+
+                                        <ItemsControl ItemsSource="{Binding Roles.Modulos}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                                            CornerRadius="10" Margin="0,0,0,8" Padding="16,14">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                            </StackPanel>
+                                                            <ToggleButton Grid.Column="1"
+                                                                          IsChecked="{Binding Activo}"
+                                                                          Width="44" Height="24"
+                                                                          Cursor="Hand"
+                                                                          VerticalAlignment="Center">
+                                                                <ToggleButton.Style>
+                                                                    <Style TargetType="ToggleButton">
+                                                                        <Setter Property="Template">
+                                                                            <Setter.Value>
+                                                                                <ControlTemplate TargetType="ToggleButton">
+                                                                                    <Border x:Name="Bg"
+                                                                                            Width="44" Height="24"
+                                                                                            CornerRadius="12"
+                                                                                            Background="{DynamicResource TextSecondaryBrush}"
+                                                                                            Cursor="Hand">
+                                                                                        <Border x:Name="Thumb"
+                                                                                                Width="20" Height="20"
+                                                                                                CornerRadius="10"
+                                                                                                Background="White"
+                                                                                                HorizontalAlignment="Left"
+                                                                                                Margin="2,0,0,0"
+                                                                                                BorderBrush="#30000000"
+                                                                                                BorderThickness="1"/>
+                                                                                    </Border>
+                                                                                    <ControlTemplate.Triggers>
+                                                                                        <Trigger Property="IsChecked" Value="True">
+                                                                                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                                                                                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                                            <Setter TargetName="Thumb" Property="Margin" Value="0,0,2,0"/>
+                                                                                        </Trigger>
+                                                                                    </ControlTemplate.Triggers>
+                                                                                </ControlTemplate>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </Style>
+                                                                </ToggleButton.Style>
+                                                            </ToggleButton>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                                <!-- Placeholder cuando no hay rol seleccionado -->
+                                <Border Grid.Column="2"
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        CornerRadius="12" Padding="24">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Roles.MostrarPermisos}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <TextBlock Text="🔑" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                        <TextBlock Text="Seleccioná un rol" FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="para ver y editar sus permisos" FontSize="13"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
                         </Grid>
                     </Border>
                 </TabItem>

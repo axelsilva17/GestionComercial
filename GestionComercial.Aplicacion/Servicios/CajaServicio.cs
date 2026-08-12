@@ -5,6 +5,7 @@ using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Aplicacion.Servicios;
 
@@ -25,12 +26,24 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal)
             => await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
 
-        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, string? turno = null, bool esPrimaria = false)
+        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, TurnoCajaEnum? turno = null, bool esPrimaria = false)
         {
             LogHelper.Log("[DEBUG-AbrirCaja] Iniciando...");
-            var cajaExistente = await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
-            if (cajaExistente != null)
-                throw new NegocioException("Ya existe una caja abierta para esta sucursal");
+
+            // Validar que no exista caja abierta para el mismo turno en esta sucursal
+            if (turno.HasValue)
+            {
+                var turnoStr = turno.Value.ToDisplayString();
+                var cajaEnTurno = await _uow.Cajas.ObtenerCajaAbiertaPorSucursYTurnoAsync(idSucursal, turnoStr);
+                if (cajaEnTurno != null)
+                    throw new NegocioException($"Ya existe una caja abierta para el turno {turnoStr} en esta sucursal");
+            }
+            else
+            {
+                var cajaExistente = await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
+                if (cajaExistente != null)
+                    throw new NegocioException("Ya existe una caja abierta para esta sucursal");
+            }
 
             // ── Crear caja usando factory method DDD ───────────────────────────────
             var caja = Caja.Crear(idSucursal, idUsuario, montoInicial, esPrimaria, turno);

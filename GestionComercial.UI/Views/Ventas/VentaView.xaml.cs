@@ -33,15 +33,14 @@ namespace GestionComercial.UI.Views.Ventas
             e.Handled = true;
         }
 
-        ///         /// Maneja el doble click en un producto del popup de autocompletado.
-        private void ResultadosBusquedaList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        ///         /// Maneja la selección (single click) en un producto del popup de autocompletado.
+        private void ResultadosBusquedaList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DataContext is not VentaViewModel vm) return;
 
-            if (sender is ListBox list && list.SelectedItem is GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto producto)
+            if (e.AddedItems.Count > 0 && e.AddedItems[0] is GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto producto)
             {
                 vm.SeleccionarProductoDelPopup(producto);
-                e.Handled = true;
             }
         }
 

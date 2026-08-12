@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Main;
@@ -42,14 +43,15 @@ namespace GestionComercial.UI.ViewModels.Cajas
         }
 
         // ── Turnos disponibles ─────────────────────────────────────────────
-        private ObservableCollection<string> _turnos = new() { "Mañana", "Tarde", "Noche" };
+        private ObservableCollection<string> _turnos =
+            new(System.Enum.GetValues<TurnoCajaEnum>().Select(t => t.ToDisplayString()));
         public ObservableCollection<string> Turnos
         {
             get => _turnos;
             set { _turnos = value; NotifyOfPropertyChange(() => Turnos); }
         }
 
-        private string _turnoNuevo = "Mañana";
+        private string _turnoNuevo = TurnoCajaEnum.Manana.ToDisplayString();
         public string TurnoNuevo
         {
             get => _turnoNuevo;
@@ -57,7 +59,8 @@ namespace GestionComercial.UI.ViewModels.Cajas
         }
 
         // ── Filtro por Turno ───────────────────────────────────────────────
-        private ObservableCollection<string> _filtroTurnos = new() { "Todos", "Mañana", "Tarde", "Noche" };
+        private ObservableCollection<string> _filtroTurnos = new(
+            new[] { "Todos" }.Concat(System.Enum.GetValues<TurnoCajaEnum>().Select(t => t.ToDisplayString())));
         public ObservableCollection<string> FiltroTurnos
         {
             get => _filtroTurnos;
@@ -137,7 +140,7 @@ namespace GestionComercial.UI.ViewModels.Cajas
                 await _uow.GuardarCambiosAsync();
 
                 await CargarCajasAsync();
-                TurnoNuevo = "Mañana";
+                TurnoNuevo = TurnoCajaEnum.Manana.ToDisplayString();
 
                 LogHelper.Log($"[CajaTurnos] Caja creada con Turno: {nuevaCaja.Turno}, EsPrimaria: {nuevaCaja.EsPrimaria}");
             }

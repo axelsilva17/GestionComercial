@@ -30,9 +30,9 @@ public class ProductoServicio : IProductoServicio
             return await _uow.Proveedores.ObtenerTodosAsync();
         }
 
-        public async Task<IEnumerable<ProductoListadoDto>> ObtenerTodosAsync(int idEmpresa)
+        public async Task<IEnumerable<ProductoListadoDto>> ObtenerTodosAsync(int idEmpresa, bool soloActivos = true)
         {
-            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(idEmpresa);
+            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(idEmpresa, soloActivos);
             return productos.Select(MapearListado);
         }
 

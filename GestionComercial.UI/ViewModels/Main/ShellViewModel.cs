@@ -68,21 +68,21 @@ namespace GestionComercial.UI.ViewModels.Main
         public bool EsAdministrador => Rol == RolUsuario.Administrador;
         public bool EsVendedor      => Rol == RolUsuario.Vendedor;
 
-        // ── Visibilidad módulos ───────────────────────────────────────────────
-        //
-        // VENDEDOR:       Dashboard, Ventas, Clientes, Caja
-        // ADMINISTRADOR:  Dashboard, Productos, Inventario, Reportes (Admin)
-        // GERENTE:        Dashboard, Reportes (Gerencia), Configuración
-        public bool MostrarVentas       => Rol == RolUsuario.Vendedor;
-        public bool MostrarCaja         => Rol == RolUsuario.Vendedor;
-        public bool MostrarCompras      => false;
-        public bool MostrarCatalogo     => Rol == RolUsuario.Administrador;
-        public bool MostrarProductos    => Rol == RolUsuario.Administrador;
-        public bool MostrarInventario   => Rol == RolUsuario.Administrador;
-        public bool MostrarClientes     => Rol == RolUsuario.Vendedor;
-        public bool MostrarProveedores  => false;
-        public bool MostrarReportes     => Rol == RolUsuario.Administrador || Rol == RolUsuario.Gerente;
-        public bool MostrarConfiguracion => Rol == RolUsuario.Gerente;
+        // ── Helper ────────────────────────────────────────────────────────────
+        private bool HasPermission(string codigo) =>
+            SesionActual.Permisos?.Contains(codigo) == true;
+
+        // ── Visibilidad módulos (basada en permisos) ──────────────────────────
+        public bool MostrarVentas       => HasPermission("Ventas.Ver");
+        public bool MostrarCaja         => HasPermission("Caja.Abrir");
+        public bool MostrarCompras      => HasPermission("Compras.Ver");
+        public bool MostrarCatalogo     => HasPermission("Productos.Ver");
+        public bool MostrarProductos    => HasPermission("Productos.Ver");
+        public bool MostrarInventario   => HasPermission("Productos.Ver");
+        public bool MostrarClientes     => HasPermission("Clientes.Ver");
+        public bool MostrarProveedores  => HasPermission("Compras.Ver");
+        public bool MostrarReportes     => HasPermission("Reportes.Ver");
+        public bool MostrarConfiguracion => HasPermission("Configuracion.Ver");
 
 
         public int              IdEmpresaActual  { get; internal set; }

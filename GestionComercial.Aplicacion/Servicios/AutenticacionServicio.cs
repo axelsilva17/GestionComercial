@@ -33,6 +33,8 @@ namespace GestionComercial.Aplicacion.Servicios
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
 
+            var permisos = await _uow.Usuarios.ObtenerPermisosAsync(usuario.Id);
+
             return new UsuarioSesionDto
             {
                 IdUsuario = usuario.Id,
@@ -44,6 +46,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Sucursal = usuario.Sucursal?.Nombre ?? string.Empty,
                 IdEmpresa = usuario.Sucursal?.Id_empresa ?? 0,
                 Empresa = usuario.Sucursal?.Empresa?.Nombre ?? string.Empty,
+                Permisos = new HashSet<string>(permisos),
             };
         }
 

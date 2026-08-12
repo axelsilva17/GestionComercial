@@ -2,6 +2,7 @@ using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Seguridad;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
+// ReSharper disable once RedundantUsingDirective — needed for extension methods on TurnoCajaEnum
 
 namespace GestionComercial.Dominio.Entidades.Caja
 {
@@ -67,6 +68,15 @@ namespace GestionComercial.Dominio.Entidades.Caja
             set => _turno = value; 
         }
 
+        /// <summary>
+        /// Acceso tipado al turno. Lee/escribe sobre el campo string de la DB.
+        /// </summary>
+        public TurnoCajaEnum? TurnoAsEnum
+        {
+            get => TurnoCajaEnumExtensions.FromString(_turno);
+            set => _turno = value?.ToDisplayString();
+        }
+
         // ── Relaciones ──
         public Sucursal  Sucursal        { get; set; } = null!;
         public Usuario UsuarioApertura { get; set; } = null!;
@@ -78,7 +88,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
         public Caja() { }
 
         public static Caja Crear(int idSucursal, int idUsuarioApertura, 
-            decimal montoInicial = 0, bool esPrimaria = false, string? turno = null)
+            decimal montoInicial = 0, bool esPrimaria = false, TurnoCajaEnum? turno = null)
         {
             if (idSucursal <= 0)
                 throw new ArgumentException("ID de sucursal inválido.", nameof(idSucursal));
@@ -93,7 +103,7 @@ namespace GestionComercial.Dominio.Entidades.Caja
                 _usuarioApertura_id = idUsuarioApertura,
                 _montoInicial = montoInicial,
                 _esPrimaria = esPrimaria,
-                _turno = turno?.Trim(),
+                _turno = turno?.ToDisplayString(),
                 _fechaApertura = DateTime.Now,
                 _estado = (int)EstadoCajaEnum.Abierta,
                 FechaAlta = DateTime.Now,

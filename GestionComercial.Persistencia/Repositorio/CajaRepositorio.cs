@@ -33,5 +33,19 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Where(c => c.Id_sucursal == idSucursal && c.FechaApertura >= desde && c.FechaApertura <= hasta)
                 .OrderByDescending(c => c.FechaApertura)
                 .ToListAsync();
+
+        public async Task<List<Caja>> ObtenerCajasPorTurnoAsync(int idSucursal, string turno)
+            => await _dbSet
+                .Where(c => c.Id_sucursal == idSucursal && c.Turno == turno)
+                .OrderBy(c => c.FechaApertura)
+                .ToListAsync();
+
+        public async Task<bool> ExisteCajaAbiertaEnTurnoAsync(int idSucursal, string turno)
+            => await _dbSet.AnyAsync(c => c.Id_sucursal == idSucursal && c.Turno == turno && c.Estado == 1);
+
+        public async Task<Caja?> ObtenerCajaAbiertaPorSucursYTurnoAsync(int idSucursal, string turno)
+            => await _dbSet
+                .Include(c => c.UsuarioApertura)
+                .FirstOrDefaultAsync(c => c.Id_sucursal == idSucursal && c.Turno == turno && c.Estado == 1);
     }
 }

@@ -360,7 +360,7 @@
                                  Background="Transparent"
                                  BorderThickness="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 MouseDoubleClick="ResultadosBusquedaList_MouseDoubleClick"
+                                 SelectionChanged="ResultadosBusquedaList_SelectionChanged"
                                  KeyDown="ResultadosBusquedaList_KeyDown"
                                  Visibility="{Binding BuscandoProductos, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}">
                             <ListBox.ItemContainerStyle>

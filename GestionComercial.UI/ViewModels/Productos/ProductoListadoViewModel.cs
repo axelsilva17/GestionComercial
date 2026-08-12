@@ -270,7 +270,10 @@ namespace GestionComercial.UI.ViewModels.Productos
             try
             {
                 IsLoading = true;
-                var productos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
+                // Si el filtro es "Solo activos", optimizamos trayendo solo activos desde la DB.
+                // Si es "Todos" o "Inactivos", traemos todo y filtramos en memoria.
+                var soloActivos = FiltroActivo == 1;
+                var productos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual, soloActivos);
                 var productosList = productos.ToList();
 
                 // Aplicar filtros

@@ -111,6 +111,7 @@ namespace GestionComercial.UI
             _container.PerRequest<IInventarioServicio, InventarioServicio>();
             _container.PerRequest<IReporteServicio, ReporteServicio>();
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
+            _container.PerRequest<IRolServicio, RolServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
             // NOTE: VentaValidator se registra más abajo con Handler para pasar IUnitOfWork.Productos
 

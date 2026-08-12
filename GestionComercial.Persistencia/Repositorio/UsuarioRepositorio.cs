@@ -25,5 +25,13 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
         public async Task<bool> ExisteEmailAsync(string email)
     => await _dbSet.AnyAsync(u => u.Email == email);
+
+        public async Task<IEnumerable<string>> ObtenerPermisosAsync(int usuarioId)
+            => await _dbSet
+                .Where(u => u.Id == usuarioId)
+                .SelectMany(u => u.Rol!.RolPermisos)
+                .Select(rp => rp.Permiso!.Nombre)
+                .Distinct()
+                .ToListAsync();
     }
 }

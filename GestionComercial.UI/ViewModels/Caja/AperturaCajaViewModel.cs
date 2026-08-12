@@ -1,6 +1,7 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
@@ -55,7 +56,31 @@ namespace GestionComercial.UI.ViewModels.Caja
             set { _montoInicial = value; NotifyOfPropertyChange(() => MontoInicial); }
         }
 
-        // ── Selección de Caja y Turno ─────────────────────────────────────────
+        // ── Paso 1: Selección de Turno ───────────────────────────────────────
+        private TurnoCajaEnum? _turnoSeleccionado;
+        public TurnoCajaEnum? TurnoSeleccionado
+        {
+            get => _turnoSeleccionado;
+            set
+            {
+                _turnoSeleccionado = value;
+                NotifyOfPropertyChange(() => TurnoSeleccionado);
+                NotifyOfPropertyChange(() => MostrarPaso1);
+                NotifyOfPropertyChange(() => MostrarPaso2);
+                if (value.HasValue)
+                    _ = CargarCajasPorTurnoAsync(value.Value);
+            }
+        }
+
+        public bool MostrarPaso1 => TurnoSeleccionado == null;
+        public bool MostrarPaso2 => TurnoSeleccionado != null;
+
+        public void SeleccionarTurno(string turnoStr)
+        {
+            TurnoSeleccionado = TurnoCajaEnumExtensions.FromString(turnoStr);
+        }
+
+        // ── Paso 2: Selección de Caja ────────────────────────────────────────
         private ObservableCollection<CajaDisponibleDto> _cajasDisponibles = new();
         public ObservableCollection<CajaDisponibleDto> CajasDisponibles
         {
@@ -70,18 +95,15 @@ namespace GestionComercial.UI.ViewModels.Caja
             set { _cajaSeleccionada = value; NotifyOfPropertyChange(() => CajaSeleccionada); }
         }
 
-        private ObservableCollection<string> _turnos = new() { "General", "Mañana", "Tarde", "Noche" };
-        public ObservableCollection<string> Turnos
-        {
-            get => _turnos;
-            set { _turnos = value; NotifyOfPropertyChange(() => Turnos); }
-        }
+        public string TurnoSeleccionadoDisplay => TurnoSeleccionado?.ToDisplayString() ?? "";
 
-        private string _turnoSeleccionado = "General";
-        public string TurnoSeleccionado
+        /// <summary>
+        /// Vuelve al paso 1 (seleccionar otro turno).
+        /// </summary>
+        public void VolverATurnos()
         {
-            get => _turnoSeleccionado;
-            set { _turnoSeleccionado = value; NotifyOfPropertyChange(() => TurnoSeleccionado); }
+            TurnoSeleccionado = null;
+            CajaSeleccionada = null;
         }
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -90,7 +112,7 @@ namespace GestionComercial.UI.ViewModels.Caja
             LimpiarError();
             try
             {
-                // Verificar si ya hay una caja abierta — si sí, volver atrás
+                // Verificar si ya hay una caja abierta en cualquier turno
                 var cajaAbierta = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
                 if (cajaAbierta != null)
                 {
@@ -98,26 +120,11 @@ namespace GestionComercial.UI.ViewModels.Caja
                     return;
                 }
 
-                // Cargar cajas disponibles para seleccionar
-                var todasCajas = (await _uow.Cajas.ObtenerTodosAsync()).ToList();
-                CajasDisponibles = new ObservableCollection<CajaDisponibleDto>(
-                    todasCajas.Select(c => new CajaDisponibleDto
-                    {
-                        Id = c.Id,
-                        Nombre = c.EsPrimaria ? $"Caja {c.Id} (Principal)" : $"Caja {c.Id} - {c.Turno ?? "General"}",
-                        Turno = c.Turno ?? "General",
-                        EsPrimaria = c.EsPrimaria,
-                    }));
-
-                if (CajasDisponibles.Any())
-                    CajaSeleccionada = CajasDisponibles.First();
-
-                // Cargar el último cierre de caja para mostrar saldo anterior
+                // Cargar datos históricos (saldo anterior)
                 await CargarUltimoCierreAsync();
             }
             catch (Exception ex)
             {
-                // No bloqueamos la apertura si falla cargar datos históricos
                 MostrarError($"No se pudo cargar el último cierre: {ex.Message}");
                 UltimoCierre  = DateTime.Now;
                 SaldoAnterior = 0;
@@ -125,18 +132,44 @@ namespace GestionComercial.UI.ViewModels.Caja
             finally { IsLoading = false; }
         }
 
-        ///         /// Carga el último cierre de caja de la sucursal actual.
-        /// Muestra: fecha del último cierre y saldo que quedó en caja.
+        private async Task CargarCajasPorTurnoAsync(TurnoCajaEnum turno)
+        {
+            try
+            {
+                IsLoading = true;
+                var turnoStr = turno.ToDisplayString();
+                var cajas = await _uow.Cajas.ObtenerCajasPorTurnoAsync(_sesion.IdSucursal, turnoStr);
+
+                CajasDisponibles = new ObservableCollection<CajaDisponibleDto>(
+                    cajas.Select(c => new CajaDisponibleDto
+                    {
+                        Id = c.Id,
+                        Nombre = c.EsPrimaria ? $"Caja {c.Id} (Principal)" : $"Caja {c.Id}",
+                        Turno = c.Turno ?? turnoStr,
+                        EsPrimaria = c.EsPrimaria,
+                    }));
+
+                if (CajasDisponibles.Any())
+                    CajaSeleccionada = CajasDisponibles.First();
+
+                NotifyOfPropertyChange(() => TurnoSeleccionadoDisplay);
+            }
+            catch (Exception ex)
+            {
+                MostrarError($"Error al cargar cajas: {ex.Message}");
+            }
+            finally { IsLoading = false; }
+        }
+
         private async Task CargarUltimoCierreAsync()
         {
             try
             {
                 var historial = await _cajaServicio.ObtenerHistorialAsync(
                     _sesion.IdSucursal,
-                    DateTime.Now.AddDays(-30), // Últimos 30 días
+                    DateTime.Now.AddDays(-30),
                     DateTime.Now);
 
-                // Obtener la última caja cerrada (la más reciente por fecha de apertura)
                 var ultimaCajaCerrada = historial
                     .Where(c => !c.EstaAbierta)
                     .OrderByDescending(c => c.FechaApertura)
@@ -145,11 +178,10 @@ namespace GestionComercial.UI.ViewModels.Caja
                 if (ultimaCajaCerrada != null)
                 {
                     UltimoCierre  = ultimaCajaCerrada.FechaCierre ?? ultimaCajaCerrada.FechaApertura;
-                    SaldoAnterior = (decimal)ultimaCajaCerrada.MontoFinal; // Efectivo que quedó al cerrar
+                    SaldoAnterior = (decimal)ultimaCajaCerrada.MontoFinal;
                 }
                 else
                 {
-                    // No hay cierre previo
                     UltimoCierre  = DateTime.Now;
                     SaldoAnterior = 0;
                 }
@@ -169,11 +201,10 @@ namespace GestionComercial.UI.ViewModels.Caja
                 return;
             }
 
-            // Si el monto inicial está vacío o en blanco, usar el saldo anterior
             decimal monto;
             if (string.IsNullOrWhiteSpace(MontoInicial))
             {
-                monto = SaldoAnterior; //默认值
+                monto = SaldoAnterior;
             }
             else if (!decimal.TryParse(
                     MontoInicial.Replace(",", "."),
@@ -190,21 +221,21 @@ namespace GestionComercial.UI.ViewModels.Caja
             try
             {
                 var caja = await _cajaServicio.AbrirCajaAsync(
-                    _sesion.IdSucursal, 
-                    _sesion.IdUsuario, 
+                    _sesion.IdSucursal,
+                    _sesion.IdUsuario,
                     monto,
                     turno: TurnoSeleccionado,
                     esPrimaria: CajaSeleccionada?.EsPrimaria ?? false);
 
                 _sesion.IdCajaActual = caja.Id;
+                _sesion.TurnoActual = TurnoSeleccionado?.ToDisplayString();
                 await Cancelar();
             }
-            catch (Exception ex) 
-            { 
-                // Mostrar error en MessageBox para debug
+            catch (Exception ex)
+            {
                 var msg = $"ERROR:\n\n{ex.GetType().Name}\n\n{ex.Message}\n\n{ex.InnerException?.Message}";
-                System.Windows.MessageBox.Show(msg, "ERROR AL ABRIR CAJA", 
-                    System.Windows.MessageBoxButton.OK, 
+                System.Windows.MessageBox.Show(msg, "ERROR AL ABRIR CAJA",
+                    System.Windows.MessageBoxButton.OK,
                     System.Windows.MessageBoxImage.Error);
             }
             finally { IsLoading = false; }

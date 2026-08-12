@@ -6,7 +6,7 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
 {
 public interface IProductoServicio
     {
-        Task<IEnumerable<ProductoListadoDto>> ObtenerTodosAsync(int idEmpresa);
+        Task<IEnumerable<ProductoListadoDto>> ObtenerTodosAsync(int idEmpresa, bool soloActivos = true);
         Task<IEnumerable<ProductoListadoDto>> ObtenerStockCriticoAsync(int idEmpresa);
         Task<ProductoDto?>                    ObtenerPorIdAsync(int id);
         Task<ProductoDto>                     CrearAsync(ProductoCrearDto dto);

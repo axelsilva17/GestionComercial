@@ -34,13 +34,17 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-        public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa)
-            => await _dbSet
-                .Where(p => p.Id_empresa == idEmpresa && p.Activo)
+        public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true)
+        {
+            var query = _dbSet.Where(p => p.Id_empresa == idEmpresa);
+            if (soloActivos)
+                query = query.Where(p => p.Activo);
+            return await query
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
+        }
 
         public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa)
         {

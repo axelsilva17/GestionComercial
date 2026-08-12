@@ -1,4 +1,5 @@
 using GestionComercial.Aplicacion.DTOs.Configuracion;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Configuracion;
 using GestionComercial.Dominio.DTOs.Infraestructura;
 using Microsoft.Win32;
@@ -166,7 +167,7 @@ namespace GestionComercial.UI.Views.Configuracion
 
         private void EditarRol_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as Button)?.Tag is RolDto item)
+            if ((sender as Button)?.Tag is RolListDto item)
             {
                 VM?.Roles.Editar(item);
                 AbrirPanel(PanelRol, PanelRolTransform);
@@ -181,7 +182,7 @@ namespace GestionComercial.UI.Views.Configuracion
 
         private async void EliminarRol_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as Button)?.Tag is RolDto item)
+            if ((sender as Button)?.Tag is RolListDto item)
             {
                 var confirm = MessageBox.Show(
                     $"¿Eliminar el rol \"{item.Nombre}\"?\nLos usuarios con este rol quedarán sin asignación.",
@@ -191,6 +192,17 @@ namespace GestionComercial.UI.Views.Configuracion
                 if (confirm == MessageBoxResult.Yes)
                     await VM.Roles.Eliminar(item);
             }
+        }
+
+        private void RolesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((sender as ListBox)?.SelectedItem is RolListDto item)
+                VM.Roles.Seleccionado = item;
+        }
+
+        private async void GuardarPermisos_Click(object sender, RoutedEventArgs e)
+        {
+            await VM.Roles.GuardarPermisos();
         }
 
         // ══ MÉTODOS DE PAGO ══════════════════════════════════════════════════

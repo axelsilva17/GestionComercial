@@ -367,6 +367,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.Property(c => c.MontoFinal).HasColumnType("decimal(18,2)");
                 b.Property(c => c.Observacion).HasMaxLength(500);
                 b.Ignore(c => c.EstaAbierta);
+                // Propiedad calculada sobre el campo string Turno — no es una columna real
+                b.Ignore(c => c.TurnoAsEnum);
                 b.HasIndex(c => new { c.Id_sucursal, c.Estado });
                 b.HasOne(c => c.Sucursal).WithMany(s => s.Cajas)
                  .HasForeignKey(c => c.Id_sucursal).OnDelete(DeleteBehavior.Restrict);

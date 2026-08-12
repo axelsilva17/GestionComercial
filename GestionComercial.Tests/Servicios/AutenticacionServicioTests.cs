@@ -35,6 +35,9 @@ namespace GestionComercial.Tests.Servicios
             _mockUsuarioRepo
                 .Setup(r => r.ObtenerPorEmailAsync("admin@miempresa.com"))
                 .ReturnsAsync(usuario);
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPermisosAsync(usuario.Id))
+                .ReturnsAsync(new[] { "Ventas.Ver", "Productos.Ver", "Usuarios.Gestionar" });
             _mockPasswordHasher
                 .Setup(h => h.VerifyPassword("admin2026", usuario.PasswordHash))
                 .Returns(true);
@@ -49,6 +52,7 @@ namespace GestionComercial.Tests.Servicios
             resultado.Sucursal.Should().Be("Principal");
             resultado.IdEmpresa.Should().Be(1);
             resultado.Empresa.Should().Be("Mi Empresa");
+            resultado.Permisos.Should().Contain(new[] { "Ventas.Ver", "Productos.Ver", "Usuarios.Gestionar" });
 
             // Verificar que se actualizó el último acceso
             _mockUsuarioRepo.Verify(r => r.Actualizar(It.Is<Usuario>(u => u.UltimoAcceso != null)), Times.Once);
@@ -104,6 +108,9 @@ namespace GestionComercial.Tests.Servicios
             _mockUsuarioRepo
                 .Setup(r => r.ObtenerPorEmailAsync("ADMIN@MIEMPRESA.COM"))
                 .ReturnsAsync(usuario);
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPermisosAsync(usuario.Id))
+                .ReturnsAsync(new[] { "Ventas.Ver" });
             _mockPasswordHasher
                 .Setup(h => h.VerifyPassword("admin2026", usuario.PasswordHash))
                 .Returns(true);
@@ -111,6 +118,7 @@ namespace GestionComercial.Tests.Servicios
             var resultado = await _servicio.LoginAsync("ADMIN@MIEMPRESA.COM", "admin2026");
 
             resultado.Should().NotBeNull();
+            resultado!.Permisos.Should().Contain("Ventas.Ver");
         }
 
         // ═══════════════════════════════════════════════════════════

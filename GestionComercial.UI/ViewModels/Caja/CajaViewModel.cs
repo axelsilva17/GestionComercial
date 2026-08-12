@@ -41,6 +41,13 @@ namespace GestionComercial.UI.ViewModels.Caja
             set { _sucursalNombre = value; NotifyOfPropertyChange(() => SucursalNombre); }
         }
 
+        private string _turnoActual = string.Empty;
+        public string TurnoActual
+        {
+            get => _turnoActual;
+            set { _turnoActual = value; NotifyOfPropertyChange(() => TurnoActual); }
+        }
+
         private decimal _montoInicial;
         public decimal MontoInicial
         {
@@ -142,6 +149,7 @@ namespace GestionComercial.UI.ViewModels.Caja
                     CajaAbierta          = false;
                     _idCajaActual        = null;
                     _sesion.IdCajaActual = null;
+                    TurnoActual          = string.Empty;
                     MontoInicial         = 0;
                     TotalIngresos        = 0;
                     TotalEgresos         = 0;
@@ -155,6 +163,7 @@ namespace GestionComercial.UI.ViewModels.Caja
                 CajaAbierta          = true;
                 _idCajaActual        = caja.Id;
                 _sesion.IdCajaActual = caja.Id;
+                TurnoActual          = caja.Turno ?? _sesion.TurnoActual ?? "";
                 MontoInicial         = caja.MontoInicial;
                 FechaApertura        = caja.FechaApertura;
 

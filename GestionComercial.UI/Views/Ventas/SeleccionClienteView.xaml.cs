@@ -21,6 +21,16 @@ namespace GestionComercial.UI.Views.Ventas
             }
         }
 
+        ///         /// Busca al presionar Enter en el campo de búsqueda.
+        private void TextoBusqueda_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && DataContext is SeleccionClienteViewModel vm)
+            {
+                _ = vm.Buscar();
+                e.Handled = true;
+            }
+        }
+
         private void ClientesDataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter) return;

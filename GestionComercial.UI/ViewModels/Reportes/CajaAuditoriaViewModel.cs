@@ -1,6 +1,7 @@
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
@@ -255,7 +256,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             try
             {
                 await _cajaServicio.AbrirCajaAsync(
-                    _sesion.IdSucursal, _sesion.IdUsuario, 0, turno: TurnoNuevaCaja);
+                    _sesion.IdSucursal, _sesion.IdUsuario, 0, turno: TurnoCajaEnumExtensions.FromString(TurnoNuevaCaja));
                 await CargarDatosAsync();
             }
             catch (Exception ex)

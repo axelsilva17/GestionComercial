@@ -140,6 +140,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 NotifyOfPropertyChange(() => VentaSeleccionada);
                 NotifyOfPropertyChange(() => PuedeAnular);
                 NotifyOfPropertyChange(() => PuedeVerDetalle);
+                NotifyOfPropertyChange(() => PuedeCobrar);
             }
         }
 

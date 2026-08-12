@@ -29,7 +29,7 @@ namespace GestionComercial.Tests.Servicios
                 new() { Id = 2, Nombre = "Prod B", StockActual = 2, StockMinimo = 5, PrecioVentaActual = 200, Id_empresa = 1 },
             };
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .Setup(r => r.ObtenerPorEmpresaAsync(1, true))
                 .ReturnsAsync(productos);
 
             var resultado = await _servicio.ObtenerTodosAsync(1);

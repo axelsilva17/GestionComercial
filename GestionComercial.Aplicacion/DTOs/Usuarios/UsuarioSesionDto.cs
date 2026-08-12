@@ -11,6 +11,11 @@ namespace GestionComercial.Aplicacion.DTOs.Usuarios
         public string Sucursal    { get; set; } = string.Empty;
         public int    IdEmpresa   { get; set; }
         public string Empresa     { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Códigos de permiso cargados al login (ej: "Ventas.Ver", "Productos.Crear").
+        /// </summary>
+        public HashSet<string> Permisos { get; set; } = new();
        
         public string NombreCompleto => $"{Nombre} {Apellido}";
         public string Inicial        => string.IsNullOrEmpty(Nombre) ? "?" : Nombre[0].ToString().ToUpper();

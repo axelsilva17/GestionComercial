@@ -186,11 +186,12 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
 
         /// Configura el formulario en modo Editar cargando el producto indicado.
-        public void InicializarParaEditar(int idProducto)
+        public async void InicializarParaEditar(int idProducto)
         {
             IsEditMode = true;
             _idProducto   = idProducto;
             LimpiarError();
+            await CargarReferenciasAsync();
             _ = CargarProductoAsync(idProducto);
         }
 
