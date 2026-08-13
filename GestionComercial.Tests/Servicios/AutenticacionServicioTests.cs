@@ -155,9 +155,11 @@ namespace GestionComercial.Tests.Servicios
         public async Task LoginAsync_UsuarioBloqueado_LanzaExcepcionSinVerificarPassword()
         {
             var usuario = CrearUsuarioAdmin();
-            usuario.RegistrarAccesoFallido(maxIntentos: 3);
-            usuario.RegistrarAccesoFallido(maxIntentos: 3);
-            usuario.RegistrarAccesoFallido(maxIntentos: 3);
+            usuario.RegistrarAccesoFallido(maxIntentos: 5);
+            usuario.RegistrarAccesoFallido(maxIntentos: 5);
+            usuario.RegistrarAccesoFallido(maxIntentos: 5);
+            usuario.RegistrarAccesoFallido(maxIntentos: 5);
+            usuario.RegistrarAccesoFallido(maxIntentos: 5);
             //此时 usuario.EstaBloqueado == true
 
             _mockUsuarioRepo
@@ -167,17 +169,17 @@ namespace GestionComercial.Tests.Servicios
             var act = () => _servicio.LoginAsync("admin@miempresa.com", "admin2026");
 
             await act.Should().ThrowAsync<NegocioException>()
-                .WithMessage("*bloqueado*");
+                .WithMessage("*Demasiados intentos*");
 
             _mockPasswordHasher.Verify(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         // ═══════════════════════════════════════════════════════════
-        // LoginAsync - 3 fallos consecutivos bloquea el usuario
+        // LoginAsync - 5 fallos consecutivos bloquea el usuario
         // ═══════════════════════════════════════════════════════════
 
         [Fact]
-        public async Task LoginAsync_TresFallosConsecutivos_BloqueaUsuario()
+        public async Task LoginAsync_CincoFallosConsecutivos_BloqueaUsuario()
         {
             var usuario = CrearUsuarioAdmin();
             _mockUsuarioRepo
@@ -187,7 +189,7 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(h => h.VerifyPassword(It.IsAny<string>(), usuario.PasswordHash))
                 .Returns(false);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 5; i++)
             {
                 try
                 {
@@ -197,7 +199,7 @@ namespace GestionComercial.Tests.Servicios
             }
 
             usuario.EstaBloqueado.Should().BeTrue();
-            usuario.IntentosFallidos.Should().Be(3);
+            usuario.IntentosFallidos.Should().Be(5);
         }
 
         // ═══════════════════════════════════════════════════════════

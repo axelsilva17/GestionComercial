@@ -72,6 +72,10 @@ namespace GestionComercial.UI.ViewModels.Main
                 await _windowManager.ShowWindowAsync(shell);
                 await TryCloseAsync();
             }
+            catch (GestionComercial.Aplicacion.Excepciones.NegocioException ex)
+            {
+                ErrorMessage = ex.Message;
+            }
             catch (System.Exception)
             {
                 ErrorMessage = "Error al conectar con la base de datos. Intentá de nuevo.";

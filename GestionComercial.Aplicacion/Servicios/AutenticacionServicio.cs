@@ -28,7 +28,7 @@ namespace GestionComercial.Aplicacion.Servicios
             if (usuario.EstaBloqueado)
             {
                 var restante = (int)(usuario.BloqueadoHasta!.Value - DateTime.Now).TotalMinutes + 1;
-                throw new NegocioException($"Usuario bloqueado temporalmente por intentos fallidos. Intentá de nuevo en {restante} minutos.");
+                throw new NegocioException($"Demasiados intentos fallidos. Intentá de nuevo en {restante} minutos o usá la opción '¿Olvidaste tu contraseña?'.");
             }
 
             if (!usuario.PuedeAcceder)
@@ -38,7 +38,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
             if (!passwordValido)
             {
-                usuario.RegistrarAccesoFallido();
+                usuario.RegistrarAccesoFallido(maxIntentos: 5);
                 _uow.Usuarios.Actualizar(usuario);
                 await _uow.GuardarCambiosAsync();
                 throw new NegocioException("Email o contraseña incorrectos.");
