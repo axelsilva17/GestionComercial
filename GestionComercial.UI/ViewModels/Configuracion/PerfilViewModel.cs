@@ -213,7 +213,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 var sesion = await _authServicio.LoginAsync(Sesion.Email, PassActual);
                 if (sesion == null) { MostrarError("La contraseña actual es incorrecta."); return; }
 
-                await _recuperacionServicio.CambiarContrasenaAsync(Sesion.Email, PassNuevo);
+                await _recuperacionServicio.CambiarContrasenaAsync(Sesion.Email, PassNuevo, esRecuperacionOlvidada: false);
                 MensajeExito         = "Contraseña actualizada correctamente.";
                 PanelPasswordVisible = false;
             }

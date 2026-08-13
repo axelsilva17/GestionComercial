@@ -249,6 +249,9 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
             ErrorDatos.Visibility    = Visibility.Collapsed;
             ErrorPassword.Visibility = Visibility.Collapsed;
             ErrorPregunta.Visibility = Visibility.Collapsed;
+            TxtErrorDatos.Text       = string.Empty;
+            TxtErrorPassword.Text    = string.Empty;
+            TxtErrorPregunta.Text    = string.Empty;
         }
 
         private async Task ActualizarEstadoPreguntaAsync()
@@ -342,7 +345,7 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
                 if (sesion == null)
                 { MostrarError(ErrorPassword, TxtErrorPassword, "La contraseña actual es incorrecta."); return; }
 
-                await _recuperacionServicio.CambiarContrasenaAsync(VM.SesionActual.Email, _passNuevo);
+                await _recuperacionServicio.CambiarContrasenaAsync(VM.SesionActual.Email, _passNuevo, esRecuperacionOlvidada: false);
 
                 FormPassword.Visibility = Visibility.Collapsed;
                 PbActual.Clear(); PbNuevo.Clear(); PbConfirmar.Clear();

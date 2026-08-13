@@ -78,6 +78,10 @@ namespace GestionComercial.UI.Views.Main
             PanelRecupPregunta.Visibility      = Visibility.Collapsed;
             PanelRecupNuevaContrasena.Visibility = Visibility.Collapsed;
 
+            ErrorRecupEmail.Visibility     = Visibility.Collapsed;
+            ErrorRecupPregunta.Visibility  = Visibility.Collapsed;
+            ErrorNuevaContrasena.Visibility = Visibility.Collapsed;
+
             panel.Visibility = Visibility.Visible;
             panel.Opacity    = 0;
 

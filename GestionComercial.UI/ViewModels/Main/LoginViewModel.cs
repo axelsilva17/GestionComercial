@@ -23,14 +23,14 @@ namespace GestionComercial.UI.ViewModels.Main
         public string Usuario
         {
             get => _usuario;
-            set { _usuario = value; NotifyOfPropertyChange(() => Usuario); NotifyOfPropertyChange(() => CanLoginCommand); }
+            set { _usuario = value; if (!string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = string.Empty; NotifyOfPropertyChange(() => Usuario); NotifyOfPropertyChange(() => CanLoginCommand); }
         }
 
         private string _password = string.Empty;
         public string Password
         {
             get => _password;
-            set { _password = value; NotifyOfPropertyChange(() => Password); NotifyOfPropertyChange(() => CanLoginCommand); }
+            set { _password = value; if (!string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = string.Empty; NotifyOfPropertyChange(() => Password); NotifyOfPropertyChange(() => CanLoginCommand); }
         }
 
         private string _errorMessage = string.Empty;

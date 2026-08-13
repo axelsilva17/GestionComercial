@@ -35,32 +35,21 @@ namespace GestionComercial.Aplicacion.Servicios
         /// Obtiene la pregunta secreta del usuario por email.
         public async Task<string?> ObtenerPreguntaAsync(string email)
         {
-            var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email);
+            var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email.Trim());
             if (usuario == null)
                 throw new NegocioException("Si el email está registrado, verás tu pregunta secreta.");
 
-            // Seguridad: bloquear recuperación para roles superiores
-            if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
-                throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
-
             if (string.IsNullOrEmpty(usuario.PreguntaSecreta))
-                return null;
+                throw new NegocioException("Este usuario no tiene configurada una pregunta secreta. Contactá al administrador.");
 
-            else {
-                return usuario.PreguntaSecreta;
-
-            } 
+            return usuario.PreguntaSecreta;
         }
 
         /// Valida la respuesta y si es correcta permite cambiar la contraseña.
         public async Task<bool> ValidarRespuestaAsync(string email, string respuesta)
         {
-            var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
+            var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email.Trim())
                 ?? throw new NegocioException("No se pudo completar la recuperación. Verificá los datos ingresados.");
-
-            // Seguridad: bloquear recuperación para roles superiores
-            if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
-                throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
 
             // Verificar bloqueo
             if (usuario.EstaBloqueado)
@@ -103,17 +92,13 @@ namespace GestionComercial.Aplicacion.Servicios
         }
 
         /// Cambia la contraseña después de validar la respuesta.
-        public async Task CambiarContrasenaAsync(string email, string nuevaContrasena)
+        public async Task CambiarContrasenaAsync(string email, string nuevaContrasena, bool esRecuperacionOlvidada = true)
         {
             if (nuevaContrasena.Length < 8)
                 throw new NegocioException("La contraseña debe tener al menos 8 caracteres.");
 
-            var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
+            var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email.Trim())
                 ?? throw new NegocioException("No se pudo completar la recuperación. Verificá los datos ingresados.");
-
-            // Seguridad: bloquear recuperación para roles superiores
-            if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
-                throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
 
             usuario.ActualizarPassword(_passwordHasher.HashPassword(nuevaContrasena));
             _uow.Usuarios.Actualizar(usuario);
