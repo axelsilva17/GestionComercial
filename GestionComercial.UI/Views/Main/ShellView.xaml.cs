@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Configuracion;
 using GestionComercial.UI.ViewModels.Main;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -42,8 +43,13 @@ namespace GestionComercial.UI.Views.Main
         private void ShellView_Loaded(object sender, RoutedEventArgs e)
         {
             // Cargar preguntas en el ComboBox + opción personalizada
-            CbPreguntas.ItemsSource = PreguntasSecretas.Lista;
-            CbPreguntas.Items.Add(PreguntaCustomSentinel);
+            // (construir la lista completa antes de asignar ItemsSource —
+            //  NO usar Items.Add mientras ItemsSource está en uso)
+            var preguntas = new List<string>(PreguntasSecretas.Lista)
+            {
+                PreguntaCustomSentinel
+            };
+            CbPreguntas.ItemsSource = preguntas;
             if (CbPreguntas.Items.Count > 0)
                 CbPreguntas.SelectedIndex = 0;
 

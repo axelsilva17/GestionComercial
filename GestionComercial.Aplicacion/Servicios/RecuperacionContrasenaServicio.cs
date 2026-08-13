@@ -51,12 +51,10 @@ namespace GestionComercial.Aplicacion.Servicios
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email.Trim())
                 ?? throw new NegocioException("No se pudo completar la recuperación. Verificá los datos ingresados.");
 
-            // Verificar bloqueo
-            if (usuario.EstaBloqueado)
-            {
-                var restante = (int)(usuario.BloqueadoHasta!.Value - DateTime.Now).TotalMinutes;
-                throw new NegocioException($"Cuenta bloqueada. Intentá de nuevo en {restante} minutos.");
-            }
+            // Verificar bloqueo — el bloqueo de LOGIN no debe bloquear la recuperación
+            // por pregunta secreta: es la salida de emergencia (el mensaje de login
+            // justamente orienta a '¿Olvidaste tu contraseña?').
+            // El propio intento de respuesta ya tiene su conteo propio (MaxIntentos).
 
             bool correcta = _passwordHasher.VerifyPassword(
                 respuesta.Trim().ToLower(),
