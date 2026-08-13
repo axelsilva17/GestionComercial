@@ -256,12 +256,16 @@
                         <Border Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}"
                                 Background="#1A0A0A" BorderBrush="{DynamicResource ErrorBrush}"
                                 BorderThickness="1" CornerRadius="10" Padding="14,12" Margin="0,0,0,24">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠" FontSize="16" Foreground="{DynamicResource ErrorBrush}"
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="⚠" FontSize="16" Foreground="{DynamicResource ErrorBrush}"
                                            Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorBrush}"
+                                <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorBrush}"
                                            FontSize="14" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Botón Login -->
