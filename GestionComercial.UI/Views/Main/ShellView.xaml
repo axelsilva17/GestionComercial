@@ -594,7 +594,12 @@
                                     <StackPanel x:Name="FormPregunta" Visibility="Collapsed">
                                         <TextBlock Text="PREGUNTA SECRETA" Style="{StaticResource FormLabel}"/>
                                         <ComboBox x:Name="CbPreguntas" Height="40" Margin="0,0,0,12"
-                                                  Style="{StaticResource FilterComboBoxStyle}" FontSize="12"/>
+                                                  Style="{StaticResource FilterComboBoxStyle}" FontSize="12"
+                                                  SelectionChanged="CbPreguntas_SelectionChanged"/>
+                                        <TextBlock x:Name="LblPreguntaCustom" Text="TU PROPIA PREGUNTA" Style="{StaticResource FormLabel}"
+                                                   Visibility="Collapsed"/>
+                                        <TextBox x:Name="TxtPreguntaCustom" Style="{StaticResource FormInput}" Margin="0,0,0,12"
+                                                 Visibility="Collapsed" MaxLength="200"/>
                                         <TextBlock Text="TU RESPUESTA" Style="{StaticResource FormLabel}"/>
                                         <PasswordBox x:Name="PbRespuesta" Style="{StaticResource FormPassword}"
                                                      PasswordChanged="PbRespuesta_PasswordChanged" Margin="0,0,0,12"/>

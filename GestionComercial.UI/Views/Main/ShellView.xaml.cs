@@ -37,10 +37,13 @@ namespace GestionComercial.UI.Views.Main
             Loaded += ShellView_Loaded;
         }
 
+        private const string PreguntaCustomSentinel = "✏️ Otra pregunta (escribila vos)";
+
         private void ShellView_Loaded(object sender, RoutedEventArgs e)
         {
-            // Cargar preguntas en el ComboBox
+            // Cargar preguntas en el ComboBox + opción personalizada
             CbPreguntas.ItemsSource = PreguntasSecretas.Lista;
+            CbPreguntas.Items.Add(PreguntaCustomSentinel);
             if (CbPreguntas.Items.Count > 0)
                 CbPreguntas.SelectedIndex = 0;
 
@@ -369,12 +372,27 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
             OcultarTodosLosFormularios();
             PbRespuesta.Clear(); PbConfirmarRespuesta.Clear();
             _respuesta = _confirmarRespuesta = string.Empty;
+            TxtPreguntaCustom.Text = string.Empty;
+            TxtPreguntaCustom.Visibility = Visibility.Collapsed;
+            LblPreguntaCustom.Visibility = Visibility.Collapsed;
             if (CbPreguntas.Items.Count > 0) CbPreguntas.SelectedIndex = 0;
             FormPregunta.Visibility = Visibility.Visible;
         }
 
         private void CancelarPregunta_Click(object sender, RoutedEventArgs e)
-            => FormPregunta.Visibility = Visibility.Collapsed;
+        {
+            FormPregunta.Visibility = Visibility.Collapsed;
+            TxtPreguntaCustom.Visibility = Visibility.Collapsed;
+            LblPreguntaCustom.Visibility = Visibility.Collapsed;
+        }
+
+        private void CbPreguntas_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool esCustom = CbPreguntas.SelectedItem?.ToString() == PreguntaCustomSentinel;
+            TxtPreguntaCustom.Visibility = esCustom ? Visibility.Visible : Visibility.Collapsed;
+            LblPreguntaCustom.Visibility = esCustom ? Visibility.Visible : Visibility.Collapsed;
+            if (!esCustom) TxtPreguntaCustom.Text = string.Empty;
+        }
 
         private async void GuardarPregunta_Click(object sender, RoutedEventArgs e)
         {
@@ -382,6 +400,12 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
             if (CbPreguntas.SelectedItem == null)
             { MostrarError(ErrorPregunta, TxtErrorPregunta, "Seleccioná una pregunta."); return; }
+
+            bool esCustom = CbPreguntas.SelectedItem?.ToString() == PreguntaCustomSentinel;
+            string pregunta = esCustom ? TxtPreguntaCustom.Text.Trim() : CbPreguntas.SelectedItem!.ToString()!;
+
+            if (esCustom && string.IsNullOrWhiteSpace(pregunta))
+            { MostrarError(ErrorPregunta, TxtErrorPregunta, "Escribí tu propia pregunta."); return; }
             if (string.IsNullOrWhiteSpace(_respuesta))
             { MostrarError(ErrorPregunta, TxtErrorPregunta, "Ingresá tu respuesta."); return; }
             if (_respuesta != _confirmarRespuesta)
@@ -393,10 +417,12 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
             {
                 await _recuperacionServicio.ConfigurarPreguntaAsync(
                     VM.SesionActual.Email,
-                    CbPreguntas.SelectedItem.ToString(),
+                    pregunta,
                     _respuesta);
 
                 FormPregunta.Visibility = Visibility.Collapsed;
+                TxtPreguntaCustom.Visibility = Visibility.Collapsed;
+                LblPreguntaCustom.Visibility = Visibility.Collapsed;
                 PbRespuesta.Clear(); PbConfirmarRespuesta.Clear();
                 await ActualizarEstadoPreguntaAsync();
                 MostrarExito("Pregunta secreta configurada correctamente.");

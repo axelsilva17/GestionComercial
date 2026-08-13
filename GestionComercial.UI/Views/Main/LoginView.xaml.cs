@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Main;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 
 namespace GestionComercial.UI.Views.Main
@@ -178,6 +179,47 @@ namespace GestionComercial.UI.Views.Main
                 MostrarError(ErrorNuevaContrasena, ErrorNuevaContrasenaText, ex.Message);
             }
         }
+
+        // ── Enter key handlers ────────────────────────────────────────────────
+        private void RecupEmail_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                RecupEmail_Continuar(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void RecupRespuesta_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                RecupPregunta_Verificar(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void NuevaContrasena_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                CambiarContrasena_Click(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void ConfirmarContrasena_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                CambiarContrasena_Click(sender, new RoutedEventArgs());
+            }
+        }
+
+        // ── Volver desde paso 3 a pregunta ────────────────────────────────────
+        private void VolverAPregunta_Click(object sender, RoutedEventArgs e)
+            => MostrarPanel(PanelRecupPregunta);
 
         // ── Helper ────────────────────────────────────────────────────────────
         private static void MostrarError(Border border, TextBlock text, string mensaje)

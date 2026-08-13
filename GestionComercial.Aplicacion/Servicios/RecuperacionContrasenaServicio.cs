@@ -111,8 +111,10 @@ namespace GestionComercial.Aplicacion.Servicios
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
                 ?? throw new NegocioException("No se pudo completar la configuración. Verificá los datos ingresados.");
 
-            if (!PreguntasSecretas.Lista.Contains(pregunta))
-                throw new NegocioException("Pregunta no válida.");
+            if (string.IsNullOrWhiteSpace(pregunta) || pregunta.Length < 10)
+                throw new NegocioException("La pregunta debe tener al menos 10 caracteres.");
+            if (string.IsNullOrWhiteSpace(respuesta) || respuesta.Trim().Length < 3)
+                throw new NegocioException("La respuesta debe tener al menos 3 caracteres.");
 
             usuario.PreguntaSecreta = pregunta;
             usuario.RespuestaHash   = _passwordHasher.HashPassword(
