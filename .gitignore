@@ -27,3 +27,7 @@ opencode.json
 build_*.txt
 build_*.log
 msbuild.log
+
+# Dev test utilities
+generar_test_import.py
+test_import_*.xlsx
