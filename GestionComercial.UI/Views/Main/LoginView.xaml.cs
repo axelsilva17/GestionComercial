@@ -83,6 +83,11 @@ namespace GestionComercial.UI.Views.Main
             ErrorRecupPregunta.Visibility  = Visibility.Collapsed;
             ErrorNuevaContrasena.Visibility = Visibility.Collapsed;
 
+            // Al volver al login, limpiar el banner de error viejo (ej: mensaje de
+            // bloqueo que ya no aplica porque la recuperación desbloqueó al usuario)
+            if (panel == PanelLogin && DataContext is LoginViewModel vm)
+                vm.ErrorMessage = string.Empty;
+
             panel.Visibility = Visibility.Visible;
             panel.Opacity    = 0;
 
