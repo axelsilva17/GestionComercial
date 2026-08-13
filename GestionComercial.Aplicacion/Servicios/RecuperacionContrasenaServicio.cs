@@ -37,7 +37,7 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email);
             if (usuario == null)
-                throw new NegocioException("No se encontró un usuario con ese email.");
+                throw new NegocioException("Si el email está registrado, verás tu pregunta secreta.");
 
             // Seguridad: bloquear recuperación para roles superiores
             if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
@@ -56,7 +56,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<bool> ValidarRespuestaAsync(string email, string respuesta)
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
-                ?? throw new NegocioException("Usuario no encontrado.");
+                ?? throw new NegocioException("No se pudo completar la recuperación. Verificá los datos ingresados.");
 
             // Seguridad: bloquear recuperación para roles superiores
             if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
@@ -109,13 +109,13 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new NegocioException("La contraseña debe tener al menos 8 caracteres.");
 
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
-                ?? throw new NegocioException("Usuario no encontrado.");
+                ?? throw new NegocioException("No se pudo completar la recuperación. Verificá los datos ingresados.");
 
             // Seguridad: bloquear recuperación para roles superiores
             if (usuario.Rol?.Nombre is "Administrador" or "Gerente")
                 throw new NegocioException("No se permite recuperación de contraseña para usuarios de alto rango. Contactá al administrador del sistema.");
 
-            usuario.PasswordHash = _passwordHasher.HashPassword(nuevaContrasena);
+            usuario.ActualizarPassword(_passwordHasher.HashPassword(nuevaContrasena));
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
         }
@@ -124,7 +124,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task ConfigurarPreguntaAsync(string email, string pregunta, string respuesta)
         {
             var usuario = await _uow.Usuarios.ObtenerPorEmailAsync(email)
-                ?? throw new NegocioException("Usuario no encontrado.");
+                ?? throw new NegocioException("No se pudo completar la configuración. Verificá los datos ingresados.");
 
             if (!PreguntasSecretas.Lista.Contains(pregunta))
                 throw new NegocioException("Pregunta no válida.");

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
@@ -54,7 +55,6 @@ namespace GestionComercial.Tests.Servicios
             resultado.Empresa.Should().Be("Mi Empresa");
             resultado.Permisos.Should().Contain(new[] { "Ventas.Ver", "Productos.Ver", "Usuarios.Gestionar" });
 
-            // Verificar que se actualizó el último acceso
             _mockUsuarioRepo.Verify(r => r.Actualizar(It.Is<Usuario>(u => u.UltimoAcceso != null)), Times.Once);
             _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
         }
@@ -77,11 +77,11 @@ namespace GestionComercial.Tests.Servicios
         }
 
         // ═══════════════════════════════════════════════════════════
-        // LoginAsync - Password incorrecto
+        // LoginAsync - Password incorrecto (P1: brute force)
         // ═══════════════════════════════════════════════════════════
 
         [Fact]
-        public async Task LoginAsync_PasswordIncorrecto_DevuelveNull()
+        public async Task LoginAsync_PasswordIncorrecto_LanzaNegocioException()
         {
             var usuario = CrearUsuarioAdmin();
             _mockUsuarioRepo
@@ -91,10 +91,113 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(h => h.VerifyPassword("wrongpass", usuario.PasswordHash))
                 .Returns(false);
 
-            var resultado = await _servicio.LoginAsync("admin@miempresa.com", "wrongpass");
+            var act = () => _servicio.LoginAsync("admin@miempresa.com", "wrongpass");
 
-            resultado.Should().BeNull();
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            await act.Should().ThrowAsync<NegocioException>()
+                .WithMessage("*incorrectos*");
+
+            _mockUsuarioRepo.Verify(r => r.Actualizar(It.IsAny<Usuario>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LoginAsync - Password incorrecto registra intento fallido
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task LoginAsync_PasswordIncorrecto_RegistraAccesoFallido()
+        {
+            var usuario = CrearUsuarioAdmin();
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPorEmailAsync("admin@miempresa.com"))
+                .ReturnsAsync(usuario);
+            _mockPasswordHasher
+                .Setup(h => h.VerifyPassword("wrongpass", usuario.PasswordHash))
+                .Returns(false);
+
+            await _servicio.Invoking(s => s.LoginAsync("admin@miempresa.com", "wrongpass"))
+                .Should().ThrowAsync<NegocioException>();
+
+            usuario.IntentosFallidos.Should().Be(1);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LoginAsync - Password correcto registra acceso exitoso
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task LoginAsync_PasswordCorrecto_RegistraAccesoExitoso()
+        {
+            var usuario = CrearUsuarioAdmin();
+            usuario.IntentosFallidos = 2;
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPorEmailAsync("admin@miempresa.com"))
+                .ReturnsAsync(usuario);
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPermisosAsync(usuario.Id))
+                .ReturnsAsync(new[] { "Ventas.Ver" });
+            _mockPasswordHasher
+                .Setup(h => h.VerifyPassword("admin2026", usuario.PasswordHash))
+                .Returns(true);
+
+            var resultado = await _servicio.LoginAsync("admin@miempresa.com", "admin2026");
+
+            resultado.Should().NotBeNull();
+            usuario.IntentosFallidos.Should().Be(0);
+            usuario.BloqueadoHasta.Should().BeNull();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LoginAsync - Usuario bloqueado no verifica password
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task LoginAsync_UsuarioBloqueado_LanzaExcepcionSinVerificarPassword()
+        {
+            var usuario = CrearUsuarioAdmin();
+            usuario.RegistrarAccesoFallido(maxIntentos: 3);
+            usuario.RegistrarAccesoFallido(maxIntentos: 3);
+            usuario.RegistrarAccesoFallido(maxIntentos: 3);
+            //此时 usuario.EstaBloqueado == true
+
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPorEmailAsync("admin@miempresa.com"))
+                .ReturnsAsync(usuario);
+
+            var act = () => _servicio.LoginAsync("admin@miempresa.com", "admin2026");
+
+            await act.Should().ThrowAsync<NegocioException>()
+                .WithMessage("*bloqueado*");
+
+            _mockPasswordHasher.Verify(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LoginAsync - 3 fallos consecutivos bloquea el usuario
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task LoginAsync_TresFallosConsecutivos_BloqueaUsuario()
+        {
+            var usuario = CrearUsuarioAdmin();
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPorEmailAsync("admin@miempresa.com"))
+                .ReturnsAsync(usuario);
+            _mockPasswordHasher
+                .Setup(h => h.VerifyPassword(It.IsAny<string>(), usuario.PasswordHash))
+                .Returns(false);
+
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    await _servicio.LoginAsync("admin@miempresa.com", "wrong");
+                }
+                catch (NegocioException) { }
+            }
+
+            usuario.EstaBloqueado.Should().BeTrue();
+            usuario.IntentosFallidos.Should().Be(3);
         }
 
         // ═══════════════════════════════════════════════════════════

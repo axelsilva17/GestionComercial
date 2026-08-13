@@ -72,9 +72,9 @@ namespace GestionComercial.UI.ViewModels.Main
                 await _windowManager.ShowWindowAsync(shell);
                 await TryCloseAsync();
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                ErrorMessage = $"Error al conectar: {ex.Message}";
+                ErrorMessage = "Error al conectar con la base de datos. Intentá de nuevo.";
             }
             finally
             {

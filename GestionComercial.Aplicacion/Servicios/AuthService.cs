@@ -8,12 +8,14 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         public bool IsCurrentUserAdmin()
         {
+#if DEBUG
             // Desarrollo/QA: posibilidad de forzar admin con variable de entorno
             var testFlag = Environment.GetEnvironmentVariable("ON_DEMAND_ADMIN_TEST");
             if (!string.IsNullOrEmpty(testFlag) && testFlag == "1")
             {
                 return true;
             }
+#endif
             try
             {
                 using var identity = WindowsIdentity.GetCurrent();
