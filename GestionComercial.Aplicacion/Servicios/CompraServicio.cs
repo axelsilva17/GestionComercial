@@ -76,7 +76,9 @@ namespace GestionComercial.Aplicacion.Servicios
                     item.Cantidad,
                     $"Compra #{compra.Id} - {producto.Nombre}",
                     dto.IdSucursal,
-                    dto.IdUsuario
+                    dto.IdUsuario,
+                    guardarCambios: false,
+                    unidadTrabajo: _uow
                 );
             }
 

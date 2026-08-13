@@ -266,5 +266,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 filtradas = filtradas.Where(v => v.Estado == FiltroEstado);
             Ventas = new ObservableCollection<VentaResumenDto>(filtradas);
         }
+
+        public async Task Volver()
+        {
+            await IoC.Get<ShellViewModel>()
+                     .IrDashboard();
+        }
     }
 }

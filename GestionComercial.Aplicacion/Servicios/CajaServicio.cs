@@ -570,5 +570,66 @@ namespace GestionComercial.Aplicacion.Servicios
 
             return desglose;
         }
+
+        public async Task EliminarCajaAsync(int idCaja)
+        {
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+                ?? throw new NegocioException("Caja no encontrada.");
+
+            if (caja.EsPrimaria)
+                throw new NegocioException("No se puede eliminar una caja primaria.");
+
+            if (caja.EstaAbierta)
+                throw new NegocioException("No se puede eliminar una caja abierta. Cerrala primero.");
+
+            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
+            if (movimientos.Any(m => m.Tipo == (int)TipoMovimientoCajaEnum.Ingreso
+                                  || m.Tipo == (int)TipoMovimientoCajaEnum.Egreso))
+                throw new NegocioException("La caja tiene movimientos de ingreso/egreso y no puede ser eliminada.");
+
+            // Capturar estado anterior para auditoría
+            var valoresAnteriores = JsonSerializer.Serialize(new
+            {
+                caja.Id,
+                caja.FechaApertura,
+                caja.MontoInicial,
+                caja.Estado,
+                caja.Turno,
+                caja.EsPrimaria
+            });
+
+            caja.Inactivar();
+            _uow.Cajas.Actualizar(caja);
+            await _uow.GuardarCambiosAsync();
+
+            // Registrar auditoría
+            try
+            {
+                var valoresNuevos = JsonSerializer.Serialize(new
+                {
+                    caja.Id,
+                    caja.Activo,
+                    caja.Estado
+                });
+
+                await _uow.Auditoria.RegistrarAuditoriaAsync(
+                    nombreTabla: "Cajas",
+                    registroId: caja.Id,
+                    tipoOperacion: OperacionAuditoriaEnum.Delete,
+                    idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : null,
+                    nombreUsuario: _sesion.Nombre ?? "Sistema",
+                    valoresAnteriores: valoresAnteriores,
+                    valoresNuevos: valoresNuevos,
+                    workstation: Environment.MachineName,
+                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
+                );
+                await _uow.GuardarCambiosAsync();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError("[CajaServicio] Error al registrar auditoría de eliminación", ex);
+            }
+        }
     }
 }

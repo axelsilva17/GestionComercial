@@ -219,6 +219,82 @@ namespace GestionComercial.Tests.Servicios
         // Helpers
         // ═══════════════════════════════════════════════════════════
 
+        // ═══════════════════════════════════════════════════════════
+        // EliminarCajaAsync
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task EliminarCajaAsync_CajaNoPrimariaCerradaSinMovimientos_Elimina()
+        {
+            var caja = CrearCajaCerrada(esPrimaria: false);
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
+            _mockMovRepo.Setup(r => r.ObtenerPorCajaAsync(1))
+                .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Caja.TipoMovimientoCaja>());
+
+            await _servicio.EliminarCajaAsync(1);
+
+            caja.Activo.Should().BeFalse();
+            _mockCajaRepo.Verify(r => r.Actualizar(caja), Times.Once);
+        }
+
+        [Fact]
+        public async Task EliminarCajaAsync_CajaPrimaria_LanzaExcepcion()
+        {
+            var caja = CrearCajaCerrada(esPrimaria: true);
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
+
+            var act = () => _servicio.EliminarCajaAsync(1);
+            await act.Should().ThrowAsync<GestionComercial.Aplicacion.Excepciones.NegocioException>()
+                .WithMessage("*primaria*");
+        }
+
+        [Fact]
+        public async Task EliminarCajaAsync_CajaAbierta_LanzaExcepcion()
+        {
+            var caja = CrearCajaAbierta();
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
+
+            var act = () => _servicio.EliminarCajaAsync(1);
+            await act.Should().ThrowAsync<GestionComercial.Aplicacion.Excepciones.NegocioException>()
+                .WithMessage("*abierta*");
+        }
+
+        [Fact]
+        public async Task EliminarCajaAsync_CajaConMovimientos_LanzaExcepcion()
+        {
+            var caja = CrearCajaCerrada(esPrimaria: false);
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
+            _mockMovRepo.Setup(r => r.ObtenerPorCajaAsync(1))
+                .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Caja.TipoMovimientoCaja>
+                {
+                    new() { Id = 1, Tipo = 1, Monto = 500, Id_caja = 1 }
+                });
+
+            var act = () => _servicio.EliminarCajaAsync(1);
+            await act.Should().ThrowAsync<GestionComercial.Aplicacion.Excepciones.NegocioException>()
+                .WithMessage("*movimientos*");
+        }
+
+        [Fact]
+        public async Task EliminarCajaAsync_CajaNoEncontrada_LanzaExcepcion()
+        {
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(999))
+                .ReturnsAsync((Caja?)null);
+
+            var act = () => _servicio.EliminarCajaAsync(999);
+            await act.Should().ThrowAsync<GestionComercial.Aplicacion.Excepciones.NegocioException>()
+                .WithMessage("*no encontrada*");
+        }
+
+        private static Caja CrearCajaCerrada(bool esPrimaria = false)
+        {
+            var caja = Caja.Crear(idSucursal: 1, idUsuarioApertura: 1, montoInicial: 1000, esPrimaria: esPrimaria);
+            caja.Cerrar(idUsuarioCierre: 1, montoFinal: 1000);
+            return caja;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+
         private static Caja CrearCajaAbierta(decimal montoInicial = 1000, decimal? montoFinal = null)
         {
             var caja = Caja.Crear(idSucursal: 1, idUsuarioApertura: 1, montoInicial: montoInicial);

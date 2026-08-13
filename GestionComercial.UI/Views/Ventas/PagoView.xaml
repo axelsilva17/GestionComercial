@@ -324,6 +324,8 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" x:Name="Cancelar"
@@ -354,7 +356,18 @@
                     </Button.Style>
                 </Button>
 
-                <Button Grid.Column="2" x:Name="Confirmar"
+                <Button Grid.Column="2" x:Name="GuardarPendienteAsync"
+                        Height="48" FontSize="14"
+                        ToolTip="Guardar la venta como pendiente de cobro"
+                        cal:Message.Attach="[Event Click] = [Action GuardarPendienteAsync]">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📋" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Guardar pendiente" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="4" x:Name="Confirmar"
                         Height="48" FontSize="14" FontWeight="SemiBold"
                         IsEnabled="{Binding PuedeCobrar}"
                         ToolTip="F6 - Confirmar cobro"

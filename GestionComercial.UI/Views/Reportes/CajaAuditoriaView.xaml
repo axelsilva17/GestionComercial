@@ -84,7 +84,7 @@
 
                     <TextBlock Text="Nueva caja:" Foreground="{DynamicResource TextSecondaryBrush}" 
                                VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"/>
-                    <ComboBox ItemsSource="{Binding TurnosDisponibles}" 
+                    <ComboBox ItemsSource="{Binding TurnosCaja}" 
                               SelectedItem="{Binding TurnoNuevaCaja}"
                               Width="100" Style="{StaticResource FilterComboBoxStyle}"/>
                     <Button Content="+ Crear" cal:Message.Attach="CrearCajaAsync"
@@ -145,6 +145,10 @@
                     <Button Content="Exportar Excel" cal:Message.Attach="ExportarExcel"
                             Padding="14,8" Background="{DynamicResource PrimaryBrush}"
                             Foreground="White" BorderThickness="0" Cursor="Hand" FontSize="12"/>
+
+                    <Button Content="✕ Eliminar" cal:Message.Attach="EliminarCaja"
+                            Padding="14,8" Background="#1AEF4444"
+                            Foreground="#EF4444" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="8,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>

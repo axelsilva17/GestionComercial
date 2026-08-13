@@ -378,6 +378,28 @@ namespace GestionComercial.UI.ViewModels.Ventas
                      .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
 
+        public async Task GuardarPendienteAsync()
+        {
+            var confirmacion = System.Windows.MessageBox.Show(
+                "La venta quedará pendiente de cobro. ¿Desea continuar?",
+                "Confirmar",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
+
+            if (confirmacion != System.Windows.MessageBoxResult.Yes) return;
+
+            // No registrar pago, no marcar pagada, no revertir stock.
+            // La venta ya existe en BD con Estado Pendiente y stock descontado.
+            await IoC.Get<ShellViewModel>()
+                     .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
+
+            System.Windows.MessageBox.Show(
+                "Venta guardada como pendiente.",
+                "Información",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+
         private void RecalcularTotalPagado()
         {
             TotalPagado = Pagos.Sum(p => p.Monto);

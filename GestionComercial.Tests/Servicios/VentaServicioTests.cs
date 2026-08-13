@@ -20,6 +20,9 @@ namespace GestionComercial.Tests.Servicios
         private readonly Mock<IProductoRepositorio> _mockProductoRepo = new();
         private readonly Mock<IPagoRepositorio> _mockPagoRepo = new();
         private readonly Mock<IMetodoPagoRepositorio> _mockMetodoPagoRepo = new();
+        private readonly Mock<ISucursalRepositorio> _mockSucursalRepo = new();
+        private readonly Mock<IMovimientoCajaRepositorio> _mockMovimientoCajaRepo = new();
+        private readonly Mock<ICajaRepositorio> _mockCajaRepo = new();
         private readonly Mock<IServicioImpresion> _mockImpresion = new();
         private readonly Mock<IInventarioServicio> _mockInventario = new();
         private readonly Mock<ILogger<VentaServicio>> _mockLogger = new();
@@ -32,6 +35,9 @@ namespace GestionComercial.Tests.Servicios
             _mockUow.Setup(u => u.Productos).Returns(_mockProductoRepo.Object);
             _mockUow.Setup(u => u.Pagos).Returns(_mockPagoRepo.Object);
             _mockUow.Setup(u => u.MetodosPago).Returns(_mockMetodoPagoRepo.Object);
+            _mockUow.Setup(u => u.Sucursales).Returns(_mockSucursalRepo.Object);
+            _mockUow.Setup(u => u.MovimientosCaja).Returns(_mockMovimientoCajaRepo.Object);
+            _mockUow.Setup(u => u.Cajas).Returns(_mockCajaRepo.Object);
 
             // Mock para EjecutarEnTransaccionAsync: ejecutar el callback inmediatamente
             _mockUow
@@ -215,10 +221,70 @@ namespace GestionComercial.Tests.Servicios
             _mockInventario.Verify(i => i.RegistrarMovimientoAsync(
                 1, "Salida", 2,
                 It.IsAny<string>(), 1, 1,
-                false), Times.Once);
+                false,
+                It.IsAny<IUnitOfWork?>()), Times.Once);
 
             // Verificar que se guardó en repositorio
             _mockVentaRepo.Verify(r => r.AgregarAsync(It.IsAny<Venta>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task CrearAsync_PasaUnidadTrabajoCompartida_AInventarioServicio()
+        {
+            var producto = new ProdEntity
+            {
+                Id = 1,
+                Nombre = "Producto Test",
+                StockActual = 10,
+                PrecioVentaActual = 100m,
+                PrecioCostoActual = 50m
+            };
+
+            _mockProductoRepo
+                .Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(producto);
+
+            _mockVentaRepo
+                .Setup(r => r.AgregarAsync(It.IsAny<Venta>()))
+                .Returns<Venta>(v => Task.FromResult(v));
+
+            var ventaCreada = CrearVentaPendiente();
+            ventaCreada.GetType().GetProperty("Id")!.SetValue(ventaCreada, 1);
+            ventaCreada.AgregarDetalle(CrearDetalle(100m, 50m, 2));
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>()))
+                .ReturnsAsync(ventaCreada);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerPorFechaAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), 1))
+                .ReturnsAsync(new List<Venta> { ventaCreada });
+
+            var dto = new VentaCrearDto
+            {
+                IdSucursal = 1,
+                IdCliente = 1,
+                IdUsuario = 1,
+                IdCaja = 5,
+                Items = new List<VentaDetalleCrearDto>
+                {
+                    new() { IdProducto = 1, Cantidad = 2 }
+                }
+            };
+
+            await _servicio.CrearAsync(dto);
+
+            // Verificar que se pasó una unidad de trabajo (no null) para que el movimiento
+            // y la venta se persistan en el mismo contexto
+            _mockInventario.Verify(i => i.RegistrarMovimientoAsync(
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<decimal>(),
+                It.IsAny<string?>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                false,
+                It.Is<IUnitOfWork?>(u => u != null)), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -463,6 +529,125 @@ namespace GestionComercial.Tests.Servicios
 
             total.Should().Be(15000.50m);
             _mockVentaRepo.Verify(r => r.ObtenerTotalDelDiaAsync(1), Times.Once);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CobrarVentaAsync
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task CobrarVentaAsync_VentaPendiente_MarcaComoPagada()
+        {
+            var venta = CrearVentaPendiente();
+            venta.AgregarDetalle(CrearDetalle(100m, 50m, 1)); // Total = 100
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1))
+                .ReturnsAsync(venta);
+
+            _mockSucursalRepo
+                .Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal
+                {
+                    Id = 1,
+                    Nombre = "Sucursal Test",
+                    Id_empresa = 1
+                });
+
+            _mockMetodoPagoRepo
+                .Setup(r => r.ObtenerTodosPorEmpresaAsync(1))
+                .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Pagos.MetodoPago>
+                {
+                    new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo" }
+                });
+
+            _mockCajaRepo
+                .Setup(r => r.ObtenerPorIdAsync(5))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Caja.Caja
+                {
+                    Id = 5,
+                    MontoInicial = 0,
+                    MontoFinal = 0
+                });
+
+            await _servicio.CobrarVentaAsync(1);
+
+            venta.Estado.Should().Be(2); // Pagada
+            _mockVentaRepo.Verify(r => r.Actualizar(It.Is<Venta>(v => v.Estado == 2)), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public async Task CobrarVentaAsync_VentaNoPendiente_LanzaExcepcion()
+        {
+            var venta = CrearVentaPendiente();
+            venta.AgregarDetalle(CrearDetalle(100m, 50m, 1));
+            venta.MarcarPagada(); // Ya pagada
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1))
+                .ReturnsAsync(venta);
+
+            var act = () => _servicio.CobrarVentaAsync(1);
+
+            await act.Should().ThrowAsync<VentaInvalidaException>()
+                .WithMessage("*Solo se pueden cobrar ventas pendientes*");
+        }
+
+        [Fact]
+        public async Task CobrarVentaAsync_RegistraPagoEnEfectivo()
+        {
+            var venta = CrearVentaPendiente();
+            venta.AgregarDetalle(CrearDetalle(200m, 50m, 1)); // Total = 200
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1))
+                .ReturnsAsync(venta);
+
+            _mockSucursalRepo
+                .Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal
+                {
+                    Id = 1,
+                    Nombre = "Sucursal Test",
+                    Id_empresa = 1
+                });
+
+            _mockMetodoPagoRepo
+                .Setup(r => r.ObtenerTodosPorEmpresaAsync(1))
+                .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Pagos.MetodoPago>
+                {
+                    new() { Id = 5, Nombre = "Efectivo", Categoria = "Efectivo" }
+                });
+
+            _mockCajaRepo
+                .Setup(r => r.ObtenerPorIdAsync(5))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Caja.Caja
+                {
+                    Id = 5,
+                    MontoInicial = 0,
+                    MontoFinal = 0
+                });
+
+            await _servicio.CobrarVentaAsync(1);
+
+            _mockPagoRepo.Verify(r => r.AgregarAsync(
+                It.Is<Pago>(p => p.Monto == 200 && p.Id_venta == 1)), Times.Once);
+        }
+
+        [Fact]
+        public async Task CobrarVentaAsync_VentaNoExistente_LanzaExcepcion()
+        {
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(999))
+                .ReturnsAsync((Venta?)null);
+
+            var act = () => _servicio.CobrarVentaAsync(999);
+
+            await act.Should().ThrowAsync<VentaInvalidaException>()
+                .WithMessage("*no encontrada*");
         }
 
         // ═══════════════════════════════════════════════════════════

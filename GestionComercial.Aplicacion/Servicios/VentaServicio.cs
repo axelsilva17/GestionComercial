@@ -136,7 +136,8 @@ namespace GestionComercial.Aplicacion.Servicios
                         $"Venta #{venta.Id} - {producto.Nombre}",
                         dto.IdSucursal,
                         dto.IdUsuario,
-                        guardarCambios: false // No guardar ahora, la transacción lo manejará al final
+                        guardarCambios: false,
+                        unidadTrabajo: _uow
                     );
                     _logger?.LogInformation("[VentaVM] RegistrarMovimientoAsync completado");
                 }
@@ -145,8 +146,7 @@ namespace GestionComercial.Aplicacion.Servicios
             });
 
             // Recargar para devolver
-            var ventaCreada = await _uow.Ventas.ObtenerConDetallesAsync(dto.Items.First().IdProducto);
-            // Obtener la venta recien creada por ID si es posible, si no buscar por recent
+            // Obtener la venta recien creada por recientes, si no existe lanzar error
             var ventasRecientes = await _uow.Ventas.ObtenerPorFechaAsync(DateTime.Now.AddDays(-1), DateTime.Now, dto.IdSucursal);
             var ventaResult = ventasRecientes
                 .Where(v => v.Estado == (int)EstadoVentaEnum.Pendiente && v.Id_usuario == dto.IdUsuario)

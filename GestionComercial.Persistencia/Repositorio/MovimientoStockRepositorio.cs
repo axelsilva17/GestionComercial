@@ -1,3 +1,4 @@
+using GestionComercial.Dominio.DTOs.Inventario;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Producto;
@@ -100,5 +101,43 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
             .ToListAsync();
 
         return (items, total);
+    }
+
+    public async Task<ResumenMovimientoStockDto?> ObtenerResumenPeriodoAsync(
+        DateTime fechaDesde,
+        DateTime fechaHasta,
+        int? idEmpresa,
+        int? idSucursal = null)
+    {
+        var query = _dbSet
+            .Where(m => m.Fecha >= fechaDesde && m.Fecha <= fechaHasta.AddDays(1));
+
+        if (idEmpresa.HasValue)
+            query = query.Where(m => m.Producto != null && m.Producto.Id_empresa == idEmpresa.Value);
+
+        if (idSucursal.HasValue)
+            query = query.Where(m => m.Id_sucursal == idSucursal.Value);
+
+        var grupo = await query
+            .GroupBy(m => m.TipoMovimiento)
+            .Select(g => new
+            {
+                TipoMovimiento = g.Key,
+                Cantidad = g.Count(),
+                Unidades = g.Sum(m => m.Cantidad)
+            })
+            .ToListAsync();
+
+        if (grupo.Count == 0)
+            return null;
+
+        return new ResumenMovimientoStockDto
+        {
+            TotalEntradas = grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Entrada)?.Cantidad ?? 0,
+            TotalSalidas = grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Salida)?.Cantidad ?? 0,
+            TotalAjustes = grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Ajuste)?.Cantidad ?? 0,
+            UnidadesIngresadas = (int)(grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Entrada)?.Unidades ?? 0),
+            UnidadesEgresadas = (int)(grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Salida)?.Unidades ?? 0),
+        };
     }
 }

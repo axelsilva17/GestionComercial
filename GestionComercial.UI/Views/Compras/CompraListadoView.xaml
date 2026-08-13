@@ -230,8 +230,9 @@
 
                     <DatePicker x:Name="FechaHasta" Style="{StaticResource FilterDatePickerStyle}"/>
 
-                    <ComboBox x:Name="ProveedorFiltro" Style="{StaticResource FilterComboBoxStyle}"
+                    <ComboBox Style="{StaticResource FilterComboBoxStyle}"
                               ItemsSource="{Binding Proveedores}"
+                              SelectedItem="{Binding ProveedorFiltro}"
                               DisplayMemberPath="Nombre"/>
 
                     <Button x:Name="Buscar" Grid.Column="8"

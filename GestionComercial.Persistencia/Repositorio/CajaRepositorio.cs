@@ -30,7 +30,7 @@ namespace GestionComercial.Persistencia.Repositorio
                     .ThenInclude(m => m.Usuario)
                 .Include(c => c.UsuarioApertura)
                 .Include(c => c.UsuarioCierre)
-                .Where(c => c.Id_sucursal == idSucursal && c.FechaApertura >= desde && c.FechaApertura <= hasta)
+                .Where(c => c.Id_sucursal == idSucursal && c.FechaApertura >= desde && c.FechaApertura <= hasta && c.Activo)
                 .OrderByDescending(c => c.FechaApertura)
                 .ToListAsync();
 

@@ -32,5 +32,8 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         ///         /// Obtiene el total de efectivo recibido por caja desde las ventas.
         /// Usado para cierre automático de caja.
         Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja);
+
+        ///         /// Elimina una caja (soft delete). No permite eliminar cajas primarias ni cajas abiertas.
+        Task EliminarCajaAsync(int idCaja);
     }
 }

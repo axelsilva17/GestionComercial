@@ -125,6 +125,12 @@ namespace GestionComercial.UI.ViewModels.Main
         // ── Navegación ────────────────────────────────────────────────────────
         public async Task IrDashboard()     => await ActivateItemAsync(IoC.Get<DashboardViewModel>(),        CancellationToken.None);
         public async Task IrVentas()        => await ActivateItemAsync(IoC.Get<VentaViewModel>(),            CancellationToken.None);
+        public async Task IrVentasPendientes()
+        {
+            var vm = IoC.Get<VentaListadoViewModel>();
+            vm.FiltroEstado = "Pendiente";
+            await ActivateItemAsync(vm, CancellationToken.None);
+        }
         public async Task IrCompras()       => await ActivateItemAsync(IoC.Get<CompraListadoViewModel>(),    CancellationToken.None);
         public async Task IrCaja()          => await ActivateItemAsync(IoC.Get<CajaViewModel>(),             CancellationToken.None);
         public async Task IrProductos()

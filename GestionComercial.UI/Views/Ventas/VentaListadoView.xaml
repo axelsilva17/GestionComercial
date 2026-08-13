@@ -83,6 +83,11 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
+                <Button x:Name="Volver" Content="← Volver"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        FontSize="13" Cursor="Hand" HorizontalAlignment="Left"
+                        Margin="0,0,0,8"/>
                 <TextBlock Text="Historial de Ventas"
                            FontSize="26" FontWeight="Bold"
                            Foreground="{DynamicResource TextPrimaryBrush}"/>

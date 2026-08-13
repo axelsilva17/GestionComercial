@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.DTOs.Inventario;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Producto;
@@ -372,6 +373,76 @@ namespace GestionComercial.Tests.Servicios
 
             resultado.Items.Should().HaveCount(1);
             resultado.Items.First().TipoMovimiento.Should().Be("Salida");
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // ObtenerResumenPeriodoAsync
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task ObtenerResumenPeriodoAsync_ConMovimientos_DevuelveResumenCorrecto()
+        {
+            var resumenDto = new ResumenMovimientoStockDto
+            {
+                TotalEntradas = 3,
+                TotalSalidas = 2,
+                TotalAjustes = 1,
+                UnidadesIngresadas = 6,
+                UnidadesEgresadas = 5,
+            };
+
+            _mockMovimientosRepo
+                .Setup(r => r.ObtenerResumenPeriodoAsync(
+                    It.IsAny<DateTime>(), It.IsAny<DateTime>(),
+                    It.IsAny<int?>(), It.IsAny<int?>()))
+                .ReturnsAsync(resumenDto);
+
+            var resultado = await _servicio.ObtenerResumenPeriodoAsync(
+                DateTime.Today.AddDays(-30), DateTime.Today, 1);
+
+            resultado.TotalEntradas.Should().Be(3);
+            resultado.TotalSalidas.Should().Be(2);
+            resultado.TotalAjustes.Should().Be(1);
+            resultado.UnidadesIngresadas.Should().Be(6);
+            resultado.UnidadesEgresadas.Should().Be(5);
+            resultado.BalanceNeto.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task ObtenerResumenPeriodoAsync_SinMovimientos_DevuelveResumenVacio()
+        {
+            _mockMovimientosRepo
+                .Setup(r => r.ObtenerResumenPeriodoAsync(
+                    It.IsAny<DateTime>(), It.IsAny<DateTime>(),
+                    It.IsAny<int?>(), It.IsAny<int?>()))
+                .ReturnsAsync((ResumenMovimientoStockDto?)null);
+
+            var resultado = await _servicio.ObtenerResumenPeriodoAsync(
+                DateTime.Today.AddDays(-30), DateTime.Today, 1);
+
+            resultado.Should().NotBeNull();
+            resultado.TotalEntradas.Should().Be(0);
+            resultado.TotalSalidas.Should().Be(0);
+            resultado.TotalAjustes.Should().Be(0);
+            resultado.UnidadesIngresadas.Should().Be(0);
+            resultado.UnidadesEgresadas.Should().Be(0);
+            resultado.BalanceNeto.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task ObtenerResumenPeriodoAsync_DelegaAlRepositorioConParametrosCorrectos()
+        {
+            var desde = new DateTime(2025, 1, 1);
+            var hasta = new DateTime(2025, 1, 31);
+
+            _mockMovimientosRepo
+                .Setup(r => r.ObtenerResumenPeriodoAsync(desde, hasta, 5, 3))
+                .ReturnsAsync(new ResumenMovimientoStockDto());
+
+            await _servicio.ObtenerResumenPeriodoAsync(desde, hasta, 5, 3);
+
+            _mockMovimientosRepo.Verify(r => r.ObtenerResumenPeriodoAsync(
+                desde, hasta, 5, 3), Times.Once);
         }
 
         // ═══════════════════════════════════════════════════════════
