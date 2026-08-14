@@ -5,9 +5,11 @@ using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Pagos.Strategies;
+using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 
 namespace GestionComercial.Aplicacion.Servicios
@@ -18,6 +20,7 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly IServicioImpresion _servicioImpresion;
         private readonly SesionServicio _sesion;
         private readonly IInventarioServicio _inventarioServicio;
+        private readonly IDescuentoConfiguracionServicio _descuentoConfiguracionServicio;
         private readonly ILogger<VentaServicio>? _logger;
         private readonly PaymentStrategyFactory _paymentStrategyFactory;
 
@@ -26,12 +29,14 @@ namespace GestionComercial.Aplicacion.Servicios
             IServicioImpresion servicioImpresion,
             SesionServicio sesion,
             IInventarioServicio inventarioServicio,
+            IDescuentoConfiguracionServicio descuentoConfiguracionServicio,
             ILogger<VentaServicio>? logger = null)
         {
             _uow = uow;
             _servicioImpresion = servicioImpresion;
             _sesion = sesion;
             _inventarioServicio = inventarioServicio;
+            _descuentoConfiguracionServicio = descuentoConfiguracionServicio;
             _logger = logger;
             _paymentStrategyFactory = new PaymentStrategyFactory();
         }
@@ -172,6 +177,28 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new VentaInvalidaException("La venta ya está pagada.");
             if (venta.Estado == (int)EstadoVentaEnum.Anulada)
                 throw new VentaInvalidaException("La venta está anulada y no puede pagarse.");
+
+            // ── Resolver descuento por método de pago ANTES de validar total ──
+            var idsMetodosPago = pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
+            if (idsMetodosPago.Any())
+            {
+                var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
+                var idEmpresa = sucursal?.Id_empresa ?? 0;
+                if (idEmpresa > 0)
+                {
+                    var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
+                    var descuentoMetodoPago = await _descuentoConfiguracionServicio.ObtenerDescuentoMetodoPagoAsync(
+                        idEmpresa, idsMetodosPago, descuentosCache);
+
+                    if (descuentoMetodoPago != null)
+                    {
+                        var descuentoMonto = venta.TotalBruto * descuentoMetodoPago.Valor / 100;
+                        venta.DescuentoMetodoPago = descuentoMonto;
+                        venta.Id_metodoPagoDescuento = descuentoMetodoPago.Id_metodoPago;
+                        venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - descuentoMonto;
+                    }
+                }
+            }
 
             var totalPagado = pagos.Sum(p => p.Monto);
             if (totalPagado < venta.TotalFinal)
