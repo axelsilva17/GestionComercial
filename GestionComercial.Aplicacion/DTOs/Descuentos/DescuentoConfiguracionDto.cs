@@ -23,6 +23,8 @@ namespace GestionComercial.Aplicacion.DTOs.Descuentos
         public string? ProductoNombre { get; set; }
         public int? Id_categoria { get; set; }
         public string? CategoriaNombre { get; set; }
+        public int? Id_metodoPago { get; set; }
+        public string? MetodoPagoNombre { get; set; }
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
         public int Prioridad { get; set; }

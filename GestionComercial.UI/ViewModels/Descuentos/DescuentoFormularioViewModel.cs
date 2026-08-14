@@ -248,13 +248,13 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 {
                     await _servicio.ActualizarAsync(
                         DescuentoId, Nombre, TipoSeleccionado, Valor,
-                        IdProducto, IdCategoria, FechaDesde, FechaHasta, Prioridad);
+                        IdProducto, IdCategoria, null, FechaDesde, FechaHasta, Prioridad);
                 }
                 else
                 {
                     await _servicio.CrearAsync(
                         _sesion.IdEmpresa, Nombre, TipoSeleccionado, Valor,
-                        IdProducto, IdCategoria, FechaDesde, FechaHasta, Prioridad);
+                        IdProducto, IdCategoria, null, FechaDesde, FechaHasta, Prioridad);
                 }
 
                 await _eventAggregator.PublishOnUIThreadAsync(new DescuentosActualizadosEvent());

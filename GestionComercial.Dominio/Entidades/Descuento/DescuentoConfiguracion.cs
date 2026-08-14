@@ -1,4 +1,5 @@
 using GestionComercial.Dominio.Entidades.Organizacion;
+using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Producto;
 
 namespace GestionComercial.Dominio.Entidades.Descuento
@@ -18,6 +19,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
         public decimal Valor { get; set; }
         public int? Id_producto { get; set; }
         public int? Id_categoria { get; set; }
+        public int? Id_metodoPago { get; set; }
         public int Id_empresa { get; set; }
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
@@ -31,6 +33,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
         public Empresa? Empresa { get; set; }
         public Producto.Producto? Producto { get; set; }
         public Categoria? Categoria { get; set; }
+        public MetodoPago? MetodoPago { get; set; }
 
         protected DescuentoConfiguracion() { }
 
@@ -41,6 +44,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             int idEmpresa,
             int? idProducto = null,
             int? idCategoria = null,
+            int? idMetodoPago = null,
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null,
             int prioridad = 0)
@@ -55,6 +59,10 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 throw new InvalidOperationException("Tipo Producto requiere Id_producto.");
             if (tipo == TipoDescuentoEnum.Categoria && idCategoria == null)
                 throw new InvalidOperationException("Tipo Categoria requiere Id_categoria.");
+            if (tipo == TipoDescuentoEnum.MetodoPago && idMetodoPago == null)
+                throw new InvalidOperationException("Tipo MetodoPago requiere Id_metodoPago.");
+            if (tipo != TipoDescuentoEnum.MetodoPago && idMetodoPago != null)
+                throw new InvalidOperationException("Id_metodoPago solo puede ser asignado para Tipo MetodoPago.");
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
@@ -66,6 +74,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 Valor = valor,
                 Id_producto = idProducto,
                 Id_categoria = idCategoria,
+                Id_metodoPago = idMetodoPago,
                 Id_empresa = idEmpresa,
                 FechaDesde = fechaDesde,
                 FechaHasta = fechaHasta,
@@ -81,6 +90,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             decimal valor,
             int? idProducto,
             int? idCategoria,
+            int? idMetodoPago,
             DateTime? fechaDesde,
             DateTime? fechaHasta,
             int prioridad)
@@ -93,6 +103,10 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 throw new InvalidOperationException("Tipo Producto requiere Id_producto.");
             if (tipo == TipoDescuentoEnum.Categoria && idCategoria == null)
                 throw new InvalidOperationException("Tipo Categoria requiere Id_categoria.");
+            if (tipo == TipoDescuentoEnum.MetodoPago && idMetodoPago == null)
+                throw new InvalidOperationException("Tipo MetodoPago requiere Id_metodoPago.");
+            if (tipo != TipoDescuentoEnum.MetodoPago && idMetodoPago != null)
+                throw new InvalidOperationException("Id_metodoPago solo puede ser asignado para Tipo MetodoPago.");
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
@@ -101,6 +115,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             Valor = valor;
             Id_producto = idProducto;
             Id_categoria = idCategoria;
+            Id_metodoPago = idMetodoPago;
             FechaDesde = fechaDesde;
             FechaHasta = fechaHasta;
             Prioridad = prioridad;

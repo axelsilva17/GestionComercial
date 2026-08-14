@@ -173,7 +173,7 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Viejo", tipo: TipoDescuentoEnum.Producto, valor: 10,
                 idEmpresa: 1, idProducto: 1);
 
-            descuento.Actualizar("Nuevo", TipoDescuentoEnum.Producto, 25, 1, null, null, null, 5);
+            descuento.Actualizar("Nuevo", TipoDescuentoEnum.Producto, 25, 1, null, null, null, null, 5);
 
             descuento.Nombre.Should().Be("Nuevo");
             descuento.Valor.Should().Be(25);
@@ -189,7 +189,7 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Test", tipo: TipoDescuentoEnum.Producto, valor: 10,
                 idEmpresa: 1, idProducto: 1);
 
-            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Producto, 0, 1, null, null, null, 0);
+            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Producto, 0, 1, null, null, null, null, 0);
 
             act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*valor*");
@@ -213,7 +213,7 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Original", tipo: TipoDescuentoEnum.Producto, valor: 10,
                 idEmpresa: 1, idProducto: 1);
 
-            descuento.Actualizar("Cambiado", TipoDescuentoEnum.Categoria, 20, null, 5, null, null, 3);
+            descuento.Actualizar("Cambiado", TipoDescuentoEnum.Categoria, 20, null, 5, null, null, null, 3);
 
             descuento.Tipo.Should().Be(TipoDescuentoEnum.Categoria);
             descuento.Id_categoria.Should().Be(5);
@@ -228,7 +228,7 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Test", tipo: TipoDescuentoEnum.Producto, valor: 10,
                 idEmpresa: 1, idProducto: 1);
 
-            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Producto, 10, null, null, null, null, 0);
+            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Producto, 10, null, null, null, null, null, 0);
 
             act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*Id_producto*");
@@ -241,7 +241,7 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Test", tipo: TipoDescuentoEnum.Categoria, valor: 10,
                 idEmpresa: 1, idCategoria: 1);
 
-            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Categoria, 10, null, null, null, null, 0);
+            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Categoria, 10, null, null, null, null, null, 0);
 
             act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*Id_categoria*");

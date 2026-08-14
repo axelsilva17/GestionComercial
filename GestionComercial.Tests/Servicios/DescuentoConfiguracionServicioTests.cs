@@ -28,7 +28,7 @@ namespace GestionComercial.Tests.Servicios
 
             var resultado = await _servicio.CrearAsync(
                 idEmpresa: 1, nombre: "Test 10%", tipo: TipoDescuentoEnum.Producto,
-                valor: 10, idProducto: 1, idCategoria: null,
+                valor: 10, idProducto: 1, idCategoria: null, idMetodoPago: null,
                 fechaDesde: null, fechaHasta: null, prioridad: 0);
 
             resultado.Should().NotBeNull();
@@ -43,7 +43,7 @@ namespace GestionComercial.Tests.Servicios
         {
             Func<Task> act = async () => await _servicio.CrearAsync(
                 idEmpresa: 1, nombre: "", tipo: TipoDescuentoEnum.Producto,
-                valor: 10, idProducto: 1, idCategoria: null,
+                valor: 10, idProducto: 1, idCategoria: null, idMetodoPago: null,
                 fechaDesde: null, fechaHasta: null, prioridad: 0);
 
             await act.Should().ThrowAsync<InvalidOperationException>();
@@ -194,7 +194,7 @@ namespace GestionComercial.Tests.Servicios
             _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
                 .ReturnsAsync(descuento);
 
-            await _servicio.ActualizarAsync(descuento.Id, "New", TipoDescuentoEnum.Producto, 25, 1, null, null, null, 5);
+            await _servicio.ActualizarAsync(descuento.Id, "New", TipoDescuentoEnum.Producto, 25, 1, null, null, null, null, 5);
 
             descuento.Nombre.Should().Be("New");
             descuento.Valor.Should().Be(25);
@@ -211,12 +211,108 @@ namespace GestionComercial.Tests.Servicios
             _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
                 .ReturnsAsync(descuento);
 
-            await _servicio.ActualizarAsync(descuento.Id, "CatDiscount", TipoDescuentoEnum.Categoria, 15, null, 5, null, null, 2);
+            await _servicio.ActualizarAsync(descuento.Id, "CatDiscount", TipoDescuentoEnum.Categoria, 15, null, 5, null, null, null, 2);
 
             descuento.Tipo.Should().Be(TipoDescuentoEnum.Categoria);
             descuento.Id_categoria.Should().Be(5);
             descuento.Id_producto.Should().BeNull();
             descuento.Nombre.Should().Be("CatDiscount");
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_SingleMatch_ReturnsDiscount()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2, prioridad: 10);
+
+            var cache = new List<DescuentoConfiguracion> { descuento };
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int> { 2 }, cache);
+
+            result.Should().NotBeNull();
+            result!.Valor.Should().Be(5);
+            result.Id_metodoPago.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_MultipleMatches_ReturnsHighestPriority()
+        {
+            var descuentoA = DescuentoConfiguracion.Crear(
+                "Efectivo 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 1, prioridad: 10);
+            var descuentoB = DescuentoConfiguracion.Crear(
+                "Débito 2%", TipoDescuentoEnum.MetodoPago, 2, 1, idMetodoPago: 2, prioridad: 20);
+
+            var cache = new List<DescuentoConfiguracion> { descuentoA, descuentoB };
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int> { 1, 2 }, cache);
+
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(descuentoB.Id);
+            result.Valor.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_NoMatch_ReturnsNull()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                "Efectivo 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 1, prioridad: 10);
+
+            var cache = new List<DescuentoConfiguracion> { descuento };
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int> { 3 }, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_ExpiredDiscount_Excluded()
+        {
+            var expired = DescuentoConfiguracion.Crear(
+                "Expired", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 1,
+                fechaHasta: DateTime.Now.AddDays(-1));
+
+            var cache = new List<DescuentoConfiguracion> { expired };
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int> { 1 }, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_InactiveDiscount_Excluded()
+        {
+            var inactive = DescuentoConfiguracion.Crear(
+                "Inactive", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 1);
+            inactive.Inactivar();
+
+            var cache = new List<DescuentoConfiguracion> { inactive };
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int> { 1 }, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_EmptyCache_ReturnsNull()
+        {
+            var cache = new List<DescuentoConfiguracion>();
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int> { 1 }, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoMetodoPagoAsync_EmptyIds_ReturnsNull()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2);
+
+            var cache = new List<DescuentoConfiguracion> { descuento };
+
+            var result = await _servicio.ObtenerDescuentoMetodoPagoAsync(1, new List<int>(), cache);
+
+            result.Should().BeNull();
         }
     }
 }

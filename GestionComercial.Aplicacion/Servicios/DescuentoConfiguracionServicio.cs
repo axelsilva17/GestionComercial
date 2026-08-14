@@ -17,10 +17,10 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<DescuentoConfiguracion> CrearAsync(
             int idEmpresa, string nombre, TipoDescuentoEnum tipo, decimal valor,
-            int? idProducto, int? idCategoria, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad)
+            int? idProducto, int? idCategoria, int? idMetodoPago, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad)
         {
             var descuento = DescuentoConfiguracion.Crear(
-                nombre, tipo, valor, idEmpresa, idProducto, idCategoria,
+                nombre, tipo, valor, idEmpresa, idProducto, idCategoria, idMetodoPago,
                 fechaDesde, fechaHasta, prioridad);
 
             await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
@@ -33,12 +33,12 @@ namespace GestionComercial.Aplicacion.Servicios
             return await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id);
         }
 
-        public async Task ActualizarAsync(int id, string nombre, TipoDescuentoEnum tipo, decimal valor, int? idProducto, int? idCategoria, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad)
+        public async Task ActualizarAsync(int id, string nombre, TipoDescuentoEnum tipo, decimal valor, int? idProducto, int? idCategoria, int? idMetodoPago, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad)
         {
             var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
-            descuento.Actualizar(nombre, tipo, valor, idProducto, idCategoria, fechaDesde, fechaHasta, prioridad);
+            descuento.Actualizar(nombre, tipo, valor, idProducto, idCategoria, idMetodoPago, fechaDesde, fechaHasta, prioridad);
             await _unitOfWork.GuardarCambiosAsync();
         }
 
@@ -104,6 +104,22 @@ namespace GestionComercial.Aplicacion.Servicios
                 .First();
 
             return Task.FromResult<DescuentoConfiguracion?>(winner);
+        }
+
+        public Task<DescuentoConfiguracion?> ObtenerDescuentoMetodoPagoAsync(
+            int idEmpresa, List<int> idsMetodosPago, List<DescuentoConfiguracion> descuentosCache)
+        {
+            if (descuentosCache == null || descuentosCache.Count == 0 || idsMetodosPago == null || idsMetodosPago.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var candidates = descuentosCache
+                .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente
+                    && d.Tipo == TipoDescuentoEnum.MetodoPago
+                    && d.Id_metodoPago.HasValue && idsMetodosPago.Contains(d.Id_metodoPago.Value))
+                .OrderByDescending(d => d.Prioridad)
+                .FirstOrDefault();
+
+            return Task.FromResult(candidates);
         }
     }
 }
