@@ -149,14 +149,14 @@
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="Cancelar" Style="{StaticResource CancelBtn}"
-                    cal:Message.Attach="Action:Cancelar"/>
+                    cal:Message.Attach="Cancelar"/>
             <Button Content="Eliminar" Style="{StaticResource CancelBtn}"
-                    cal:Message.Attach="Action:EliminarAsync"
+                    cal:Message.Attach="EliminarAsync"
                     Visibility="{Binding EsModoEdicion, Converter={StaticResource BoolToVisibility}}"
                     Background="#1AEF4444" Foreground="{DynamicResource ErrorBrush}" Margin="8,0,8,0"/>
             <Button Content="Guardar" Style="{StaticResource PrimaryButton}"
                     Height="38" Padding="16,0"
-                    cal:Message.Attach="Action:GuardarAsync"/>
+                    cal:Message.Attach="GuardarAsync"/>
         </StackPanel>
     </Grid>
 </UserControl>

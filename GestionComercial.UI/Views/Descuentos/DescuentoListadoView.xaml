@@ -13,7 +13,7 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-            <Button Content="Nuevo Descuento" cal:Message.Attach="Action:NuevoDescuento"
+            <Button Content="Nuevo Descuento" cal:Message.Attach="NuevoDescuento"
                     Height="36" Padding="16,0" FontSize="13" Cursor="Hand"
                     Background="{DynamicResource PrimaryBrush}" Foreground="White"
                     BorderThickness="0" HorizontalAlignment="Left"/>
