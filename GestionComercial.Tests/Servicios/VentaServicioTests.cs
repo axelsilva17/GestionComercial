@@ -785,6 +785,57 @@ namespace GestionComercial.Tests.Servicios
             venta.EsPagada.Should().BeTrue();
         }
 
+        [Fact]
+        public async Task RegistrarPagoAsync_PagosMixtos_AplicaDescuentoMayorPrioridadAlTotalCompleto()
+        {
+            var venta = CrearVentaPendiente();
+            venta.AgregarDetalle(CrearDetalle(1000m, 500m, 1)); // TotalBruto=1000, TotalFinal=1000
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1))
+                .ReturnsAsync(venta);
+
+            _mockMetodoPagoRepo
+                .Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new MetodoPago { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo" });
+            _mockMetodoPagoRepo
+                .Setup(r => r.ObtenerPorIdAsync(2))
+                .ReturnsAsync(new MetodoPago { Id = 2, Nombre = "Débito", Categoria = "Tarjeta" });
+
+            _mockSucursalRepo
+                .Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal
+                {
+                    Id = 1, Nombre = "Sucursal Test", Id_empresa = 1
+                });
+
+            // Dos configs: Efectivo 2% (prio 10) y Débito 5% (prio 20) → gana Débito
+            var efectivo = DescuentoConfiguracion.Crear(
+                "Efectivo 2%", TipoDescuentoEnum.MetodoPago, 2, 1, idMetodoPago: 1, prioridad: 10);
+            var debito = DescuentoConfiguracion.Crear(
+                "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2, prioridad: 20);
+            _mockDescuentoConfig
+                .Setup(s => s.ObtenerTodosAsync(1, null, null, null))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { efectivo, debito });
+            _mockDescuentoConfig
+                .Setup(s => s.ObtenerDescuentoMetodoPagoAsync(1, It.IsAny<List<int>>(), It.IsAny<List<DescuentoConfiguracion>>()))
+                .ReturnsAsync(debito);
+
+            // Pago mixto: Efectivo $600 + Débito $350 = $950 (total post-descuento)
+            await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
+            {
+                new() { IdMetodoPago = 1, Monto = 600m },
+                new() { IdMetodoPago = 2, Monto = 350m }
+            });
+
+            // El descuento se aplica a la TOTALIDAD (1000 * 5% = 50), no proporcional al split
+            venta.DescuentoMetodoPago.Should().Be(50m);
+            venta.Id_metodoPagoDescuento.Should().Be(2);
+            venta.TotalFinal.Should().Be(950m);
+            venta.EsPagada.Should().BeTrue();
+        }
+
         // ═══════════════════════════════════════════════════════════
         // Helpers
         // ═══════════════════════════════════════════════════════════
