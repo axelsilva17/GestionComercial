@@ -1,13 +1,17 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.DTOs.Ventas;
+using GestionComercial.Aplicacion.Eventos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using FluentValidation;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -15,21 +19,27 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 
 namespace GestionComercial.UI.ViewModels.Ventas
 {
-    public class VentaViewModel : NavigableViewModel
+    public class VentaViewModel : NavigableViewModel, IHandle<DescuentosActualizadosEvent>
     {
         private readonly IProductoServicio _productoServicio;
         private readonly IVentaServicio    _ventaServicio;
         private readonly SesionServicio    _sesion;
         private readonly IValidator<VentaCrearDto> _validator;
+        private readonly IDescuentoConfiguracionServicio _descuentoServicio;
+        private readonly IEventAggregator _eventAggregator;
+        private readonly IUnitOfWork _unitOfWork;
 
         // ── Timer para debounce de búsqueda ──────────────────────────────────────
         private readonly DispatcherTimer _debounceTimer;
         private CancellationTokenSource?  _debounceCts;
         private List<ProductoListadoDto> _productosCache = new(); // Cache de productos precargados
+        private List<DescuentoConfiguracion> _descuentosCache = new();
+        private Dictionary<int, Categoria> _categoriasCache = new();
 
         // ── Scanner Fast-Entry Detection ──────────────────────────────────────────
         // Un escáner de código de barras tipea muy rápido (>8 chars en <500ms)
@@ -44,7 +54,10 @@ namespace GestionComercial.UI.ViewModels.Ventas
             IProductoServicio productoServicio,
             IVentaServicio    ventaServicio,
             SesionServicio    sesion,
-            IValidator<VentaCrearDto> validator)
+            IValidator<VentaCrearDto> validator,
+            IDescuentoConfiguracionServicio descuentoServicio,
+            IEventAggregator eventAggregator,
+            IUnitOfWork unitOfWork)
         {
             System.Diagnostics.Debug.WriteLine("[VentaVM] Constructor INICIO");
 
@@ -54,6 +67,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 _ventaServicio        = ventaServicio;
                 _sesion               = sesion;
                 _validator            = validator;
+                _descuentoServicio    = descuentoServicio;
+                _eventAggregator      = eventAggregator;
+                _unitOfWork           = unitOfWork;
                 Titulo                = "Nueva Venta";
                 Items                 = new ObservableCollection<VentaItemDto>();
                 ResultadosBusqueda    = new ObservableCollection<ProductoListadoDto>();
@@ -74,6 +90,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
                 FiltrarHistorialCommand = new RelayCommand(() => FiltrarHistorial());
                 TestBarcodeCommand = new RelayCommand(TestBarcodeKeyDown);
+
+                _eventAggregator.SubscribeOnUIThread(this);
 
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Constructor: _sesion={_sesion?.GetType().Name ?? "NULL"}, Rol={_sesion?.Rol ?? "NULL"}");
                 LimiteDescuento = _sesion?.Rol?.ToLowerInvariant() switch
@@ -135,6 +153,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     // Guardar en cache para búsquedas rápidas
                     _productosCache = productos.ToList();
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
+
+                    // Cargar cache de descuentos y categorías
+                    _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+                    var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
+                    _categoriasCache = categorias.ToDictionary(c => c.Id);
 
 
                 }
@@ -656,6 +679,23 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 });
             }
 
+            // ── Auto-aplicar descuento configurado ──
+            var item = Items.FirstOrDefault(i => i.ProductoId == producto.IdProducto);
+            if (item != null && _descuentosCache.Count > 0)
+            {
+                var idCategoria = _productosCache
+                    .FirstOrDefault(p => p.IdProducto == producto.IdProducto)?.IdCategoria;
+
+                var descuento = _descuentoServicio.ObtenerDescuentoAplicableAsync(
+                    _sesion.IdEmpresa, producto.IdProducto, idCategoria,
+                    _descuentosCache, _categoriasCache).GetAwaiter().GetResult();
+
+                if (descuento != null)
+                {
+                    item.DescuentoPorItem = Math.Round(item.Subtotal * descuento.Valor / 100, 2);
+                }
+            }
+
             BusquedaProducto = string.Empty;
             MostrarPopupBusqueda = false;
             RecalcularTotales();
@@ -977,7 +1017,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             if (decimal.TryParse(DescuentoManual, out var d))
             {
-                pct = Math.Clamp(d, 0, 100);
+                pct = Math.Clamp(d, 0, LimiteDescuento);
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Descuento aplicado: {pct}% sobre TotalBruto={TotalBruto}");
             }
 
@@ -1099,6 +1139,16 @@ namespace GestionComercial.UI.ViewModels.Ventas
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al buscar producto: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task HandleAsync(DescuentosActualizadosEvent message, CancellationToken cancellationToken)
+        {
+            if (_sesion.IdEmpresa > 0)
+            {
+                _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+                var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
+                _categoriasCache = categorias.ToDictionary(c => c.Id);
             }
         }
     }

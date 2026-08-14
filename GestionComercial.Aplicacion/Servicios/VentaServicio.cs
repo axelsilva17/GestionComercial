@@ -332,6 +332,13 @@ namespace GestionComercial.Aplicacion.Servicios
                 CostoUnitario  = d.CostoUnitario,
                 Subtotal       = d.Subtotal,
                 MargenUnitario = d.MargenUnitario,
+                DescuentoPorItem = d.Descuento,
+                Descuentos     = d.Descuentos?.Select(dd => new DescuentoItemDto
+                {
+                    Porcentaje  = dd.Porcentaje,
+                    Monto       = dd.Monto,
+                    Descripcion = dd.Descripcion
+                }).ToList() ?? new List<DescuentoItemDto>(),
             }).ToList(),
             Pagos = v.Pagos.Select(p => new PagoDto
             {
