@@ -26,6 +26,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<List<DescuentoConfiguracion>> BuscarAsync(int idEmpresa, string? texto, TipoDescuentoEnum? tipo, bool? activo)
         {
             var query = _dbSet
+                .Include(d => d.MetodoPago)
                 .Where(d => d.Id_empresa == idEmpresa);
 
             if (!string.IsNullOrWhiteSpace(texto))

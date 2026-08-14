@@ -255,6 +255,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                  .HasForeignKey(v => v.Id_usuario).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(v => v.Caja).WithMany(c => c.Ventas)
                  .HasForeignKey(v => v.Id_caja).OnDelete(DeleteBehavior.Restrict);
+                b.HasIndex(v => v.Id_metodoPagoDescuento);
+                b.Property(v => v.DescuentoMetodoPago).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
             }
         }
 
@@ -418,6 +420,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                  .HasForeignKey(d => d.Id_producto).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(d => d.Categoria).WithMany()
                  .HasForeignKey(d => d.Id_categoria).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(d => d.MetodoPago).WithMany()
+                 .HasForeignKey(d => d.Id_metodoPago).OnDelete(DeleteBehavior.Restrict);
             }
         }
     }
