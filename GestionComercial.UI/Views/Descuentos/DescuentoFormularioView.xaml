@@ -27,11 +27,32 @@
             <!-- Tipo -->
             <TextBlock Text="TIPO" Style="{StaticResource FormLabel}"/>
             <ComboBox Height="36" Margin="0,0,0,12" FontSize="13"
-                      SelectedItem="{Binding TipoSeleccionado}"
+                      SelectedValue="{Binding TipoSeleccionadoStr, Mode=TwoWay}"
+                      SelectedValuePath="Tag"
                       IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}">
                 <ComboBoxItem Content="Producto" Tag="Producto"/>
                 <ComboBoxItem Content="Categoría" Tag="Categoria"/>
             </ComboBox>
+
+            <!-- Selector de Producto (visible cuando Tipo = Producto) -->
+            <StackPanel Visibility="{Binding EsTipoProducto, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="PRODUCTO" Style="{StaticResource FormLabel}"/>
+                <ComboBox ItemsSource="{Binding Productos}"
+                          DisplayMemberPath="Nombre"
+                          SelectedItem="{Binding ProductoSeleccionado}"
+                          IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
+                          Height="36" Margin="0,0,0,12" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Selector de Categoría (visible cuando Tipo = Categoria) -->
+            <StackPanel Visibility="{Binding EsTipoCategoria, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="CATEGORÍA" Style="{StaticResource FormLabel}"/>
+                <ComboBox ItemsSource="{Binding Categorias}"
+                          DisplayMemberPath="Nombre"
+                          SelectedItem="{Binding CategoriaSeleccionada}"
+                          IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
+                          Height="36" Margin="0,0,0,12" FontSize="13"/>
+            </StackPanel>
 
             <!-- Nombre -->
             <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
