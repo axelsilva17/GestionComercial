@@ -693,6 +693,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 if (descuento != null)
                 {
                     item.DescuentoPorItem = Math.Round(item.Subtotal * descuento.Valor / 100, 2);
+                    item.DescripcionDescuento = $"Descuento {descuento.Valor}%";
                 }
             }
 
@@ -909,7 +910,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                                 {
                                     Porcentaje = 0, // Ya calculado el monto
                                     Monto      = i.DescuentoPorItem,
-                                    Descripcion = "Descuento por ítem"
+                                    Descripcion = i.DescripcionDescuento ?? "Descuento por ítem"
                                 }
                             }
                             : new List<DescuentoItemDto>(),
