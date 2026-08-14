@@ -334,6 +334,15 @@
                                        VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
+
+                    <Button x:Name="IrDescuentos" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarDescuentos, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="%" FontSize="15" VerticalAlignment="Center" Width="22"/>
+                            <TextBlock x:Name="TxtDescuentos" Text="Descuentos" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- ── Footer usuario ── -->

@@ -5,6 +5,7 @@ using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Clientes;
 using GestionComercial.UI.ViewModels.Compras;
 using GestionComercial.UI.ViewModels.Configuracion;
+using GestionComercial.UI.ViewModels.Descuentos;
 using GestionComercial.UI.ViewModels.Inventario;
 using GestionComercial.UI.ViewModels.Productos;
 using GestionComercial.UI.ViewModels.Proveedores;
@@ -57,6 +58,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 NotifyOfPropertyChange(() => MostrarProveedores);
                 NotifyOfPropertyChange(() => MostrarReportes);
                 NotifyOfPropertyChange(() => MostrarConfiguracion);
+                NotifyOfPropertyChange(() => MostrarDescuentos);
             }
         }
 
@@ -83,6 +85,7 @@ namespace GestionComercial.UI.ViewModels.Main
         public bool MostrarProveedores  => HasPermission("Compras.Ver");
         public bool MostrarReportes     => HasPermission("Reportes.Ver");
         public bool MostrarConfiguracion => HasPermission("Configuracion.Ver");
+        public bool MostrarDescuentos    => HasPermission("Descuentos.Ver");
 
 
         public int              IdEmpresaActual  { get; internal set; }
@@ -151,6 +154,7 @@ namespace GestionComercial.UI.ViewModels.Main
         public async Task IrClientes()      => await ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(),   CancellationToken.None);
         public async Task IrProveedores()   => await ActivateItemAsync(IoC.Get<ProveedorListadoViewModel>(), CancellationToken.None);
         public async Task IrConfiguracion() => await ActivateItemAsync(IoC.Get<ConfiguracionViewModel>(),    CancellationToken.None);
+        public async Task IrDescuentos()    => await ActivateItemAsync(IoC.Get<DescuentoListadoViewModel>(), CancellationToken.None);
 
         // Reportes diferenciados por rol
         public async Task IrReportes()
