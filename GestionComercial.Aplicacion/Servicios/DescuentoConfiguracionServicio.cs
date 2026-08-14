@@ -33,12 +33,12 @@ namespace GestionComercial.Aplicacion.Servicios
             return await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id);
         }
 
-        public async Task ActualizarAsync(int id, string nombre, decimal valor, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad)
+        public async Task ActualizarAsync(int id, string nombre, TipoDescuentoEnum tipo, decimal valor, int? idProducto, int? idCategoria, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad)
         {
             var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
-            descuento.Actualizar(nombre, valor, fechaDesde, fechaHasta, prioridad);
+            descuento.Actualizar(nombre, tipo, valor, idProducto, idCategoria, fechaDesde, fechaHasta, prioridad);
             await _unitOfWork.GuardarCambiosAsync();
         }
 

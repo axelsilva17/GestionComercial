@@ -194,12 +194,29 @@ namespace GestionComercial.Tests.Servicios
             _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
                 .ReturnsAsync(descuento);
 
-            await _servicio.ActualizarAsync(descuento.Id, "New", 25, null, null, 5);
+            await _servicio.ActualizarAsync(descuento.Id, "New", TipoDescuentoEnum.Producto, 25, 1, null, null, null, 5);
 
             descuento.Nombre.Should().Be("New");
             descuento.Valor.Should().Be(25);
             descuento.Prioridad.Should().Be(5);
+            descuento.Tipo.Should().Be(TipoDescuentoEnum.Producto);
             _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActualizarAsync_ChangesTipoToCategoria()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                "Old", TipoDescuentoEnum.Producto, 10, 1, idProducto: 1);
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+                .ReturnsAsync(descuento);
+
+            await _servicio.ActualizarAsync(descuento.Id, "CatDiscount", TipoDescuentoEnum.Categoria, 15, null, 5, null, null, 2);
+
+            descuento.Tipo.Should().Be(TipoDescuentoEnum.Categoria);
+            descuento.Id_categoria.Should().Be(5);
+            descuento.Id_producto.Should().BeNull();
+            descuento.Nombre.Should().Be("CatDiscount");
         }
     }
 }

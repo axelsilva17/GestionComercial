@@ -77,7 +77,10 @@ namespace GestionComercial.Dominio.Entidades.Descuento
 
         public void Actualizar(
             string nombre,
+            TipoDescuentoEnum tipo,
             decimal valor,
+            int? idProducto,
+            int? idCategoria,
             DateTime? fechaDesde,
             DateTime? fechaHasta,
             int prioridad)
@@ -86,11 +89,18 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 throw new InvalidOperationException("El nombre es requerido.");
             if (valor <= 0 || valor > 100)
                 throw new InvalidOperationException("El valor debe ser mayor a 0 y menor o igual a 100.");
+            if (tipo == TipoDescuentoEnum.Producto && idProducto == null)
+                throw new InvalidOperationException("Tipo Producto requiere Id_producto.");
+            if (tipo == TipoDescuentoEnum.Categoria && idCategoria == null)
+                throw new InvalidOperationException("Tipo Categoria requiere Id_categoria.");
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
             _nombre = nombre.Trim();
+            Tipo = tipo;
             Valor = valor;
+            Id_producto = idProducto;
+            Id_categoria = idCategoria;
             FechaDesde = fechaDesde;
             FechaHasta = fechaHasta;
             Prioridad = prioridad;

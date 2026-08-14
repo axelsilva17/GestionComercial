@@ -173,11 +173,13 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Viejo", tipo: TipoDescuentoEnum.Producto, valor: 10,
                 idEmpresa: 1, idProducto: 1);
 
-            descuento.Actualizar("Nuevo", 25, null, null, 5);
+            descuento.Actualizar("Nuevo", TipoDescuentoEnum.Producto, 25, 1, null, null, null, 5);
 
             descuento.Nombre.Should().Be("Nuevo");
             descuento.Valor.Should().Be(25);
             descuento.Prioridad.Should().Be(5);
+            descuento.Tipo.Should().Be(TipoDescuentoEnum.Producto);
+            descuento.Id_producto.Should().Be(1);
         }
 
         [Fact]
@@ -187,7 +189,7 @@ namespace GestionComercial.Tests.Dominio
                 nombre: "Test", tipo: TipoDescuentoEnum.Producto, valor: 10,
                 idEmpresa: 1, idProducto: 1);
 
-            var act = () => descuento.Actualizar("Test", 0, null, null, 0);
+            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Producto, 0, 1, null, null, null, 0);
 
             act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*valor*");
@@ -202,6 +204,47 @@ namespace GestionComercial.Tests.Dominio
 
             act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*nombre*");
+        }
+
+        [Fact]
+        public void Actualizar_CambiaTipoYCategoria()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                nombre: "Original", tipo: TipoDescuentoEnum.Producto, valor: 10,
+                idEmpresa: 1, idProducto: 1);
+
+            descuento.Actualizar("Cambiado", TipoDescuentoEnum.Categoria, 20, null, 5, null, null, 3);
+
+            descuento.Tipo.Should().Be(TipoDescuentoEnum.Categoria);
+            descuento.Id_categoria.Should().Be(5);
+            descuento.Id_producto.Should().BeNull();
+            descuento.Valor.Should().Be(20);
+        }
+
+        [Fact]
+        public void Actualizar_ProductoSinIdProducto_Throws()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                nombre: "Test", tipo: TipoDescuentoEnum.Producto, valor: 10,
+                idEmpresa: 1, idProducto: 1);
+
+            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Producto, 10, null, null, null, null, 0);
+
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage("*Id_producto*");
+        }
+
+        [Fact]
+        public void Actualizar_CategoriaSinIdCategoria_Throws()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                nombre: "Test", tipo: TipoDescuentoEnum.Categoria, valor: 10,
+                idEmpresa: 1, idCategoria: 1);
+
+            var act = () => descuento.Actualizar("Test", TipoDescuentoEnum.Categoria, 10, null, null, null, null, 0);
+
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage("*Id_categoria*");
         }
     }
 }
