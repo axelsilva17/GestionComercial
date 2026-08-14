@@ -1,6 +1,7 @@
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Entidades.Compras;
+using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Pagos;
@@ -394,6 +395,29 @@ namespace GestionComercial.Persistencia.Configuraciones
                 // ── Link a Venta (para trazabilidad) ────────────────────────────
                 b.HasOne(m => m.Venta).WithMany()
                  .HasForeignKey(m => m.Id_venta).OnDelete(DeleteBehavior.Restrict);
+            }
+        }
+
+        public class DescuentoConfiguracionConfiguracion : IEntityTypeConfiguration<DescuentoConfiguracion>
+        {
+            public void Configure(EntityTypeBuilder<DescuentoConfiguracion> b)
+            {
+                b.ToTable("DescuentoConfiguracion");
+                b.HasKey(d => d.Id);
+                b.Property(d => d.Nombre).HasMaxLength(150).IsRequired();
+                b.Property(d => d.Tipo).HasConversion<int>();
+                b.Property(d => d.ModoDescuento).HasConversion<int>();
+                b.Property(d => d.Valor).HasColumnType("decimal(18,2)");
+                b.Ignore(d => d.EstaVigente);
+                b.HasIndex(d => d.Id_empresa);
+                b.HasIndex(d => d.Activo);
+                b.HasIndex(d => new { d.Id_empresa, d.Tipo, d.Activo });
+                b.HasOne(d => d.Empresa).WithMany()
+                 .HasForeignKey(d => d.Id_empresa).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(d => d.Producto).WithMany()
+                 .HasForeignKey(d => d.Id_producto).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(d => d.Categoria).WithMany()
+                 .HasForeignKey(d => d.Id_categoria).OnDelete(DeleteBehavior.Restrict);
             }
         }
     }

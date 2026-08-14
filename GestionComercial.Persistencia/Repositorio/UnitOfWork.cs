@@ -28,6 +28,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public IProveedorProductoCostoRepositorio ProveedoresCostos { get; }
         public IRolRepositorio     Roles    { get; }
         public IPermisoRepositorio Permisos { get; }
+        public IDescuentoConfiguracionRepositorio DescuentoConfiguraciones { get; }
 
         public UnitOfWork(GestionComercialContext context)
         {
@@ -50,6 +51,7 @@ namespace GestionComercial.Persistencia.Repositorio
             ProveedoresCostos = new ProveedorProductoCostoRepositorio(context);
             Roles            = new RolRepositorio(context);
             Permisos         = new PermisoRepositorio(context);
+            DescuentoConfiguraciones = new DescuentoConfiguracionRepositorio(context);
         }
 
         public async Task<int> GuardarCambiosAsync()
