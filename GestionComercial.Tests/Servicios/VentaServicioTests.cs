@@ -786,7 +786,7 @@ namespace GestionComercial.Tests.Servicios
         }
 
         [Fact]
-        public async Task RegistrarPagoAsync_PagosMixtos_AplicaDescuentoMayorPrioridadAlTotalCompleto()
+        public async Task RegistrarPagoAsync_PagosMixtos_NoAplicaDescuentoMetodoPago()
         {
             var venta = CrearVentaPendiente();
             venta.AgregarDetalle(CrearDetalle(1000m, 500m, 1)); // TotalBruto=1000, TotalFinal=1000
@@ -810,29 +810,27 @@ namespace GestionComercial.Tests.Servicios
                     Id = 1, Nombre = "Sucursal Test", Id_empresa = 1
                 });
 
-            // Dos configs: Efectivo 2% (prio 10) y Débito 5% (prio 20) → gana Débito
-            var efectivo = DescuentoConfiguracion.Crear(
-                "Efectivo 2%", TipoDescuentoEnum.MetodoPago, 2, 1, idMetodoPago: 1, prioridad: 10);
+            // Débito tiene descuento 5% (prio 20), pero el pago es MIXTO → no aplica
             var debito = DescuentoConfiguracion.Crear(
                 "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2, prioridad: 20);
             _mockDescuentoConfig
                 .Setup(s => s.ObtenerTodosAsync(1, null, null, null))
-                .ReturnsAsync(new List<DescuentoConfiguracion> { efectivo, debito });
+                .ReturnsAsync(new List<DescuentoConfiguracion> { debito });
             _mockDescuentoConfig
                 .Setup(s => s.ObtenerDescuentoMetodoPagoAsync(1, It.IsAny<List<int>>(), It.IsAny<List<DescuentoConfiguracion>>()))
                 .ReturnsAsync(debito);
 
-            // Pago mixto: Efectivo $600 + Débito $350 = $950 (total post-descuento)
+            // Pago mixto: Efectivo $600 + Débito $400 = $1000 (sin descuento)
             await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
             {
                 new() { IdMetodoPago = 1, Monto = 600m },
-                new() { IdMetodoPago = 2, Monto = 350m }
+                new() { IdMetodoPago = 2, Monto = 400m }
             });
 
-            // El descuento se aplica a la TOTALIDAD (1000 * 5% = 50), no proporcional al split
-            venta.DescuentoMetodoPago.Should().Be(50m);
-            venta.Id_metodoPagoDescuento.Should().Be(2);
-            venta.TotalFinal.Should().Be(950m);
+            // Pago mixto: NO se aplica descuento, total sin modificar
+            venta.DescuentoMetodoPago.Should().Be(0m);
+            venta.Id_metodoPagoDescuento.Should().BeNull();
+            venta.TotalFinal.Should().Be(1000m);
             venta.EsPagada.Should().BeTrue();
         }
 

@@ -179,8 +179,10 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new VentaInvalidaException("La venta está anulada y no puede pagarse.");
 
             // ── Resolver descuento por método de pago ANTES de validar total ──
+            // Regla de negocio: el descuento solo aplica cuando el pago es 100% con
+            // UN ÚNICO método de pago. Los pagos mixtos (varios métodos) NO reciben descuento.
             var idsMetodosPago = pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
-            if (idsMetodosPago.Any())
+            if (idsMetodosPago.Count == 1)
             {
                 var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
                 var idEmpresa = sucursal?.Id_empresa ?? 0;
