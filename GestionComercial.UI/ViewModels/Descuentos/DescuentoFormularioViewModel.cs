@@ -3,6 +3,8 @@ using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Eventos;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Pagos;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
@@ -17,17 +19,20 @@ namespace GestionComercial.UI.ViewModels.Descuentos
     {
         private readonly IDescuentoConfiguracionServicio _servicio;
         private readonly IProductoServicio _productoServicio;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly SesionServicio _sesion;
         private readonly IEventAggregator _eventAggregator;
 
         public DescuentoFormularioViewModel(
             IDescuentoConfiguracionServicio servicio,
             IProductoServicio productoServicio,
+            IUnitOfWork unitOfWork,
             SesionServicio sesion,
             IEventAggregator eventAggregator)
         {
             _servicio = servicio;
             _productoServicio = productoServicio;
+            _unitOfWork = unitOfWork;
             _sesion = sesion;
             _eventAggregator = eventAggregator;
         }
@@ -47,6 +52,9 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 NotifyOfPropertyChange(() => TipoSeleccionadoStr);
                 NotifyOfPropertyChange(() => EsTipoProducto);
                 NotifyOfPropertyChange(() => EsTipoCategoria);
+                NotifyOfPropertyChange(() => EsTipoMetodoPago);
+                if (value != TipoDescuentoEnum.MetodoPago)
+                    IdMetodoPago = null;
             }
         }
 
@@ -62,6 +70,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
 
         public bool EsTipoProducto => TipoSeleccionado == TipoDescuentoEnum.Producto;
         public bool EsTipoCategoria => TipoSeleccionado == TipoDescuentoEnum.Categoria;
+        public bool EsTipoMetodoPago => TipoSeleccionado == TipoDescuentoEnum.MetodoPago;
 
         private string _nombre = string.Empty;
         public string Nombre
@@ -103,6 +112,33 @@ namespace GestionComercial.UI.ViewModels.Descuentos
         {
             get => _categoriaNombre;
             set { _categoriaNombre = value; NotifyOfPropertyChange(() => CategoriaNombre); }
+        }
+
+        private int? _idMetodoPago;
+        public int? IdMetodoPago
+        {
+            get => _idMetodoPago;
+            set { _idMetodoPago = value; NotifyOfPropertyChange(() => IdMetodoPago); }
+        }
+
+        // ── Métodos de pago para selector ───────────────────────────────
+        private ObservableCollection<MetodoPago> _metodosPago = new();
+        public ObservableCollection<MetodoPago> MetodosPago
+        {
+            get => _metodosPago;
+            set { _metodosPago = value; NotifyOfPropertyChange(() => MetodosPago); }
+        }
+
+        private MetodoPago? _metodoPagoSeleccionado;
+        public MetodoPago? MetodoPagoSeleccionado
+        {
+            get => _metodoPagoSeleccionado;
+            set
+            {
+                _metodoPagoSeleccionado = value;
+                IdMetodoPago = value?.Id;
+                NotifyOfPropertyChange(() => MetodoPagoSeleccionado);
+            }
         }
 
         // ── Productos / Categorías para selectores ───────────────────────
@@ -183,15 +219,18 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                     TipoSeleccionado = descuento.Tipo;
                     IdProducto = descuento.Id_producto;
                     IdCategoria = descuento.Id_categoria;
+                    IdMetodoPago = descuento.Id_metodoPago;
                     FechaDesde = descuento.FechaDesde;
                     FechaHasta = descuento.FechaHasta;
                     Prioridad = descuento.Prioridad;
 
-                    // Preseleccionar producto/categoría en los combos
+                    // Preseleccionar producto/categoría/método de pago en los combos
                     if (IdProducto.HasValue)
                         ProductoSeleccionado = Productos.FirstOrDefault(p => p.IdProducto == IdProducto.Value);
                     if (IdCategoria.HasValue)
                         CategoriaSeleccionada = Categorias.FirstOrDefault(c => c.IdCategoria == IdCategoria.Value);
+                    if (IdMetodoPago.HasValue)
+                        MetodoPagoSeleccionado = MetodosPago.FirstOrDefault(m => m.Id == IdMetodoPago.Value);
                 }
             }
         }
@@ -205,6 +244,10 @@ namespace GestionComercial.UI.ViewModels.Descuentos
 
                 var categorias = await _productoServicio.ObtenerCategoriasAsync(_sesion.IdEmpresa);
                 Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
+
+                var metodos = await _unitOfWork.MetodosPago.ObtenerTodosPorEmpresaAsync(_sesion.IdEmpresa);
+                MetodosPago = new ObservableCollection<MetodoPago>(
+                    metodos.Where(m => m.Activo).OrderBy(m => m.Nombre));
             }
             catch
             {
@@ -236,6 +279,16 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 MostrarError("Debe seleccionar una categoría.");
                 return;
             }
+            if (TipoSeleccionado == TipoDescuentoEnum.MetodoPago && IdMetodoPago == null)
+            {
+                MostrarError("Debe seleccionar un método de pago.");
+                return;
+            }
+            if (TipoSeleccionado != TipoDescuentoEnum.MetodoPago && IdMetodoPago != null)
+            {
+                MostrarError("El método de pago solo puede asignarse para tipo Método de Pago.");
+                return;
+            }
             if (FechaDesde.HasValue && FechaHasta.HasValue && FechaHasta < FechaDesde)
             {
                 MostrarError("FechaHasta debe ser >= FechaDesde.");
@@ -248,13 +301,13 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 {
                     await _servicio.ActualizarAsync(
                         DescuentoId, Nombre, TipoSeleccionado, Valor,
-                        IdProducto, IdCategoria, null, FechaDesde, FechaHasta, Prioridad);
+                        IdProducto, IdCategoria, IdMetodoPago, FechaDesde, FechaHasta, Prioridad);
                 }
                 else
                 {
                     await _servicio.CrearAsync(
                         _sesion.IdEmpresa, Nombre, TipoSeleccionado, Valor,
-                        IdProducto, IdCategoria, null, FechaDesde, FechaHasta, Prioridad);
+                        IdProducto, IdCategoria, IdMetodoPago, FechaDesde, FechaHasta, Prioridad);
                 }
 
                 await _eventAggregator.PublishOnUIThreadAsync(new DescuentosActualizadosEvent());

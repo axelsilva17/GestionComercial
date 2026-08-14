@@ -23,7 +23,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             _servicio = servicio;
             _sesion = sesion;
             Titulo = "Descuentos";
-            Subtitulo = "Gestión de descuentos por producto y categoría";
+            Subtitulo = "Gestión de descuentos por producto, categoría y método de pago";
         }
 
         private ObservableCollection<DescuentoListadoDto> _items = new();
@@ -71,6 +71,8 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                         Valor = d.Valor,
                         Id_producto = d.Id_producto,
                         Id_categoria = d.Id_categoria,
+                        Id_metodoPago = d.Id_metodoPago,
+                        MetodoPagoNombre = d.MetodoPago?.Nombre,
                         FechaDesde = d.FechaDesde,
                         FechaHasta = d.FechaHasta,
                         Prioridad = d.Prioridad,

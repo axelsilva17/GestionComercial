@@ -5,6 +5,7 @@ using GestionComercial.Aplicacion.Eventos;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
 using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Descuentos;
 using Moq;
@@ -15,6 +16,7 @@ namespace GestionComercial.Tests.UI
     {
         private readonly Mock<IDescuentoConfiguracionServicio> _mockServicio = new();
         private readonly Mock<IProductoServicio> _mockProductoServicio = new();
+        private readonly Mock<IUnitOfWork> _mockUnitOfWork = new();
         private readonly Mock<IEventAggregator> _mockEventAggregator = new();
         private readonly SesionServicio _sesion;
 
@@ -37,6 +39,7 @@ namespace GestionComercial.Tests.UI
             return new DescuentoFormularioViewModel(
                 _mockServicio.Object,
                 _mockProductoServicio.Object,
+                _mockUnitOfWork.Object,
                 _sesion,
                 _mockEventAggregator.Object);
         }

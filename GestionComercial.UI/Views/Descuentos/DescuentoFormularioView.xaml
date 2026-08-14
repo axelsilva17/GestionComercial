@@ -32,6 +32,7 @@
                       IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}">
                 <ComboBoxItem Content="Producto" Tag="Producto"/>
                 <ComboBoxItem Content="Categoría" Tag="Categoria"/>
+                <ComboBoxItem Content="Método de Pago" Tag="MetodoPago"/>
             </ComboBox>
 
             <!-- Selector de Producto (visible cuando Tipo = Producto) -->
@@ -50,6 +51,16 @@
                 <ComboBox ItemsSource="{Binding Categorias}"
                           DisplayMemberPath="Nombre"
                           SelectedItem="{Binding CategoriaSeleccionada}"
+                          IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
+                          Height="36" Margin="0,0,0,12" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Selector de Método de Pago (visible cuando Tipo = MetodoPago) -->
+            <StackPanel Visibility="{Binding EsTipoMetodoPago, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="MÉTODO DE PAGO" Style="{StaticResource FormLabel}"/>
+                <ComboBox ItemsSource="{Binding MetodosPago}"
+                          DisplayMemberPath="Nombre"
+                          SelectedItem="{Binding MetodoPagoSeleccionado}"
                           IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
                           Height="36" Margin="0,0,0,12" FontSize="13"/>
             </StackPanel>
