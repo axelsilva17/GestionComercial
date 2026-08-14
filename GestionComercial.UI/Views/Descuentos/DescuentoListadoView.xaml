@@ -48,9 +48,40 @@
                   MouseDoubleClick="DataGrid_MouseDoubleClick">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="*"/>
-                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="80"/>
+                <DataGridTextColumn Header="Ámbito" Binding="{Binding ProductoNombre, StringFormat={}{0}}" Width="140">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{Binding CategoriaNombre}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Id_producto}" Value="{x:Null}">
+                                    <Setter Property="Text" Value="{Binding CategoriaNombre}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Id_producto}">
+                                    <Setter Property="Text" Value="{Binding ProductoNombre}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Pago" Width="160">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="MetodosPagoNombres" FallbackValue=""/>
+                    </DataGridTextColumn.Binding>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="Cualquier método"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding AplicaCualquierMetodoPago}" Value="False">
+                                    <Setter Property="Text" Value="{Binding MetodosPagoNombres}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
                 <DataGridTextColumn Header="Valor %" Binding="{Binding Valor}" Width="70"/>
-                <DataGridTextColumn Header="Prioridad" Binding="{Binding Prioridad}" Width="70"/>
                 <DataGridTextColumn Header="Activo" Binding="{Binding Activo}" Width="60"/>
             </DataGrid.Columns>
         </DataGrid>

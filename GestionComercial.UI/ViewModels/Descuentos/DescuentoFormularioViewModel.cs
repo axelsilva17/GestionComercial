@@ -41,36 +41,46 @@ namespace GestionComercial.UI.ViewModels.Descuentos
         public bool EsModoEdicion { get; set; }
         public int DescuentoId { get; set; }
 
-        private TipoDescuentoEnum _tipoSeleccionado = TipoDescuentoEnum.Producto;
-        public TipoDescuentoEnum TipoSeleccionado
+        // ── Ámbito (qué se compra): Producto o Categoría ─────────────────
+        private string _ambitoSeleccionado = "Producto";
+        public string AmbitoSeleccionado
         {
-            get => _tipoSeleccionado;
+            get => _ambitoSeleccionado;
             set
             {
-                _tipoSeleccionado = value;
-                NotifyOfPropertyChange(() => TipoSeleccionado);
-                NotifyOfPropertyChange(() => TipoSeleccionadoStr);
-                NotifyOfPropertyChange(() => EsTipoProducto);
-                NotifyOfPropertyChange(() => EsTipoCategoria);
-                NotifyOfPropertyChange(() => EsTipoMetodoPago);
-                if (value != TipoDescuentoEnum.MetodoPago)
-                    IdMetodoPago = null;
+                _ambitoSeleccionado = value;
+                NotifyOfPropertyChange(() => AmbitoSeleccionado);
+                NotifyOfPropertyChange(() => MuestraSelectorProducto);
+                NotifyOfPropertyChange(() => MuestraSelectorCategoria);
+                if (value == "Producto") IdCategoria = null;
+                else IdProducto = null;
             }
         }
 
-        public string TipoSeleccionadoStr
+        public bool MuestraSelectorProducto => AmbitoSeleccionado == "Producto";
+        public bool MuestraSelectorCategoria => AmbitoSeleccionado == "Categoría";
+
+        // ── Condición de pago ────────────────────────────────────────────
+        private bool _aplicaCualquierMetodoPago = true;
+        public bool AplicaCualquierMetodoPago
         {
-            get => TipoSeleccionado.ToString();
+            get => _aplicaCualquierMetodoPago;
             set
             {
-                if (System.Enum.TryParse<TipoDescuentoEnum>(value, out var parsed))
-                    TipoSeleccionado = parsed;
+                _aplicaCualquierMetodoPago = value;
+                NotifyOfPropertyChange(() => AplicaCualquierMetodoPago);
+                NotifyOfPropertyChange(() => MuestraSelectorMetodosPago);
             }
         }
 
-        public bool EsTipoProducto => TipoSeleccionado == TipoDescuentoEnum.Producto;
-        public bool EsTipoCategoria => TipoSeleccionado == TipoDescuentoEnum.Categoria;
-        public bool EsTipoMetodoPago => TipoSeleccionado == TipoDescuentoEnum.MetodoPago;
+        public bool MuestraSelectorMetodosPago => !AplicaCualquierMetodoPago;
+
+        private ObservableCollection<MetodoPagoCheckItem> _metodosPagoDisponibles = new();
+        public ObservableCollection<MetodoPagoCheckItem> MetodosPagoDisponibles
+        {
+            get => _metodosPagoDisponibles;
+            set { _metodosPagoDisponibles = value; NotifyOfPropertyChange(() => MetodosPagoDisponibles); }
+        }
 
         private string _nombre = string.Empty;
         public string Nombre
@@ -114,34 +124,6 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             set { _categoriaNombre = value; NotifyOfPropertyChange(() => CategoriaNombre); }
         }
 
-        private int? _idMetodoPago;
-        public int? IdMetodoPago
-        {
-            get => _idMetodoPago;
-            set { _idMetodoPago = value; NotifyOfPropertyChange(() => IdMetodoPago); }
-        }
-
-        // ── Métodos de pago para selector ───────────────────────────────
-        private ObservableCollection<MetodoPago> _metodosPago = new();
-        public ObservableCollection<MetodoPago> MetodosPago
-        {
-            get => _metodosPago;
-            set { _metodosPago = value; NotifyOfPropertyChange(() => MetodosPago); }
-        }
-
-        private MetodoPago? _metodoPagoSeleccionado;
-        public MetodoPago? MetodoPagoSeleccionado
-        {
-            get => _metodoPagoSeleccionado;
-            set
-            {
-                _metodoPagoSeleccionado = value;
-                IdMetodoPago = value?.Id;
-                NotifyOfPropertyChange(() => MetodoPagoSeleccionado);
-            }
-        }
-
-        // ── Productos / Categorías para selectores ───────────────────────
         private ObservableCollection<ProductoListadoDto> _productos = new();
         public ObservableCollection<ProductoListadoDto> Productos
         {
@@ -196,13 +178,6 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
         }
 
-        private int _prioridad;
-        public int Prioridad
-        {
-            get => _prioridad;
-            set { _prioridad = value; NotifyOfPropertyChange(() => Prioridad); }
-        }
-
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             Titulo = EsModoEdicion ? "Editar Descuento" : "Nuevo Descuento";
@@ -216,21 +191,23 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 {
                     Nombre = descuento.Nombre;
                     Valor = descuento.Valor;
-                    TipoSeleccionado = descuento.Tipo;
                     IdProducto = descuento.Id_producto;
                     IdCategoria = descuento.Id_categoria;
-                    IdMetodoPago = descuento.Id_metodoPago;
+                    AplicaCualquierMetodoPago = descuento.AplicaCualquierMetodoPago;
                     FechaDesde = descuento.FechaDesde;
                     FechaHasta = descuento.FechaHasta;
-                    Prioridad = descuento.Prioridad;
 
-                    // Preseleccionar producto/categoría/método de pago en los combos
+                    // Inferir ámbito desde la FK seteada
+                    AmbitoSeleccionado = descuento.Id_producto.HasValue ? "Producto" : "Categoría";
+
                     if (IdProducto.HasValue)
                         ProductoSeleccionado = Productos.FirstOrDefault(p => p.IdProducto == IdProducto.Value);
                     if (IdCategoria.HasValue)
                         CategoriaSeleccionada = Categorias.FirstOrDefault(c => c.IdCategoria == IdCategoria.Value);
-                    if (IdMetodoPago.HasValue)
-                        MetodoPagoSeleccionado = MetodosPago.FirstOrDefault(m => m.Id == IdMetodoPago.Value);
+
+                    // Preseleccionar métodos de pago
+                    foreach (var item in MetodosPagoDisponibles)
+                        item.EstaSeleccionado = descuento.DescuentosMetodosPago.Any(dm => dm.Id_metodoPago == item.MetodoPago.Id);
                 }
             }
         }
@@ -246,12 +223,15 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
 
                 var metodos = await _unitOfWork.MetodosPago.ObtenerTodosPorEmpresaAsync(_sesion.IdEmpresa);
-                MetodosPago = new ObservableCollection<MetodoPago>(
-                    metodos.Where(m => m.Activo).OrderBy(m => m.Nombre));
+                MetodosPagoDisponibles = new ObservableCollection<MetodoPagoCheckItem>(
+                    metodos
+                        .Where(m => m.Activo && (m.Categoria == "Credito" || m.Categoria == "Debito"))
+                        .OrderBy(m => m.Nombre)
+                        .Select(m => new MetodoPagoCheckItem(m)));
             }
             catch
             {
-                // Silently fail — selectors will be empty, validation will catch on save
+                // Selectores vacíos; la validación de guardado cubre los casos inválidos
             }
         }
 
@@ -269,24 +249,20 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 MostrarError("El valor debe ser entre 1 y 100.");
                 return;
             }
-            if (TipoSeleccionado == TipoDescuentoEnum.Producto && IdProducto == null)
+            if (IdProducto == null && IdCategoria == null)
             {
-                MostrarError("Debe seleccionar un producto.");
+                MostrarError("Debe seleccionar un producto o una categoría.");
                 return;
             }
-            if (TipoSeleccionado == TipoDescuentoEnum.Categoria && IdCategoria == null)
+            if (IdProducto != null && IdCategoria != null)
             {
-                MostrarError("Debe seleccionar una categoría.");
+                MostrarError("No puede seleccionar producto y categoría a la vez.");
                 return;
             }
-            if (TipoSeleccionado == TipoDescuentoEnum.MetodoPago && IdMetodoPago == null)
+            if (!AplicaCualquierMetodoPago
+                && !MetodosPagoDisponibles.Any(m => m.EstaSeleccionado))
             {
-                MostrarError("Debe seleccionar un método de pago.");
-                return;
-            }
-            if (TipoSeleccionado != TipoDescuentoEnum.MetodoPago && IdMetodoPago != null)
-            {
-                MostrarError("El método de pago solo puede asignarse para tipo Método de Pago.");
+                MostrarError("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
                 return;
             }
             if (FechaDesde.HasValue && FechaHasta.HasValue && FechaHasta < FechaDesde)
@@ -295,19 +271,28 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 return;
             }
 
+            var idsMetodosPago = MetodosPagoDisponibles
+                .Where(m => m.EstaSeleccionado)
+                .Select(m => m.MetodoPago.Id)
+                .ToList();
+
             try
             {
                 if (EsModoEdicion)
                 {
                     await _servicio.ActualizarAsync(
-                        DescuentoId, Nombre, TipoSeleccionado, Valor,
-                        IdProducto, IdCategoria, IdMetodoPago, FechaDesde, FechaHasta, Prioridad);
+                        DescuentoId, Nombre, Valor,
+                        IdProducto, IdCategoria, AplicaCualquierMetodoPago,
+                        AplicaCualquierMetodoPago ? null : idsMetodosPago,
+                        FechaDesde, FechaHasta);
                 }
                 else
                 {
                     await _servicio.CrearAsync(
-                        _sesion.IdEmpresa, Nombre, TipoSeleccionado, Valor,
-                        IdProducto, IdCategoria, IdMetodoPago, FechaDesde, FechaHasta, Prioridad);
+                        _sesion.IdEmpresa, Nombre, Valor,
+                        IdProducto, IdCategoria, AplicaCualquierMetodoPago,
+                        AplicaCualquierMetodoPago ? null : idsMetodosPago,
+                        FechaDesde, FechaHasta);
                 }
 
                 await _eventAggregator.PublishOnUIThreadAsync(new DescuentosActualizadosEvent());
@@ -345,6 +330,24 @@ namespace GestionComercial.UI.ViewModels.Descuentos
         {
             if (ListadoRef != null)
                 IoC.Get<ShellViewModel>().ActivateItemAsync(ListadoRef, CancellationToken.None);
+        }
+    }
+
+    // ── Item para checkbox de tarjeta ─────────────────────────────────────
+    public class MetodoPagoCheckItem : PropertyChangedBase
+    {
+        public MetodoPago MetodoPago { get; }
+
+        private bool _estaSeleccionado;
+        public bool EstaSeleccionado
+        {
+            get => _estaSeleccionado;
+            set { _estaSeleccionado = value; NotifyOfPropertyChange(() => EstaSeleccionado); }
+        }
+
+        public MetodoPagoCheckItem(MetodoPago metodoPago)
+        {
+            MetodoPago = metodoPago;
         }
     }
 }

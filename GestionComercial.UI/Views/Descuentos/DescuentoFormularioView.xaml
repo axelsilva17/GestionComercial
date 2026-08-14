@@ -62,9 +62,18 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="SeccionCard" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="8"/>
+            <Setter Property="Padding"         Value="14"/>
+            <Setter Property="Margin"          Value="0,0,0,14"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid Margin="20" MaxWidth="500" HorizontalAlignment="Left">
+    <Grid Margin="20" MaxWidth="520" HorizontalAlignment="Left">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -76,75 +85,92 @@
                    Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
 
         <!-- Form -->
-        <StackPanel Grid.Row="1">
-            <!-- Error -->
-            <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
-                    Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="{Binding MensajeError}" FontSize="12"
-                           Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
-            </Border>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Error -->
+                <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
+                        Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding MensajeError}" FontSize="12"
+                               Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
+                </Border>
 
-            <!-- Tipo -->
-            <TextBlock Text="TIPO" Style="{StaticResource FormLabel}"/>
-            <ComboBox Height="36" Margin="0,0,0,12" FontSize="13"
-                      SelectedValue="{Binding TipoSeleccionadoStr, Mode=TwoWay}"
-                      SelectedValuePath="Tag"
-                      IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}">
-                <ComboBoxItem Content="Producto" Tag="Producto"/>
-                <ComboBoxItem Content="Categoría" Tag="Categoria"/>
-                <ComboBoxItem Content="Método de Pago" Tag="MetodoPago"/>
-            </ComboBox>
+                <!-- ── Ámbito (qué se compra) ── -->
+                <Border Style="{StaticResource SeccionCard}">
+                    <StackPanel>
+                        <TextBlock Text="QUÉ SE COMPRA" Style="{StaticResource FormLabel}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <RadioButton GroupName="Ambito" Content="Producto" FontSize="13"
+                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Producto}"
+                                         Margin="0,0,20,0"/>
+                            <RadioButton GroupName="Ambito" Content="Categoría" FontSize="13"
+                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Categoría}"/>
+                        </StackPanel>
 
-            <!-- Selector de Producto (visible cuando Tipo = Producto) -->
-            <StackPanel Visibility="{Binding EsTipoProducto, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="PRODUCTO" Style="{StaticResource FormLabel}"/>
-                <ComboBox ItemsSource="{Binding Productos}"
-                          DisplayMemberPath="Nombre"
-                          SelectedItem="{Binding ProductoSeleccionado}"
-                          IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
-                          Height="36" Margin="0,0,0,12" FontSize="13"/>
+                        <!-- Selector de Producto -->
+                        <StackPanel Visibility="{Binding MuestraSelectorProducto, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="PRODUCTO" Style="{StaticResource FormLabel}"/>
+                            <ComboBox ItemsSource="{Binding Productos}"
+                                      DisplayMemberPath="Nombre"
+                                      SelectedItem="{Binding ProductoSeleccionado}"
+                                      IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
+                                      Height="36" FontSize="13"/>
+                        </StackPanel>
+
+                        <!-- Selector de Categoría -->
+                        <StackPanel Visibility="{Binding MuestraSelectorCategoria, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="CATEGORÍA" Style="{StaticResource FormLabel}"/>
+                            <ComboBox ItemsSource="{Binding Categorias}"
+                                      DisplayMemberPath="Nombre"
+                                      SelectedItem="{Binding CategoriaSeleccionada}"
+                                      IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
+                                      Height="36" FontSize="13"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Condición de Pago ── -->
+                <Border Style="{StaticResource SeccionCard}">
+                    <StackPanel>
+                        <TextBlock Text="CONDICIÓN DE PAGO" Style="{StaticResource FormLabel}"/>
+                        <CheckBox Content="Aplica a cualquier método de pago" FontSize="13"
+                                  IsChecked="{Binding AplicaCualquierMetodoPago}"
+                                  Margin="0,0,0,10"/>
+
+                        <StackPanel Visibility="{Binding MuestraSelectorMetodosPago, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="TARJETAS (crédito / débito)" Style="{StaticResource FormLabel}"/>
+                            <ItemsControl ItemsSource="{Binding MetodosPagoDisponibles}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding MetodoPago.Nombre}" FontSize="13"
+                                                  IsChecked="{Binding EstaSeleccionado}"
+                                                  Margin="0,2,0,2"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Datos generales ── -->
+                <Border Style="{StaticResource SeccionCard}">
+                    <StackPanel>
+                        <TextBlock Text="DATOS" Style="{StaticResource FormLabel}"/>
+
+                        <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource FormInput}" Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="VALOR (%)" Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource FormInput}" Text="{Binding Valor, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="FECHA DESDE (opcional)" Style="{StaticResource FormLabel}"/>
+                        <DatePicker SelectedDate="{Binding FechaDesde}" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="FECHA HASTA (opcional)" Style="{StaticResource FormLabel}"/>
+                        <DatePicker SelectedDate="{Binding FechaHasta}" Margin="0,0,0,12"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-
-            <!-- Selector de Categoría (visible cuando Tipo = Categoria) -->
-            <StackPanel Visibility="{Binding EsTipoCategoria, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="CATEGORÍA" Style="{StaticResource FormLabel}"/>
-                <ComboBox ItemsSource="{Binding Categorias}"
-                          DisplayMemberPath="Nombre"
-                          SelectedItem="{Binding CategoriaSeleccionada}"
-                          IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
-                          Height="36" Margin="0,0,0,12" FontSize="13"/>
-            </StackPanel>
-
-            <!-- Selector de Método de Pago (visible cuando Tipo = MetodoPago) -->
-            <StackPanel Visibility="{Binding EsTipoMetodoPago, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="MÉTODO DE PAGO" Style="{StaticResource FormLabel}"/>
-                <ComboBox ItemsSource="{Binding MetodosPago}"
-                          DisplayMemberPath="Nombre"
-                          SelectedItem="{Binding MetodoPagoSeleccionado}"
-                          IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
-                          Height="36" Margin="0,0,0,12" FontSize="13"/>
-            </StackPanel>
-
-            <!-- Nombre -->
-            <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
-            <TextBox Style="{StaticResource FormInput}" Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-
-            <!-- Valor -->
-            <TextBlock Text="VALOR (%)" Style="{StaticResource FormLabel}"/>
-            <TextBox Style="{StaticResource FormInput}" Text="{Binding Valor, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-
-            <!-- FechaDesde -->
-            <TextBlock Text="FECHA DESDE (opcional)" Style="{StaticResource FormLabel}"/>
-            <DatePicker SelectedDate="{Binding FechaDesde}" Margin="0,0,0,12"/>
-
-            <!-- FechaHasta -->
-            <TextBlock Text="FECHA HASTA (opcional)" Style="{StaticResource FormLabel}"/>
-            <DatePicker SelectedDate="{Binding FechaHasta}" Margin="0,0,0,12"/>
-
-            <!-- Prioridad -->
-            <TextBlock Text="PRIORIDAD" Style="{StaticResource FormLabel}"/>
-            <TextBox Style="{StaticResource FormInput}" Text="{Binding Prioridad, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-        </StackPanel>
+        </ScrollViewer>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">

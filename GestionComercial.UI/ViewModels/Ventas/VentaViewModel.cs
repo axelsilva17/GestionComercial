@@ -38,8 +38,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private readonly DispatcherTimer _debounceTimer;
         private CancellationTokenSource?  _debounceCts;
         private List<ProductoListadoDto> _productosCache = new(); // Cache de productos precargados
-        private List<DescuentoConfiguracion> _descuentosCache = new();
-        private Dictionary<int, Categoria> _categoriasCache = new();
 
         // ── Scanner Fast-Entry Detection ──────────────────────────────────────────
         // Un escáner de código de barras tipea muy rápido (>8 chars en <500ms)
@@ -153,11 +151,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     // Guardar en cache para búsquedas rápidas
                     _productosCache = productos.ToList();
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
-
-                    // Cargar cache de descuentos y categorías
-                    _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
-                    var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
-                    _categoriasCache = categorias.ToDictionary(c => c.Id);
 
 
                 }
@@ -679,24 +672,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 });
             }
 
-            // ── Auto-aplicar descuento configurado ──
-            var item = Items.FirstOrDefault(i => i.ProductoId == producto.IdProducto);
-            if (item != null && _descuentosCache.Count > 0)
-            {
-                var idCategoria = _productosCache
-                    .FirstOrDefault(p => p.IdProducto == producto.IdProducto)?.IdCategoria;
-
-                var descuento = _descuentoServicio.ObtenerDescuentoAplicableAsync(
-                    _sesion.IdEmpresa, producto.IdProducto, idCategoria,
-                    _descuentosCache, _categoriasCache).GetAwaiter().GetResult();
-
-                if (descuento != null)
-                {
-                    item.DescuentoPorItem = Math.Round(item.Subtotal * descuento.Valor / 100, 2);
-                    item.DescripcionDescuento = $"Descuento {descuento.Valor}%";
-                }
-            }
-
             BusquedaProducto = string.Empty;
             MostrarPopupBusqueda = false;
             RecalcularTotales();
@@ -1145,12 +1120,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public async Task HandleAsync(DescuentosActualizadosEvent message, CancellationToken cancellationToken)
         {
-            if (_sesion.IdEmpresa > 0)
-            {
-                _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
-                var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
-                _categoriasCache = categorias.ToDictionary(c => c.Id);
-            }
+            // Los descuentos se aplican en el momento del pago (VentaServicio.RegistrarPagoAsync),
+            // por lo que el carrito no necesita mantener un cache local de descuentos.
+            await Task.CompletedTask;
         }
     }
 

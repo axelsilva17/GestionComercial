@@ -1,10 +1,8 @@
 using Caliburn.Micro;
 using FluentAssertions;
 using GestionComercial.Aplicacion.DTOs.Productos;
-using GestionComercial.Aplicacion.Eventos;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
-using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Descuentos;
@@ -45,48 +43,67 @@ namespace GestionComercial.Tests.UI
         }
 
         [Fact]
-        public void TipoSeleccionado_DefaultIsProducto()
+        public void AmbitoSeleccionado_DefaultEsProducto()
         {
             var vm = CrearVM();
-            vm.TipoSeleccionado.Should().Be(TipoDescuentoEnum.Producto);
+            vm.AmbitoSeleccionado.Should().Be("Producto");
+            vm.MuestraSelectorProducto.Should().BeTrue();
+            vm.MuestraSelectorCategoria.Should().BeFalse();
         }
 
         [Fact]
-        public void TipoSeleccionado_UpdateNotifiesEsTipoProducto()
+        public void AmbitoSeleccionado_AlCambiarACategoria_ActualizaSelectoresYLimpiarProducto()
         {
             var vm = CrearVM();
-            vm.TipoSeleccionado.Should().Be(TipoDescuentoEnum.Producto);
-            vm.EsTipoProducto.Should().BeTrue();
-            vm.EsTipoCategoria.Should().BeFalse();
+            vm.ProductoSeleccionado = new ProductoListadoDto { IdProducto = 42, Nombre = "Leche" };
 
-            vm.TipoSeleccionado = TipoDescuentoEnum.Categoria;
+            vm.AmbitoSeleccionado = "Categoría";
 
-            vm.EsTipoProducto.Should().BeFalse();
-            vm.EsTipoCategoria.Should().BeTrue();
+            vm.MuestraSelectorProducto.Should().BeFalse();
+            vm.MuestraSelectorCategoria.Should().BeTrue();
+            vm.IdProducto.Should().BeNull();
         }
 
         [Fact]
-        public void TipoSeleccionadoStr_GetReturnsEnumName()
+        public void AmbitoSeleccionado_AlCambiarAProducto_LimpiaCategoria()
         {
             var vm = CrearVM();
-            vm.TipoSeleccionadoStr.Should().Be("Producto");
+            vm.CategoriaSeleccionada = new CategoriaItemDto { IdCategoria = 5, Nombre = "Lácteos" };
+
+            vm.AmbitoSeleccionado = "Producto";
+
+            vm.MuestraSelectorProducto.Should().BeTrue();
+            vm.MuestraSelectorCategoria.Should().BeFalse();
+            vm.IdCategoria.Should().BeNull();
         }
 
         [Fact]
-        public void TipoSeleccionadoStr_SetParsesEnum()
+        public void AplicaCualquierMetodoPago_DefaultEsTrue()
         {
             var vm = CrearVM();
-            vm.TipoSeleccionadoStr = "Categoria";
-            vm.TipoSeleccionado.Should().Be(TipoDescuentoEnum.Categoria);
+            vm.AplicaCualquierMetodoPago.Should().BeTrue();
+            vm.MuestraSelectorMetodosPago.Should().BeFalse();
         }
 
         [Fact]
-        public void TipoSeleccionadoStr_SetInvalidValue_DoesNotCrash()
+        public void AplicaCualquierMetodoPago_AlDesmarcar_MuestraSelectorMetodosPago()
         {
             var vm = CrearVM();
-            var original = vm.TipoSeleccionado;
-            vm.TipoSeleccionadoStr = "InvalidValue";
-            vm.TipoSeleccionado.Should().Be(original);
+
+            vm.AplicaCualquierMetodoPago = false;
+
+            vm.MuestraSelectorMetodosPago.Should().BeTrue();
+        }
+
+        [Fact]
+        public void AplicaCualquierMetodoPago_AlMarcar_OcultaSelectorMetodosPago()
+        {
+            var vm = CrearVM();
+            vm.AplicaCualquierMetodoPago = false;
+
+            vm.AplicaCualquierMetodoPago = true;
+
+            vm.MuestraSelectorMetodosPago.Should().BeFalse();
         }
 
         [Fact]

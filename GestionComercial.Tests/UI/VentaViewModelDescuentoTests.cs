@@ -51,17 +51,6 @@ namespace GestionComercial.Tests.UI
                 _mockUow.Object);
         }
 
-        private static void SeedAllCaches(
-            VentaViewModel vm,
-            List<DescuentoConfiguracion> descuentos,
-            Dictionary<int, Categoria> categorias,
-            List<ProductoListadoDto> productos)
-        {
-            typeof(VentaViewModel).GetField("_descuentosCache", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(vm, descuentos);
-            typeof(VentaViewModel).GetField("_categoriasCache", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(vm, categorias);
-            typeof(VentaViewModel).GetField("_productosCache", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(vm, productos);
-        }
-
         [Fact]
         public void LimiteDescuento_Vendedor_Returns5()
         {
@@ -81,73 +70,6 @@ namespace GestionComercial.Tests.UI
         {
             var vm = CrearVMconSesion(rol: "administrador");
             vm.LimiteDescuento.Should().Be(15m);
-        }
-
-        [Fact]
-        public void SeleccionarProductoDelPopup_ConDescuento_AplicaDescuento()
-        {
-            var vm = CrearVMconSesion();
-            var producto = new ProductoListadoDto
-            {
-                IdProducto = 10,
-                Nombre = "Leche",
-                PrecioVentaActual = 1000,
-                StockActual = 50,
-                IdCategoria = 5
-            };
-
-            var descuento = DescuentoConfiguracion.Crear(
-                "Leche 20%", TipoDescuentoEnum.Producto, 20, 1, idProducto: 10);
-
-            SeedAllCaches(vm,
-                new List<DescuentoConfiguracion> { descuento },
-                new Dictionary<int, Categoria>(),
-                new List<ProductoListadoDto> { producto });
-
-            _mockDescuentoServicio
-                .Setup(s => s.ObtenerDescuentoAplicableAsync(
-                    1, 10, 5,
-                    It.IsAny<List<DescuentoConfiguracion>>(),
-                    It.IsAny<Dictionary<int, Categoria>>()))
-                .ReturnsAsync(descuento);
-
-            vm.SeleccionarProductoDelPopup(producto);
-
-            vm.Items.Should().HaveCount(1);
-            vm.Items[0].DescuentoPorItem.Should().Be(200m);
-            vm.TotalDescuento.Should().Be(200m);
-            vm.TotalFinal.Should().Be(800m);
-        }
-
-        [Fact]
-        public void SeleccionarProductoDelPopup_SinDescuento_DescuentoPorItemCero()
-        {
-            var vm = CrearVMconSesion();
-            var producto = new ProductoListadoDto
-            {
-                IdProducto = 10,
-                Nombre = "Leche",
-                PrecioVentaActual = 1000,
-                StockActual = 50,
-                IdCategoria = 5
-            };
-
-            SeedAllCaches(vm,
-                new List<DescuentoConfiguracion>(),
-                new Dictionary<int, Categoria>(),
-                new List<ProductoListadoDto> { producto });
-
-            _mockDescuentoServicio
-                .Setup(s => s.ObtenerDescuentoAplicableAsync(
-                    1, 10, 5,
-                    It.IsAny<List<DescuentoConfiguracion>>(),
-                    It.IsAny<Dictionary<int, Categoria>>()))
-                .ReturnsAsync((DescuentoConfiguracion?)null);
-
-            vm.SeleccionarProductoDelPopup(producto);
-
-            vm.Items.Should().HaveCount(1);
-            vm.Items[0].DescuentoPorItem.Should().Be(0m);
         }
 
         [Fact]
