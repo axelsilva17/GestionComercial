@@ -23,6 +23,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             ("Productos",     "Productos.Ver"),
             ("Clientes",      "Clientes.Ver"),
             ("Reportes",      "Reportes.Ver"),
+            ("Descuentos",    "Descuentos.Ver"),
             ("Configuración", "Configuracion.Ver"),
             ("Usuarios",      "Usuarios.Gestionar"),
         };
