@@ -5,6 +5,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Pagos;
+using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Ventas;
 using ProdEntity = GestionComercial.Dominio.Entidades.Producto.Producto;
 using GestionComercial.Dominio.Interfaces;
@@ -25,6 +26,7 @@ namespace GestionComercial.Tests.Servicios
         private readonly Mock<ISucursalRepositorio> _mockSucursalRepo = new();
         private readonly Mock<IMovimientoCajaRepositorio> _mockMovimientoCajaRepo = new();
         private readonly Mock<ICajaRepositorio> _mockCajaRepo = new();
+        private readonly Mock<ICategoriaRepositorio> _mockCategoriaRepo = new();
         private readonly Mock<IServicioImpresion> _mockImpresion = new();
         private readonly Mock<IInventarioServicio> _mockInventario = new();
         private readonly Mock<IDescuentoConfiguracionServicio> _mockDescuentoConfig = new();
@@ -41,6 +43,7 @@ namespace GestionComercial.Tests.Servicios
             _mockUow.Setup(u => u.Sucursales).Returns(_mockSucursalRepo.Object);
             _mockUow.Setup(u => u.MovimientosCaja).Returns(_mockMovimientoCajaRepo.Object);
             _mockUow.Setup(u => u.Cajas).Returns(_mockCajaRepo.Object);
+            _mockUow.Setup(u => u.Categorias).Returns(_mockCategoriaRepo.Object);
 
             // Mock para EjecutarEnTransaccionAsync: ejecutar el callback inmediatamente
             _mockUow
@@ -681,14 +684,23 @@ namespace GestionComercial.Tests.Servicios
                     Id = 1, Nombre = "Sucursal Test", Id_empresa = 1
                 });
 
-            // Mock descuento configuración: 5% por débito, prioridad 10
+            _mockCategoriaRepo
+                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            // Descuento 5% sobre el producto 1, restringido a débito (método 2)
             var descuento = DescuentoConfiguracion.Crear(
-                "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2, prioridad: 10);
+                "Débito 5%", 5, 1, idProducto: 1, aplicaCualquierMetodoPago: false,
+                idsMetodosPago: new List<int> { 2 });
+            descuento.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 2 });
+
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerTodosAsync(1, null, null, null))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerDescuentoMetodoPagoAsync(1, It.IsAny<List<int>>(), It.IsAny<List<DescuentoConfiguracion>>()))
+                .Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
                 .ReturnsAsync(descuento);
 
             await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
@@ -725,13 +737,22 @@ namespace GestionComercial.Tests.Servicios
                     Id = 1, Nombre = "Sucursal Test", Id_empresa = 1
                 });
 
+            _mockCategoriaRepo
+                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
             var descuento = DescuentoConfiguracion.Crear(
-                "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2, prioridad: 10);
+                "Débito 5%", 5, 1, idProducto: 1, aplicaCualquierMetodoPago: false,
+                idsMetodosPago: new List<int> { 2 });
+            descuento.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 2 });
+
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerTodosAsync(1, null, null, null))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerDescuentoMetodoPagoAsync(1, It.IsAny<List<int>>(), It.IsAny<List<DescuentoConfiguracion>>()))
+                .Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
                 .ReturnsAsync(descuento);
 
             // Pago de 950 = total post-descuento (1000 - 50)
@@ -766,12 +787,18 @@ namespace GestionComercial.Tests.Servicios
                     Id = 1, Nombre = "Sucursal Test", Id_empresa = 1
                 });
 
+            _mockCategoriaRepo
+                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
             // Sin descuentos configurados
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerTodosAsync(1, null, null, null))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion>());
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerDescuentoMetodoPagoAsync(1, It.IsAny<List<int>>(), It.IsAny<List<DescuentoConfiguracion>>()))
+                .Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
                 .ReturnsAsync((DescuentoConfiguracion?)null);
 
             await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
@@ -810,15 +837,19 @@ namespace GestionComercial.Tests.Servicios
                     Id = 1, Nombre = "Sucursal Test", Id_empresa = 1
                 });
 
-            // Débito tiene descuento 5% (prio 20), pero el pago es MIXTO → no aplica
-            var debito = DescuentoConfiguracion.Crear(
-                "Débito 5%", TipoDescuentoEnum.MetodoPago, 5, 1, idMetodoPago: 2, prioridad: 20);
+            _mockCategoriaRepo
+                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            // Débito tiene descuento 5%, pero el pago es MIXTO → ObtenerDescuentoAplicableAsync devuelve null
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerTodosAsync(1, null, null, null))
-                .ReturnsAsync(new List<DescuentoConfiguracion> { debito });
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion>());
             _mockDescuentoConfig
-                .Setup(s => s.ObtenerDescuentoMetodoPagoAsync(1, It.IsAny<List<int>>(), It.IsAny<List<DescuentoConfiguracion>>()))
-                .ReturnsAsync(debito);
+                .Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync((DescuentoConfiguracion?)null);
 
             // Pago mixto: Efectivo $600 + Débito $400 = $1000 (sin descuento)
             await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>

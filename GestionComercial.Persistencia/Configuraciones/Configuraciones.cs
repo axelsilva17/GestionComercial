@@ -407,21 +407,42 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.ToTable("DescuentoConfiguracion");
                 b.HasKey(d => d.Id);
                 b.Property(d => d.Nombre).HasMaxLength(150).IsRequired();
-                b.Property(d => d.Tipo).HasConversion<int>();
                 b.Property(d => d.ModoDescuento).HasConversion<int>();
                 b.Property(d => d.Valor).HasColumnType("decimal(18,2)");
+                b.Property(d => d.AplicaCualquierMetodoPago).HasDefaultValue(true);
                 b.Ignore(d => d.EstaVigente);
                 b.HasIndex(d => d.Id_empresa);
                 b.HasIndex(d => d.Activo);
-                b.HasIndex(d => new { d.Id_empresa, d.Tipo, d.Activo });
+                b.HasIndex(d => new { d.Id_empresa, d.Activo });
                 b.HasOne(d => d.Empresa).WithMany()
                  .HasForeignKey(d => d.Id_empresa).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(d => d.Producto).WithMany()
                  .HasForeignKey(d => d.Id_producto).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(d => d.Categoria).WithMany()
                  .HasForeignKey(d => d.Id_categoria).OnDelete(DeleteBehavior.Restrict);
-                b.HasOne(d => d.MetodoPago).WithMany()
-                 .HasForeignKey(d => d.Id_metodoPago).OnDelete(DeleteBehavior.Restrict);
+                b.HasMany(d => d.DescuentosMetodosPago)
+                 .WithOne(dm => dm.DescuentoConfiguracion)
+                 .HasForeignKey(dm => dm.Id_descuentoConfiguracion)
+                 .OnDelete(DeleteBehavior.Cascade);
+            }
+        }
+
+        public class DescuentoMetodoPagoConfiguracion : IEntityTypeConfiguration<DescuentoMetodoPago>
+        {
+            public void Configure(EntityTypeBuilder<DescuentoMetodoPago> b)
+            {
+                b.ToTable("DescuentoMetodoPago");
+                b.HasKey(d => new { d.Id_descuentoConfiguracion, d.Id_metodoPago });
+
+                b.HasOne(d => d.DescuentoConfiguracion)
+                 .WithMany(dc => dc.DescuentosMetodosPago)
+                 .HasForeignKey(d => d.Id_descuentoConfiguracion)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(d => d.MetodoPago)
+                 .WithMany()
+                 .HasForeignKey(d => d.Id_metodoPago)
+                 .OnDelete(DeleteBehavior.Restrict);
             }
         }
     }

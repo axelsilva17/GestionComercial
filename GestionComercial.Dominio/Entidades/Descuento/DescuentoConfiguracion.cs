@@ -1,5 +1,4 @@
 using GestionComercial.Dominio.Entidades.Organizacion;
-using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Producto;
 
 namespace GestionComercial.Dominio.Entidades.Descuento
@@ -14,16 +13,14 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             set => _nombre = value ?? string.Empty;
         }
 
-        public TipoDescuentoEnum Tipo { get; set; }
         public ModoDescuentoEnum ModoDescuento { get; set; }
         public decimal Valor { get; set; }
         public int? Id_producto { get; set; }
         public int? Id_categoria { get; set; }
-        public int? Id_metodoPago { get; set; }
+        public bool AplicaCualquierMetodoPago { get; set; } = true;
         public int Id_empresa { get; set; }
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
-        public int Prioridad { get; set; }
 
         public bool EstaVigente =>
             Activo
@@ -33,21 +30,20 @@ namespace GestionComercial.Dominio.Entidades.Descuento
         public Empresa? Empresa { get; set; }
         public Producto.Producto? Producto { get; set; }
         public Categoria? Categoria { get; set; }
-        public MetodoPago? MetodoPago { get; set; }
+        public ICollection<DescuentoMetodoPago> DescuentosMetodosPago { get; set; } = new List<DescuentoMetodoPago>();
 
         protected DescuentoConfiguracion() { }
 
         public static DescuentoConfiguracion Crear(
             string nombre,
-            TipoDescuentoEnum tipo,
             decimal valor,
             int idEmpresa,
             int? idProducto = null,
             int? idCategoria = null,
-            int? idMetodoPago = null,
+            bool aplicaCualquierMetodoPago = true,
+            List<int>? idsMetodosPago = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null,
-            int prioridad = 0)
+            DateTime? fechaHasta = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new InvalidOperationException("El nombre es requerido.");
@@ -55,30 +51,26 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 throw new InvalidOperationException("El valor debe ser mayor a 0 y menor o igual a 100.");
             if (idEmpresa <= 0)
                 throw new InvalidOperationException("El ID de empresa debe ser mayor a 0.");
-            if (tipo == TipoDescuentoEnum.Producto && idProducto == null)
-                throw new InvalidOperationException("Tipo Producto requiere Id_producto.");
-            if (tipo == TipoDescuentoEnum.Categoria && idCategoria == null)
-                throw new InvalidOperationException("Tipo Categoria requiere Id_categoria.");
-            if (tipo == TipoDescuentoEnum.MetodoPago && idMetodoPago == null)
-                throw new InvalidOperationException("Tipo MetodoPago requiere Id_metodoPago.");
-            if (tipo != TipoDescuentoEnum.MetodoPago && idMetodoPago != null)
-                throw new InvalidOperationException("Id_metodoPago solo puede ser asignado para Tipo MetodoPago.");
+            if (idProducto.HasValue && idCategoria.HasValue)
+                throw new InvalidOperationException("No se puede asignar producto y categoría simultáneamente.");
+            if (!idProducto.HasValue && !idCategoria.HasValue)
+                throw new InvalidOperationException("Se requiere un producto o categoría.");
+            if (!aplicaCualquierMetodoPago && (idsMetodosPago == null || idsMetodosPago.Count == 0))
+                throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
             return new DescuentoConfiguracion
             {
                 _nombre = nombre.Trim(),
-                Tipo = tipo,
                 ModoDescuento = ModoDescuentoEnum.Porcentaje,
                 Valor = valor,
                 Id_producto = idProducto,
                 Id_categoria = idCategoria,
-                Id_metodoPago = idMetodoPago,
+                AplicaCualquierMetodoPago = aplicaCualquierMetodoPago,
                 Id_empresa = idEmpresa,
                 FechaDesde = fechaDesde,
                 FechaHasta = fechaHasta,
-                Prioridad = prioridad,
                 Activo = true,
                 FechaAlta = DateTime.Now
             };
@@ -86,39 +78,31 @@ namespace GestionComercial.Dominio.Entidades.Descuento
 
         public void Actualizar(
             string nombre,
-            TipoDescuentoEnum tipo,
             decimal valor,
             int? idProducto,
             int? idCategoria,
-            int? idMetodoPago,
+            bool aplicaCualquierMetodoPago,
             DateTime? fechaDesde,
-            DateTime? fechaHasta,
-            int prioridad)
+            DateTime? fechaHasta)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new InvalidOperationException("El nombre es requerido.");
             if (valor <= 0 || valor > 100)
                 throw new InvalidOperationException("El valor debe ser mayor a 0 y menor o igual a 100.");
-            if (tipo == TipoDescuentoEnum.Producto && idProducto == null)
-                throw new InvalidOperationException("Tipo Producto requiere Id_producto.");
-            if (tipo == TipoDescuentoEnum.Categoria && idCategoria == null)
-                throw new InvalidOperationException("Tipo Categoria requiere Id_categoria.");
-            if (tipo == TipoDescuentoEnum.MetodoPago && idMetodoPago == null)
-                throw new InvalidOperationException("Tipo MetodoPago requiere Id_metodoPago.");
-            if (tipo != TipoDescuentoEnum.MetodoPago && idMetodoPago != null)
-                throw new InvalidOperationException("Id_metodoPago solo puede ser asignado para Tipo MetodoPago.");
+            if (idProducto.HasValue && idCategoria.HasValue)
+                throw new InvalidOperationException("No se puede asignar producto y categoría simultáneamente.");
+            if (!idProducto.HasValue && !idCategoria.HasValue)
+                throw new InvalidOperationException("Se requiere un producto o categoría.");
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
             _nombre = nombre.Trim();
-            Tipo = tipo;
             Valor = valor;
             Id_producto = idProducto;
             Id_categoria = idCategoria;
-            Id_metodoPago = idMetodoPago;
+            AplicaCualquierMetodoPago = aplicaCualquierMetodoPago;
             FechaDesde = fechaDesde;
             FechaHasta = fechaHasta;
-            Prioridad = prioridad;
         }
     }
 }

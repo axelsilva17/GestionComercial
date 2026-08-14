@@ -49,6 +49,7 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<TablaAuditada> TablasAuditadas { get; set; }
         public DbSet<GestionComercial.Dominio.Entidades.Proveedores.ProveedorProductoCosto> ProveedorProductoCostos { get; set; }
         public DbSet<DescuentoConfiguracion> DescuentoConfiguraciones { get; set; }
+        public DbSet<DescuentoMetodoPago> DescuentoMetodosPago { get; set; }
 
         // ── Vistas (entidades de solo lectura) ──────────────────────
         public DbSet<VistaVentasResumida> VistaVentasResumidas { get; set; }

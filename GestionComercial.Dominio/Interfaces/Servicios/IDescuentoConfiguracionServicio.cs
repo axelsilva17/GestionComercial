@@ -4,12 +4,28 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
 {
     public interface IDescuentoConfiguracionServicio
     {
-        Task<DescuentoConfiguracion> CrearAsync(int idEmpresa, string nombre, TipoDescuentoEnum tipo, decimal valor, int? idProducto, int? idCategoria, int? idMetodoPago, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad);
+        Task<DescuentoConfiguracion> CrearAsync(
+            int idEmpresa, string nombre, decimal valor,
+            int? idProducto, int? idCategoria,
+            bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
+            DateTime? fechaDesde, DateTime? fechaHasta);
+
         Task<DescuentoConfiguracion?> ObtenerPorIdAsync(int id);
-        Task ActualizarAsync(int id, string nombre, TipoDescuentoEnum tipo, decimal valor, int? idProducto, int? idCategoria, int? idMetodoPago, DateTime? fechaDesde, DateTime? fechaHasta, int prioridad);
+
+        Task ActualizarAsync(
+            int id, string nombre, decimal valor,
+            int? idProducto, int? idCategoria,
+            bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
+            DateTime? fechaDesde, DateTime? fechaHasta);
+
         Task EliminarAsync(int id);
-        Task<List<DescuentoConfiguracion>> ObtenerTodosAsync(int idEmpresa, TipoDescuentoEnum? tipo = null, bool? activo = null, string? texto = null);
-        Task<DescuentoConfiguracion?> ObtenerDescuentoAplicableAsync(int idEmpresa, int? idProducto, int? idCategoria, List<DescuentoConfiguracion> descuentosCache, Dictionary<int, Entidades.Producto.Categoria> categoriasCache);
-        Task<DescuentoConfiguracion?> ObtenerDescuentoMetodoPagoAsync(int idEmpresa, List<int> idsMetodosPago, List<DescuentoConfiguracion> descuentosCache);
+
+        Task<List<DescuentoConfiguracion>> ObtenerTodosAsync(int idEmpresa, bool? activo = null, string? texto = null);
+
+        Task<DescuentoConfiguracion?> ObtenerDescuentoAplicableAsync(
+            int idEmpresa, int? idProducto, int? idCategoria,
+            List<int> idsMetodosPago, bool esPagoUnico,
+            List<DescuentoConfiguracion> descuentosCache,
+            Dictionary<int, Entidades.Producto.Categoria> categoriasCache);
     }
 }

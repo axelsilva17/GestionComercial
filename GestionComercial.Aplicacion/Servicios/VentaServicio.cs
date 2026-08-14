@@ -6,6 +6,7 @@ using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Pagos.Strategies;
 using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
@@ -178,27 +179,40 @@ namespace GestionComercial.Aplicacion.Servicios
             if (venta.Estado == (int)EstadoVentaEnum.Anulada)
                 throw new VentaInvalidaException("La venta está anulada y no puede pagarse.");
 
-            // ── Resolver descuento por método de pago ANTES de validar total ──
-            // Regla de negocio: el descuento solo aplica cuando el pago es 100% con
-            // UN ÚNICO método de pago. Los pagos mixtos (varios métodos) NO reciben descuento.
+            // ── Resolver descuento combinado ANTES de validar total ──
+            // Regla de negocio: el descuento por método de pago solo aplica cuando el
+            // pago es 100% con UN ÚNICO método. Los pagos mixtos NO reciben descuento
+            // salvo que el descuento sea "cualquier método de pago".
             var idsMetodosPago = pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
-            if (idsMetodosPago.Count == 1)
-            {
-                var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
-                var idEmpresa = sucursal?.Id_empresa ?? 0;
-                if (idEmpresa > 0)
-                {
-                    var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
-                    var descuentoMetodoPago = await _descuentoConfiguracionServicio.ObtenerDescuentoMetodoPagoAsync(
-                        idEmpresa, idsMetodosPago, descuentosCache);
+            var esPagoUnico = idsMetodosPago.Count == 1;
 
-                    if (descuentoMetodoPago != null)
-                    {
-                        var descuentoMonto = venta.TotalBruto * descuentoMetodoPago.Valor / 100;
-                        venta.DescuentoMetodoPago = descuentoMonto;
-                        venta.Id_metodoPagoDescuento = descuentoMetodoPago.Id_metodoPago;
-                        venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - descuentoMonto;
-                    }
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
+            var idEmpresa = sucursal?.Id_empresa ?? 0;
+            if (idEmpresa > 0)
+            {
+                var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
+
+                var categoriasCache = new Dictionary<int, Categoria>();
+                var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+                foreach (var cat in categorias)
+                    categoriasCache[cat.Id] = cat;
+
+                var primerDetalle = venta.Detalles.FirstOrDefault();
+                var descuentoAplicable = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
+                    idEmpresa,
+                    primerDetalle?.Id_producto,
+                    primerDetalle?.Producto?.Id_categoria,
+                    idsMetodosPago,
+                    esPagoUnico,
+                    descuentosCache,
+                    categoriasCache);
+
+                if (descuentoAplicable != null)
+                {
+                    var descuentoMonto = venta.TotalBruto * descuentoAplicable.Valor / 100;
+                    venta.DescuentoMetodoPago = descuentoMonto;
+                    venta.Id_metodoPagoDescuento = esPagoUnico ? idsMetodosPago[0] : null;
+                    venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - descuentoMonto;
                 }
             }
 
