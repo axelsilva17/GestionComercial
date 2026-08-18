@@ -883,5 +883,192 @@ namespace GestionComercial.Tests.Servicios
             };
             return VentaDetalle.Crear(producto, cantidad, precio, costo, descuentoPorItem: 0);
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // T4: Per-item payment discount — RegistrarPagoAsync
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task RegistrarPagoAsync_UnDetalle_AplicaDescuentoPorItem()
+        {
+            var venta = CrearVentaPendiente();
+            var prod1 = new ProdEntity { Id = 1, Nombre = "A", PrecioVentaActual = 1000, PrecioCostoActual = 500, Id_categoria = 1 };
+            venta.AgregarDetalle(VentaDetalle.Crear(prod1, 1, 1000, 500));
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockMetodoPagoRepo.Setup(r => r.ObtenerPorIdAsync(2))
+                .ReturnsAsync(new MetodoPago { Id = 2, Nombre = "Débito", Categoria = "Tarjeta" });
+            _mockSucursalRepo.Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal { Id = 1, Id_empresa = 1 });
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            var descuento = DescuentoConfiguracion.Crear(
+                "Débito 5%", 5, 1, idProducto: 1, aplicaCualquierMetodoPago: false,
+                idsMetodosPago: new List<int> { 2 });
+            descuento.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 2 });
+
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(descuento);
+
+            await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
+            {
+                new() { IdMetodoPago = 2, Monto = 950m }
+            });
+
+            venta.DescuentoMetodoPago.Should().Be(50m); // 1000 * 5%
+            venta.TotalFinal.Should().Be(950m);
+            venta.EsPagada.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task RegistrarPagoAsync_DosDetallesDistintos_AplicaPorItem()
+        {
+            var venta = CrearVentaPendiente();
+            var prod1 = new ProdEntity { Id = 1, Nombre = "A", PrecioVentaActual = 1000, PrecioCostoActual = 500, Id_categoria = 1 };
+            var prod2 = new ProdEntity { Id = 2, Nombre = "B", PrecioVentaActual = 2000, PrecioCostoActual = 1000, Id_categoria = 2 };
+            venta.AgregarDetalle(VentaDetalle.Crear(prod1, 1, 1000, 500));
+            venta.AgregarDetalle(VentaDetalle.Crear(prod2, 1, 2000, 1000));
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockMetodoPagoRepo.Setup(r => r.ObtenerPorIdAsync(2))
+                .ReturnsAsync(new MetodoPago { Id = 2, Nombre = "Débito", Categoria = "Tarjeta" });
+            _mockSucursalRepo.Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal { Id = 1, Id_empresa = 1 });
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            // Descuento 10% en producto 1
+            var desc1 = DescuentoConfiguracion.Crear(
+                "Prod1 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            // Descuento 5% en categoría 2
+            var desc2 = DescuentoConfiguracion.Crear(
+                "Cat2 5%", 5, 1, idCategoria: 2, aplicaCualquierMetodoPago: true);
+
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { desc1, desc2 });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(desc1);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 2, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(desc2);
+
+            await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
+            {
+                new() { IdMetodoPago = 2, Monto = 2800m } // 3000 - 100 - 100 = 2800
+            });
+
+            venta.DescuentoMetodoPago.Should().Be(200m); // 100 + 100
+            venta.TotalFinal.Should().Be(2800m);
+            venta.EsPagada.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task RegistrarPagoAsync_DosDetallesSinDescuento_NoAplicaNada()
+        {
+            var venta = CrearVentaPendiente();
+            var prod1 = new ProdEntity { Id = 1, Nombre = "A", PrecioVentaActual = 1000, PrecioCostoActual = 500, Id_categoria = 1 };
+            venta.AgregarDetalle(VentaDetalle.Crear(prod1, 1, 1000, 500));
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockMetodoPagoRepo.Setup(r => r.ObtenerPorIdAsync(2))
+                .ReturnsAsync(new MetodoPago { Id = 2, Nombre = "Débito", Categoria = "Tarjeta" });
+            _mockSucursalRepo.Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal { Id = 1, Id_empresa = 1 });
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion>());
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync((DescuentoConfiguracion?)null);
+
+            await _servicio.RegistrarPagoAsync(1, new List<PagoItemDto>
+            {
+                new() { IdMetodoPago = 2, Monto = 1000m }
+            });
+
+            venta.DescuentoMetodoPago.Should().Be(0m);
+            venta.TotalFinal.Should().Be(1000m);
+            venta.EsPagada.Should().BeTrue();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // T5: CobrarVentaAsync per-item loop
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task CobrarVentaAsync_ConDescuento_AplicaPorItem()
+        {
+            var venta = CrearVentaPendiente();
+            var prod1 = new ProdEntity { Id = 1, Nombre = "A", PrecioVentaActual = 1000, PrecioCostoActual = 500, Id_categoria = 1 };
+            venta.AgregarDetalle(VentaDetalle.Crear(prod1, 1, 1000, 500));
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockSucursalRepo.Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal { Id = 1, Id_empresa = 1 });
+            _mockMetodoPagoRepo.Setup(r => r.ObtenerTodosPorEmpresaAsync(1))
+                .ReturnsAsync(new List<MetodoPago> { new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo" } });
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            var descuento = DescuentoConfiguracion.Crear(
+                "Efectivo 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(descuento);
+
+            await _servicio.CobrarVentaAsync(1);
+
+            venta.DescuentoMetodoPago.Should().Be(100m); // 1000 * 10%
+            venta.TotalFinal.Should().Be(900m);
+            venta.Estado.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task CobrarVentaAsync_SinDescuento_TotalFinalIgual()
+        {
+            var venta = CrearVentaPendiente();
+            var prod1 = new ProdEntity { Id = 1, Nombre = "A", PrecioVentaActual = 500, PrecioCostoActual = 250, Id_categoria = 1 };
+            venta.AgregarDetalle(VentaDetalle.Crear(prod1, 1, 500, 250));
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockSucursalRepo.Setup(r => r.ObtenerPorIdAsync(1))
+                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal { Id = 1, Id_empresa = 1 });
+            _mockMetodoPagoRepo.Setup(r => r.ObtenerTodosPorEmpresaAsync(1))
+                .ReturnsAsync(new List<MetodoPago> { new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo" } });
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<Categoria>());
+
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion>());
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync((DescuentoConfiguracion?)null);
+
+            await _servicio.CobrarVentaAsync(1);
+
+            venta.DescuentoMetodoPago.Should().Be(0m);
+            venta.TotalFinal.Should().Be(500m);
+            venta.Estado.Should().Be(2);
+        }
     }
 }
