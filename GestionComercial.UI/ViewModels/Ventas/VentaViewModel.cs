@@ -48,6 +48,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private const int ScannerMinLength = 8;
         private const int ScannerMaxMs = 500;
 
+        private List<DescuentoConfiguracion> _descuentosCache = new();
+        private Dictionary<int, Categoria> _categoriasCache = new();
+
         public VentaViewModel(
             IProductoServicio productoServicio,
             IVentaServicio    ventaServicio,
@@ -82,7 +85,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     MotivoAnulacion = string.Empty;
                     MostrarPopupAnulacion = false;
                 });
-                SeleccionarProductoCommand = new RelayCommand<ProductoListadoDto>(SeleccionarProductoDelPopup);
+                SeleccionarProductoCommand = new RelayCommand<ProductoListadoDto>(p => { _ = SeleccionarProductoDelPopup(p); });
                 CerrarPopupBusquedaCommand  = new RelayCommand(CerrarPopupBusqueda);
                 VerHistorialCommand = new RelayCommand(() => { _ = CargarHistorialAsync(); MostrarHistorial = true; });
                 CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
@@ -151,6 +154,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     // Guardar en cache para búsquedas rápidas
                     _productosCache = productos.ToList();
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
+
+                    // Precargar cache de descuentos y categorías para badge en tiempo real
+                    _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+                    var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
+                    _categoriasCache = new Dictionary<int, Categoria>();
+                    foreach (var cat in categorias)
+                        _categoriasCache[cat.Id] = cat;
 
 
                 }
@@ -342,35 +352,24 @@ namespace GestionComercial.UI.ViewModels.Ventas
             MostrarPopupAnulacion = true;
         }
 
-        private void AgregarItemConDescuento(DescuentoItemParam? param)
+        private async void AgregarItemConDescuento(DescuentoItemParam? param)
         {
             if (param?.Producto == null || param.Cantidad <= 0) return;
 
             var existente = Items.FirstOrDefault(i => i.ProductoId == param.Producto.IdProducto);
             if (existente != null)
             {
-                // Actualizar cantidad y recalcular con descuento
                 var idx = Items.IndexOf(existente);
                 existente.Cantidad += param.Cantidad;
                 existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
-
-                // Aplicar descuento por ítem
-                if (param.PorcentajeDescuento > 0)
-                {
-                    existente.DescuentoPorItem = Math.Round(existente.Subtotal * param.PorcentajeDescuento / 100, 2);
-                }
-
+                await ResolverDescuentoProducto(existente);
                 Items.RemoveAt(idx);
                 Items.Insert(idx, existente);
             }
             else
             {
                 var subtotal = param.Cantidad * param.Producto.PrecioVentaActual;
-                var descuento = param.PorcentajeDescuento > 0
-                    ? Math.Round(subtotal * param.PorcentajeDescuento / 100, 2)
-                    : 0m;
-
-                Items.Add(new VentaItemDto
+                var newItem = new VentaItemDto
                 {
                     ProductoId          = param.Producto.IdProducto,
                     ProductoNombre      = param.Producto.Nombre,
@@ -379,8 +378,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     PrecioUnitario      = param.Producto.PrecioVentaActual,
                     CostoUnitario       = param.Producto.PrecioCostoActual,
                     Subtotal            = subtotal,
-                    DescuentoPorItem    = descuento,
-                });
+                };
+                await ResolverDescuentoProducto(newItem);
+                Items.Add(newItem);
             }
 
             RecalcularTotales();
@@ -523,7 +523,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     StockActual = producto.StockActual,
                 };
 
-                SeleccionarProductoDelPopup(dtoParaAgregar);
+                await SeleccionarProductoDelPopup(dtoParaAgregar);
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Escáner: agregado {producto.Nombre}");
             }
             catch (Exception ex)
@@ -634,7 +634,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         ///         /// Selecciona un producto del popup de autocompletado y lo agrega al carrito.
-        public void SeleccionarProductoDelPopup(ProductoListadoDto? producto)
+        public async Task SeleccionarProductoDelPopup(ProductoListadoDto? producto)
         {
             if (producto == null) return;
 
@@ -655,12 +655,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 var idx = Items.IndexOf(existente);
                 existente.Cantidad++;
                 existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+                await ResolverDescuentoProducto(existente);
                 Items.RemoveAt(idx);
                 Items.Insert(idx, existente);
             }
             else
             {
-                Items.Add(new VentaItemDto
+                var newItem = new VentaItemDto
                 {
                     ProductoId     = producto.IdProducto,
                     ProductoNombre = producto.Nombre,
@@ -669,7 +670,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     PrecioUnitario = producto.PrecioVentaActual,
                     CostoUnitario  = producto.PrecioCostoActual,
                     Subtotal       = producto.PrecioVentaActual,
-                });
+                };
+                await ResolverDescuentoProducto(newItem);
+                Items.Add(newItem);
             }
 
             BusquedaProducto = string.Empty;
@@ -796,12 +799,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     var idx = Items.IndexOf(existente);
                     existente.Cantidad++;
                     existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+                    await ResolverDescuentoProducto(existente);
                     Items.RemoveAt(idx);
                     Items.Insert(idx, existente);
                 }
                 else
                 {
-                    Items.Add(new VentaItemDto
+                    var newItem = new VentaItemDto
                     {
                         ProductoId     = producto.IdProducto,
                         ProductoNombre = producto.Nombre,
@@ -810,7 +814,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         PrecioUnitario = producto.PrecioVentaActual,
                         CostoUnitario  = producto.PrecioCostoActual,
                         Subtotal       = producto.PrecioVentaActual,
-                    });
+                    };
+                    await ResolverDescuentoProducto(newItem);
+                    Items.Add(newItem);
                 }
 
                 BusquedaProducto = string.Empty;
@@ -913,7 +919,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
                 System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] Navegando a PagoViewModel...");
                 var vm = IoC.Get<PagoViewModel>();
-                vm.InicializarConVenta(
+                await vm.InicializarConVenta(
                     venta.IdVenta,
                     ClienteNombre.Length > 0 ? ClienteNombre : "Consumidor Final",
                     venta.TotalFinal);
@@ -951,25 +957,27 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         // ── Lógica interna ────────────────────────────────────────────────────
-        private void SumarCantidad(VentaItemDto? item)
+        private async void SumarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
             var idx = Items.IndexOf(item);
             item.Cantidad++;
             item.Subtotal = item.Cantidad * item.PrecioUnitario;
+            await ResolverDescuentoProducto(item);
             Items.RemoveAt(idx);
             Items.Insert(idx, item);
             RecalcularTotales();
             NotificarCanIrACobrar();
         }
 
-        private void RestarCantidad(VentaItemDto? item)
+        private async void RestarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
             if (item.Cantidad <= 1) { QuitarItem(item); return; }
             var idx = Items.IndexOf(item);
             item.Cantidad--;
             item.Subtotal = item.Cantidad * item.PrecioUnitario;
+            await ResolverDescuentoProducto(item);
             Items.RemoveAt(idx);
             Items.Insert(idx, item);
             RecalcularTotales();
@@ -982,6 +990,50 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Items.Remove(item);
             RecalcularTotales();
             NotificarCanIrACobrar();
+        }
+
+        ///         /// Resuelve el descuento configurado para un ítem del carrito.
+        /// Mutúa DescuentoPorItem, DescripcionDescuento y Descuentos sobre el item.
+        private async Task ResolverDescuentoProducto(VentaItemDto item)
+        {
+            if (_descuentosCache.Count == 0 || _sesion.IdEmpresa <= 0)
+            {
+                item.DescuentoPorItem = 0;
+                item.DescripcionDescuento = null;
+                item.Descuentos.Clear();
+                return;
+            }
+
+            var idCategoria = _productosCache
+                .FirstOrDefault(p => p.IdProducto == item.ProductoId)?.IdCategoria;
+
+            var descuento = await _descuentoServicio.ObtenerDescuentoProductoAsync(
+                _sesion.IdEmpresa,
+                item.ProductoId,
+                idCategoria,
+                _descuentosCache,
+                _categoriasCache);
+
+            if (descuento != null)
+            {
+                item.DescuentoPorItem = Math.Round(item.Subtotal * descuento.Valor / 100, 2);
+                item.DescripcionDescuento = descuento.Nombre;
+                item.Descuentos = new List<DescuentoItemDto>
+                {
+                    new DescuentoItemDto
+                    {
+                        Porcentaje = descuento.Valor,
+                        Monto = item.DescuentoPorItem,
+                        Descripcion = descuento.Nombre
+                    }
+                };
+            }
+            else
+            {
+                item.DescuentoPorItem = 0;
+                item.DescripcionDescuento = null;
+                item.Descuentos.Clear();
+            }
         }
 
         private void RecalcularTotales()
@@ -1110,7 +1162,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     StockActual = producto.StockActual,
                 };
 
-                SeleccionarProductoDelPopup(dtoParaAgregar);
+                await SeleccionarProductoDelPopup(dtoParaAgregar);
             }
             catch (Exception ex)
             {
@@ -1120,9 +1172,22 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public async Task HandleAsync(DescuentosActualizadosEvent message, CancellationToken cancellationToken)
         {
-            // Los descuentos se aplican en el momento del pago (VentaServicio.RegistrarPagoAsync),
-            // por lo que el carrito no necesita mantener un cache local de descuentos.
-            await Task.CompletedTask;
+            // Actualizar cache de descuentos cuando se modifican desde configuración
+            if (_sesion.IdEmpresa > 0)
+            {
+                _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
+                var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
+                _categoriasCache = new Dictionary<int, Categoria>();
+                foreach (var cat in categorias)
+                    _categoriasCache[cat.Id] = cat;
+
+                // Re-resolver descuentos de items existentes en el carrito
+                foreach (var item in Items)
+                {
+                    await ResolverDescuentoProducto(item);
+                }
+                RecalcularTotales();
+            }
         }
     }
 

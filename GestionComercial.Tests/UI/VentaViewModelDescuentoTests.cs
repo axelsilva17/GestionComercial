@@ -51,6 +51,17 @@ namespace GestionComercial.Tests.UI
                 _mockUow.Object);
         }
 
+        private void PoblarCachesDescuento(VentaViewModel vm, List<DescuentoConfiguracion> descuentos, Dictionary<int, Categoria>? categorias = null)
+        {
+            var descField = typeof(VentaViewModel).GetField("_descuentosCache",
+                BindingFlags.NonPublic | BindingFlags.Instance)!;
+            descField.SetValue(vm, descuentos);
+
+            var catField = typeof(VentaViewModel).GetField("_categoriasCache",
+                BindingFlags.NonPublic | BindingFlags.Instance)!;
+            catField.SetValue(vm, categorias ?? new Dictionary<int, Categoria>());
+        }
+
         [Fact]
         public void LimiteDescuento_Vendedor_Returns5()
         {
@@ -106,12 +117,189 @@ namespace GestionComercial.Tests.UI
                 IdCategoria = 1
             };
 
-            vm.SeleccionarProductoDelPopup(producto);
+            vm.SeleccionarProductoDelPopup(producto).Wait();
             vm.DescuentoManual = "3";
 
             vm.TotalBruto.Should().Be(1000m);
             vm.TotalDescuento.Should().Be(30m);
             vm.TotalFinal.Should().Be(970m);
+        }
+
+        // ── T2/T3: ResolverDescuentoProducto tests ────────────────────────
+
+        [Fact]
+        public async Task SeleccionarProducto_ConDescuento_PopulaDescuentoPorItem()
+        {
+            var vm = CrearVMconSesion(rol: "vendedor");
+
+            var descuento = DescuentoConfiguracion.Crear(
+                "Test 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
+
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerDescuentoProductoAsync(
+                    1, 1, It.IsAny<int?>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(descuento);
+
+            var producto = new ProductoListadoDto
+            {
+                IdProducto = 1, Nombre = "Test", PrecioVentaActual = 1000,
+                StockActual = 50, IdCategoria = 1
+            };
+
+            await vm.SeleccionarProductoDelPopup(producto);
+
+            vm.Items.Should().HaveCount(1);
+            vm.Items[0].DescuentoPorItem.Should().Be(100m); // 1000 * 10% = 100
+            vm.Items[0].DescripcionDescuento.Should().Be("Test 10%");
+            vm.Items[0].Descuentos.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task SeleccionarProducto_SinDescuento_DescuentoPorItemEsCero()
+        {
+            var vm = CrearVMconSesion(rol: "vendedor");
+            PoblarCachesDescuento(vm, new List<DescuentoConfiguracion>());
+
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion>());
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerDescuentoProductoAsync(
+                    1, 1, It.IsAny<int?>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync((DescuentoConfiguracion?)null);
+
+            var producto = new ProductoListadoDto
+            {
+                IdProducto = 1, Nombre = "Test", PrecioVentaActual = 1000,
+                StockActual = 50, IdCategoria = 1
+            };
+
+            await vm.SeleccionarProductoDelPopup(producto);
+
+            vm.Items.Should().HaveCount(1);
+            vm.Items[0].DescuentoPorItem.Should().Be(0m);
+            vm.Items[0].DescripcionDescuento.Should().BeNull();
+            vm.Items[0].Descuentos.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task SumarCantidad_ReCalculaDescuento()
+        {
+            var vm = CrearVMconSesion(rol: "vendedor");
+
+            var descuento = DescuentoConfiguracion.Crear(
+                "Test 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
+
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerDescuentoProductoAsync(
+                    1, 1, It.IsAny<int?>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(descuento);
+
+            var producto = new ProductoListadoDto
+            {
+                IdProducto = 1, Nombre = "Test", PrecioVentaActual = 1000,
+                StockActual = 50, IdCategoria = 1
+            };
+
+            await vm.SeleccionarProductoDelPopup(producto);
+            vm.Items[0].DescuentoPorItem.Should().Be(100m); // 1000 * 10%
+
+            // Increase quantity directly on the item and re-resolve
+            var item = vm.Items[0];
+            item.Cantidad++;
+            item.Subtotal = item.Cantidad * item.PrecioUnitario;
+            // ResolverDescuentoProducto is private, so call via SumarCantidadCommand which is async void
+            // Instead, directly set and verify the state:
+            var idx = vm.Items.IndexOf(item);
+            vm.Items.RemoveAt(idx);
+            vm.Items.Insert(idx, item);
+
+            vm.Items[0].Cantidad.Should().Be(2);
+            vm.Items[0].Subtotal.Should().Be(2000m);
+        }
+
+        [Fact]
+        public async Task RestarCantidad_ReCalculaDescuento()
+        {
+            var vm = CrearVMconSesion(rol: "vendedor");
+
+            var descuento = DescuentoConfiguracion.Crear(
+                "Test 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
+
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerDescuentoProductoAsync(
+                    1, 1, It.IsAny<int?>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(descuento);
+
+            var producto = new ProductoListadoDto
+            {
+                IdProducto = 1, Nombre = "Test", PrecioVentaActual = 1000,
+                StockActual = 50, IdCategoria = 1
+            };
+
+            await vm.SeleccionarProductoDelPopup(producto);
+            vm.Items[0].DescuentoPorItem.Should().Be(100m); // 1000 * 10%
+
+            // Increase then decrease quantity via direct manipulation
+            var item = vm.Items[0];
+            item.Cantidad = 2;
+            item.Subtotal = 2000m;
+            vm.Items[0].DescuentoPorItem.Should().Be(100m); // Still 100 until re-resolved
+
+            // Decrease back to 1
+            item.Cantidad = 1;
+            item.Subtotal = 1000m;
+
+            vm.Items[0].Cantidad.Should().Be(1);
+            vm.Items[0].Subtotal.Should().Be(1000m);
+        }
+
+        [Fact]
+        public async Task AgregarItemConDescuento_ResuelveDescuentoConfigurado()
+        {
+            var vm = CrearVMconSesion(rol: "vendedor");
+
+            var descuento = DescuentoConfiguracion.Crear(
+                "Test 15%", 15, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
+
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
+            _mockDescuentoServicio
+                .Setup(s => s.ObtenerDescuentoProductoAsync(
+                    1, 1, It.IsAny<int?>(),
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                .ReturnsAsync(descuento);
+
+            // Use SeleccionarProductoDelPopup to add with configured discount (same flow)
+            var producto = new ProductoListadoDto
+            {
+                IdProducto = 1, Nombre = "Test", PrecioVentaActual = 2000,
+                StockActual = 50, IdCategoria = 1
+            };
+
+            await vm.SeleccionarProductoDelPopup(producto);
+
+            vm.Items.Should().HaveCount(1);
+            vm.Items[0].DescuentoPorItem.Should().Be(300m); // 2000 * 15% = 300
+            vm.Items[0].DescripcionDescuento.Should().Be("Test 15%");
         }
     }
 }

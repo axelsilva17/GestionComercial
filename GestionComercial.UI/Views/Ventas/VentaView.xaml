@@ -12,6 +12,7 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
+        <converters:DecimalToVisibilityConverter x:Key="DecimalToVisibility"/>
         <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
 
         <!-- Estilo para ComboBox de categorías -->
@@ -575,6 +576,32 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
+                            <DataGridTemplateColumn Header="DTO" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="6,3" Margin="12,0"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                Background="#1A4CAF50" BorderBrush="{DynamicResource SuccessBrush}"
+                                                BorderThickness="1"
+                                                ToolTip="Aplica según método de pago">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DescuentoPorItem, Converter={StaticResource DecimalToVisibility}}" Value="Visible">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource SuccessBrush}"
+                                                       Text="{Binding DescripcionDescuento, FallbackValue='DTO'}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Quitar item -->
                             <DataGridTemplateColumn Width="50">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -640,6 +667,23 @@
                                                 <Run Text=" x "/>
                                                 <Run Text="{Binding PrecioUnitario, Converter={StaticResource DecimalToMoneda}}"/>
                                             </TextBlock>
+                                            <TextBlock FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource SuccessBrush}"
+                                                       Margin="0,2,0,0"
+                                                       ToolTip="Aplica según método de pago">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DescuentoPorItem, Converter={StaticResource DecimalToVisibility}}" Value="Visible">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                                <Run Text="Dto: "/>
+                                                <Run Text="{Binding DescripcionDescuento}"/>
+                                            </TextBlock>
                                         </StackPanel>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Subtotal, Converter={StaticResource DecimalToMoneda}}"
@@ -671,6 +715,28 @@
                         <TextBlock Text="{Binding TotalDescuento, Converter={StaticResource DecimalToMoneda}}"
                                    FontSize="13" Foreground="{DynamicResource ErrorBrush}"
                                    HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="Dto. configurados" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock FontSize="12"
+                                   Foreground="{DynamicResource SuccessBrush}"
+                                   HorizontalAlignment="Right"
+                                   ToolTip="Aplica según método de pago">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TotalDescuento, Converter={StaticResource DecimalToVisibility}}" Value="Visible">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                            <Run Text="✓ "/>
+                            <Run Text="{Binding TotalDescuento, Converter={StaticResource DecimalToMoneda}}"/>
+                        </TextBlock>
                     </Grid>
 
                     <Separator Background="{DynamicResource BorderBrush}" Margin="0,4,0,16"/>

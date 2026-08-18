@@ -40,7 +40,7 @@ namespace GestionComercial.UI.Views.Ventas
 
             if (e.AddedItems.Count > 0 && e.AddedItems[0] is GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto producto)
             {
-                vm.SeleccionarProductoDelPopup(producto);
+                vm.SeleccionarProductoDelPopup(producto).ConfigureAwait(false);
             }
         }
 
@@ -52,7 +52,7 @@ namespace GestionComercial.UI.Views.Ventas
 
             if (sender is ListBox list && list.SelectedItem is GestionComercial.Aplicacion.DTOs.Productos.ProductoListadoDto producto)
             {
-                vm.SeleccionarProductoDelPopup(producto);
+                vm.SeleccionarProductoDelPopup(producto).ConfigureAwait(false);
                 e.Handled = true;
             }
         }
