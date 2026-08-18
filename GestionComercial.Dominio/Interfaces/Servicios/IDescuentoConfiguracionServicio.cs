@@ -27,5 +27,10 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
             List<int> idsMetodosPago, bool esPagoUnico,
             List<DescuentoConfiguracion> descuentosCache,
             Dictionary<int, Entidades.Producto.Categoria> categoriasCache);
+
+        Task<DescuentoConfiguracion?> ObtenerDescuentoProductoAsync(
+            int idEmpresa, int? idProducto, int? idCategoria,
+            List<DescuentoConfiguracion> descuentosCache,
+            Dictionary<int, Entidades.Producto.Categoria> categoriasCache);
     }
 }

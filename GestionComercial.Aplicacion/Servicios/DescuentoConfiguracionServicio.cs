@@ -148,5 +148,55 @@ namespace GestionComercial.Aplicacion.Servicios
 
             return Task.FromResult<DescuentoConfiguracion?>(winner);
         }
+
+        public Task<DescuentoConfiguracion?> ObtenerDescuentoProductoAsync(
+            int idEmpresa, int? idProducto, int? idCategoria,
+            List<DescuentoConfiguracion> descuentosCache,
+            Dictionary<int, Categoria> categoriasCache)
+        {
+            if (descuentosCache == null || descuentosCache.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var candidates = descuentosCache
+                .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente)
+                .ToList();
+
+            var productDiscounts = candidates
+                .Where(d => d.Id_producto.HasValue && d.Id_producto == idProducto)
+                .ToList();
+
+            var categoryDiscounts = new List<DescuentoConfiguracion>();
+            if (idCategoria.HasValue && categoriasCache.TryGetValue(idCategoria.Value, out var startCategoria))
+            {
+                var current = startCategoria;
+                var depth = 0;
+                while (current != null && depth < 10)
+                {
+                    var matches = candidates
+                        .Where(d => d.Id_categoria.HasValue && d.Id_categoria == current.Id)
+                        .ToList();
+                    categoryDiscounts.AddRange(matches);
+
+                    if (current.CategoriaPadre_id.HasValue
+                        && categoriasCache.TryGetValue(current.CategoriaPadre_id.Value, out var parent))
+                        current = parent;
+                    else
+                        break;
+
+                    depth++;
+                }
+            }
+
+            var allCandidates = productDiscounts.Concat(categoryDiscounts).ToList();
+            if (allCandidates.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var winner = allCandidates
+                .OrderByDescending(d => d.Id_producto.HasValue)
+                .ThenByDescending(d => d.Valor)
+                .First();
+
+            return Task.FromResult<DescuentoConfiguracion?>(winner);
+        }
     }
 }

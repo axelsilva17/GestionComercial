@@ -398,5 +398,150 @@ namespace GestionComercial.Tests.Servicios
             result.Should().NotBeNull();
             result!.Valor.Should().Be(5);
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // ObtenerDescuentoProductoAsync (sin filtro de pago)
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_ProductoGanaACategoria()
+        {
+            var productDiscount = DescuentoConfiguracion.Crear(
+                "Prod 20%", 20, 1, idProducto: 10, aplicaCualquierMetodoPago: true);
+            var categoryDiscount = DescuentoConfiguracion.Crear(
+                "Cat 10%", 10, 1, idCategoria: 5, aplicaCualquierMetodoPago: true);
+
+            var cache = new List<DescuentoConfiguracion> { productDiscount, categoryDiscount };
+            var catCache = new Dictionary<int, Categoria>();
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, 10, 5, cache, catCache);
+
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(productDiscount.Id);
+            result.Valor.Should().Be(20);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_CategoriaFallback_Aplica()
+        {
+            var categoryDiscount = DescuentoConfiguracion.Crear(
+                "Cat 15%", 15, 1, idCategoria: 5, aplicaCualquierMetodoPago: true);
+
+            var categoria = new Categoria { Id = 5, CategoriaPadre_id = null, Id_empresa = 1 };
+            var cache = new List<DescuentoConfiguracion> { categoryDiscount };
+            var catCache = new Dictionary<int, Categoria> { { 5, categoria } };
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, 10, 5, cache, catCache);
+
+            result.Should().NotBeNull();
+            result!.Valor.Should().Be(15);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_SinDescuento_ReturnsNull()
+        {
+            var cache = new List<DescuentoConfiguracion>();
+            var catCache = new Dictionary<int, Categoria>();
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, 10, null, cache, catCache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_Jerarquia_AplicaAncestro()
+        {
+            var ancestorDiscount = DescuentoConfiguracion.Crear(
+                "Root 10%", 10, 1, idCategoria: 1, aplicaCualquierMetodoPago: true);
+
+            var root = new Categoria { Id = 1, CategoriaPadre_id = null, Id_empresa = 1 };
+            var child = new Categoria { Id = 2, CategoriaPadre_id = 1, Id_empresa = 1 };
+            var grandchild = new Categoria { Id = 3, CategoriaPadre_id = 2, Id_empresa = 1 };
+
+            var cache = new List<DescuentoConfiguracion> { ancestorDiscount };
+            var catCache = new Dictionary<int, Categoria>
+            {
+                { 1, root }, { 2, child }, { 3, grandchild }
+            };
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, null, 3, cache, catCache);
+
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(ancestorDiscount.Id);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_Vencido_Excluido()
+        {
+            var expired = DescuentoConfiguracion.Crear(
+                "Expired", 20, 1, idProducto: 10, aplicaCualquierMetodoPago: true,
+                fechaHasta: DateTime.Now.AddDays(-1));
+
+            var cache = new List<DescuentoConfiguracion> { expired };
+            var catCache = new Dictionary<int, Categoria>();
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, 10, null, cache, catCache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_Inactivo_Excluido()
+        {
+            var disabled = DescuentoConfiguracion.Crear(
+                "Disabled", 20, 1, idProducto: 10, aplicaCualquierMetodoPago: true);
+            disabled.Inactivar();
+
+            var cache = new List<DescuentoConfiguracion> { disabled };
+            var catCache = new Dictionary<int, Categoria>();
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, 10, null, cache, catCache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_EmpateMayorValor_Gana()
+        {
+            var bajo = DescuentoConfiguracion.Crear(
+                "Cat 10%", 10, 1, idCategoria: 5, aplicaCualquierMetodoPago: true);
+            var alto = DescuentoConfiguracion.Crear(
+                "Cat 20%", 20, 1, idCategoria: 5, aplicaCualquierMetodoPago: true);
+
+            var categoria = new Categoria { Id = 5, CategoriaPadre_id = null, Id_empresa = 1 };
+            var cache = new List<DescuentoConfiguracion> { bajo, alto };
+            var catCache = new Dictionary<int, Categoria> { { 5, categoria } };
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, null, 5, cache, catCache);
+
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(alto.Id);
+            result.Valor.Should().Be(20);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoProductoAsync_SinFiltroPago_SiempreAplica()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                "Débito 5%", 5, 1, idProducto: 10, aplicaCualquierMetodoPago: false,
+                idsMetodosPago: new List<int> { 2 });
+            AgregarMetodoPago(descuento, 2);
+
+            var cache = new List<DescuentoConfiguracion> { descuento };
+            var catCache = new Dictionary<int, Categoria>();
+
+            var result = await _servicio.ObtenerDescuentoProductoAsync(
+                1, 10, null, cache, catCache);
+
+            result.Should().NotBeNull();
+            result!.Valor.Should().Be(5);
+        }
     }
 }
