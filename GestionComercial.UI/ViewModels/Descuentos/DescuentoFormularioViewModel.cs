@@ -223,11 +223,18 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
 
                 var metodos = await _unitOfWork.MetodosPago.ObtenerTodosPorEmpresaAsync(_sesion.IdEmpresa);
-                MetodosPagoDisponibles = new ObservableCollection<MetodoPagoCheckItem>(
-                    metodos
-                        .Where(m => m.Activo && (m.Categoria == "Credito" || m.Categoria == "Debito"))
-                        .OrderBy(m => m.Nombre)
-                        .Select(m => new MetodoPagoCheckItem(m)));
+                var lista = metodos
+                    .Where(m => m.Activo && m.Categoria == "Tarjeta" && m.Subcategoria != null)
+                    .OrderBy(m => m.Subcategoria == "Credito" ? 0 : 1)
+                    .ThenBy(m => m.Nombre)
+                    .Select(m => new MetodoPagoCheckItem(m))
+                    .ToList();
+                MetodosPagoDisponibles = new ObservableCollection<MetodoPagoCheckItem>(lista);
+
+                // Configurar agrupación por Subcategoria
+                var view = System.Windows.Data.CollectionViewSource.GetDefaultView(MetodosPagoDisponibles);
+                view?.GroupDescriptions?.Clear();
+                view?.GroupDescriptions?.Add(new System.Windows.Data.PropertyGroupDescription("MetodoPago.Subcategoria"));
             }
             catch
             {

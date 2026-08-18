@@ -1275,8 +1275,22 @@
                     <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
                     <TextBox Text="{Binding MetodosPago.EditNombre, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource FormInput}" Margin="0,0,0,16"/>
-                    <CheckBox Content="Es efectivo" IsChecked="{Binding MetodosPago.EditEfectivo}"
-                              Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
+                    <TextBlock Text="TIPO" Style="{StaticResource FormLabel}"/>
+                    <ComboBox SelectedValue="{Binding MetodosPago.EditCategoria}" SelectedValuePath="Content"
+                              Style="{StaticResource FormInput}" Margin="0,0,0,16">
+                        <ComboBoxItem Content="Efectivo"/>
+                        <ComboBoxItem Content="Tarjeta"/>
+                        <ComboBoxItem Content="Transferencia"/>
+                        <ComboBoxItem Content="Otro"/>
+                    </ComboBox>
+                    <StackPanel Visibility="{Binding MetodosPago.MostrarSubcategoria, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="CATEGORÍA" Style="{StaticResource FormLabel}"/>
+                        <ComboBox SelectedValue="{Binding MetodosPago.EditSubcategoria}" SelectedValuePath="Content"
+                                  Style="{StaticResource FormInput}" Margin="0,0,0,16">
+                            <ComboBoxItem Content="Credito"/>
+                            <ComboBoxItem Content="Debito"/>
+                        </ComboBox>
+                    </StackPanel>
                     <Border Background="#1AEF4444" CornerRadius="8" Padding="12,8" Margin="0,12,0,0"
                             Visibility="{Binding MetodosPago.TieneError, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="{Binding MetodosPago.MensajeError}" FontSize="12"

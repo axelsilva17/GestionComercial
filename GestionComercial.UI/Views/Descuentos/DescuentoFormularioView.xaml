@@ -137,13 +137,23 @@
                                   Margin="0,0,0,10"/>
 
                         <StackPanel Visibility="{Binding MuestraSelectorMetodosPago, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="TARJETAS (crédito / débito)" Style="{StaticResource FormLabel}"/>
+                            <TextBlock Text="TARJETAS" Style="{StaticResource FormLabel}"/>
                             <ItemsControl ItemsSource="{Binding MetodosPagoDisponibles}">
+                                <ItemsControl.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.HeaderTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,2"/>
+                                            </DataTemplate>
+                                        </GroupStyle.HeaderTemplate>
+                                    </GroupStyle>
+                                </ItemsControl.GroupStyle>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <CheckBox Content="{Binding MetodoPago.Nombre}" FontSize="13"
                                                   IsChecked="{Binding EstaSeleccionado}"
-                                                  Margin="0,2,0,2"/>
+                                                  Margin="16,2,0,2"/>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

@@ -163,11 +163,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 }
 
                 MetodosPago = new ObservableCollection<PagoItemDto>(
-                    metodos.Select(m => new PagoItemDto
+                    metodos.Where(m => m.Activo).Select(m => new PagoItemDto
                     {
                         IdMetodoPago = m.Id,
                         NombreMetodo = m.Nombre,
                         Categoria    = m.Categoria ?? "Otro",
+                        Subcategoria = m.Subcategoria,
                         Monto        = 0,
                     }));
 
@@ -277,8 +278,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 		public void AgregarDebito()
 		{
 			var debito = MetodosPago.FirstOrDefault(m =>
-				m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
-				m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
+				m.Categoria == "Tarjeta" && m.Subcategoria == "Debito");
 			if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
 			SeleccionarOCompletar(debito);
 		}
@@ -286,8 +286,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 		public void AgregarCredito()
 		{
 			var credito = MetodosPago.FirstOrDefault(m =>
-				m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
-				m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
+				m.Categoria == "Tarjeta" && m.Subcategoria == "Credito");
 			if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
 			SeleccionarOCompletar(credito);
 		}
