@@ -9,6 +9,7 @@ using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -178,6 +179,15 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
         }
 
+        private string GenerarNombre()
+        {
+            if (IdProducto != null)
+                return $"{ProductoNombre} {Valor.ToString("0.##", CultureInfo.InvariantCulture)}%";
+            if (IdCategoria != null)
+                return $"Categoría {CategoriaNombre} {Valor.ToString("0.##", CultureInfo.InvariantCulture)}%";
+            return string.Empty;
+        }
+
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             Titulo = EsModoEdicion ? "Editar Descuento" : "Nuevo Descuento";
@@ -189,7 +199,6 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 var descuento = await _servicio.ObtenerPorIdAsync(DescuentoId);
                 if (descuento != null)
                 {
-                    Nombre = descuento.Nombre;
                     Valor = descuento.Valor;
                     IdProducto = descuento.Id_producto;
                     IdCategoria = descuento.Id_categoria;
@@ -246,11 +255,6 @@ namespace GestionComercial.UI.ViewModels.Descuentos
         {
             LimpiarError();
 
-            if (string.IsNullOrWhiteSpace(Nombre))
-            {
-                MostrarError("El nombre es requerido.");
-                return;
-            }
             if (Valor <= 0 || Valor > 100)
             {
                 MostrarError("El valor debe ser entre 1 y 100.");
@@ -282,6 +286,8 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 .Where(m => m.EstaSeleccionado)
                 .Select(m => m.MetodoPago.Id)
                 .ToList();
+
+            Nombre = GenerarNombre();
 
             try
             {
