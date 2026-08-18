@@ -153,5 +153,139 @@ namespace GestionComercial.Tests.UI
             vm.IdCategoria.Should().BeNull();
             vm.CategoriaNombre.Should().BeEmpty();
         }
+
+        [Fact]
+        public async Task GuardarAsync_Crea_Producto_GeneraNombreProductoValorPorcentaje()
+        {
+            var vm = CrearVM();
+            vm.ProductoNombre = "Leche";
+            vm.IdProducto = 42;
+            vm.Valor = 15;
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), "Leche 15%", 15m, 42, null,
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_Crea_Categoria_GeneraNombreCategoriaValorPorcentaje()
+        {
+            var vm = CrearVM();
+            vm.CategoriaNombre = "Carnes";
+            vm.IdCategoria = 5;
+            vm.Valor = 10;
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), "Categoría Carnes 10%", 10m, null, 5,
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_Crea_ValorDecimal_FormateaSinCeroDecimal()
+        {
+            var vm = CrearVM();
+            vm.ProductoNombre = "Leche";
+            vm.IdProducto = 42;
+            vm.Valor = 7.5m;
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), "Leche 7.5%", 7.5m, 42, null,
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_Crea_ValorEntero_OmiteDecimales()
+        {
+            var vm = CrearVM();
+            vm.ProductoNombre = "Leche";
+            vm.IdProducto = 42;
+            vm.Valor = 10.00m;
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), "Leche 10%", 10m, 42, null,
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_Crea_Valor100_GeneraNombreValido()
+        {
+            var vm = CrearVM();
+            vm.ProductoNombre = "Leche";
+            vm.IdProducto = 42;
+            vm.Valor = 100;
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), "Leche 100%", 100m, 42, null,
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_Edita_GeneraNombreRegenerado()
+        {
+            var vm = CrearVM();
+            vm.EsModoEdicion = true;
+            vm.DescuentoId = 1;
+            vm.ProductoNombre = "Queso";
+            vm.IdProducto = 7;
+            vm.Valor = 20;
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.ActualizarAsync(
+                1, "Queso 20%", 20m, 7, null,
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_SinScope_MuestraError()
+        {
+            var vm = CrearVM();
+            vm.Valor = 15;
+
+            await vm.GuardarAsync();
+
+            vm.ErrorMessage.Should().Be("Debe seleccionar un producto o una categoría.");
+            vm.ErrorVisible.Should().BeTrue();
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
+                It.IsAny<int?>(), It.IsAny<int?>(),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_ValorCero_MuestraError()
+        {
+            var vm = CrearVM();
+            vm.ProductoNombre = "Leche";
+            vm.IdProducto = 42;
+            vm.Valor = 0;
+
+            await vm.GuardarAsync();
+
+            vm.ErrorMessage.Should().Be("El valor debe ser entre 1 y 100.");
+            vm.ErrorVisible.Should().BeTrue();
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
+                It.IsAny<int?>(), It.IsAny<int?>(),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                Times.Never);
+        }
     }
 }
