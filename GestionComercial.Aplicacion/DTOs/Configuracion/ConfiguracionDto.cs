@@ -42,6 +42,7 @@ namespace GestionComercial.Aplicacion.DTOs.Configuracion
         public int    IdMetodoPago { get; set; }
         public string Nombre       { get; set; } = string.Empty;
         public string Categoria    { get; set; } = "Otro";
+        public string? Subcategoria { get; set; }
         public int    IdEmpresa    { get; set; }
         public string Icono        => Categoria switch
         {

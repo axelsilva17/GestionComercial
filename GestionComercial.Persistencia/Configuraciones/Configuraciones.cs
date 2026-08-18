@@ -210,6 +210,7 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.ToTable("MetodoPago");
                 b.HasKey(m => m.Id);
                 b.Property(m => m.Nombre).HasMaxLength(50).IsRequired();
+                b.Property(m => m.Subcategoria).HasMaxLength(20);
                 b.HasOne(m => m.Empresa).WithMany(e => e.MetodosPago)
                  .HasForeignKey(m => m.Id_empresa).OnDelete(DeleteBehavior.Restrict);
             }
