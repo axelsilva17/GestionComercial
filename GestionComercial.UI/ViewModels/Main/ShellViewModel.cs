@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Clientes;
@@ -70,6 +71,13 @@ namespace GestionComercial.UI.ViewModels.Main
         public bool EsAdministrador => Rol == RolUsuario.Administrador;
         public bool EsVendedor      => Rol == RolUsuario.Vendedor;
 
+        private bool _esUsuarioUnico;
+        public bool EsUsuarioUnico
+        {
+            get => _esUsuarioUnico;
+            private set { _esUsuarioUnico = value; NotifyOfPropertyChange(() => EsUsuarioUnico); }
+        }
+
         // ── Helper ────────────────────────────────────────────────────────────
         private bool HasPermission(string codigo) =>
             SesionActual.Permisos?.Contains(codigo) == true;
@@ -93,7 +101,7 @@ namespace GestionComercial.UI.ViewModels.Main
         public UsuarioSesionDto SesionActual     { get; set; } = new();
 
         // ── Configurar sesión ─────────────────────────────────────────────────
-        public void ConfigurarSesion(string nombre, string rol, string sucursal, UsuarioSesionDto sesion)
+        public async Task ConfigurarSesion(string nombre, string rol, string sucursal, UsuarioSesionDto sesion)
         {
             SesionActual    = sesion;
             UsuarioSucursal = sucursal;
@@ -110,6 +118,17 @@ namespace GestionComercial.UI.ViewModels.Main
                 _                        => "Vendedor",
             };
             UsuarioNombre = nombre;
+
+            try
+            {
+                var repo = IoC.Get<IUsuarioRepositorio>();
+                var count = await repo.ContarAsync(u => u.Activo);
+                EsUsuarioUnico = count == 1;
+            }
+            catch
+            {
+                EsUsuarioUnico = false;
+            }
         }
 
         protected override async void OnViewLoaded(object view)
@@ -159,7 +178,7 @@ namespace GestionComercial.UI.ViewModels.Main
         // Reportes diferenciados por rol
         public async Task IrReportes()
         {
-            if (EsGerente)
+            if (EsGerente || EsUsuarioUnico)
                 await ActivateItemAsync(IoC.Get<ReporteGerenciaViewModel>(), CancellationToken.None);
             else
                 await ActivateItemAsync(IoC.Get<ReporteAdminViewModel>(),    CancellationToken.None);
