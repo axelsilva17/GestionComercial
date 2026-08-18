@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Caja;
@@ -121,8 +122,7 @@ namespace GestionComercial.UI.ViewModels.Main
 
             try
             {
-                var repo = IoC.Get<IUsuarioRepositorio>();
-                var count = await repo.ContarAsync(u => u.Activo);
+                var count = await IoC.Get<IUnitOfWork>().Usuarios.ContarAsync(u => u.Activo);
                 EsUsuarioUnico = count == 1;
             }
             catch

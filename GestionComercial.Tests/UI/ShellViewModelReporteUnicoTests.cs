@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using FluentAssertions;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
 using GestionComercial.Dominio.Entidades.Seguridad;
+using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Reportes;
@@ -12,12 +13,14 @@ namespace GestionComercial.Tests.UI
     public class ShellViewModelReporteUnicoTests : IDisposable
     {
         private readonly Mock<IUsuarioRepositorio> _mockUsuarioRepo = new();
+        private readonly Mock<IUnitOfWork> _mockUow = new();
         private readonly SimpleContainer _container;
 
         public ShellViewModelReporteUnicoTests()
         {
+            _mockUow.Setup(u => u.Usuarios).Returns(_mockUsuarioRepo.Object);
             _container = new SimpleContainer();
-            _container.Instance<IUsuarioRepositorio>(_mockUsuarioRepo.Object);
+            _container.Instance<IUnitOfWork>(_mockUow.Object);
             _container.PerRequest<ReporteGerenciaViewModel>();
             _container.PerRequest<ReporteAdminViewModel>();
 
