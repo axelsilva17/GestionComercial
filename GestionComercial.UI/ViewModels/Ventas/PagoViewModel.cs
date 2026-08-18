@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -184,17 +185,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 MostrarError(mensaje);
                 System.Windows.MessageBox.Show(mensaje, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
-        }
-
-        /// Llamado desde VentaViewModel antes de navegar.
-        public void InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
-        {
-            _idVenta       = idVenta;
-            ClienteNombre  = clienteNombre;
-            TotalVenta     = totalFinal;
-            Pagos          = new();
-            MontoIngresado = totalFinal.ToString("F2");
-            RecalcularVuelto();
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
@@ -498,6 +488,73 @@ namespace GestionComercial.UI.ViewModels.Ventas
             get => _ventaCompletada;
             set { _ventaCompletada = value; NotifyOfPropertyChange(() => VentaCompletada); }
         }
+
+        // ── Descuentos aplicados ─────────────────────────────────────────
+        private ObservableCollection<DescuentoLineaVm> _lineasDescuento = new();
+        public ObservableCollection<DescuentoLineaVm> LineasDescuento
+        {
+            get => _lineasDescuento;
+            set { _lineasDescuento = value; NotifyOfPropertyChange(() => LineasDescuento); }
+        }
+
+        public bool TieneDescuentos => LineasDescuento.Any();
+
+        ///         /// Inicializa el PagoViewModel con los datos de la venta.
+        /// Carga los descuentos aplicados desde la base de datos.
+        public async Task InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
+        {
+            _idVenta       = idVenta;
+            ClienteNombre  = clienteNombre;
+            TotalVenta     = totalFinal;
+            Pagos          = new();
+            MontoIngresado = totalFinal.ToString("F2");
+            RecalcularVuelto();
+
+            // Cargar descuentos aplicados desde la venta
+            await CargarDescuentosAsync(idVenta);
+        }
+
+        private async Task CargarDescuentosAsync(int idVenta)
+        {
+            try
+            {
+                var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta);
+                if (venta == null) return;
+
+                var lineas = new List<DescuentoLineaVm>();
+
+                // Líneas de descuento por configuración (por detalle)
+                foreach (var detalle in venta.Detalles.Where(d => d.Descuento > 0 || d.Descuentos.Any()))
+                {
+                    lineas.Add(new DescuentoLineaVm
+                    {
+                        ProductoNombre = detalle.Producto?.Nombre ?? $"Item #{detalle.Id_producto}",
+                        Monto = detalle.DescuentoTotal,
+                        Descripcion = "Configurado",
+                        EsMetodoPago = false
+                    });
+                }
+
+                // Línea de descuento por método de pago
+                if (venta.DescuentoMetodoPago > 0)
+                {
+                    lineas.Add(new DescuentoLineaVm
+                    {
+                        ProductoNombre = "Método de pago",
+                        Monto = venta.DescuentoMetodoPago,
+                        Descripcion = "Método de pago",
+                        EsMetodoPago = true
+                    });
+                }
+
+                LineasDescuento = new ObservableCollection<DescuentoLineaVm>(lineas);
+                NotifyOfPropertyChange(() => TieneDescuentos);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PagoVM] Error cargando descuentos: {ex.Message}");
+            }
+        }
     }
 
     public class PagoLineaVm
@@ -506,5 +563,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public string  NombreMetodo { get; set; } = string.Empty;
         public string  Categoria    { get; set; } = "Otro";
         public decimal Monto        { get; set; }
+    }
+
+    public class DescuentoLineaVm
+    {
+        public string  ProductoNombre { get; set; } = string.Empty;
+        public decimal Monto          { get; set; }
+        public string  Descripcion    { get; set; } = string.Empty;
+        public bool    EsMetodoPago   { get; set; }
     }
 }

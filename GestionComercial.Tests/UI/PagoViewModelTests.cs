@@ -5,6 +5,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Pagos;
+using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.UI.ViewModels.Ventas;
@@ -19,12 +20,14 @@ namespace GestionComercial.Tests.UI
         private readonly Mock<IUnitOfWork> _mockUow = new();
         private readonly Mock<IMetodoPagoRepositorio> _mockMetodos = new();
         private readonly Mock<ISucursalRepositorio> _mockSucursales = new();
+        private readonly Mock<IVentaRepostorio> _mockVentaRepo = new();
         private readonly SesionServicio _sesion;
 
         public PagoViewModelTests()
         {
             _mockUow.Setup(u => u.MetodosPago).Returns(_mockMetodos.Object);
             _mockUow.Setup(u => u.Sucursales).Returns(_mockSucursales.Object);
+            _mockUow.Setup(u => u.Ventas).Returns(_mockVentaRepo.Object);
             _sesion = new SesionServicio();
             _sesion.IniciarSesion(new UsuarioSesionDto
             {
@@ -48,8 +51,11 @@ namespace GestionComercial.Tests.UI
             _mockSucursales.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(sucursal);
             _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1)).ReturnsAsync(metodos);
 
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>()))
+                .ReturnsAsync((Venta?)null);
+
             var vm = CrearVM();
-            vm.InicializarConVenta(1, "Test", 1000);
+            await vm.InicializarConVenta(1, "Test", 1000);
             // Use reflection to call the private CargarMetodosAsync
             var method = typeof(PagoViewModel).GetMethod("CargarMetodosAsync",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -149,6 +155,96 @@ namespace GestionComercial.Tests.UI
 
             vm.Pagos.Should().BeEmpty();
             vm.TieneError.Should().BeTrue();
+        }
+
+        // ── T6: Descuentos aplicados tests ──────────────────────────────
+
+        [Fact]
+        public async Task InicializarConVenta_ConDescuentos_MuestraLineas()
+        {
+            var venta = GestionComercial.Dominio.Entidades.Ventas.Venta.Crear(1, 1, 1, 5);
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            var producto = new GestionComercial.Dominio.Entidades.Producto.Producto
+            {
+                Id = 1, Nombre = "Producto Test", PrecioVentaActual = 1000, PrecioCostoActual = 500
+            };
+            var detalle = GestionComercial.Dominio.Entidades.Ventas.VentaDetalle.Crear(
+                producto, 2, 1000, 500, descuentoPorItem: 100);
+            venta.AgregarDetalle(detalle);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1800);
+
+            vm.LineasDescuento.Should().HaveCount(1);
+            vm.LineasDescuento[0].ProductoNombre.Should().Be("Producto Test");
+            vm.LineasDescuento[0].Descripcion.Should().Be("Configurado");
+            vm.LineasDescuento[0].EsMetodoPago.Should().BeFalse();
+            vm.TieneDescuentos.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task InicializarConVenta_ConDescuentoMetodoPago_MuestraLineaExtra()
+        {
+            var venta = GestionComercial.Dominio.Entidades.Ventas.Venta.Crear(1, 1, 1, 5);
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+            venta.GetType().GetProperty("DescuentoMetodoPago")!.SetValue(venta, 50m);
+
+            var producto = new GestionComercial.Dominio.Entidades.Producto.Producto
+            {
+                Id = 1, Nombre = "Producto Test", PrecioVentaActual = 1000, PrecioCostoActual = 500
+            };
+            var detalle = GestionComercial.Dominio.Entidades.Ventas.VentaDetalle.Crear(
+                producto, 1, 1000, 500);
+            venta.AgregarDetalle(detalle);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 950);
+
+            vm.LineasDescuento.Should().HaveCount(1); // Solo la línea de método de pago
+            vm.LineasDescuento[0].EsMetodoPago.Should().BeTrue();
+            vm.LineasDescuento[0].Monto.Should().Be(50m);
+            vm.TieneDescuentos.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task InicializarConVenta_SinDescuentos_NoMuestraLineas()
+        {
+            var venta = GestionComercial.Dominio.Entidades.Ventas.Venta.Crear(1, 1, 1, 5);
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            var producto = new GestionComercial.Dominio.Entidades.Producto.Producto
+            {
+                Id = 1, Nombre = "Producto Test", PrecioVentaActual = 1000, PrecioCostoActual = 500
+            };
+            var detalle = GestionComercial.Dominio.Entidades.Ventas.VentaDetalle.Crear(
+                producto, 1, 1000, 500);
+            venta.AgregarDetalle(detalle);
+
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            vm.LineasDescuento.Should().BeEmpty();
+            vm.TieneDescuentos.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task InicializarConVenta_VentaNoExistente_NoMuestraLineas()
+        {
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(999))
+                .ReturnsAsync((Venta?)null);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(999, "Test", 1000);
+
+            vm.LineasDescuento.Should().BeEmpty();
+            vm.TieneDescuentos.Should().BeFalse();
         }
     }
 }
