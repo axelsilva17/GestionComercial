@@ -409,6 +409,7 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.HasKey(d => d.Id);
                 b.Property(d => d.Nombre).HasMaxLength(150).IsRequired();
                 b.Property(d => d.ModoDescuento).HasConversion<int>();
+                b.Property(d => d.Alcance).HasConversion<int>().HasDefaultValue(AlcanceDescuentoEnum.Producto);
                 b.Property(d => d.Valor).HasColumnType("decimal(18,2)");
                 b.Property(d => d.AplicaCualquierMetodoPago).HasDefaultValue(true);
                 b.Ignore(d => d.EstaVigente);

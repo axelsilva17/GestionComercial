@@ -2,8 +2,12 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Producto;
+using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -20,14 +24,19 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private readonly IVentaServicio _ventaServicio;
         private readonly IUnitOfWork    _uow;
         private readonly SesionServicio _sesion;
+        private readonly IDescuentoConfiguracionServicio _descuentoConfiguracionServicio;
 
         private int _idVenta;
+        private Venta? _ventaCompleta;
+        private List<DescuentoConfiguracion>? _descuentosCache;
+        private Dictionary<int, Categoria>? _categoriasCache;
 
-        public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion)
+        public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion, IDescuentoConfiguracionServicio descuentoConfiguracionServicio)
         {
             _ventaServicio = ventaServicio;
             _uow           = uow;
             _sesion        = sesion;
+            _descuentoConfiguracionServicio = descuentoConfiguracionServicio;
             Titulo         = "Cobrar Venta";
         }
 
@@ -230,6 +239,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             MontoIngresado = string.Empty;
             RecalcularTotalPagado();
+            _ = RecalcularDescuentoPreviewAsync();
         }
 
         public void QuitarPago(PagoLineaVm linea)
@@ -237,6 +247,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             if (linea == null) return;
             Pagos.Remove(linea);
             RecalcularTotalPagado();
+            _ = RecalcularDescuentoPreviewAsync();
         }
 
 		/// 		/// Agrega un pago con el método seleccionado.
@@ -398,6 +409,85 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private void RecalcularVuelto()
             => Vuelto = TotalPagado > TotalVenta ? TotalPagado - TotalVenta : 0;
 
+        private async Task RecalcularDescuentoPreviewAsync()
+        {
+            if (_descuentosCache == null || _ventaCompleta == null || _categoriasCache == null)
+                return;
+
+            var idsMetodosPago = Pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
+            var esPagoUnico = idsMetodosPago.Count == 1;
+            decimal totalDescuentoMetodoPago = 0;
+
+            if (esPagoUnico && idsMetodosPago.Count == 1)
+            {
+                // Per-item discounts
+                foreach (var detalle in _ventaCompleta.Detalles)
+                {
+                    var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
+                    if (subtotalDetalle <= 0) continue;
+
+                    var descuento = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
+                        _sesion.IdEmpresa,
+                        detalle.Id_producto,
+                        detalle.Producto?.Id_categoria,
+                        idsMetodosPago,
+                        esPagoUnico: true,
+                        _descuentosCache,
+                        _categoriasCache);
+                    if (descuento != null)
+                    {
+                        totalDescuentoMetodoPago += Math.Round(subtotalDetalle * descuento.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                    }
+                }
+
+                // REGLA B: total-venta solo si no hubo per-item
+                if (totalDescuentoMetodoPago == 0)
+                {
+                    var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
+                        _sesion.IdEmpresa, idsMetodosPago[0], _descuentosCache);
+                    if (descuentoTotalVenta != null)
+                    {
+                        var baseCalculo = _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento;
+                        totalDescuentoMetodoPago = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                    }
+                }
+            }
+
+            TotalVenta = _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento - totalDescuentoMetodoPago;
+
+            // Sincronizar línea de descuento por método de pago en el preview
+            var lineaMetodo = LineasDescuento.FirstOrDefault(l => l.EsMetodoPago);
+            if (totalDescuentoMetodoPago > 0)
+            {
+                if (lineaMetodo == null)
+                {
+                    LineasDescuento.Add(new DescuentoLineaVm
+                    {
+                        ProductoNombre = "Método de pago",
+                        Monto = totalDescuentoMetodoPago,
+                        Descripcion = "Método de pago",
+                        EsMetodoPago = true
+                    });
+                }
+                else
+                {
+                    var idx = LineasDescuento.IndexOf(lineaMetodo);
+                    LineasDescuento[idx] = new DescuentoLineaVm
+                    {
+                        ProductoNombre = "Método de pago",
+                        Monto = totalDescuentoMetodoPago,
+                        Descripcion = "Método de pago",
+                        EsMetodoPago = true
+                    };
+                }
+            }
+            else if (lineaMetodo != null)
+            {
+                LineasDescuento.Remove(lineaMetodo);
+            }
+            NotifyOfPropertyChange(() => TieneDescuentos);
+        }
+
         // ── Popup Historial (same as VentaViewModel) ─────────────────────────────
         private bool _mostrarHistorial;
         public bool MostrarHistorial
@@ -509,6 +599,20 @@ namespace GestionComercial.UI.ViewModels.Ventas
             Pagos          = new();
             MontoIngresado = totalFinal.ToString("F2");
             RecalcularVuelto();
+
+            // Cargar venta completa y caches para preview de descuentos
+            _ventaCompleta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta);
+            if (_ventaCompleta != null && _sesion.IdEmpresa > 0)
+            {
+                _descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
+                _categoriasCache = new Dictionary<int, Categoria>();
+                if (categorias != null)
+                {
+                    foreach (var cat in categorias)
+                        _categoriasCache[cat.Id] = cat;
+                }
+            }
 
             // Cargar descuentos aplicados desde la venta
             await CargarDescuentosAsync(idVenta);

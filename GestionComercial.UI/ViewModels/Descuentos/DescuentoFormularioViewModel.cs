@@ -42,7 +42,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
         public bool EsModoEdicion { get; set; }
         public int DescuentoId { get; set; }
 
-        // ── Ámbito (qué se compra): Producto o Categoría ─────────────────
+        // ── Ámbito (qué se compra): Producto, Categoría o Método de Pago ─────────────────
         private string _ambitoSeleccionado = "Producto";
         public string AmbitoSeleccionado
         {
@@ -53,13 +53,30 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 NotifyOfPropertyChange(() => AmbitoSeleccionado);
                 NotifyOfPropertyChange(() => MuestraSelectorProducto);
                 NotifyOfPropertyChange(() => MuestraSelectorCategoria);
-                if (value == "Producto") IdCategoria = null;
-                else IdProducto = null;
+                NotifyOfPropertyChange(() => MuestraAmbitoMetodoPago);
+                NotifyOfPropertyChange(() => MuestraSelectorMetodosPago);
+                if (value == "Producto")
+                {
+                    IdCategoria = null;
+                    AplicaCualquierMetodoPago = true;
+                }
+                else if (value == "Categoría")
+                {
+                    IdProducto = null;
+                    AplicaCualquierMetodoPago = true;
+                }
+                else if (value == "Método de Pago")
+                {
+                    IdProducto = null;
+                    IdCategoria = null;
+                    AplicaCualquierMetodoPago = false;
+                }
             }
         }
 
         public bool MuestraSelectorProducto => AmbitoSeleccionado == "Producto";
         public bool MuestraSelectorCategoria => AmbitoSeleccionado == "Categoría";
+        public bool MuestraAmbitoMetodoPago => AmbitoSeleccionado == "Método de Pago";
 
         // ── Condición de pago ────────────────────────────────────────────
         private bool _aplicaCualquierMetodoPago = true;
@@ -74,7 +91,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             }
         }
 
-        public bool MuestraSelectorMetodosPago => !AplicaCualquierMetodoPago;
+        public bool MuestraSelectorMetodosPago => AmbitoSeleccionado == "Método de Pago" || (!AplicaCualquierMetodoPago && AmbitoSeleccionado != "Método de Pago");
 
         private ObservableCollection<MetodoPagoCheckItem> _metodosPagoDisponibles = new();
         public ObservableCollection<MetodoPagoCheckItem> MetodosPagoDisponibles
@@ -179,8 +196,16 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             set { _fechaHasta = value; NotifyOfPropertyChange(() => FechaHasta); }
         }
 
-        private string GenerarNombre()
+        private string GenerarNombre(List<int>? idsMetodosPago = null)
         {
+            if (AmbitoSeleccionado == "Método de Pago" && idsMetodosPago != null && idsMetodosPago.Count > 0)
+            {
+                var nombres = MetodosPagoDisponibles
+                    .Where(m => m.EstaSeleccionado)
+                    .Select(m => m.MetodoPago.Nombre)
+                    .ToList();
+                return $"Método {string.Join("/", nombres)} {Valor.ToString("0.##", CultureInfo.InvariantCulture)}%";
+            }
             if (IdProducto != null)
                 return $"{ProductoNombre} {Valor.ToString("0.##", CultureInfo.InvariantCulture)}%";
             if (IdCategoria != null)
@@ -206,8 +231,13 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                     FechaDesde = descuento.FechaDesde;
                     FechaHasta = descuento.FechaHasta;
 
-                    // Inferir ámbito desde la FK seteada
-                    AmbitoSeleccionado = descuento.Id_producto.HasValue ? "Producto" : "Categoría";
+                    // Inferir ámbito desde Alcance
+                    AmbitoSeleccionado = descuento.Alcance switch
+                    {
+                        AlcanceDescuentoEnum.MetodoPago => "Método de Pago",
+                        AlcanceDescuentoEnum.Categoria => "Categoría",
+                        _ => "Producto"
+                    };
 
                     if (IdProducto.HasValue)
                         ProductoSeleccionado = Productos.FirstOrDefault(p => p.IdProducto == IdProducto.Value);
@@ -232,18 +262,20 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 Categorias = new ObservableCollection<CategoriaItemDto>(categorias);
 
                 var metodos = await _unitOfWork.MetodosPago.ObtenerTodosPorEmpresaAsync(_sesion.IdEmpresa);
-                var lista = metodos
-                    .Where(m => m.Activo && m.Categoria == "Tarjeta" && m.Subcategoria != null)
-                    .OrderBy(m => m.Subcategoria == "Credito" ? 0 : 1)
+
+                // Para scope Método de Pago: cargar TODOS los métodos activos
+                var todosMetodos = metodos
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Categoria)
                     .ThenBy(m => m.Nombre)
                     .Select(m => new MetodoPagoCheckItem(m))
                     .ToList();
-                MetodosPagoDisponibles = new ObservableCollection<MetodoPagoCheckItem>(lista);
+                MetodosPagoDisponibles = new ObservableCollection<MetodoPagoCheckItem>(todosMetodos);
 
-                // Configurar agrupación por Subcategoria
+                // Configurar agrupación por Categoría (Efectivo, Tarjeta, QR, etc.)
                 var view = System.Windows.Data.CollectionViewSource.GetDefaultView(MetodosPagoDisponibles);
                 view?.GroupDescriptions?.Clear();
-                view?.GroupDescriptions?.Add(new System.Windows.Data.PropertyGroupDescription("MetodoPago.Subcategoria"));
+                view?.GroupDescriptions?.Add(new System.Windows.Data.PropertyGroupDescription("MetodoPago.Categoria"));
             }
             catch
             {
@@ -260,22 +292,48 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 MostrarError("El valor debe ser entre 1 y 100.");
                 return;
             }
-            if (IdProducto == null && IdCategoria == null)
+
+            // Validar scope
+            var alcance = AmbitoSeleccionado switch
             {
-                MostrarError("Debe seleccionar un producto o una categoría.");
-                return;
-            }
-            if (IdProducto != null && IdCategoria != null)
+                "Método de Pago" => AlcanceDescuentoEnum.MetodoPago,
+                "Categoría" => AlcanceDescuentoEnum.Categoria,
+                _ => AlcanceDescuentoEnum.Producto
+            };
+
+            if (alcance == AlcanceDescuentoEnum.MetodoPago)
             {
-                MostrarError("No puede seleccionar producto y categoría a la vez.");
-                return;
+                if (AplicaCualquierMetodoPago)
+                {
+                    MostrarError("Para descuentos por método de pago, no puede aplicar a cualquier método.");
+                    return;
+                }
+                if (!MetodosPagoDisponibles.Any(m => m.EstaSeleccionado))
+                {
+                    MostrarError("Debe seleccionar al menos un método de pago.");
+                    return;
+                }
             }
-            if (!AplicaCualquierMetodoPago
-                && !MetodosPagoDisponibles.Any(m => m.EstaSeleccionado))
+            else
             {
-                MostrarError("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
-                return;
+                if (IdProducto == null && IdCategoria == null)
+                {
+                    MostrarError("Debe seleccionar un producto o una categoría.");
+                    return;
+                }
+                if (IdProducto != null && IdCategoria != null)
+                {
+                    MostrarError("No puede seleccionar producto y categoría a la vez.");
+                    return;
+                }
+                if (!AplicaCualquierMetodoPago
+                    && !MetodosPagoDisponibles.Any(m => m.EstaSeleccionado))
+                {
+                    MostrarError("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
+                    return;
+                }
             }
+
             if (FechaDesde.HasValue && FechaHasta.HasValue && FechaHasta < FechaDesde)
             {
                 MostrarError("FechaHasta debe ser >= FechaDesde.");
@@ -287,7 +345,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 .Select(m => m.MetodoPago.Id)
                 .ToList();
 
-            Nombre = GenerarNombre();
+            Nombre = GenerarNombre(idsMetodosPago);
 
             try
             {
@@ -297,7 +355,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                         DescuentoId, Nombre, Valor,
                         IdProducto, IdCategoria, AplicaCualquierMetodoPago,
                         AplicaCualquierMetodoPago ? null : idsMetodosPago,
-                        FechaDesde, FechaHasta);
+                        FechaDesde, FechaHasta, alcance);
                 }
                 else
                 {
@@ -305,7 +363,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                         _sesion.IdEmpresa, Nombre, Valor,
                         IdProducto, IdCategoria, AplicaCualquierMetodoPago,
                         AplicaCualquierMetodoPago ? null : idsMetodosPago,
-                        FechaDesde, FechaHasta);
+                        FechaDesde, FechaHasta, alcance);
                 }
 
                 await _eventAggregator.PublishOnUIThreadAsync(new DescuentosActualizadosEvent());

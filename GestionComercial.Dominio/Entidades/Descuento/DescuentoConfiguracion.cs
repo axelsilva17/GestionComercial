@@ -14,6 +14,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
         }
 
         public ModoDescuentoEnum ModoDescuento { get; set; }
+        public AlcanceDescuentoEnum Alcance { get; set; } = AlcanceDescuentoEnum.Producto;
         public decimal Valor { get; set; }
         public int? Id_producto { get; set; }
         public int? Id_categoria { get; set; }
@@ -43,7 +44,8 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             bool aplicaCualquierMetodoPago = true,
             List<int>? idsMetodosPago = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new InvalidOperationException("El nombre es requerido.");
@@ -51,12 +53,28 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 throw new InvalidOperationException("El valor debe ser mayor a 0 y menor o igual a 100.");
             if (idEmpresa <= 0)
                 throw new InvalidOperationException("El ID de empresa debe ser mayor a 0.");
-            if (idProducto.HasValue && idCategoria.HasValue)
-                throw new InvalidOperationException("No se puede asignar producto y categoría simultáneamente.");
-            if (!idProducto.HasValue && !idCategoria.HasValue)
-                throw new InvalidOperationException("Se requiere un producto o categoría.");
-            if (!aplicaCualquierMetodoPago && (idsMetodosPago == null || idsMetodosPago.Count == 0))
-                throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
+
+            if (alcance == AlcanceDescuentoEnum.MetodoPago)
+            {
+                // Alcance MetodoPago: producto y categoria deben ser null
+                if (idProducto.HasValue || idCategoria.HasValue)
+                    throw new InvalidOperationException("Para descuentos por método de pago, no puede asignar producto o categoría.");
+                if (aplicaCualquierMetodoPago)
+                    throw new InvalidOperationException("Para descuentos por método de pago, no puede aplicar a cualquier método.");
+                if (idsMetodosPago == null || idsMetodosPago.Count == 0)
+                    throw new InvalidOperationException("Debe seleccionar al menos un método de pago.");
+            }
+            else
+            {
+                // Alcance Producto/Categoria: validación original
+                if (idProducto.HasValue && idCategoria.HasValue)
+                    throw new InvalidOperationException("No se puede asignar producto y categoría simultáneamente.");
+                if (!idProducto.HasValue && !idCategoria.HasValue)
+                    throw new InvalidOperationException("Se requiere un producto o categoría.");
+                if (!aplicaCualquierMetodoPago && (idsMetodosPago == null || idsMetodosPago.Count == 0))
+                    throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
+            }
+
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
@@ -64,6 +82,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             {
                 _nombre = nombre.Trim(),
                 ModoDescuento = ModoDescuentoEnum.Porcentaje,
+                Alcance = alcance,
                 Valor = valor,
                 Id_producto = idProducto,
                 Id_categoria = idCategoria,
@@ -83,16 +102,29 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             int? idCategoria,
             bool aplicaCualquierMetodoPago,
             DateTime? fechaDesde,
-            DateTime? fechaHasta)
+            DateTime? fechaHasta,
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new InvalidOperationException("El nombre es requerido.");
             if (valor <= 0 || valor > 100)
                 throw new InvalidOperationException("El valor debe ser mayor a 0 y menor o igual a 100.");
-            if (idProducto.HasValue && idCategoria.HasValue)
-                throw new InvalidOperationException("No se puede asignar producto y categoría simultáneamente.");
-            if (!idProducto.HasValue && !idCategoria.HasValue)
-                throw new InvalidOperationException("Se requiere un producto o categoría.");
+
+            if (alcance == AlcanceDescuentoEnum.MetodoPago)
+            {
+                if (idProducto.HasValue || idCategoria.HasValue)
+                    throw new InvalidOperationException("Para descuentos por método de pago, no puede asignar producto o categoría.");
+                if (aplicaCualquierMetodoPago)
+                    throw new InvalidOperationException("Para descuentos por método de pago, no puede aplicar a cualquier método.");
+            }
+            else
+            {
+                if (idProducto.HasValue && idCategoria.HasValue)
+                    throw new InvalidOperationException("No se puede asignar producto y categoría simultáneamente.");
+                if (!idProducto.HasValue && !idCategoria.HasValue)
+                    throw new InvalidOperationException("Se requiere un producto o categoría.");
+            }
+
             if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
                 throw new InvalidOperationException("FechaHasta debe ser >= FechaDesde.");
 
@@ -101,6 +133,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             Id_producto = idProducto;
             Id_categoria = idCategoria;
             AplicaCualquierMetodoPago = aplicaCualquierMetodoPago;
+            Alcance = alcance;
             FechaDesde = fechaDesde;
             FechaHasta = fechaHasta;
         }

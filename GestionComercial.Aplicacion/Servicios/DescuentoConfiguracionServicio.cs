@@ -19,11 +19,12 @@ namespace GestionComercial.Aplicacion.Servicios
             int idEmpresa, string nombre, decimal valor,
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
-            DateTime? fechaDesde, DateTime? fechaHasta)
+            DateTime? fechaDesde, DateTime? fechaHasta,
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
         {
             var descuento = DescuentoConfiguracion.Crear(
                 nombre, valor, idEmpresa, idProducto, idCategoria,
-                aplicaCualquierMetodoPago, idsMetodosPago, fechaDesde, fechaHasta);
+                aplicaCualquierMetodoPago, idsMetodosPago, fechaDesde, fechaHasta, alcance);
 
             await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
             await _unitOfWork.GuardarCambiosAsync();
@@ -49,16 +50,27 @@ namespace GestionComercial.Aplicacion.Servicios
             int id, string nombre, decimal valor,
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
-            DateTime? fechaDesde, DateTime? fechaHasta)
+            DateTime? fechaDesde, DateTime? fechaHasta,
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
         {
-            if (!aplicaCualquierMetodoPago && (idsMetodosPago == null || idsMetodosPago.Count == 0))
-                throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
+            if (alcance == AlcanceDescuentoEnum.MetodoPago)
+            {
+                if (aplicaCualquierMetodoPago)
+                    throw new InvalidOperationException("Para descuentos por método de pago, no puede aplicar a cualquier método.");
+                if (idsMetodosPago == null || idsMetodosPago.Count == 0)
+                    throw new InvalidOperationException("Debe seleccionar al menos un método de pago.");
+            }
+            else
+            {
+                if (!aplicaCualquierMetodoPago && (idsMetodosPago == null || idsMetodosPago.Count == 0))
+                    throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
+            }
 
             var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
             descuento.Actualizar(nombre, valor, idProducto, idCategoria,
-                aplicaCualquierMetodoPago, fechaDesde, fechaHasta);
+                aplicaCualquierMetodoPago, fechaDesde, fechaHasta, alcance);
 
             // Reemplazar relaciones N:M
             var effectiveIds = aplicaCualquierMetodoPago
@@ -94,7 +106,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 return Task.FromResult<DescuentoConfiguracion?>(null);
 
             var candidates = descuentosCache
-                .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente)
+                .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente
+                         && d.Alcance != AlcanceDescuentoEnum.MetodoPago)
                 .ToList();
 
             // ── Compuerta de condición de pago ──────────────────────────────
@@ -196,6 +209,30 @@ namespace GestionComercial.Aplicacion.Servicios
                 .ThenByDescending(d => d.Valor)
                 .First();
 
+            return Task.FromResult<DescuentoConfiguracion?>(winner);
+        }
+
+        public virtual Task<DescuentoConfiguracion?> ObtenerDescuentoTotalVentaAsync(
+            int idEmpresa,
+            int idMetodoPago,
+            List<DescuentoConfiguracion> descuentosCache)
+        {
+            if (descuentosCache == null || descuentosCache.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var candidates = descuentosCache
+                .Where(d => d.Id_empresa == idEmpresa
+                         && d.Activo
+                         && d.EstaVigente
+                         && d.Alcance == AlcanceDescuentoEnum.MetodoPago
+                         && !d.AplicaCualquierMetodoPago
+                         && d.DescuentosMetodosPago.Any(dm => dm.Id_metodoPago == idMetodoPago))
+                .ToList();
+
+            if (candidates.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var winner = candidates.OrderByDescending(d => d.Valor).First();
             return Task.FromResult<DescuentoConfiguracion?>(winner);
         }
     }

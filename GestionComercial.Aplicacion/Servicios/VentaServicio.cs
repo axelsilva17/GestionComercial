@@ -223,6 +223,19 @@ namespace GestionComercial.Aplicacion.Servicios
                     }
                 }
 
+                // ── REGLA B: descuento total-venta (solo si no hubo per-item) ──
+                if (totalDescuentoMetodoPago == 0 && esPagoUnico && idEmpresa > 0)
+                {
+                    var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
+                        idEmpresa, idsMetodosPago[0], descuentosCache);
+                    if (descuentoTotalVenta != null)
+                    {
+                        var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
+                        var monto = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        totalDescuentoMetodoPago += monto;
+                    }
+                }
+
                 venta.DescuentoMetodoPago = totalDescuentoMetodoPago;
                 venta.Id_metodoPagoDescuento = totalDescuentoMetodoPago > 0 && esPagoUnico ? idsMetodosPago[0] : null;
                 venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - totalDescuentoMetodoPago;
@@ -307,6 +320,19 @@ namespace GestionComercial.Aplicacion.Servicios
                             descuentoAplicable.Valor, subtotalDetalle, detalle.Id, descuentoAplicable.Nombre);
                         detalle.AgregarDescuento(descuentoEntity);
                         totalDescuentoMetodoPago += descuentoMonto;
+                    }
+                }
+
+                // ── REGLA B: descuento total-venta (solo si no hubo per-item) ──
+                if (totalDescuentoMetodoPago == 0 && idEmpresa > 0)
+                {
+                    var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
+                        idEmpresa, efectivo.Id, descuentosCache);
+                    if (descuentoTotalVenta != null)
+                    {
+                        var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
+                        var monto = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        totalDescuentoMetodoPago += monto;
                     }
                 }
 

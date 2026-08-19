@@ -8,7 +8,8 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
             int idEmpresa, string nombre, decimal valor,
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
-            DateTime? fechaDesde, DateTime? fechaHasta);
+            DateTime? fechaDesde, DateTime? fechaHasta,
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto);
 
         Task<DescuentoConfiguracion?> ObtenerPorIdAsync(int id);
 
@@ -16,7 +17,8 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
             int id, string nombre, decimal valor,
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
-            DateTime? fechaDesde, DateTime? fechaHasta);
+            DateTime? fechaDesde, DateTime? fechaHasta,
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto);
 
         Task EliminarAsync(int id);
 
@@ -32,5 +34,10 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
             int idEmpresa, int? idProducto, int? idCategoria,
             List<DescuentoConfiguracion> descuentosCache,
             Dictionary<int, Entidades.Producto.Categoria> categoriasCache);
+
+        Task<DescuentoConfiguracion?> ObtenerDescuentoTotalVentaAsync(
+            int idEmpresa,
+            int idMetodoPago,
+            List<DescuentoConfiguracion> descuentosCache);
     }
 }

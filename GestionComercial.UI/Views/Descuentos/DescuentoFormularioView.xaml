@@ -103,7 +103,10 @@
                                          IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Producto}"
                                          Margin="0,0,20,0"/>
                             <RadioButton GroupName="Ambito" Content="Categoría" FontSize="13"
-                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Categoría}"/>
+                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Categoría}"
+                                         Margin="0,0,20,0"/>
+                            <RadioButton GroupName="Ambito" Content="Método de Pago" FontSize="13"
+                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Método de Pago}"/>
                         </StackPanel>
 
                         <!-- Selector de Producto -->
@@ -134,10 +137,36 @@
                         <TextBlock Text="CONDICIÓN DE PAGO" Style="{StaticResource FormLabel}"/>
                         <CheckBox Content="Aplica a cualquier método de pago" FontSize="13"
                                   IsChecked="{Binding AplicaCualquierMetodoPago}"
-                                  Margin="0,0,0,10"/>
+                                  Margin="0,0,0,10">
+                            <CheckBox.Style>
+                                <Style TargetType="CheckBox">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MuestraAmbitoMetodoPago}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </CheckBox.Style>
+                        </CheckBox>
 
                         <StackPanel Visibility="{Binding MuestraSelectorMetodosPago, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="TARJETAS" Style="{StaticResource FormLabel}"/>
+                            <TextBlock>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                        <Setter Property="Margin" Value="0,0,0,6"/>
+                                        <Setter Property="Text" Value="MÉTODOS DE PAGO"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding MuestraAmbitoMetodoPago}" Value="False">
+                                                <Setter Property="Text" Value="TARJETAS"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <ItemsControl ItemsSource="{Binding MetodosPagoDisponibles}">
                                 <ItemsControl.GroupStyle>
                                     <GroupStyle>
