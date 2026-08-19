@@ -3,6 +3,7 @@ using FluentAssertions;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Descuentos;
@@ -166,7 +167,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 15%", 15m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Once);
         }
 
@@ -182,7 +183,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Categoría Carnes 10%", 10m, null, 5,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Once);
         }
 
@@ -198,7 +199,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 7.5%", 7.5m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Once);
         }
 
@@ -214,7 +215,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 10%", 10m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Once);
         }
 
@@ -230,7 +231,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 100%", 100m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Once);
         }
 
@@ -248,7 +249,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.ActualizarAsync(
                 1, "Queso 20%", 20m, 7, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Once);
         }
 
@@ -265,7 +266,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Never);
         }
 
@@ -284,8 +285,92 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
                 Times.Never);
+        }
+
+        // ── T8: Scope "Método de Pago" ───────────────────────────────────
+
+        [Fact]
+        public void AmbitoSeleccionado_MetodoPago_OcultaProductoCategoria()
+        {
+            var vm = CrearVM();
+            vm.ProductoSeleccionado = new ProductoListadoDto { IdProducto = 42, Nombre = "Leche" };
+            vm.CategoriaSeleccionada = new CategoriaItemDto { IdCategoria = 5, Nombre = "Lácteos" };
+
+            vm.AmbitoSeleccionado = "Método de Pago";
+
+            vm.MuestraAmbitoMetodoPago.Should().BeTrue();
+            vm.MuestraSelectorProducto.Should().BeFalse();
+            vm.MuestraSelectorCategoria.Should().BeFalse();
+            vm.IdProducto.Should().BeNull();
+            vm.IdCategoria.Should().BeNull();
+            vm.AplicaCualquierMetodoPago.Should().BeFalse();
+            vm.MuestraSelectorMetodosPago.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GuardarAsync_MetodoPago_SinMetodos_MuestraError()
+        {
+            var vm = CrearVM();
+            vm.AmbitoSeleccionado = "Método de Pago";
+            vm.Valor = 5;
+
+            await vm.GuardarAsync();
+
+            vm.ErrorMessage.Should().Be("Debe seleccionar al menos un método de pago.");
+            vm.ErrorVisible.Should().BeTrue();
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
+                It.IsAny<int?>(), It.IsAny<int?>(),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task GuardarAsync_MetodoPago_ConMetodos_Ok()
+        {
+            var vm = CrearVM();
+            vm.AmbitoSeleccionado = "Método de Pago";
+            vm.Valor = 5;
+            vm.MetodosPagoDisponibles = new System.Collections.ObjectModel.ObservableCollection<MetodoPagoCheckItem>
+            {
+                new MetodoPagoCheckItem(
+                    new GestionComercial.Dominio.Entidades.Pagos.MetodoPago { Id = 2, Nombre = "Visa", Categoria = "Tarjeta" })
+                { EstaSeleccionado = true }
+            };
+
+            await vm.GuardarAsync();
+
+            _mockServicio.Verify(s => s.CrearAsync(
+                It.IsAny<int>(), "Método Visa 5%", 5m, null, null,
+                false, It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), AlcanceDescuentoEnum.MetodoPago),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task CargarSelectores_MetodoPagoScope_IncluyeTodosMetodos()
+        {
+            var metodos = new List<GestionComercial.Dominio.Entidades.Pagos.MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Activo = true },
+                new() { Id = 2, Nombre = "Visa", Categoria = "Tarjeta", Subcategoria = "Credito", Activo = true },
+                new() { Id = 3, Nombre = "QR", Categoria = "QR", Activo = true },
+            };
+            _mockUnitOfWork.Setup(u => u.MetodosPago).Returns(new Mock<GestionComercial.Dominio.Interfaces.Repositorios.IMetodoPagoRepositorio>().Object);
+            _mockUnitOfWork.Setup(u => u.MetodosPago.ObtenerTodosPorEmpresaAsync(1)).ReturnsAsync(metodos);
+            _mockProductoServicio.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool>())).ReturnsAsync(new List<ProductoListadoDto>());
+            _mockProductoServicio.Setup(s => s.ObtenerCategoriasAsync(1)).ReturnsAsync(new List<CategoriaItemDto>());
+
+            var vm = CrearVM();
+            var method = typeof(DescuentoFormularioViewModel).GetMethod("CargarSelectoresAsync",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            await (Task)method!.Invoke(vm, null)!;
+
+            vm.MetodosPagoDisponibles.Should().HaveCount(3);
+            vm.MetodosPagoDisponibles.Should().Contain(m => m.MetodoPago.Nombre == "Efectivo");
+            vm.MetodosPagoDisponibles.Should().Contain(m => m.MetodoPago.Nombre == "Visa");
+            vm.MetodosPagoDisponibles.Should().Contain(m => m.MetodoPago.Nombre == "QR");
         }
     }
 }

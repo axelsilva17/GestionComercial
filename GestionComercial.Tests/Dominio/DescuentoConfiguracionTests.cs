@@ -95,6 +95,60 @@ namespace GestionComercial.Tests.Dominio
         }
 
         [Fact]
+        public void Crear_MetodoPago_SinProductoCategoria_Ok()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                nombre: "Visa 5%", valor: 5, idEmpresa: 1,
+                idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 10 },
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            descuento.Alcance.Should().Be(AlcanceDescuentoEnum.MetodoPago);
+            descuento.Id_producto.Should().BeNull();
+            descuento.Id_categoria.Should().BeNull();
+            descuento.AplicaCualquierMetodoPago.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Crear_MetodoPago_ConAplicaCualquier_Throws()
+        {
+            var act = () => DescuentoConfiguracion.Crear(
+                nombre: "Visa 5%", valor: 5, idEmpresa: 1,
+                idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: true, idsMetodosPago: null,
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage("*no puede aplicar a cualquier método*");
+        }
+
+        [Fact]
+        public void Crear_MetodoPago_ConProducto_Throws()
+        {
+            var act = () => DescuentoConfiguracion.Crear(
+                nombre: "Visa 5%", valor: 5, idEmpresa: 1,
+                idProducto: 42, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 10 },
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage("*no puede asignar producto o categoría*");
+        }
+
+        [Fact]
+        public void Crear_MetodoPago_SinMetodos_Throws()
+        {
+            var act = () => DescuentoConfiguracion.Crear(
+                nombre: "Visa 5%", valor: 5, idEmpresa: 1,
+                idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int>(),
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage("*al menos un método*");
+        }
+
+        [Fact]
         public void Crear_ProductoYCategoriaJuntos_Throws()
         {
             var act = () => DescuentoConfiguracion.Crear(
@@ -228,6 +282,36 @@ namespace GestionComercial.Tests.Dominio
 
             act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*producto o categoría*");
+        }
+
+        [Fact]
+        public void Actualizar_MetodoPago_ConProducto_Throws()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                nombre: "Test", valor: 10, idEmpresa: 1, idProducto: 1);
+
+            var act = () => descuento.Actualizar(
+                "Nuevo", 10, 1, null, false, null, null,
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage("*no puede asignar producto o categoría*");
+        }
+
+        [Fact]
+        public void Actualizar_MetodoPago_SinProductoCategoria_Ok()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                nombre: "Test", valor: 10, idEmpresa: 1, idProducto: 1);
+
+            descuento.Actualizar(
+                "Visa 5%", 5, null, null, false, null, null,
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            descuento.Alcance.Should().Be(AlcanceDescuentoEnum.MetodoPago);
+            descuento.Id_producto.Should().BeNull();
+            descuento.Id_categoria.Should().BeNull();
+            descuento.AplicaCualquierMetodoPago.Should().BeFalse();
         }
 
         [Fact]

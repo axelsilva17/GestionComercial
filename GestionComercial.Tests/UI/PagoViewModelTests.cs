@@ -8,6 +8,7 @@ using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Ventas;
 using Moq;
 using System.Windows.Input;
@@ -21,6 +22,8 @@ namespace GestionComercial.Tests.UI
         private readonly Mock<IMetodoPagoRepositorio> _mockMetodos = new();
         private readonly Mock<ISucursalRepositorio> _mockSucursales = new();
         private readonly Mock<IVentaRepostorio> _mockVentaRepo = new();
+        private readonly Mock<IDescuentoConfiguracionServicio> _mockDescuentoConfig = new();
+        private readonly Mock<ICategoriaRepositorio> _mockCategoriaRepo = new();
         private readonly SesionServicio _sesion;
 
         public PagoViewModelTests()
@@ -28,6 +31,7 @@ namespace GestionComercial.Tests.UI
             _mockUow.Setup(u => u.MetodosPago).Returns(_mockMetodos.Object);
             _mockUow.Setup(u => u.Sucursales).Returns(_mockSucursales.Object);
             _mockUow.Setup(u => u.Ventas).Returns(_mockVentaRepo.Object);
+            _mockUow.Setup(u => u.Categorias).Returns(_mockCategoriaRepo.Object);
             _sesion = new SesionServicio();
             _sesion.IniciarSesion(new UsuarioSesionDto
             {
@@ -42,7 +46,7 @@ namespace GestionComercial.Tests.UI
 
         private PagoViewModel CrearVM()
         {
-            return new PagoViewModel(_mockVentaServicio.Object, _mockUow.Object, _sesion);
+            return new PagoViewModel(_mockVentaServicio.Object, _mockUow.Object, _sesion, _mockDescuentoConfig.Object);
         }
 
         private async Task<PagoViewModel> CrearVMConMetodosAsync(List<MetodoPago> metodos)
@@ -245,6 +249,133 @@ namespace GestionComercial.Tests.UI
 
             vm.LineasDescuento.Should().BeEmpty();
             vm.TieneDescuentos.Should().BeFalse();
+        }
+
+        // ── T7: Preview de descuento por método de pago ─────────────────
+
+        private Venta CrearVentaParaPreview(decimal totalBruto)
+        {
+            var venta = GestionComercial.Dominio.Entidades.Ventas.Venta.Crear(1, 1, 1, 5);
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+            var producto = new GestionComercial.Dominio.Entidades.Producto.Producto
+            {
+                Id = 1, Nombre = "Producto Test", PrecioVentaActual = totalBruto, PrecioCostoActual = totalBruto / 2
+            };
+            var detalle = GestionComercial.Dominio.Entidades.Ventas.VentaDetalle.Crear(
+                producto, 1, totalBruto, totalBruto / 2);
+            venta.AgregarDetalle(detalle);
+            return venta;
+        }
+
+        private void SetupCachesVenta(int idVenta, Venta venta, List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> descuentos)
+        {
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(idVenta)).ReturnsAsync(venta);
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .ReturnsAsync(descuentos);
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Producto.Categoria>());
+        }
+
+        [Fact]
+        public async Task Preview_Visa5Pct_UpdatesTotalVenta()
+        {
+            var venta = CrearVentaParaPreview(1000m);
+            var descuento = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Visa 5%", 5, 1, idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.MetodoPago);
+            descuento.DescuentosMetodosPago.Add(new GestionComercial.Dominio.Entidades.Descuento.DescuentoMetodoPago { Id_metodoPago = 2 });
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoTotalVentaAsync(
+                    1, 2, It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>()))
+                .ReturnsAsync(descuento);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            // Simular pago único con Visa (método 2)
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 2, NombreMetodo = "Visa", Categoria = "Tarjeta" };
+            vm.MontoIngresado = "950";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            vm.TotalVenta.Should().Be(950m); // 1000 - 5% = 950
+            vm.LineasDescuento.Should().Contain(l => l.EsMetodoPago && l.Monto == 50m);
+        }
+
+        [Fact]
+        public async Task Preview_PagoMixto_SinDescuento()
+        {
+            var venta = CrearVentaParaPreview(1000m);
+            var descuento = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Visa 5%", 5, 1, idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.MetodoPago);
+            descuento.DescuentosMetodosPago.Add(new GestionComercial.Dominio.Entidades.Descuento.DescuentoMetodoPago { Id_metodoPago = 2 });
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            // Pago mixto: Efectivo (1) + Visa (2)
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 1, NombreMetodo = "Efectivo", Categoria = "Efectivo" };
+            vm.MontoIngresado = "600";
+            vm.AgregarPago();
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 2, NombreMetodo = "Visa", Categoria = "Tarjeta" };
+            vm.MontoIngresado = "400";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            vm.TotalVenta.Should().Be(1000m);
+            vm.LineasDescuento.Should().NotContain(l => l.EsMetodoPago);
+        }
+
+        [Fact]
+        public async Task Preview_SinMatch_SoloPerItem()
+        {
+            var venta = CrearVentaParaPreview(1000m);
+            var perItem = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Prod 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { perItem });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>()))
+                .ReturnsAsync(perItem);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoTotalVentaAsync(
+                    1, 2, It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            // Pago único con Visa (2) que no tiene descuento total-venta → solo per-item 10%
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 2, NombreMetodo = "Visa", Categoria = "Tarjeta" };
+            vm.MontoIngresado = "900";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            vm.TotalVenta.Should().Be(900m); // 1000 - 10% = 900
+        }
+
+        private static async Task InvocarRecalcularDescuentoPreviewAsync(PagoViewModel vm)
+        {
+            var method = typeof(PagoViewModel).GetMethod("RecalcularDescuentoPreviewAsync",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            await (Task)method!.Invoke(vm, null)!;
         }
     }
 }

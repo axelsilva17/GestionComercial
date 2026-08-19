@@ -543,5 +543,136 @@ namespace GestionComercial.Tests.Servicios
             result.Should().NotBeNull();
             result!.Valor.Should().Be(5);
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // ObtenerDescuentoTotalVentaAsync (scope Método de Pago)
+        // ═══════════════════════════════════════════════════════════
+
+        private static DescuentoConfiguracion CrearTotalVenta(int idMetodoPago, decimal valor)
+        {
+            var d = DescuentoConfiguracion.Crear(
+                $"Método {valor}%", valor, 1, idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { idMetodoPago },
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+            d.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = idMetodoPago });
+            return d;
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoTotalVentaAsync_Match_HighestValor()
+        {
+            var cache = new List<DescuentoConfiguracion>
+            {
+                CrearTotalVenta(2, 10),
+                CrearTotalVenta(2, 5)
+            };
+
+            var result = await _servicio.ObtenerDescuentoTotalVentaAsync(1, 2, cache);
+
+            result.Should().NotBeNull();
+            result!.Valor.Should().Be(10);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoTotalVentaAsync_NoMatch_Null()
+        {
+            var cache = new List<DescuentoConfiguracion> { CrearTotalVenta(2, 5) };
+
+            var result = await _servicio.ObtenerDescuentoTotalVentaAsync(1, 3, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoTotalVentaAsync_ProductoScope_Null()
+        {
+            var productoDiscount = DescuentoConfiguracion.Crear(
+                "Prod 20%", 20, 1, idProducto: 10, aplicaCualquierMetodoPago: true);
+            var cache = new List<DescuentoConfiguracion> { productoDiscount };
+
+            var result = await _servicio.ObtenerDescuentoTotalVentaAsync(1, 1, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoTotalVentaAsync_DosConfigs5y10_Returns10()
+        {
+            var cache = new List<DescuentoConfiguracion>
+            {
+                CrearTotalVenta(1, 5),
+                CrearTotalVenta(1, 10)
+            };
+
+            var result = await _servicio.ObtenerDescuentoTotalVentaAsync(1, 1, cache);
+
+            result.Should().NotBeNull();
+            result!.Valor.Should().Be(10);
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoTotalVentaAsync_Vencido_Null()
+        {
+            var vencido = DescuentoConfiguracion.Crear(
+                "Vencido 5%", 5, 1, idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                alcance: AlcanceDescuentoEnum.MetodoPago,
+                fechaHasta: DateTime.Now.AddDays(-1));
+            vencido.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 2 });
+            var cache = new List<DescuentoConfiguracion> { vencido };
+
+            var result = await _servicio.ObtenerDescuentoTotalVentaAsync(1, 2, cache);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ObtenerDescuentoAplicableAsync_MetodoPago_ExcludedFromPerItem()
+        {
+            var totalVenta = CrearTotalVenta(2, 5);
+            var cache = new List<DescuentoConfiguracion> { totalVenta };
+            var catCache = new Dictionary<int, Categoria>();
+
+            var result = await _servicio.ObtenerDescuentoAplicableAsync(
+                1, 10, null, new List<int> { 2 }, true, cache, catCache);
+
+            result.Should().BeNull();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CrearAsync / ActualizarAsync con scope Método de Pago
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task CrearAsync_MetodoPago_SinProductoCategoria_Ok()
+        {
+            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()))
+                .Returns<DescuentoConfiguracion>(d => Task.FromResult(d));
+
+            var resultado = await _servicio.CrearAsync(
+                idEmpresa: 1, nombre: "Visa 5%", valor: 5,
+                idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                fechaDesde: null, fechaHasta: null,
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            resultado.Should().NotBeNull();
+            resultado.Alcance.Should().Be(AlcanceDescuentoEnum.MetodoPago);
+            resultado.Id_producto.Should().BeNull();
+            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CrearAsync_MetodoPago_ConAplicaCualquier_Throws()
+        {
+            Func<Task> act = async () => await _servicio.CrearAsync(
+                idEmpresa: 1, nombre: "Visa 5%", valor: 5,
+                idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: true, idsMetodosPago: null,
+                fechaDesde: null, fechaHasta: null,
+                alcance: AlcanceDescuentoEnum.MetodoPago);
+
+            await act.Should().ThrowAsync<InvalidOperationException>();
+        }
     }
 }
