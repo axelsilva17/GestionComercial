@@ -48,6 +48,7 @@
         </Style>
     </UserControl.Resources>
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <Grid MaxWidth="700" Margin="0,40" VerticalAlignment="Top"
           HorizontalAlignment="Center">
         <Grid.RowDefinitions>
@@ -462,4 +463,5 @@
             </Border>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </UserControl>
