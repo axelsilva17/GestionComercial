@@ -1,7 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Clientes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
-using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,49 +10,28 @@ using System.Windows;
 
 namespace GestionComercial.UI.ViewModels.Clientes
 {
-    public class ClienteFormularioViewModel : NavigableViewModel
+    public class ClienteFormularioViewModel : FormularioEntidadViewModel
     {
         private readonly IClienteServicio _clienteServicio;
-        private readonly ShellViewModel _shell;
         private readonly ILogger<ClienteFormularioViewModel> _logger;
 
         public ClienteFormularioViewModel(IClienteServicio clienteServicio, ShellViewModel shell, ILogger<ClienteFormularioViewModel> logger)
+            : base(shell)
         {
             _clienteServicio = clienteServicio;
-            _shell = shell;
             _logger = logger;
         }
 
-        // ── Modo ──────────────────────────────────────────────────────────────
-        private bool _esModoEdicion;
-        public bool EsModoEdicion
-        {
-            get => _esModoEdicion;
-            set
-            {
-                _esModoEdicion = value;
-                NotifyOfPropertyChange(() => EsModoEdicion);
-                NotifyOfPropertyChange(() => TituloFormulario);
-                NotifyOfPropertyChange(() => SubtituloFormulario);
-            }
-        }
+        // ── Títulos ───────────────────────────────────────────────────────────
+        public override string TituloFormulario    => EsModoEdicion ? "Editar Cliente"                     : "Nuevo Cliente";
+        public override string SubtituloFormulario => EsModoEdicion ? "Modificá los datos del cliente"     : "Completá los datos para registrar un nuevo cliente";
 
-        public string TituloFormulario    => EsModoEdicion ? "Editar Cliente"                           : "Nuevo Cliente";
-        public string SubtituloFormulario => EsModoEdicion ? "Modificá los datos del cliente"           : "Completá los datos para registrar un nuevo cliente";
-
+        // ── Campos propios de Cliente ──────────────────────────────────────────
+        private int _idCliente;
         public int IdCliente
         {
             get => _idCliente;
             set => _idCliente = value;
-        }
-        private int _idCliente;
-
-        // ── Campos ────────────────────────────────────────────────────────────
-        private string _nombre = string.Empty;
-        public string Nombre
-        {
-            get => _nombre;
-            set { _nombre = value; NotifyOfPropertyChange(() => Nombre); NotifyOfPropertyChange(() => CanGuardar); }
         }
 
         private string _apellido = string.Empty;
@@ -70,20 +48,6 @@ namespace GestionComercial.UI.ViewModels.Clientes
             set { _documento = value; NotifyOfPropertyChange(() => Documento); NotifyOfPropertyChange(() => CanGuardar); }
         }
 
-        private string _telefono = string.Empty;
-        public string Telefono
-        {
-            get => _telefono;
-            set { _telefono = value; NotifyOfPropertyChange(() => Telefono); }
-        }
-
-        private string _email = string.Empty;
-        public string Email
-        {
-            get => _email;
-            set { _email = value; NotifyOfPropertyChange(() => Email); NotifyOfPropertyChange(() => EmailValido); NotifyOfPropertyChange(() => CanGuardar); }
-        }
-
         private string _direccion = string.Empty;
         public string Direccion
         {
@@ -91,34 +55,21 @@ namespace GestionComercial.UI.ViewModels.Clientes
             set { _direccion = value; NotifyOfPropertyChange(() => Direccion); }
         }
 
-        private bool _activo = true;
-        public bool Activo
-        {
-            get => _activo;
-            set { _activo = value; NotifyOfPropertyChange(() => Activo); NotifyOfPropertyChange(() => CanGuardar); }
-        }
-
         // ── Validación ────────────────────────────────────────────────────────
-        public bool EmailValido  => string.IsNullOrWhiteSpace(Email) || Email.Contains("@");
-        public bool EmailInvalido => !EmailValido;
-        public bool CanGuardar  => !string.IsNullOrWhiteSpace(Nombre)
-                                && !string.IsNullOrWhiteSpace(Documento)
-                                && EmailValido
-                                && !IsLoading;
+        public override bool CanGuardar => !string.IsNullOrWhiteSpace(Nombre)
+                                        && !string.IsNullOrWhiteSpace(Documento)
+                                        && EmailValido
+                                        && !IsLoading;
 
         // ── Inicialización ────────────────────────────────────────────────────
         public void InicializarParaCrear()
         {
             EsModoEdicion = false;
             _idCliente    = 0;
-            Nombre        = string.Empty;
             Apellido      = string.Empty;
             Documento     = string.Empty;
-            Telefono      = string.Empty;
-            Email         = string.Empty;
             Direccion     = string.Empty;
-            Activo        = true;
-            LimpiarError();
+            LimpiarCamposComunes();
         }
 
         public void InicializarParaEditar(int idCliente)
@@ -138,13 +89,13 @@ namespace GestionComercial.UI.ViewModels.Clientes
                 if (dto != null)
                 {
                     IdCliente = dto.IdCliente;
-                    Nombre = dto.Nombre;
-                    Apellido = ""; // No existe en ClienteDto, mantener compatibilidad
+                    Nombre    = dto.Nombre;
+                    Apellido  = "";
                     Documento = dto.Documento.ToString();
-                    Telefono = dto.Telefono.ToString();
-                    Email = dto.Email;
-                    Direccion = ""; // No existe en ClienteDto
-                    Activo = dto.Activo;
+                    Telefono  = dto.Telefono.ToString();
+                    Email     = dto.Email;
+                    Direccion = "";
+                    Activo    = dto.Activo;
                     EsModoEdicion = true;
                 }
             }
@@ -169,12 +120,12 @@ namespace GestionComercial.UI.ViewModels.Clientes
                 {
                     var dto = new ClienteActualizarDto
                     {
-                        Id = IdCliente,
-                        Nombre = Nombre,
+                        Id        = IdCliente,
+                        Nombre    = Nombre,
                         Documento = int.TryParse(Documento, out var doc) ? doc : 0,
-                        Telefono = Telefono,
-                        Email = Email,
-                        Activo = Activo
+                        Telefono  = Telefono,
+                        Email     = Email,
+                        Activo    = Activo
                     };
                     await _clienteServicio.ActualizarAsync(dto);
                 }
@@ -182,16 +133,16 @@ namespace GestionComercial.UI.ViewModels.Clientes
                 {
                     var dto = new ClienteCrearDto
                     {
-                        Nombre = Nombre,
+                        Nombre    = Nombre,
                         Documento = int.TryParse(Documento, out var doc) ? doc : 0,
-                        Telefono = Telefono,
-                        Email = Email,
-                        IdEmpresa = _shell.IdEmpresaActual,
-                        Activo = Activo
+                        Telefono  = Telefono,
+                        Email     = Email,
+                        IdEmpresa = Shell.IdEmpresaActual,
+                        Activo    = Activo
                     };
                     await _clienteServicio.CrearAsync(dto);
                 }
-                MessageBox.Show("Cliente guardado correctamente", "Exito", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Cliente guardado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 await Volver();
                 return true;
             }
@@ -208,6 +159,6 @@ namespace GestionComercial.UI.ViewModels.Clientes
         }
 
         public async Task Volver()
-            => await _shell.ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(), CancellationToken.None);
+            => await Shell.ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(), CancellationToken.None);
     }
 }
