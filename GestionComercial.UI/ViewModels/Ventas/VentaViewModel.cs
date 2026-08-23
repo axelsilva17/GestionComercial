@@ -132,7 +132,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[VentaVM] Constructor ERROR: {ex.Message}\n{ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Constructor ERROR: {ex.Message}");
                 // No lanzar - permitir que el ViewModel se cree aunque haya error
                 Titulo = "Nueva Venta";
                 Items = new ObservableCollection<VentaItemDto>();
@@ -930,7 +930,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] ERROR: {ex}");
-                MessageBox.Show($"Error al procesar: {ex.Message}\n\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error al procesar: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { IsLoading = false; }
         }
