@@ -598,6 +598,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             var idsMetodosPago = Pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
             var esPagoUnico = idsMetodosPago.Count == 1;
             decimal totalDescuentoMetodoPago = 0;
+            decimal porcentajeDescuentoMetodo = 0;
 
             if (esPagoUnico && idsMetodosPago.Count == 1)
             {
@@ -618,6 +619,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     if (descuento != null)
                     {
                         totalDescuentoMetodoPago += Math.Round(subtotalDetalle * descuento.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        porcentajeDescuentoMetodo = descuento.Valor;
                     }
                 }
 
@@ -630,6 +632,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     {
                         var baseCalculo = _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento;
                         totalDescuentoMetodoPago = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        porcentajeDescuentoMetodo = descuentoTotalVenta.Valor;
                     }
                 }
             }
@@ -640,14 +643,18 @@ namespace GestionComercial.UI.ViewModels.Ventas
             var lineaMetodo = LineasDescuento.FirstOrDefault(l => l.EsMetodoPago);
             if (totalDescuentoMetodoPago > 0)
             {
+                var descuentoTexto = porcentajeDescuentoMetodo > 0
+                    ? $"Método de pago -{porcentajeDescuentoMetodo:0.##}%"
+                    : "Método de pago";
                 if (lineaMetodo == null)
                 {
                     LineasDescuento.Add(new DescuentoLineaVm
                     {
                         ProductoNombre = "Método de pago",
                         Monto = totalDescuentoMetodoPago,
-                        Descripcion = "Método de pago",
-                        EsMetodoPago = true
+                        Descripcion = descuentoTexto,
+                        EsMetodoPago = true,
+                        Porcentaje = porcentajeDescuentoMetodo
                     });
                 }
                 else
@@ -657,8 +664,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     {
                         ProductoNombre = "Método de pago",
                         Monto = totalDescuentoMetodoPago,
-                        Descripcion = "Método de pago",
-                        EsMetodoPago = true
+                        Descripcion = descuentoTexto,
+                        EsMetodoPago = true,
+                        Porcentaje = porcentajeDescuentoMetodo
                     };
                 }
             }
@@ -811,12 +819,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 // Líneas de descuento por configuración (por detalle)
                 foreach (var detalle in venta.Detalles.Where(d => d.Descuento > 0 || d.Descuentos.Any()))
                 {
+                    var descuentoConfig = detalle.Descuentos?.FirstOrDefault();
                     lineas.Add(new DescuentoLineaVm
                     {
                         ProductoNombre = detalle.Producto?.Nombre ?? $"Item #{detalle.Id_producto}",
                         Monto = detalle.DescuentoTotal,
-                        Descripcion = "Configurado",
-                        EsMetodoPago = false
+                        Descripcion = descuentoConfig != null ? $"-{descuentoConfig.Porcentaje:0.##}%" : "Configurado",
+                        EsMetodoPago = false,
+                        Porcentaje = descuentoConfig?.Porcentaje ?? 0
                     });
                 }
 
@@ -828,7 +838,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         ProductoNombre = "Método de pago",
                         Monto = venta.DescuentoMetodoPago,
                         Descripcion = "Método de pago",
-                        EsMetodoPago = true
+                        EsMetodoPago = true,
+                        Porcentaje = 0
                     });
                 }
 
@@ -856,5 +867,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public decimal Monto          { get; set; }
         public string  Descripcion    { get; set; } = string.Empty;
         public bool    EsMetodoPago   { get; set; }
+        public decimal Porcentaje     { get; set; }
     }
 }

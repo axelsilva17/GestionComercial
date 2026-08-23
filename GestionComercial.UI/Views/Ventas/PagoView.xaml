@@ -329,11 +329,18 @@
                                         <Run Text="{Binding Descripcion}"/>
                                     </TextBlock>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding Monto, Converter={StaticResource DecimalToMoneda}}"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource SuccessBrush}"
-                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource WarningBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"
+                                               Text="{Binding Porcentaje, StringFormat='{}{0:0.##}%'}"
+                                               Visibility="{Binding EsMetodoPago, Converter={StaticResource BoolToVisibility}}"/>
+                                    <TextBlock Text="{Binding Monto, Converter={StaticResource DecimalToMoneda}}"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SuccessBrush}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
