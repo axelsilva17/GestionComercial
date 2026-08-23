@@ -148,7 +148,15 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public decimal TotalVenta
         {
             get => _totalVenta;
-            set { _totalVenta = value; NotifyOfPropertyChange(() => TotalVenta); RecalcularVuelto(); }
+            set
+            {
+                _totalVenta = value;
+                NotifyOfPropertyChange(() => TotalVenta);
+                NotifyOfPropertyChange(() => Faltante);
+                NotifyOfPropertyChange(() => HayFaltante);
+                NotifyOfPropertyChange(() => PuedeCobrar);
+                RecalcularVuelto();
+            }
         }
 
         private decimal _totalPagado;
