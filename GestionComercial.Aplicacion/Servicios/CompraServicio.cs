@@ -52,11 +52,16 @@ namespace GestionComercial.Aplicacion.Servicios
                 observacion: dto.Observacion
             );
 
+            // Batch fetch: traer todos los productos de una sola vez
+            var idsProductos = dto.Items.Select(i => i.IdProducto).Distinct().ToList();
+            var productos = await _uow.Productos.BuscarAsync(p => idsProductos.Contains(p.Id));
+            var productosDict = productos.ToDictionary(p => p.Id);
+
             // ── Agregar detalles con factory methods (DDD) ──
             foreach (var item in dto.Items)
             {
-                var producto = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
-                    ?? throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
+                if (!productosDict.TryGetValue(item.IdProducto, out var producto))
+                    throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
 
                 // Factory method: CompraDetalle.Crear() calcula el subtotal SOLO
                 var detalle = CompraDetalle.Crear(producto, item.Cantidad, item.PrecioCosto);

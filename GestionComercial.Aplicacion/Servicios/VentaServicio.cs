@@ -94,11 +94,16 @@ namespace GestionComercial.Aplicacion.Servicios
             // ── Validar stock y crear venta en una TRANSACCIÓN ───────────────
             await _uow.EjecutarEnTransaccionAsync(async () =>
             {
+                // Batch fetch: traer todos los productos de una sola vez
+                var idsProductos = dto.Items.Select(i => i.IdProducto).Distinct().ToList();
+                var productos = await _uow.Productos.BuscarAsync(p => idsProductos.Contains(p.Id));
+                var productosDict = productos.ToDictionary(p => p.Id);
+
                 // Validar stock antes de tocar nada
                 foreach (var item in dto.Items)
                 {
-                    var p = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
-                        ?? throw new ProductoNoEncontradoException(item.IdProducto);
+                    if (!productosDict.TryGetValue(item.IdProducto, out var p))
+                        throw new ProductoNoEncontradoException(item.IdProducto);
                     if (p.StockActual < item.Cantidad)
                         throw new StockInsuficienteException(p.Nombre, (int)p.StockActual, item.Cantidad);
                 }
@@ -108,7 +113,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
                 foreach (var item in dto.Items)
                 {
-                    var producto = (await _uow.Productos.ObtenerPorIdAsync(item.IdProducto))!;
+                    var producto = productosDict[item.IdProducto];
                     var descuentoPorItem = item.Descuentos.Sum(d => d.Monto);
 
                     // Crear detalle usando factory method DDD
@@ -180,9 +185,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new VentaInvalidaException("La venta está anulada y no puede pagarse.");
 
             // ── Resolver descuento combinado ANTES de validar total ──
-            // Regla de negocio: el descuento por método de pago solo aplica cuando el
-            // pago es 100% con UN ÚNICO método. Los pagos mixtos NO reciben descuento
-            // salvo que el descuento sea "cualquier método de pago".
             var idsMetodosPago = pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
             var esPagoUnico = idsMetodosPago.Count == 1;
 
@@ -190,55 +192,7 @@ namespace GestionComercial.Aplicacion.Servicios
             var idEmpresa = sucursal?.Id_empresa ?? 0;
             if (idEmpresa > 0)
             {
-                var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
-
-                var categoriasCache = new Dictionary<int, Categoria>();
-                var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
-                foreach (var cat in categorias)
-                    categoriasCache[cat.Id] = cat;
-
-                decimal totalDescuentoMetodoPago = 0;
-
-                foreach (var detalle in venta.Detalles)
-                {
-                    var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
-                    if (subtotalDetalle <= 0) continue;
-
-                    var descuentoAplicable = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
-                        idEmpresa,
-                        detalle.Id_producto,
-                        detalle.Producto?.Id_categoria,
-                        idsMetodosPago,
-                        esPagoUnico,
-                        descuentosCache,
-                        categoriasCache);
-
-                    if (descuentoAplicable != null)
-                    {
-                        var descuentoMonto = subtotalDetalle * descuentoAplicable.Valor / 100;
-                        var descuentoEntity = VentaDetalleDescuento.PorPorcentaje(
-                            descuentoAplicable.Valor, subtotalDetalle, detalle.Id, descuentoAplicable.Nombre);
-                        detalle.AgregarDescuento(descuentoEntity);
-                        totalDescuentoMetodoPago += descuentoMonto;
-                    }
-                }
-
-                // ── REGLA B: descuento total-venta (solo si no hubo per-item) ──
-                if (totalDescuentoMetodoPago == 0 && esPagoUnico && idEmpresa > 0)
-                {
-                    var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
-                        idEmpresa, idsMetodosPago[0], descuentosCache);
-                    if (descuentoTotalVenta != null)
-                    {
-                        var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
-                        var monto = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
-                        totalDescuentoMetodoPago += monto;
-                    }
-                }
-
-                venta.DescuentoMetodoPago = totalDescuentoMetodoPago;
-                venta.Id_metodoPagoDescuento = totalDescuentoMetodoPago > 0 && esPagoUnico ? idsMetodosPago[0] : null;
-                venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - totalDescuentoMetodoPago;
+                await AplicarDescuentosPorMetodoPagoAsync(venta, idsMetodosPago, esPagoUnico, idEmpresa);
             }
 
             var totalPagado = pagos.Sum(p => p.Monto);
@@ -290,55 +244,7 @@ namespace GestionComercial.Aplicacion.Servicios
             // Aplicar descuentos por método de pago a cada detalle
             if (idEmpresa > 0)
             {
-                var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
-                var categoriasCache = new Dictionary<int, Categoria>();
-                var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
-                foreach (var cat in categorias)
-                    categoriasCache[cat.Id] = cat;
-
-                var idsMetodosPago = new List<int> { efectivo.Id };
-                decimal totalDescuentoMetodoPago = 0;
-
-                foreach (var detalle in venta.Detalles)
-                {
-                    var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
-                    if (subtotalDetalle <= 0) continue;
-
-                    var descuentoAplicable = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
-                        idEmpresa,
-                        detalle.Id_producto,
-                        detalle.Producto?.Id_categoria,
-                        idsMetodosPago,
-                        esPagoUnico: true,
-                        descuentosCache,
-                        categoriasCache);
-
-                    if (descuentoAplicable != null)
-                    {
-                        var descuentoMonto = subtotalDetalle * descuentoAplicable.Valor / 100;
-                        var descuentoEntity = VentaDetalleDescuento.PorPorcentaje(
-                            descuentoAplicable.Valor, subtotalDetalle, detalle.Id, descuentoAplicable.Nombre);
-                        detalle.AgregarDescuento(descuentoEntity);
-                        totalDescuentoMetodoPago += descuentoMonto;
-                    }
-                }
-
-                // ── REGLA B: descuento total-venta (solo si no hubo per-item) ──
-                if (totalDescuentoMetodoPago == 0 && idEmpresa > 0)
-                {
-                    var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
-                        idEmpresa, efectivo.Id, descuentosCache);
-                    if (descuentoTotalVenta != null)
-                    {
-                        var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
-                        var monto = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
-                        totalDescuentoMetodoPago += monto;
-                    }
-                }
-
-                venta.DescuentoMetodoPago = totalDescuentoMetodoPago;
-                venta.Id_metodoPagoDescuento = totalDescuentoMetodoPago > 0 ? efectivo.Id : null;
-                venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - totalDescuentoMetodoPago;
+                await AplicarDescuentosPorMetodoPagoAsync(venta, new List<int> { efectivo.Id }, esPagoUnico: true, idEmpresa);
             }
 
             // Crear pago único por el total final
@@ -352,6 +258,66 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
 
             _ = ImprimirTicketAsync(venta.Id);
+        }
+
+        /// <summary>
+        /// Aplica descuentos por método de pago a cada detalle de la venta.
+        /// Lógica centralizada usada por RegistrarPagoAsync y CobrarVentaAsync.
+        /// REGLA: descuento por método de pago solo aplica con UN ÚNICO método (pago único).
+        /// REGLA B: si no hubo descuento per-item, intenta descuento total-venta.
+        /// </summary>
+        private async Task AplicarDescuentosPorMetodoPagoAsync(
+            Venta venta, List<int> idsMetodosPago, bool esPagoUnico, int idEmpresa)
+        {
+            var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
+
+            var categoriasCache = new Dictionary<int, Categoria>();
+            var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+            foreach (var cat in categorias)
+                categoriasCache[cat.Id] = cat;
+
+            decimal totalDescuentoMetodoPago = 0;
+
+            foreach (var detalle in venta.Detalles)
+            {
+                var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
+                if (subtotalDetalle <= 0) continue;
+
+                var descuentoAplicable = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
+                    idEmpresa,
+                    detalle.Id_producto,
+                    detalle.Producto?.Id_categoria,
+                    idsMetodosPago,
+                    esPagoUnico,
+                    descuentosCache,
+                    categoriasCache);
+
+                if (descuentoAplicable != null)
+                {
+                    var descuentoMonto = subtotalDetalle * descuentoAplicable.Valor / 100;
+                    var descuentoEntity = VentaDetalleDescuento.PorPorcentaje(
+                        descuentoAplicable.Valor, subtotalDetalle, detalle.Id, descuentoAplicable.Nombre);
+                    detalle.AgregarDescuento(descuentoEntity);
+                    totalDescuentoMetodoPago += descuentoMonto;
+                }
+            }
+
+            // ── REGLA B: descuento total-venta (solo si no hubo per-item) ──
+            if (totalDescuentoMetodoPago == 0 && esPagoUnico && idEmpresa > 0)
+            {
+                var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
+                    idEmpresa, idsMetodosPago[0], descuentosCache);
+                if (descuentoTotalVenta != null)
+                {
+                    var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
+                    var monto = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                    totalDescuentoMetodoPago += monto;
+                }
+            }
+
+            venta.DescuentoMetodoPago = totalDescuentoMetodoPago;
+            venta.Id_metodoPagoDescuento = totalDescuentoMetodoPago > 0 && esPagoUnico ? idsMetodosPago[0] : null;
+            venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - totalDescuentoMetodoPago;
         }
 
         ///         /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).

@@ -187,6 +187,10 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerPorIdAsync(1))
                 .ReturnsAsync(producto);
 
+            _mockProductoRepo
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ProdEntity, bool>>>()))
+                .ReturnsAsync(new List<ProdEntity> { producto });
+
             _mockVentaRepo
                 .Setup(r => r.AgregarAsync(It.IsAny<Venta>()))
                 .Returns<Venta>(v => Task.FromResult(v));
@@ -251,6 +255,10 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerPorIdAsync(1))
                 .ReturnsAsync(producto);
 
+            _mockProductoRepo
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ProdEntity, bool>>>()))
+                .ReturnsAsync(new List<ProdEntity> { producto });
+
             _mockVentaRepo
                 .Setup(r => r.AgregarAsync(It.IsAny<Venta>()))
                 .Returns<Venta>(v => Task.FromResult(v));
@@ -310,6 +318,10 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerPorIdAsync(1))
                 .ReturnsAsync(producto);
 
+            _mockProductoRepo
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ProdEntity, bool>>>()))
+                .ReturnsAsync(new List<ProdEntity> { producto });
+
             var dto = new VentaCrearDto
             {
                 IdSucursal = 1,
@@ -333,6 +345,10 @@ namespace GestionComercial.Tests.Servicios
             _mockProductoRepo
                 .Setup(r => r.ObtenerPorIdAsync(999))
                 .ReturnsAsync((ProdEntity?)null);
+
+            _mockProductoRepo
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ProdEntity, bool>>>()))
+                .ReturnsAsync(new List<ProdEntity>());
 
             var dto = new VentaCrearDto
             {

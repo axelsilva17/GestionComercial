@@ -41,6 +41,10 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerPorIdAsync(1))
                 .ReturnsAsync(producto);
 
+            _mockProductoRepo
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Producto, bool>>>()))
+                .ReturnsAsync(new List<Producto> { producto });
+
             _mockCompraRepo
                 .Setup(r => r.AgregarAsync(It.IsAny<GestionComercial.Dominio.Entidades.Compras.Compra>()))
                 .Returns<GestionComercial.Dominio.Entidades.Compras.Compra>(c => Task.FromResult(c));
@@ -85,6 +89,10 @@ namespace GestionComercial.Tests.Servicios
             _mockProductoRepo
                 .Setup(r => r.ObtenerPorIdAsync(1))
                 .ReturnsAsync(producto);
+
+            _mockProductoRepo
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Producto, bool>>>()))
+                .ReturnsAsync(new List<Producto> { producto });
 
             _mockCompraRepo
                 .Setup(r => r.AgregarAsync(It.IsAny<GestionComercial.Dominio.Entidades.Compras.Compra>()))
