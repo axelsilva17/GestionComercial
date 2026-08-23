@@ -93,23 +93,23 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // F2 expande Tarjeta
+            // F2 abre modal de Tarjeta
             vm.HandleKeyDown(Key.F2, ModifierKeys.None);
-            vm.EsNivelRaiz.Should().BeFalse();
-            vm.NivelActual!.Nombre.Should().Be("Tarjeta");
+            vm.MostrarModalTarjeta.Should().BeTrue();
 
-            // Seleccionar Débito
-            var nodoDebito = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Débito");
+            // Seleccionar Débito en el modal
+            var nodoDebito = vm.OpcionesTarjeta.FirstOrDefault(n => n.Nombre == "Débito");
             nodoDebito.Should().NotBeNull();
-            vm.SeleccionarNodo(nodoDebito!);
+            vm.SeleccionarMetodoModal(nodoDebito!);
 
-            // Debería mostrar tarjetas débito
-            vm.NodosVisibles.Should().HaveCount(2);
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Mastercard Débito");
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Visa Débito");
+            // Debería mostrar tarjetas débito en el modal
+            vm.OpcionesTarjeta.Should().HaveCount(2);
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Mastercard Débito");
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Visa Débito");
 
             // Seleccionar primera tarjeta
-            vm.SeleccionarNodo(vm.NodosVisibles.First());
+            vm.SeleccionarMetodoModal(vm.OpcionesTarjeta.First());
+            vm.MostrarModalTarjeta.Should().BeFalse();
             vm.Pagos.Should().HaveCount(1);
         }
 
@@ -124,27 +124,28 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // F2 expande Tarjeta
+            // F2 abre modal de Tarjeta
             vm.HandleKeyDown(Key.F2, ModifierKeys.None);
-            vm.EsNivelRaiz.Should().BeFalse();
+            vm.MostrarModalTarjeta.Should().BeTrue();
 
-            // Seleccionar Crédito
-            var nodoCredito = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Crédito");
+            // Seleccionar Crédito en el modal
+            var nodoCredito = vm.OpcionesTarjeta.FirstOrDefault(n => n.Nombre == "Crédito");
             nodoCredito.Should().NotBeNull();
-            vm.SeleccionarNodo(nodoCredito!);
+            vm.SeleccionarMetodoModal(nodoCredito!);
 
-            // Debería mostrar tarjetas crédito
-            vm.NodosVisibles.Should().HaveCount(2);
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Naranja");
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Mastercard Crédito");
+            // Debería mostrar tarjetas crédito en el modal
+            vm.OpcionesTarjeta.Should().HaveCount(2);
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Naranja");
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Mastercard Crédito");
 
             // Seleccionar primera tarjeta
-            vm.SeleccionarNodo(vm.NodosVisibles.First());
+            vm.SeleccionarMetodoModal(vm.OpcionesTarjeta.First());
+            vm.MostrarModalTarjeta.Should().BeFalse();
             vm.Pagos.Should().HaveCount(1);
         }
 
         [Fact]
-        public async Task AgregarDebito_SinMetodos_NoExpande()
+        public async Task AgregarDebito_SinMetodos_MuestraSoloCredito()
         {
             var metodos = new List<MetodoPago>
             {
@@ -153,19 +154,18 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // F2 expande Tarjeta (aunque solo tenga Crédito)
+            // F2 abre modal de Tarjeta
             vm.HandleKeyDown(Key.F2, ModifierKeys.None);
-            vm.EsNivelRaiz.Should().BeFalse();
-            vm.NivelActual!.Nombre.Should().Be("Tarjeta");
+            vm.MostrarModalTarjeta.Should().BeTrue();
 
-            // No debería tener Débito
-            vm.NodosVisibles.Should().HaveCount(1);
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Crédito");
-            vm.NodosVisibles.Should().NotContain(n => n.Nombre == "Débito");
+            // Solo debería tener Crédito (no Débito)
+            vm.OpcionesTarjeta.Should().HaveCount(1);
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Crédito");
+            vm.OpcionesTarjeta.Should().NotContain(n => n.Nombre == "Débito");
         }
 
         [Fact]
-        public async Task AgregarCredito_SinMetodos_NoExpande()
+        public async Task AgregarCredito_SinMetodos_MuestraSoloDebito()
         {
             var metodos = new List<MetodoPago>
             {
@@ -174,14 +174,14 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // F2 expande Tarjeta (aunque solo tenga Débito)
+            // F2 abre modal de Tarjeta
             vm.HandleKeyDown(Key.F2, ModifierKeys.None);
-            vm.EsNivelRaiz.Should().BeFalse();
+            vm.MostrarModalTarjeta.Should().BeTrue();
 
-            // No debería tener Crédito
-            vm.NodosVisibles.Should().HaveCount(1);
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Débito");
-            vm.NodosVisibles.Should().NotContain(n => n.Nombre == "Crédito");
+            // Solo debería tener Débito (no Crédito)
+            vm.OpcionesTarjeta.Should().HaveCount(1);
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Débito");
+            vm.OpcionesTarjeta.Should().NotContain(n => n.Nombre == "Crédito");
         }
 
         [Fact]
@@ -440,7 +440,7 @@ namespace GestionComercial.Tests.UI
         }
 
         [Fact]
-        public async Task SeleccionarNodo_NodoNoHoja_ExpandeNivel()
+        public async Task SeleccionarNodo_NodoNoHoja_AbreModal()
         {
             var metodos = new List<MetodoPago>
             {
@@ -451,23 +451,21 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // Nodo Tarjeta no es hoja
             var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
             nodoTarjeta.Should().NotBeNull();
             nodoTarjeta!.EsHoja.Should().BeFalse();
-            nodoTarjeta.Hijos.Should().HaveCount(2); // Débito y Crédito
 
             vm.SeleccionarNodo(nodoTarjeta);
 
-            // Ahora debería mostrar Débito y Crédito
-            vm.NivelActual.Should().Be(nodoTarjeta);
-            vm.NodosVisibles.Should().HaveCount(2);
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Débito");
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Crédito");
+            // Tarjeta abre modal en vez de navegar
+            vm.MostrarModalTarjeta.Should().BeTrue();
+            vm.OpcionesTarjeta.Should().HaveCount(2);
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Débito");
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Crédito");
         }
 
         [Fact]
-        public async Task Volver_RetrocedeUnNivel()
+        public async Task CerrarModalTarjeta_Cierra()
         {
             var metodos = new List<MetodoPago>
             {
@@ -477,20 +475,16 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // Navegar a Tarjeta
             var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
             vm.SeleccionarNodo(nodoTarjeta!);
-            vm.NivelActual.Should().Be(nodoTarjeta);
+            vm.MostrarModalTarjeta.Should().BeTrue();
 
-            // Volver
-            vm.Volver();
-            vm.NivelActual.Should().Be(nodoTarjeta!.Padre);
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Efectivo");
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Tarjeta");
+            vm.CerrarModal();
+            vm.MostrarModalTarjeta.Should().BeFalse();
         }
 
         [Fact]
-        public async Task Breadcrumb_MuestraRutaCorrecta()
+        public async Task Breadcrumb_MuestraRaizInicial()
         {
             var metodos = new List<MetodoPago>
             {
@@ -503,15 +497,10 @@ namespace GestionComercial.Tests.UI
             // En raíz
             vm.Breadcrumb.Should().Be("Raíz");
 
-            // Navegar a Tarjeta
+            // Tarjeta abre modal, no cambia breadcrumb
             var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
             vm.SeleccionarNodo(nodoTarjeta!);
-            vm.Breadcrumb.Should().Be("Raíz → Tarjeta");
-
-            // Navegar a Débito
-            var nodoDebito = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Débito");
-            vm.SeleccionarNodo(nodoDebito!);
-            vm.Breadcrumb.Should().Be("Raíz → Tarjeta → Débito");
+            vm.Breadcrumb.Should().Be("Raíz");
         }
 
         [Fact]
@@ -528,7 +517,7 @@ namespace GestionComercial.Tests.UI
         }
 
         [Fact]
-        public async Task EsNivelRaiz_FalseDespuesDeExpandir()
+        public async Task ModalTarjeta_SeAbreAlSeleccionar()
         {
             var metodos = new List<MetodoPago>
             {
@@ -541,11 +530,12 @@ namespace GestionComercial.Tests.UI
             var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
             vm.SeleccionarNodo(nodoTarjeta!);
 
-            vm.EsNivelRaiz.Should().BeFalse();
+            vm.MostrarModalTarjeta.Should().BeTrue();
+            vm.EsNivelRaiz.Should().BeTrue(); // No navega, abre modal
         }
 
         [Fact]
-        public async Task HandleKeyDown_EscapeEnNivelNoRaiz_Vuelve()
+        public async Task HandleKeyDown_EscapeCierraModal()
         {
             var metodos = new List<MetodoPago>
             {
@@ -555,14 +545,14 @@ namespace GestionComercial.Tests.UI
 
             var vm = await CrearVMConMetodosAsync(metodos);
 
-            // Navegar a Tarjeta
+            // Abrir modal de Tarjeta
             var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
             vm.SeleccionarNodo(nodoTarjeta!);
-            vm.EsNivelRaiz.Should().BeFalse();
+            vm.MostrarModalTarjeta.Should().BeTrue();
 
-            // Escape debería volver
+            // Escape cierra modal
             vm.HandleKeyDown(Key.Escape, ModifierKeys.None);
-            vm.EsNivelRaiz.Should().BeTrue();
+            vm.MostrarModalTarjeta.Should().BeFalse();
         }
 
         [Fact]
@@ -582,7 +572,7 @@ namespace GestionComercial.Tests.UI
         }
 
         [Fact]
-        public async Task HandleKeyDown_F2EnNivelRaiz_ExpandeTarjeta()
+        public async Task HandleKeyDown_F2EnNivelRaiz_AbreModalTarjeta()
         {
             var metodos = new List<MetodoPago>
             {
@@ -594,10 +584,9 @@ namespace GestionComercial.Tests.UI
 
             vm.HandleKeyDown(Key.F2, ModifierKeys.None);
 
-            // Debería expandir Tarjeta
-            vm.EsNivelRaiz.Should().BeFalse();
-            vm.NivelActual!.Nombre.Should().Be("Tarjeta");
-            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Débito");
+            // F2 abre modal de Tarjeta
+            vm.MostrarModalTarjeta.Should().BeTrue();
+            vm.OpcionesTarjeta.Should().Contain(n => n.Nombre == "Débito");
         }
     }
 }

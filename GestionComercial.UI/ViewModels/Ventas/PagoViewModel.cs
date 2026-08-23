@@ -66,7 +66,30 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public bool EsNivelRaiz => NivelActual == null || NivelActual == _nodoRaiz;
 
-        public ICommand VolverCommand { get; }
+        // ── Modal Tarjeta ─────────────────────────────────────────────────────
+        private bool _mostrarModalTarjeta;
+        public bool MostrarModalTarjeta
+        {
+            get => _mostrarModalTarjeta;
+            set { _mostrarModalTarjeta = value; NotifyOfPropertyChange(() => MostrarModalTarjeta); }
+        }
+
+        private ObservableCollection<PagoNodoJerarquico> _opcionesTarjeta = new();
+        public ObservableCollection<PagoNodoJerarquico> OpcionesTarjeta
+        {
+            get => _opcionesTarjeta;
+            set { _opcionesTarjeta = value; NotifyOfPropertyChange(() => OpcionesTarjeta); }
+        }
+
+        private string _tituloModalTarjeta = "Seleccionar tipo de tarjeta";
+        public string TituloModalTarjeta
+        {
+            get => _tituloModalTarjeta;
+            set { _tituloModalTarjeta = value; NotifyOfPropertyChange(() => TituloModalTarjeta); }
+        }
+
+        private PagoNodoJerarquico? _padreModalActual;
+
 
         public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion, IDescuentoConfiguracionServicio descuentoConfiguracionServicio)
         {
@@ -75,7 +98,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
             _sesion        = sesion;
             _descuentoConfiguracionServicio = descuentoConfiguracionServicio;
             Titulo         = "Cobrar Venta";
-            VolverCommand  = new RelayCommand(() => Volver());
         }
 
         ///         /// Maneja atajos de teclado globales en la vista de pago.
@@ -103,7 +125,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     if (PuedeCobrar) _ = Confirmar();
                     break;
                 case Key.Escape:
-                    if (!EsNivelRaiz)
+                    if (MostrarModalTarjeta)
+                        CerrarModal();
+                    else if (!EsNivelRaiz)
                         Volver();
                     else
                         _ = Cancelar();
@@ -468,9 +492,52 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
             else if (nodo.Hijos.Any())
             {
-                NivelActual = nodo;
-                NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(nodo.Hijos);
+                // Si es Tarjeta → abrir modal en vez de navegar
+                if (nodo.Nombre == "Tarjeta")
+                {
+                    AbrirModalTarjeta(nodo);
+                }
+                else
+                {
+                    NivelActual = nodo;
+                    NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(nodo.Hijos);
+                }
             }
+        }
+
+        private void AbrirModalTarjeta(PagoNodoJerarquico nodoTarjeta)
+        {
+            _padreModalActual = nodoTarjeta;
+            OpcionesTarjeta = new ObservableCollection<PagoNodoJerarquico>(nodoTarjeta.Hijos);
+            TituloModalTarjeta = "Seleccionar tipo de tarjeta";
+            MostrarModalTarjeta = true;
+        }
+
+        public void SeleccionarMetodoModal(PagoNodoJerarquico nodo)
+        {
+            if (nodo == null) return;
+
+            if (nodo.EsHoja && nodo.MetodoPagoId.HasValue)
+            {
+                // Es una tarjeta específica → seleccionar y cerrar
+                var metodo = MetodosPago.FirstOrDefault(m => m.IdMetodoPago == nodo.MetodoPagoId);
+                if (metodo != null)
+                {
+                    MostrarModalTarjeta = false;
+                    SeleccionarOCompletar(metodo);
+                }
+            }
+            else if (nodo.Hijos.Any())
+            {
+                // Es Débito/Crédito → mostrar tarjetas de ese tipo
+                OpcionesTarjeta = new ObservableCollection<PagoNodoJerarquico>(nodo.Hijos);
+                TituloModalTarjeta = $"Tarjetas {nodo.Nombre}";
+            }
+        }
+
+        public void CerrarModal()
+        {
+            MostrarModalTarjeta = false;
         }
 
         public void Volver()

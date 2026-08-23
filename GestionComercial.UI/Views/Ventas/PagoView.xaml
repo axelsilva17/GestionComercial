@@ -171,8 +171,7 @@
                            Margin="0,0,0,14"/>
 
                 <!-- Botón Volver (visible cuando no está en raíz) -->
-                <Button x:Name="VolverCommand"
-                        Visibility="{Binding EsNivelRaiz, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                <Button Visibility="{Binding EsNivelRaiz, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
                         Margin="0,0,0,12"
                         Height="36"
                         Padding="12,0"
@@ -180,7 +179,8 @@
                         Foreground="{DynamicResource TextPrimaryBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
-                        Cursor="Hand">
+                        Cursor="Hand"
+                        cal:Message.Attach="[Event Click] = [Action Volver]">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="←" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Volver" VerticalAlignment="Center" FontSize="12"/>
@@ -190,31 +190,31 @@
                 </Button>
 
                 <!-- Selector jerárquico de métodos de pago -->
-                <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding NodosVisibles}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Margin="0,0,0,8"
-                                        Height="48"
-                                        Padding="12,14"
-                                        Background="{DynamicResource SurfaceBrush}"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1"
-                                        Cursor="Hand"
-                                        cal:Message.Attach="[Event Click] = [Action SeleccionarNodo($dataContext)]">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Icono}" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                        <TextBlock Text="{Binding Nombre}" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"/>
-                                        <TextBlock Text=" ▸" VerticalAlignment="Center" FontSize="12"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                   Visibility="{Binding EsHoja, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"/>
-                                    </StackPanel>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <ItemsControl ItemsSource="{Binding NodosVisibles}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Margin="4"
+                                    Width="140" Height="48"
+                                    Padding="12,14"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    Cursor="Hand"
+                                    cal:Message.Attach="[Event Click] = [Action SeleccionarNodo($dataContext)]">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Icono}" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding Nombre}" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
                 <!-- Monto a ingresar -->
                 <Border Background="{DynamicResource SurfaceBrush}"
@@ -450,6 +450,51 @@
                 </Button.Style>
             </Button>
         </StackPanel>
+
+        <!-- Popup Modal Tarjeta -->
+        <Grid Visibility="{Binding MostrarModalTarjeta, Converter={StaticResource BoolToVisibility}}"
+              Panel.ZIndex="90" Background="#80000000"
+              MouseLeftButtonDown="CerrarModalTarjeta_Click">
+            <Border Background="{DynamicResource CardBrush}"
+                    CornerRadius="16" Padding="28,24"
+                    MaxWidth="400" MinWidth="280"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="{Binding TituloModalTarjeta}" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                    <ItemsControl ItemsSource="{Binding OpcionesTarjeta}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Margin="4" Width="120" Height="44"
+                                        Padding="12,10"
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        Cursor="Hand"
+                                        cal:Message.Attach="[Event Click] = [Action SeleccionarMetodoModal($dataContext)]">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Icono}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="{Binding Nombre}" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="Cancelar" Margin="0,16,0,0" Height="32"
+                            Padding="16,0" HorizontalAlignment="Right"
+                            Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}"
+                            BorderThickness="0" Cursor="Hand"
+                            cal:Message.Attach="[Event Click] = [Action CerrarModal]"/>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- Popup Historial (shared HistorialControl) -->
         <Grid x:Name="HistorialPopup" Visibility="{Binding MostrarHistorial, Converter={StaticResource BoolToVisibility}}"
