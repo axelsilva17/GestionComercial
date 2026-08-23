@@ -203,20 +203,18 @@ namespace GestionComercial.UI.ViewModels.Main
 
         public async Task CerrarSesion()
         {
-            // Verificar si la caja está abierta
+            // Verificar si la caja está abierta — cierre obligatorio
             if (_cajaServicio != null && _sesion != null)
             {
                 var cajaAbierta = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
                 if (cajaAbierta != null)
                 {
-                    var resultado = MessageBox.Show(
-                        "⚠️ La caja está abierta.\n\n¿Desea cerrar sesión de todas formas?\n\nSe recomienda cerrar la caja antes de salir.",
+                    MessageBox.Show(
+                        "⚠️ No puede cerrar sesión mientras la caja esté abierta.\n\nPor favor, cierre la caja primero.",
                         "Caja abierta",
-                        MessageBoxButton.YesNo,
+                        MessageBoxButton.OK,
                         MessageBoxImage.Warning);
-
-                    if (resultado != MessageBoxResult.Yes)
-                        return;
+                    return;
                 }
             }
 
@@ -226,8 +224,8 @@ namespace GestionComercial.UI.ViewModels.Main
             TryCloseAsync();
         }
 
-        /// Verifica si se puede cerrar la ventana. Retorna true si no hay caja abierta,
-        /// o false y muestra aviso si la caja está abierta.
+        /// Verifica si se puede cerrar la ventana.
+        /// Retorna true solo si la caja está cerrada; si está abierta, muestra aviso y retorna false.
         public async Task<bool> VerificarCajaAntesDeCerrarAsync()
         {
             if (_cajaServicio == null || _sesion == null)
@@ -236,13 +234,12 @@ namespace GestionComercial.UI.ViewModels.Main
             var cajaAbierta = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
             if (cajaAbierta != null)
             {
-                var resultado = MessageBox.Show(
-                    "⚠️ La caja está abierta.\n\n¿Desea cerrar el sistema de todas formas?\n\nSe recomienda cerrar la caja antes de salir.",
+                MessageBox.Show(
+                    "⚠️ No puede cerrar el sistema mientras la caja esté abierta.\n\nPor favor, cierre la caja primero.",
                     "Caja abierta",
-                    MessageBoxButton.YesNo,
+                    MessageBoxButton.OK,
                     MessageBoxImage.Warning);
-
-                return resultado == MessageBoxResult.Yes;
+                return false;
             }
             return true;
         }
