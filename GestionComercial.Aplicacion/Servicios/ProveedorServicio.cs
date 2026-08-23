@@ -9,7 +9,13 @@ namespace GestionComercial.Aplicacion.Servicios
     public class ProveedorServicio : IProveedorServicio
     {
         private readonly IUnitOfWork _uow;
-        public ProveedorServicio(IUnitOfWork uow) => _uow = uow;
+        private readonly SesionServicio? _sesion;
+
+        public ProveedorServicio(IUnitOfWork uow, SesionServicio? sesion = null)
+        {
+            _uow = uow;
+            _sesion = sesion;
+        }
 
         public async Task<IEnumerable<Proveedor>> ObtenerTodosAsync(int idEmpresa)
             => await _uow.Proveedores.ObtenerPorEmpresaAsync(idEmpresa);
@@ -19,6 +25,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<Proveedor> CrearAsync(Proveedor proveedor)
         {
+            if (_sesion != null && !_sesion.HasPermission("Compras.Crear"))
+                throw new InvalidOperationException("No tenés permiso para crear proveedores.");
+
             // ── Crear con factory method (DDD) ──
             var nuevo = Proveedor.Crear(
                 nombre: proveedor.Nombre,
@@ -35,6 +44,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task ActualizarAsync(Proveedor proveedor)
         {
+            if (_sesion != null && !_sesion.HasPermission("Compras.Crear"))
+                throw new InvalidOperationException("No tenés permiso para editar proveedores.");
+
             // ── Usar método de dominio (DDD) ──
             proveedor.Actualizar(
                 nombre: proveedor.Nombre,
@@ -48,6 +60,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task DesactivarAsync(int id)
         {
+            if (_sesion != null && !_sesion.HasPermission("Compras.Crear"))
+                throw new InvalidOperationException("No tenés permiso para desactivar proveedores.");
+
             var proveedor = await _uow.Proveedores.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Proveedor {id} no encontrado");
             

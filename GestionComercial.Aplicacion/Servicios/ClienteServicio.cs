@@ -8,7 +8,13 @@ namespace GestionComercial.Aplicacion.Servicios
     public class ClienteServicio : IClienteServicio
     {
         private readonly IUnitOfWork _uow;
-        public ClienteServicio(IUnitOfWork uow) => _uow = uow;
+        private readonly SesionServicio? _sesion;
+
+        public ClienteServicio(IUnitOfWork uow, SesionServicio? sesion = null)
+        {
+            _uow = uow;
+            _sesion = sesion;
+        }
 
         public async Task<IEnumerable<ClienteDto>> ObtenerTodosAsync(int idEmpresa)
         {
@@ -24,6 +30,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<ClienteDto> CrearAsync(ClienteCrearDto dto)
         {
+            if (_sesion != null && !_sesion.HasPermission("Clientes.Crear"))
+                throw new InvalidOperationException("No tenés permiso para crear clientes.");
+
             var cliente = new Cliente
             {
                 Nombre     = dto.Nombre,
@@ -40,6 +49,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task ActualizarAsync(ClienteActualizarDto dto)
         {
+            if (_sesion != null && !_sesion.HasPermission("Clientes.Crear"))
+                throw new InvalidOperationException("No tenés permiso para editar clientes.");
+
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(dto.Id)
                 ?? throw new KeyNotFoundException($"Cliente {dto.Id} no encontrado");
             cliente.Nombre    = dto.Nombre;
@@ -56,6 +68,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task DesactivarAsync(int id)
         {
+            if (_sesion != null && !_sesion.HasPermission("Clientes.Crear"))
+                throw new InvalidOperationException("No tenés permiso para desactivar clientes.");
+
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Cliente {id} no encontrado");
             // Soft delete: marcar como inactivo

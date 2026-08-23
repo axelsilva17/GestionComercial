@@ -9,10 +9,12 @@ namespace GestionComercial.Aplicacion.Servicios
     public class DescuentoConfiguracionServicio : IDescuentoConfiguracionServicio
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly SesionServicio? _sesion;
 
-        public DescuentoConfiguracionServicio(IUnitOfWork unitOfWork)
+        public DescuentoConfiguracionServicio(IUnitOfWork unitOfWork, SesionServicio? sesion = null)
         {
             _unitOfWork = unitOfWork;
+            _sesion = sesion;
         }
 
         public async Task<DescuentoConfiguracion> CrearAsync(
@@ -22,6 +24,9 @@ namespace GestionComercial.Aplicacion.Servicios
             DateTime? fechaDesde, DateTime? fechaHasta,
             AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
         {
+            if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
+                throw new InvalidOperationException("No tenés permiso para crear descuentos.");
+
             var descuento = DescuentoConfiguracion.Crear(
                 nombre, valor, idEmpresa, idProducto, idCategoria,
                 aplicaCualquierMetodoPago, idsMetodosPago, fechaDesde, fechaHasta, alcance);
@@ -53,6 +58,9 @@ namespace GestionComercial.Aplicacion.Servicios
             DateTime? fechaDesde, DateTime? fechaHasta,
             AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
         {
+            if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
+                throw new InvalidOperationException("No tenés permiso para editar descuentos.");
+
             if (alcance == AlcanceDescuentoEnum.MetodoPago)
             {
                 if (aplicaCualquierMetodoPago)
@@ -84,6 +92,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task EliminarAsync(int id)
         {
+            if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
+                throw new InvalidOperationException("No tenés permiso para eliminar descuentos.");
+
             var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
