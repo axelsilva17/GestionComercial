@@ -78,6 +78,17 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
         }
 
+        public async Task ActualizarDatosAsync(int idUsuario, string nombre, string apellido)
+        {
+            var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario)
+                ?? throw new KeyNotFoundException($"Usuario {idUsuario} no encontrado");
+
+            usuario.Nombre = nombre;
+            usuario.Apellido = apellido;
+            _uow.Usuarios.Actualizar(usuario);
+            await _uow.GuardarCambiosAsync();
+        }
+
         private static UsuarioDto MapearDto(Usuario u) => new()
         {
             IdUsuario = u.Id,
