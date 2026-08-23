@@ -1,3 +1,4 @@
+using FluentValidation;
 using GestionComercial.Aplicacion.DTOs.Clientes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Cliente;
@@ -9,11 +10,19 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         private readonly IUnitOfWork _uow;
         private readonly SesionServicio? _sesion;
+        private readonly IValidator<ClienteCrearDto>? _crearValidator;
+        private readonly IValidator<ClienteActualizarDto>? _actualizarValidator;
 
-        public ClienteServicio(IUnitOfWork uow, SesionServicio? sesion = null)
+        public ClienteServicio(
+            IUnitOfWork uow,
+            SesionServicio? sesion = null,
+            IValidator<ClienteCrearDto>? crearValidator = null,
+            IValidator<ClienteActualizarDto>? actualizarValidator = null)
         {
             _uow = uow;
             _sesion = sesion;
+            _crearValidator = crearValidator;
+            _actualizarValidator = actualizarValidator;
         }
 
         public async Task<IEnumerable<ClienteDto>> ObtenerTodosAsync(int idEmpresa)
@@ -33,6 +42,13 @@ namespace GestionComercial.Aplicacion.Servicios
             if (_sesion != null && !_sesion.HasPermission("Clientes.Crear"))
                 throw new InvalidOperationException("No tenés permiso para crear clientes.");
 
+            if (_crearValidator != null)
+            {
+                var result = await _crearValidator.ValidateAsync(dto);
+                if (!result.IsValid)
+                    throw new ValidationException(result.Errors);
+            }
+
             var cliente = new Cliente
             {
                 Nombre     = dto.Nombre,
@@ -51,6 +67,13 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             if (_sesion != null && !_sesion.HasPermission("Clientes.Crear"))
                 throw new InvalidOperationException("No tenés permiso para editar clientes.");
+
+            if (_actualizarValidator != null)
+            {
+                var result = await _actualizarValidator.ValidateAsync(dto);
+                if (!result.IsValid)
+                    throw new ValidationException(result.Errors);
+            }
 
             var cliente = await _uow.Clientes.ObtenerPorIdAsync(dto.Id)
                 ?? throw new KeyNotFoundException($"Cliente {dto.Id} no encontrado");

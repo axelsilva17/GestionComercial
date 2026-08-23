@@ -21,5 +21,6 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<List<Producto>> ObtenerConCodigoBarraPorEmpresaAsync(int idEmpresa);
         Task<int> ContarProductosConStockBajoAsync(int idEmpresa);
         Task<List<Producto>> ObtenerConStockBajoConLimiteAsync(int idEmpresa, int limite);
+        Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos);
     }
 }

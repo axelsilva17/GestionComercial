@@ -16,6 +16,8 @@ public interface IProductoServicio
         Task<(int Nuevos, int Actualizados)> AjustePreciosPorProveedorAsync(int idProveedor, decimal porcentaje);
         Task<ImportResult> ImportarMasivoAsync(IEnumerable<ProductoImportarDto> dtos, bool actualizarExistentes, IProgress<(int current, int total, string message)>? progreso = null);
         Task                                  DesactivarAsync(int id);
+        Task                                  ActualizarPreciosLoteAsync(IEnumerable<ProductoActualizarDto> dtos);
+        Task<IEnumerable<ProductoListadoDto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos);
 
         // Reference data
         Task<IEnumerable<CategoriaItemDto>>   ObtenerCategoriasAsync(int idEmpresa);

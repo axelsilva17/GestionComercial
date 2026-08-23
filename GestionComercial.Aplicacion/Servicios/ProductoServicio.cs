@@ -386,6 +386,51 @@ public class ProductoServicio : IProductoServicio
             await _uow.GuardarCambiosAsync();
         }
 
+        public async Task ActualizarPreciosLoteAsync(IEnumerable<ProductoActualizarDto> dtos)
+        {
+            var dtoList = dtos.ToList();
+            var ids = dtoList.Select(d => d.IdProducto).Distinct().ToList();
+            var productos = await _uow.Productos.BuscarAsync(p => ids.Contains(p.Id));
+            var productosDict = productos.ToDictionary(p => p.Id);
+
+            foreach (var dto in dtoList)
+            {
+                if (!productosDict.TryGetValue(dto.IdProducto, out var producto))
+                    continue;
+
+                if (_sesion != null && !_sesion.HasPermission("Productos.Editar"))
+                    throw new ValidationException("No tenés permiso para editar productos.");
+
+                if (dto.PrecioVentaActual > 0)
+                    producto.PrecioVentaActual = dto.PrecioVentaActual;
+                if (dto.PrecioCostoActual > 0)
+                    producto.PrecioCostoActual = dto.PrecioCostoActual;
+
+                _uow.Productos.Actualizar(producto);
+            }
+
+            await _uow.GuardarCambiosAsync();
+        }
+
+        public async Task<IEnumerable<ProductoListadoDto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos)
+        {
+            var productos = await _uow.Productos.BuscarProductosAsync(idEmpresa, texto, idCategoria, soloActivos);
+            return productos.Select(p => new ProductoListadoDto
+            {
+                IdProducto = p.Id,
+                Nombre = p.Nombre,
+                CodigoBarra = p.CodigoBarra,
+                IdCategoria = p.Id_categoria,
+                PrecioVentaActual = p.PrecioVentaActual,
+                PrecioCostoActual = p.PrecioCostoActual,
+                StockActual = (int)p.StockActual,
+                StockMinimo = (int)p.StockMinimo,
+                Activo = p.Activo,
+                CategoriaNombre = p.Categoria?.Nombre ?? "",
+                UnidadMedida = ""
+            });
+        }
+
         public async Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa)
         {
             var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
