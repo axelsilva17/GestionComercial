@@ -1,5 +1,6 @@
 using FluentValidation;
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.Importacion;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Proveedores;
@@ -137,26 +138,28 @@ public class ProductoServicio : IProductoServicio
             return (nuevo, false);
         }
 
-        ///         /// Importación masiva optimizada.
-        /// 1) Crea categorías nuevas primero para tener IDs válidos.
-        /// 2) Para cada producto: si el código de barra ya existe y actualizarExistentes = true,
-        ///    actualiza el producto existente; si no existe (o no se busca por barra), crea uno nuevo.
-        /// 3) Procesa en batches de 50 para no agotar memoria.
-        public async Task<(int Nuevos, int Actualizados, int Omitidos)> ImportarMasivoAsync(
+        /// Importación masiva con guardrails y commit parcial por lotes.
+        /// Procesa en lotes de TAMANIO_LOTE: ejecuta guardrails, filtra válidos,
+        /// bulk insert, commit independiente. Un lote fallido no revierte anteriores.
+        public async Task<ImportResult> ImportarMasivoAsync(
             IEnumerable<ProductoImportarDto> dtos,
             bool actualizarExistentes,
             IProgress<(int current, int total, string message)>? progreso = null)
         {
+            const int TAMANIO_LOTE = 50;
+            var resultado = new ImportResult();
             var productosAImportar = dtos.ToList();
             var total = productosAImportar.Count;
 
             var idEmpresa = productosAImportar.FirstOrDefault()?.IdEmpresa ?? 0;
             if (idEmpresa <= 0)
-                return (0, 0, total);
+            {
+                resultado.Errors.AddRange(productosAImportar.Select((_, i) =>
+                    new ImportError(i + 2, "IdEmpresa", "Empresa inválida", GuardSeverity.Error)));
+                return resultado;
+            }
 
-            // ── 1. Cargar datos existentes (UNA SOLA CONSULTA) ──────────────────
-            // ✅ Optimización #1: Cargar todos los productos en un Dictionary,
-            //    eliminando el N+1 de ObtenerPorCodigoBarraAsync por cada DTO.
+            // Cargar datos existentes (UNA SOLA CONSULTA)
             var productosPorCodigo = (await _uow.Productos.ObtenerConCodigoBarraPorEmpresaAsync(idEmpresa))
                 .ToDictionary(p => p.CodigoBarra!, StringComparer.OrdinalIgnoreCase);
 
@@ -164,16 +167,7 @@ public class ProductoServicio : IProductoServicio
                 .GroupBy(c => c.Nombre.ToLower().Trim(), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
 
-            // ── 2. Ejecutar TODO dentro de una transacción ─────────────────────
-            //    Si falla en cualquier punto (crear categorías, procesar, guardar),
-            //    TODO se revierte — no quedan categorías huérfanas.
-            var mapCategorias = categoriasExistentes;
-            var resultado = (Nuevos: 0, Actualizados: 0, Omitidos: 0);
-
-            // ⚠️ Pre-validar y normalizar: trim + uppercase en todos los códigos de barra
-            //    para evitar UNIQUE constraint por diferencias de espacios o mayúsculas.
-            //    CRÍTICO: códigos vacíos → null (no "") porque SQLite trata NULL como distinto
-            //    en UNIQUE constraints, pero "" como valor repetible viola el constraint.
+            // Normalizar datos
             foreach (var dto in productosAImportar)
             {
                 dto.CodigoBarra = string.IsNullOrWhiteSpace(dto.CodigoBarra)
@@ -183,40 +177,38 @@ public class ProductoServicio : IProductoServicio
                 dto.Categoria = dto.Categoria?.Trim() ?? string.Empty;
             }
 
-            // ⚠️ Reconstruir el diccionario con claves NORMALIZADAS (trim + upper)
-            //    porque los datos en DB pueden tener espacios extra o diferencias de mayúsculas.
+            // Reconstruir diccionario con claves normalizadas
             productosPorCodigo = productosPorCodigo
                 .GroupBy(p => p.Key.Trim().ToUpperInvariant())
                 .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
 
-            // ── 2a. PRE-VALIDACIÓN: clasificar TODOS los DTOs antes de la transacción ──
+            // Pre-clasificar
             var dtosNuevos = new List<ProductoImportarDto>();
             var dtosActualizar = new List<ProductoImportarDto>();
-            var dtosOmitir = new List<(ProductoImportarDto, string)>();
             var barcodesVistos = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var dto in productosAImportar)
             {
                 if (string.IsNullOrWhiteSpace(dto.Nombre) || dto.PrecioVentaActual <= 0)
                 {
-                    dtosOmitir.Add((dto, "datos inválidos"));
+                    resultado.Errors.Add(new ImportError(productosAImportar.IndexOf(dto) + 2, "General", "Datos inválidos", GuardSeverity.Error));
+                    resultado.Skipped++;
                     continue;
                 }
 
-                // Duplicado dentro del mismo archivo
                 if (!string.IsNullOrWhiteSpace(dto.CodigoBarra) && !barcodesVistos.Add(dto.CodigoBarra))
                 {
-                    dtosOmitir.Add((dto, "código duplicado en el archivo"));
+                    resultado.Errors.Add(new ImportError(productosAImportar.IndexOf(dto) + 2, "CodigoBarra", "Código duplicado en archivo", GuardSeverity.Skip));
+                    resultado.Skipped++;
                     continue;
                 }
 
-                // Ya existe en la DB
                 if (!string.IsNullOrWhiteSpace(dto.CodigoBarra)
                     && productosPorCodigo.TryGetValue(dto.CodigoBarra, out _))
                 {
                     if (!actualizarExistentes)
                     {
-                        dtosOmitir.Add((dto, "ya existe en BD y actualizar está desactivado"));
+                        resultado.Skipped++;
                         continue;
                     }
                     dtosActualizar.Add(dto);
@@ -226,105 +218,127 @@ public class ProductoServicio : IProductoServicio
                 dtosNuevos.Add(dto);
             }
 
-            // ── 2b. Ejecutar TODO dentro de una transacción ─────────────────────
-            var categoriasMap = new Dictionary<string, int>(mapCategorias, StringComparer.OrdinalIgnoreCase);
+            var categoriasMap = new Dictionary<string, int>(categoriasExistentes, StringComparer.OrdinalIgnoreCase);
 
-            await _uow.EjecutarEnTransaccionAsync(async () =>
+            // Procesar por lotes con commit independiente
+            var todosLosNuevos = dtosNuevos.ToList();
+            for (int offset = 0; offset < todosLosNuevos.Count; offset += TAMANIO_LOTE)
             {
-                // ── Categorías nuevas ──────────────────────────────────────────
-                var nuevasCategorias = dtosNuevos
-                    .Concat(dtosActualizar)
-                    .Select(d => d.Categoria)
-                    .Where(c => !string.IsNullOrWhiteSpace(c))
-                    .Select(c => c.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .Where(c => !categoriasMap.ContainsKey(c.ToLowerInvariant()))
-                    .ToList();
+                var lote = todosLosNuevos.Skip(offset).Take(TAMANIO_LOTE).ToList();
+                var loteExitoso = true;
 
-                foreach (var nombreCat in nuevasCategorias)
+                try
                 {
-                    await _uow.Categorias.AgregarAsync(new Categoria
+                    await _uow.EjecutarEnTransaccionAsync(async () =>
                     {
-                        Nombre = nombreCat,
-                        Id_empresa = idEmpresa,
-                        Activo = true,
+                        // Crear categorías nuevas del lote
+                        var nuevasCategorias = lote
+                            .Select(d => d.Categoria)
+                            .Where(c => !string.IsNullOrWhiteSpace(c))
+                            .Select(c => c.Trim())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .Where(c => !categoriasMap.ContainsKey(c.ToLowerInvariant()))
+                            .ToList();
+
+                        foreach (var nombreCat in nuevasCategorias)
+                        {
+                            await _uow.Categorias.AgregarAsync(new Categoria
+                            {
+                                Nombre = nombreCat,
+                                Id_empresa = idEmpresa,
+                                Activo = true,
+                            });
+                        }
+
+                        if (nuevasCategorias.Count > 0)
+                        {
+                            await _uow.GuardarCambiosAsync();
+                            var catsActualizadas = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+                            foreach (var c in catsActualizadas)
+                                categoriasMap[c.Nombre.ToLower().Trim()] = c.Id;
+                        }
+
+                        // Bulk insert del lote
+                        var batchEntidades = new List<Producto>();
+                        foreach (var dto in lote)
+                        {
+                            var idCat = dto.IdCategoria;
+                            if (!string.IsNullOrWhiteSpace(dto.Categoria)
+                                && categoriasMap.TryGetValue(dto.Categoria.ToLowerInvariant(), out int idCatM))
+                                idCat = idCatM;
+
+                            batchEntidades.Add(new Producto
+                            {
+                                Nombre = dto.Nombre,
+                                CodigoBarra = dto.CodigoBarra,
+                                PrecioVentaActual = dto.PrecioVentaActual,
+                                PrecioCostoActual = dto.PrecioCostoActual,
+                                StockActual = dto.StockActual,
+                                StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10,
+                                Id_empresa = dto.IdEmpresa,
+                                Id_categoria = idCat > 0 ? idCat : 1,
+                                Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1,
+                                Activo = true,
+                            });
+                        }
+
+                        await _uow.Productos.AgregarRangoAsync(batchEntidades);
+                        await _uow.GuardarCambiosAsync();
                     });
                 }
-
-                if (nuevasCategorias.Count > 0)
+                catch
                 {
-                    await _uow.GuardarCambiosAsync();
-                    var catsActualizadas = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
-                    foreach (var c in catsActualizadas)
-                        categoriasMap[c.Nombre.ToLower().Trim()] = c.Id;
+                    loteExitoso = false;
                 }
 
-                // ── Actualizar existentes ──────────────────────────────────────
-                foreach (var dto in dtosActualizar)
+                if (loteExitoso)
+                    resultado.Inserted += lote.Count;
+                else
                 {
-                    if (!productosPorCodigo.TryGetValue(dto.CodigoBarra, out var prod)) continue;
-
-                    var idCat = dto.IdCategoria;
-                    if (!string.IsNullOrWhiteSpace(dto.Categoria)
-                        && categoriasMap.TryGetValue(dto.Categoria.ToLowerInvariant(), out int idCatM))
-                        idCat = idCatM;
-
-                    prod.Nombre = dto.Nombre;
-                    prod.PrecioVentaActual = dto.PrecioVentaActual;
-                    prod.PrecioCostoActual = dto.PrecioCostoActual;
-                    prod.StockActual = dto.StockActual;
-                    prod.StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10;
-                    prod.Id_categoria = idCat;
-                    prod.Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1;
+                    resultado.Errors.AddRange(lote.Select((dto, idx) =>
+                        new ImportError(offset + idx + 2, "Lote", "Error al insertar lote", GuardSeverity.Error)));
+                    resultado.Skipped += lote.Count;
                 }
 
-                // ── Insertar nuevos en BATCHES de 50 ──────────────────────────
-                const int BATCH_SIZE = 50;
-                for (int offset = 0; offset < dtosNuevos.Count; offset += BATCH_SIZE)
-                {
-                    var batch = dtosNuevos.Skip(offset).Take(BATCH_SIZE).ToList();
-                    var batchEntidades = new List<Producto>();
+                var porcentaje = Math.Min(100, (int)(((offset + lote.Count) / (double)total) * 100));
+                progreso?.Report((offset + lote.Count, total, $"Procesando lote... {porcentaje}%"));
+            }
 
-                    foreach (var dto in batch)
+            // Actualizar existentes (fuera de lotes, cada uno independiente)
+            foreach (var dto in dtosActualizar)
+            {
+                try
+                {
+                    await _uow.EjecutarEnTransaccionAsync(async () =>
                     {
+                        if (!productosPorCodigo.TryGetValue(dto.CodigoBarra, out var prod)) return;
+
                         var idCat = dto.IdCategoria;
                         if (!string.IsNullOrWhiteSpace(dto.Categoria)
                             && categoriasMap.TryGetValue(dto.Categoria.ToLowerInvariant(), out int idCatM))
                             idCat = idCatM;
 
-                        batchEntidades.Add(new Producto
-                        {
-                            Nombre = dto.Nombre,
-                            CodigoBarra = dto.CodigoBarra,
-                            PrecioVentaActual = dto.PrecioVentaActual,
-                            PrecioCostoActual = dto.PrecioCostoActual,
-                            StockActual = dto.StockActual,
-                            StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10,
-                            Id_empresa = dto.IdEmpresa,
-                            Id_categoria = idCat > 0 ? idCat : 1,
-                            Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1,
-                            Activo = true,
-                        });
-                    }
-
-                    await _uow.Productos.AgregarRangoAsync(batchEntidades);
-                    await _uow.GuardarCambiosAsync();
-
-                    var porcentaje = (int)(((offset + batch.Count) / (double)dtosNuevos.Count) * 100);
-                    progreso?.Report((offset + batch.Count, dtosNuevos.Count, $"Insertando {porcentaje}%..."));
+                        prod.Nombre = dto.Nombre;
+                        prod.PrecioVentaActual = dto.PrecioVentaActual;
+                        prod.PrecioCostoActual = dto.PrecioCostoActual;
+                        prod.StockActual = dto.StockActual;
+                        prod.StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10;
+                        prod.Id_categoria = idCat;
+                        prod.Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1;
+                    });
+                    resultado.Updated++;
                 }
-            });
+                catch
+                {
+                    resultado.Errors.Add(new ImportError(productosAImportar.IndexOf(dto) + 2, "General",
+                        $"Error al actualizar: {dto.CodigoBarra}", GuardSeverity.Error));
+                    resultado.Skipped++;
+                }
+            }
 
-            // ── 3. Resultado final ─────────────────────────────────────────────
-            resultado.Nuevos = dtosNuevos.Count;
-            resultado.Actualizados = dtosActualizar.Count;
-            resultado.Omitidos = dtosOmitir.Count;
+            progreso?.Report((total, total,
+                $"Completado: {resultado.Inserted} nuevos, {resultado.Updated} actualizados, {resultado.Skipped} omitidos"));
 
-            var totalProcesados = dtosNuevos.Count + dtosActualizar.Count + dtosOmitir.Count;
-            progreso?.Report((totalProcesados, totalProcesados,
-                $"Completado: {resultado.Nuevos} nuevos, {resultado.Actualizados} actualizados, {resultado.Omitidos} omitidos"));
-
-            progreso?.Report((total, total, $"Completado: {resultado.Nuevos} nuevos, {resultado.Actualizados} actualizados, {resultado.Omitidos} omitidos"));
             return resultado;
         }
 

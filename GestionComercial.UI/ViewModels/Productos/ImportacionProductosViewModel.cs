@@ -1,6 +1,7 @@
 using Caliburn.Micro;
 using ClosedXML.Excel;
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.Importacion;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -296,35 +298,48 @@ namespace GestionComercial.UI.ViewModels.Productos
                     colIdx++;
                 }
 
-                if (!mapaColumnas.ContainsKey("nombre"))
-                    throw new Exception("Falta columna 'Nombre'. Asegurate de usar la plantilla oficial.");
-
-                for (int i = 1; i < filasUsadas.Count; i++)
+                // Pre-validación de esquema Excel
+                var table = new DataTable();
+                foreach (var col in mapaColumnas)
+                    table.Columns.Add(col.Key, typeof(string));
+                foreach (var filaExcel in filasUsadas.Skip(1))
                 {
-                    var filaExcel = filasUsadas[i];
-                    int numeroFila = i + 1;
+                    var newRow = table.NewRow();
+                    foreach (var col in mapaColumnas)
+                    {
+                        try { newRow[col.Key] = filaExcel.Cell(col.Value)?.GetString()?.Trim() ?? string.Empty; }
+                        catch { newRow[col.Key] = string.Empty; }
+                    }
+                    table.Rows.Add(newRow);
+                }
 
-                    var nombre       = ObtenerValorCelda(filaExcel, mapaColumnas, "nombre");
-                    var codigoBarra  = ObtenerValorCelda(filaExcel, mapaColumnas, "codigobarra");
-                    var pVentaStr    = ObtenerValorCelda(filaExcel, mapaColumnas, "precioventa");
-                    var pCostoStr    = ObtenerValorCelda(filaExcel, mapaColumnas, "preciocosto");
-                    var stockStr     = ObtenerValorCelda(filaExcel, mapaColumnas, "stockactual");
-                    var stockMinStr  = ObtenerValorCelda(filaExcel, mapaColumnas, "stockminimo");
-                    var categoria    = ObtenerValorCelda(filaExcel, mapaColumnas, "categoria");
-                    var unidadMedida = ObtenerValorCelda(filaExcel, mapaColumnas, "unidadmedida");
+                var schemaResult = ImportacionSchemaGuard.Validate(table);
+                if (schemaResult.HasFatalErrors)
+                {
+                    var fatalErrors = string.Join("\n", schemaResult.Errors.Where(e => e.IsFatal).Select(e => e.Message));
+                    throw new Exception($"Error de esquema:\n{fatalErrors}");
+                }
 
-                    var errores = new List<string>();
+                // Construir filas desde el DataTable validado
+                var guardrails = new ProductoImportGuardrails();
+                var dtosImportacion = new List<ProductoImportarDto>();
 
-                    if (string.IsNullOrWhiteSpace(nombre))
-                        errores.Add("Nombre vacío");
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    var row = table.Rows[i];
+                    var nombre = row["Nombre"]?.ToString() ?? string.Empty;
+                    var codigoBarra = row["CodigoBarra"]?.ToString() ?? string.Empty;
+                    var pVentaStr = row["PrecioVenta"]?.ToString() ?? string.Empty;
+                    var pCostoStr = row["PrecioCosto"]?.ToString() ?? string.Empty;
+                    var stockStr = row["StockActual"]?.ToString() ?? string.Empty;
+                    var stockMinStr = row["StockMinimo"]?.ToString() ?? string.Empty;
+                    var categoria = row["Categoria"]?.ToString() ?? string.Empty;
+                    var unidadMedida = row["UnidadMedida"]?.ToString() ?? string.Empty;
 
                     decimal.TryParse(pVentaStr, out decimal precioVenta);
                     decimal.TryParse(pCostoStr, out decimal precioCosto);
                     int.TryParse(stockStr, out int stock);
                     int.TryParse(stockMinStr, out int stockMinimo);
-
-                    if (!string.IsNullOrWhiteSpace(pVentaStr) && precioVenta <= 0)
-                        errores.Add("Precio de venta inválido");
 
                     int? idCategoria = null;
                     if (!string.IsNullOrWhiteSpace(categoria))
@@ -338,39 +353,53 @@ namespace GestionComercial.UI.ViewModels.Productos
 
                     filas.Add(new FilaImportacionDto
                     {
-                        Fila       = numeroFila,
-                        Nombre     = nombre,
+                        Fila = i + 2,
+                        Nombre = nombre,
                         CodigoBarra = codigoBarra,
                         PrecioVenta = precioVenta,
                         PrecioVentaOriginal = precioVenta,
                         PrecioCosto = precioCosto,
                         PrecioCostoOriginal = precioCosto,
-                        Stock       = stock,
+                        Stock = stock,
                         StockMinimo = stockMinimo,
-                        Categoria   = categoria,
+                        Categoria = categoria,
                         UnidadMedida = string.IsNullOrWhiteSpace(unidadMedida) ? "Unidad" : unidadMedida,
-                        EsValida    = errores.Count == 0,
-                        ErrorDescripcion = string.Join("; ", errores),
-                        IdCategoria = idCategoria
+                        IdCategoria = idCategoria,
+                        EsValida = true,
+                        ErrorDescripcion = string.Empty,
                     });
+
+                    dtosImportacion.Add(new ProductoImportarDto
+                    {
+                        Nombre = nombre,
+                        CodigoBarra = codigoBarra,
+                        PrecioVentaActual = precioVenta,
+                        PrecioCostoActual = precioCosto,
+                        StockActual = stock,
+                        StockMinimo = stockMinimo,
+                        Categoria = categoria,
+                        UnidadMedida = string.IsNullOrWhiteSpace(unidadMedida) ? "Unidad" : unidadMedida,
+                        IdEmpresa = _shell.IdEmpresaActual,
+                        IdCategoria = idCategoria ?? 0,
+                        IdUnidadMedida = 1,
+                    });
+                }
+
+                // Ejecutar guardrails de negocio
+                var guardResults = guardrails.ValidateBatch(dtosImportacion);
+                for (int i = 0; i < guardResults.Count; i++)
+                {
+                    var (rowDto, results) = guardResults[i];
+                    var errors = results.Where(r => !r.Passed).ToList();
+                    if (errors.Any())
+                    {
+                        filas[i].EsValida = !errors.Any(r => r.Severity == GuardSeverity.Error);
+                        filas[i].ErrorDescripcion = string.Join("; ", errors.Select(r => r.Message));
+                    }
                 }
 
                 return filas;
             });
-        }
-
-        private static string ObtenerValorCelda(IXLRangeRow fila, Dictionary<string, int> mapa, string nombreCol)
-        {
-            if (!mapa.TryGetValue(nombreCol, out int colIdx)) return string.Empty;
-            try
-            {
-                var celda = fila.Cell(colIdx);
-                return celda?.GetString()?.Trim() ?? string.Empty;
-            }
-            catch
-            {
-                return string.Empty;
-            }
         }
 
         // ── Ejecutar importación con bulk ───────────────────────────────────────────
@@ -428,15 +457,15 @@ namespace GestionComercial.UI.ViewModels.Productos
                     });
                 });
 
-                // Importar en bulk (más rápido)
-                var (nuevos, actualizados, omitidos) = await _productoServicio.ImportarMasivoAsync(
+                // Importar en bulk con guardrails y commit parcial
+                var importResult = await _productoServicio.ImportarMasivoAsync(
                     dtos,
                     ActualizarExistentes,
                     progress);
 
-                Importados = nuevos;
-                Actualizados = actualizados;
-                Omitidos = omitidos + FilasConError;
+                Importados = importResult.Inserted;
+                Actualizados = importResult.Updated;
+                Omitidos = importResult.Skipped + FilasConError;
 
                 Estado = Omitidos > 0
                     ? EstadoImportacion.ConErrores
@@ -592,121 +621,4 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
     }
 
-    // ── DTO fila con edición inline y INotifyPropertyChanged ──────────────────
-    public class FilaImportacionDto : System.ComponentModel.INotifyPropertyChanged
-    {
-        private string  _nombre = string.Empty;
-        private string  _codigoBarra = string.Empty;
-        private decimal _precioVenta;
-        private decimal _precioCosto;
-        private int     _stock;
-        private int     _stockMinimo;
-        private string  _categoria = string.Empty;
-        private string  _unidadMedida = string.Empty;
-        private bool    _esValida;
-        private string  _errorDescripcion = string.Empty;
-
-        public int     Fila          { get; set; }
-        public int?    IdCategoria   { get; set; }
-        public bool    EsNuevo       { get; set; }
-
-        // Valores originales (desde Excel, nunca cambian)
-        public decimal PrecioVentaOriginal { get; set; }
-        public decimal PrecioCostoOriginal { get; set; }
-
-        public string Nombre
-        {
-            get => _nombre;
-            set { _nombre = value; OnPropertyChanged(); Validar(); }
-        }
-
-        public string CodigoBarra
-        {
-            get => _codigoBarra;
-            set { _codigoBarra = value; OnPropertyChanged(); }
-        }
-
-        public decimal PrecioVenta
-        {
-            get => _precioVenta;
-            set { _precioVenta = value; OnPropertyChanged(); OnPropertyChanged(nameof(Margen)); Validar(); }
-        }
-
-        public decimal PrecioCosto
-        {
-            get => _precioCosto;
-            set { _precioCosto = value; OnPropertyChanged(); OnPropertyChanged(nameof(Margen)); }
-        }
-
-        ///         /// Recalcula los precios mostrados desde los valores originales aplicando el factor de ajuste.
-        public void AplicarAjuste(decimal factor, bool ajustarVenta, bool ajustarCosto)
-        {
-            if (ajustarVenta)
-                PrecioVenta = Math.Round(PrecioVentaOriginal * factor, 2);
-            else
-                PrecioVenta = PrecioVentaOriginal;
-
-            if (ajustarCosto)
-                PrecioCosto = Math.Round(PrecioCostoOriginal * factor, 2);
-            else
-                PrecioCosto = PrecioCostoOriginal;
-        }
-
-        public int Stock
-        {
-            get => _stock;
-            set { _stock = value; OnPropertyChanged(); }
-        }
-
-        public int StockMinimo
-        {
-            get => _stockMinimo;
-            set { _stockMinimo = value; OnPropertyChanged(); }
-        }
-
-        public string Categoria
-        {
-            get => _categoria;
-            set { _categoria = value; OnPropertyChanged(); }
-        }
-
-        public string UnidadMedida
-        {
-            get => _unidadMedida;
-            set { _unidadMedida = value; OnPropertyChanged(); }
-        }
-
-        public bool EsValida
-        {
-            get => _esValida;
-            set { _esValida = value; OnPropertyChanged(); OnPropertyChanged(nameof(EstadoTexto)); }
-        }
-
-        public string ErrorDescripcion
-        {
-            get => _errorDescripcion;
-            set { _errorDescripcion = value; OnPropertyChanged(); }
-        }
-
-        public string EstadoTexto => EsValida ? (EsNuevo ? "Nuevo" : "Actualizar") : "Error";
-
-        public decimal Margen => PrecioVenta > 0 && PrecioCosto > 0
-            ? Math.Round((PrecioVenta - PrecioCosto) / PrecioVenta * 100, 1)
-            : 0;
-
-        private void Validar()
-        {
-            var errores = new List<string>();
-            if (string.IsNullOrWhiteSpace(Nombre))
-                errores.Add("Nombre vacío");
-            if (PrecioVenta <= 0)
-                errores.Add("Precio de venta inválido");
-            EsValida = errores.Count == 0;
-            ErrorDescripcion = string.Join("; ", errores);
-        }
-
-        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? name = null)
-            => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
-    }
 }

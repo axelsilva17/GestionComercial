@@ -1,5 +1,5 @@
 using GestionComercial.Aplicacion.DTOs.Productos;
-
+using GestionComercial.Aplicacion.Importacion;
 using GestionComercial.Dominio.Entidades.Proveedores;
 
 namespace GestionComercial.Dominio.Interfaces.Servicios
@@ -14,7 +14,7 @@ public interface IProductoServicio
         Task<(ProductoDto Producto, bool FueActualizacion)> CrearOActualizarAsync(ProductoImportarDto dto, bool actualizarExistentes);
         // Nuevo: ajuste de precios por proveedor (global por empresa del proveedor)
         Task<(int Nuevos, int Actualizados)> AjustePreciosPorProveedorAsync(int idProveedor, decimal porcentaje);
-        Task<(int Nuevos, int Actualizados, int Omitidos)> ImportarMasivoAsync(IEnumerable<ProductoImportarDto> dtos, bool actualizarExistentes, IProgress<(int current, int total, string message)>? progreso = null);
+        Task<ImportResult> ImportarMasivoAsync(IEnumerable<ProductoImportarDto> dtos, bool actualizarExistentes, IProgress<(int current, int total, string message)>? progreso = null);
         Task                                  DesactivarAsync(int id);
 
         // Reference data
