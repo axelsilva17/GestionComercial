@@ -137,6 +137,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         // ── Datos de la venta ─────────────────────────────────────────────────
         private string _clienteNombre = "Consumidor Final";
+        private decimal _totalVentaOriginal; // Total sin descuento de método de pago
         public string ClienteNombre
         {
             get => _clienteNombre;
@@ -428,9 +429,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             // Si no quedan pagos, restaurar el total original inmediatamente (síncrono)
             if (!Pagos.Any())
             {
-                TotalVenta = _ventaCompleta != null
-                    ? _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento
-                    : TotalVenta;
+                TotalVenta = _totalVentaOriginal;
                 LineasDescuento.Clear();
                 NotificarDescuentos();
                 MontoIngresado = TotalVenta.ToString("F2");
@@ -716,7 +715,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 }
             }
 
-            TotalVenta = _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento - totalDescuentoMetodoPago;
+            TotalVenta = _totalVentaOriginal - totalDescuentoMetodoPago;
 
             // Si el descuento reduce el total y ya hay pagos, ajustar para evitar vuelto falso
             if (totalDescuentoMetodoPago > 0 && Pagos.Any())
@@ -886,11 +885,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
         /// Carga los descuentos aplicados desde la base de datos.
         public async Task InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
         {
-            _idVenta       = idVenta;
-            ClienteNombre  = clienteNombre;
-            TotalVenta     = totalFinal;
-            Pagos          = new();
-            MontoIngresado = totalFinal.ToString("F2");
+            _idVenta            = idVenta;
+            ClienteNombre       = clienteNombre;
+            _totalVentaOriginal = totalFinal; // Guardar el total original SIN descuento de método
+            TotalVenta          = totalFinal;
+            Pagos               = new();
+            MontoIngresado      = totalFinal.ToString("F2");
             RecalcularVuelto();
 
             // Cargar venta completa y caches para preview de descuentos
