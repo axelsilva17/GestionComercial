@@ -11,11 +11,13 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         private readonly IUnitOfWork _uow;
         private readonly IInventarioServicio _inventarioServicio;
+        private readonly SesionServicio _sesion;
 
-        public CompraServicio(IUnitOfWork uow, IInventarioServicio inventarioServicio)
+        public CompraServicio(IUnitOfWork uow, IInventarioServicio inventarioServicio, SesionServicio sesion)
         {
             _uow = uow;
             _inventarioServicio = inventarioServicio;
+            _sesion = sesion;
         }
 
         public async Task<IEnumerable<CompraDto>> ObtenerPorSucursalAsync(int idSucursal)
@@ -44,6 +46,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<CompraDto> CrearAsync(CompraCrearDto dto)
         {
+            if (!_sesion.HasPermission("Compras.Crear"))
+                throw new KeyNotFoundException("No tenés permiso para crear compras.");
+
             // ── Crear la compra con factory method (DDD) ──
             var compra = Compra.Crear(
                 idProveedor: dto.IdProveedor,

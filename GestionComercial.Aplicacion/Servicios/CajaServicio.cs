@@ -28,6 +28,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, TurnoCajaEnum? turno = null, bool esPrimaria = false)
         {
+            if (!_sesion.HasPermission("Caja.Abrir"))
+                throw new NegocioException("No tenés permiso para abrir caja.");
+
             LogHelper.Log("[DEBUG-AbrirCaja] Iniciando...");
 
             // Validar que no exista caja abierta para el mismo turno en esta sucursal
@@ -155,6 +158,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<Caja> CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal)
         {
+            if (!_sesion.HasPermission("Caja.Cerrar"))
+                throw new NegocioException("No tenés permiso para cerrar caja.");
+
             LogHelper.Log("[DEBUG-CerrarCaja] Iniciando...");
             var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
                 ?? throw new CajaNoAbiertaException();

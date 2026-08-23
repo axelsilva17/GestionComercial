@@ -15,15 +15,18 @@ public class ProductoServicio : IProductoServicio
     private readonly IUnitOfWork _uow;
     private readonly IValidator<ProductoCrearDto>? _crearValidator;
     private readonly IValidator<ProductoActualizarDto>? _actualizarValidator;
+    private readonly SesionServicio? _sesion;
 
     public ProductoServicio(
         IUnitOfWork uow,
         IValidator<ProductoCrearDto>? crearValidator = null,
-        IValidator<ProductoActualizarDto>? actualizarValidator = null)
+        IValidator<ProductoActualizarDto>? actualizarValidator = null,
+        SesionServicio? sesion = null)
     {
         _uow = uow;
         _crearValidator = crearValidator;
         _actualizarValidator = actualizarValidator;
+        _sesion = sesion;
     }
 
         public async Task<IEnumerable<Proveedor>> ObtenerProveedoresAsync()
@@ -51,6 +54,9 @@ public class ProductoServicio : IProductoServicio
 
         public async Task<ProductoDto> CrearAsync(ProductoCrearDto dto)
         {
+            if (_sesion != null && !_sesion.HasPermission("Productos.Crear"))
+                throw new ValidationException("No tenés permiso para crear productos.");
+
             // Validar entrada con FluentValidation
             if (_crearValidator != null)
             {
@@ -79,6 +85,9 @@ public class ProductoServicio : IProductoServicio
 
         public async Task ActualizarAsync(ProductoActualizarDto dto)
         {
+            if (_sesion != null && !_sesion.HasPermission("Productos.Editar"))
+                throw new ValidationException("No tenés permiso para editar productos.");
+
             // Validar entrada con FluentValidation
             if (_actualizarValidator != null)
             {

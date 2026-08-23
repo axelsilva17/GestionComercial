@@ -91,6 +91,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<VentaDto> CrearAsync(VentaCrearDto dto)
         {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para crear ventas.");
+
             // ── Validar stock y crear venta en una TRANSACCIÓN ───────────────
             await _uow.EjecutarEnTransaccionAsync(async () =>
             {
@@ -176,6 +179,9 @@ namespace GestionComercial.Aplicacion.Servicios
         /// El vuelto se registra como egreso en la caja.
         public async Task RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos)
         {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para registrar pagos.");
+
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
                 ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
 
@@ -227,6 +233,9 @@ namespace GestionComercial.Aplicacion.Servicios
         /// Útil para "Cobrar" rápido desde el historial.
         public async Task CobrarVentaAsync(int idVenta)
         {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para cobrar ventas.");
+
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
                 ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
 
@@ -357,6 +366,9 @@ namespace GestionComercial.Aplicacion.Servicios
         /// <exception cref="ArgumentException">Si el motivo está vacío</exception>
         public async Task CancelarAsync(int id, string motivo)
         {
+            if (!_sesion.HasPermission("Ventas.Anular"))
+                throw new NegocioException("No tenés permiso para anular ventas.");
+
             if (string.IsNullOrWhiteSpace(motivo))
                 throw new ArgumentException("El motivo de anulación es obligatorio.", nameof(motivo));
 

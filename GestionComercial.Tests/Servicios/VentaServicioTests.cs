@@ -36,6 +36,14 @@ namespace GestionComercial.Tests.Servicios
 
         public VentaServicioTests()
         {
+            _sesionServicio.IniciarSesion(new GestionComercial.Aplicacion.DTOs.Usuarios.UsuarioSesionDto
+            {
+                IdUsuario = 1,
+                IdSucursal = 1,
+                IdEmpresa = 1,
+                Permisos = new HashSet<string> { "Ventas.Crear", "Ventas.Anular", "Caja.Abrir", "Caja.Cerrar" }
+            });
+
             _mockUow.Setup(u => u.Ventas).Returns(_mockVentaRepo.Object);
             _mockUow.Setup(u => u.Productos).Returns(_mockProductoRepo.Object);
             _mockUow.Setup(u => u.Pagos).Returns(_mockPagoRepo.Object);

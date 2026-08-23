@@ -15,14 +15,23 @@ namespace GestionComercial.Tests.Servicios
         private readonly Mock<ICompraRepositorio> _mockCompraRepo = new();
         private readonly Mock<IProductoRepositorio> _mockProductoRepo = new();
         private readonly Mock<IInventarioServicio> _mockInventario = new();
+        private readonly SesionServicio _sesionServicio = new();
         private readonly CompraServicio _servicio;
 
         public CompraServicioTests()
         {
+            _sesionServicio.IniciarSesion(new GestionComercial.Aplicacion.DTOs.Usuarios.UsuarioSesionDto
+            {
+                IdUsuario = 1,
+                IdSucursal = 1,
+                IdEmpresa = 1,
+                Permisos = new HashSet<string> { "Compras.Crear" }
+            });
+
             _mockUow.Setup(u => u.Compras).Returns(_mockCompraRepo.Object);
             _mockUow.Setup(u => u.Productos).Returns(_mockProductoRepo.Object);
 
-            _servicio = new CompraServicio(_mockUow.Object, _mockInventario.Object);
+            _servicio = new CompraServicio(_mockUow.Object, _mockInventario.Object, _sesionServicio);
         }
 
         [Fact]
