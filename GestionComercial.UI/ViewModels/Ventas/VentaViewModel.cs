@@ -352,15 +352,32 @@ namespace GestionComercial.UI.ViewModels.Ventas
             MostrarPopupAnulacion = true;
         }
 
-        private async void AgregarItemConDescuento(DescuentoItemParam? param)
+        /// <summary>
+        /// Método centralizado para agregar un producto al carrito.
+        /// Maneja item existente (incrementa cantidad) y nuevo (crea item).
+        /// Resuelve descuentos y recalcula totales.
+        /// </summary>
+        private async Task AgregarProductoAlCarrito(
+            int productoId, string nombre, string codigoBarra,
+            decimal precioUnitario, decimal costoUnitario,
+            int cantidad, int stockDisponible, bool validarStock = true)
         {
-            if (param?.Producto == null || param.Cantidad <= 0) return;
+            if (validarStock && stockDisponible <= 0)
+            {
+                MostrarError($"'{nombre}' no tiene stock disponible.");
+                return;
+            }
 
-            var existente = Items.FirstOrDefault(i => i.ProductoId == param.Producto.IdProducto);
+            var existente = Items.FirstOrDefault(i => i.ProductoId == productoId);
             if (existente != null)
             {
+                if (validarStock && existente.Cantidad + cantidad > stockDisponible)
+                {
+                    MostrarError($"Stock máximo: {stockDisponible}");
+                    return;
+                }
                 var idx = Items.IndexOf(existente);
-                existente.Cantidad += param.Cantidad;
+                existente.Cantidad += cantidad;
                 existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
                 await ResolverDescuentoProducto(existente);
                 Items.RemoveAt(idx);
@@ -368,22 +385,37 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
             else
             {
-                var subtotal = param.Cantidad * param.Producto.PrecioVentaActual;
+                var subtotal = cantidad * precioUnitario;
                 var newItem = new VentaItemDto
                 {
-                    ProductoId          = param.Producto.IdProducto,
-                    ProductoNombre      = param.Producto.Nombre,
-                    CodigoBarra         = param.Producto.CodigoBarra ?? string.Empty,
-                    Cantidad            = param.Cantidad,
-                    PrecioUnitario      = param.Producto.PrecioVentaActual,
-                    CostoUnitario       = param.Producto.PrecioCostoActual,
-                    Subtotal            = subtotal,
+                    ProductoId     = productoId,
+                    ProductoNombre = nombre,
+                    CodigoBarra    = codigoBarra,
+                    Cantidad       = cantidad,
+                    PrecioUnitario = precioUnitario,
+                    CostoUnitario  = costoUnitario,
+                    Subtotal       = subtotal,
                 };
                 await ResolverDescuentoProducto(newItem);
                 Items.Add(newItem);
             }
 
             RecalcularTotales();
+        }
+
+        private async void AgregarItemConDescuento(DescuentoItemParam? param)
+        {
+            if (param?.Producto == null || param.Cantidad <= 0) return;
+
+            await AgregarProductoAlCarrito(
+                param.Producto.IdProducto,
+                param.Producto.Nombre,
+                param.Producto.CodigoBarra ?? string.Empty,
+                param.Producto.PrecioVentaActual,
+                param.Producto.PrecioCostoActual,
+                param.Cantidad,
+                stockDisponible: 0,
+                validarStock: false);
         }
 
         private void MostrarMensaje(string mensaje)
@@ -638,46 +670,18 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             if (producto == null) return;
 
-            if (producto.StockActual <= 0)
-            {
-                MostrarError($"'{producto.Nombre}' no tiene stock disponible.");
-                return;
-            }
-
-            var existente = Items.FirstOrDefault(i => i.ProductoId == producto.IdProducto);
-            if (existente != null)
-            {
-                if (existente.Cantidad >= producto.StockActual)
-                {
-                    MostrarError($"Stock máximo: {producto.StockActual}");
-                    return;
-                }
-                var idx = Items.IndexOf(existente);
-                existente.Cantidad++;
-                existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
-                await ResolverDescuentoProducto(existente);
-                Items.RemoveAt(idx);
-                Items.Insert(idx, existente);
-            }
-            else
-            {
-                var newItem = new VentaItemDto
-                {
-                    ProductoId     = producto.IdProducto,
-                    ProductoNombre = producto.Nombre,
-                    CodigoBarra    = producto.CodigoBarra ?? string.Empty,
-                    Cantidad       = 1,
-                    PrecioUnitario = producto.PrecioVentaActual,
-                    CostoUnitario  = producto.PrecioCostoActual,
-                    Subtotal       = producto.PrecioVentaActual,
-                };
-                await ResolverDescuentoProducto(newItem);
-                Items.Add(newItem);
-            }
+            await AgregarProductoAlCarrito(
+                producto.IdProducto,
+                producto.Nombre,
+                producto.CodigoBarra ?? string.Empty,
+                producto.PrecioVentaActual,
+                producto.PrecioCostoActual,
+                cantidad: 1,
+                stockDisponible: producto.StockActual,
+                validarStock: true);
 
             BusquedaProducto = string.Empty;
             MostrarPopupBusqueda = false;
-            RecalcularTotales();
             NotificarCanIrACobrar();
         }
 
@@ -782,45 +786,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     return;
                 }
 
-                if (producto.StockActual <= 0)
-                {
-                    MostrarError($"'{producto.Nombre}' no tiene stock disponible.");
-                    return;
-                }
-
-                var existente = Items.FirstOrDefault(i => i.ProductoId == producto.IdProducto);
-                if (existente != null)
-                {
-                    if (existente.Cantidad >= producto.StockActual)
-                    {
-                        MostrarError($"Stock máximo: {producto.StockActual}");
-                        return;
-                    }
-                    var idx = Items.IndexOf(existente);
-                    existente.Cantidad++;
-                    existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
-                    await ResolverDescuentoProducto(existente);
-                    Items.RemoveAt(idx);
-                    Items.Insert(idx, existente);
-                }
-                else
-                {
-                    var newItem = new VentaItemDto
-                    {
-                        ProductoId     = producto.IdProducto,
-                        ProductoNombre = producto.Nombre,
-                        CodigoBarra    = producto.CodigoBarra ?? string.Empty,
-                        Cantidad       = 1,
-                        PrecioUnitario = producto.PrecioVentaActual,
-                        CostoUnitario  = producto.PrecioCostoActual,
-                        Subtotal       = producto.PrecioVentaActual,
-                    };
-                    await ResolverDescuentoProducto(newItem);
-                    Items.Add(newItem);
-                }
+                await AgregarProductoAlCarrito(
+                    producto.IdProducto,
+                    producto.Nombre,
+                    producto.CodigoBarra ?? string.Empty,
+                    producto.PrecioVentaActual,
+                    producto.PrecioCostoActual,
+                    cantidad: 1,
+                    stockDisponible: producto.StockActual,
+                    validarStock: true);
 
                 BusquedaProducto = string.Empty;
-                RecalcularTotales();
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
