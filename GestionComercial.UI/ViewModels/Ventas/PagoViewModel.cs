@@ -741,7 +741,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 LineasDescuento.Remove(lineaMetodo);
             }
-            NotifyOfPropertyChange(() => TieneDescuentos);
+            NotificarDescuentos();
         }
 
         // ── Popup Historial (same as VentaViewModel) ─────────────────────────────
@@ -840,10 +840,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public ObservableCollection<DescuentoLineaVm> LineasDescuento
         {
             get => _lineasDescuento;
-            set { _lineasDescuento = value; NotifyOfPropertyChange(() => LineasDescuento); }
+            set { _lineasDescuento = value; NotifyOfPropertyChange(() => LineasDescuento); NotifyOfPropertyChange(() => TieneDescuentos); }
         }
 
         public bool TieneDescuentos => LineasDescuento.Any();
+
+        /// Notifica explícitamente que TieneDescuentos pudo haber cambiado.
+        private void NotificarDescuentos()
+        {
+            NotifyOfPropertyChange(() => TieneDescuentos);
+            NotifyOfPropertyChange(() => LineasDescuento);
+        }
 
         ///         /// Inicializa el PagoViewModel con los datos de la venta.
         /// Carga los descuentos aplicados desde la base de datos.

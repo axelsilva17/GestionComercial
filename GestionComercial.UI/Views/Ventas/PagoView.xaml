@@ -67,26 +67,27 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Layout principal: Grid con contenido scrolleable + modal overlay fuera del scroll -->
+    <!-- Layout principal: contenido scrolleable arriba + botones fijos abajo -->
     <Grid>
-        <!-- Contenido principal con scroll -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                      MaxHeight="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}">
-            <Grid MaxWidth="700" Margin="0,40" VerticalAlignment="Top"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Contenido principal con scroll (toma todo el espacio disponible) -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid MaxWidth="700" Margin="0,24,0,16" VerticalAlignment="Top"
                   HorizontalAlignment="Center">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="16"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="14"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="14"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="14"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
@@ -328,7 +329,7 @@
                 </Border>
 
                 <!-- Descuentos aplicados -->
-                <Border Grid.Row="7" Background="{DynamicResource CardBrush}"
+                <Border Grid.Row="8" Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="16" Padding="24,16"
                         Visibility="{Binding TieneDescuentos, Converter={StaticResource BoolToVisibility}}">
@@ -372,110 +373,113 @@
                         </ItemsControl>
                     </StackPanel>
                 </Border>
-
-                <!-- Error + Botones finales -->
-                <StackPanel Grid.Row="9" Orientation="Vertical">
-                    <Border Background="#1AEF4444" BorderBrush="{DynamicResource ErrorBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
-                            Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   Foreground="{DynamicResource ErrorBrush}" FontSize="13"/>
-                    </Border>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Button Grid.Column="0" x:Name="Cancelar"
-                                Height="48" FontSize="14" Content="← Volver a la venta"
-                                ToolTip="Escape - Volver"
-                                cal:Message.Attach="[Event Click] = [Action Cancelar]">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
-                                    <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
-                                    <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
-                                    <Setter Property="BorderThickness" Value="1"/>
-                                    <Setter Property="Cursor"          Value="Hand"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}"
-                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                        CornerRadius="10">
-                                                    <ContentPresenter HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-
-                        <Button Grid.Column="2" x:Name="GuardarPendienteAsync"
-                                Height="48" FontSize="14"
-                                ToolTip="Guardar la venta como pendiente de cobro"
-                                cal:Message.Attach="[Event Click] = [Action GuardarPendienteAsync]">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📋" FontSize="16"
-                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Guardar pendiente" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <Button Grid.Column="4" x:Name="Confirmar"
-                                Height="48" FontSize="14" FontWeight="SemiBold"
-                                IsEnabled="{Binding PuedeCobrar}"
-                                ToolTip="F6 - Confirmar cobro"
-                                cal:Message.Attach="[Event Click] = [Action Confirmar]">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="✅" FontSize="16"
-                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Confirmar Cobro" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-
-                    <!-- Botón Ver Historial -->
-                    <Button Content="📋 Ver Historial"
-                            Click="VerHistorial_Click"
-                            Margin="0,12,0,0"
-                            Height="40"
-                            Padding="16,0"
-                            Background="Transparent"
-                            Foreground="{DynamicResource PrimaryBrush}"
-                            BorderThickness="0"
-                            Cursor="Hand"
-                            Visibility="{Binding VentaCompletada, Converter={StaticResource BoolToVisibility}}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="b" Background="Transparent" CornerRadius="8" Padding="12,8">
-                                                <ContentPresenter/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                </StackPanel>
             </Grid>
         </ScrollViewer>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             BOTONES FIJOS — SIEMPRE VISIBLES, fuera del scroll
+             ═══════════════════════════════════════════════════════════════ -->
+        <StackPanel Grid.Row="1" MaxWidth="700" Margin="0,0,0,16"
+                    HorizontalAlignment="Center" VerticalAlignment="Bottom">
+            <Border Background="#1AEF4444" BorderBrush="{DynamicResource ErrorBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
+                    Visibility="{Binding ErrorVisible, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{DynamicResource ErrorBrush}" FontSize="13"/>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" x:Name="Cancelar"
+                        Height="48" FontSize="14" Content="← Volver a la venta"
+                        ToolTip="Escape - Volver"
+                        cal:Message.Attach="[Event Click] = [Action Cancelar]">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+                            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="Cursor"          Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="10">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Grid.Column="2" x:Name="GuardarPendienteAsync"
+                        Height="48" FontSize="14"
+                        ToolTip="Guardar la venta como pendiente de cobro"
+                        cal:Message.Attach="[Event Click] = [Action GuardarPendienteAsync]">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📋" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Guardar pendiente" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="4" x:Name="Confirmar"
+                        Height="48" FontSize="14" FontWeight="SemiBold"
+                        IsEnabled="{Binding PuedeCobrar}"
+                        ToolTip="F6 - Confirmar cobro"
+                        cal:Message.Attach="[Event Click] = [Action Confirmar]">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✅" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Confirmar Cobro" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Botón Ver Historial -->
+            <Button Content="📋 Ver Historial"
+                    Click="VerHistorial_Click"
+                    Margin="0,12,0,0"
+                    Height="40"
+                    Padding="16,0"
+                    Background="Transparent"
+                    Foreground="{DynamicResource PrimaryBrush}"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Visibility="{Binding VentaCompletada, Converter={StaticResource BoolToVisibility}}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="b" Background="Transparent" CornerRadius="8" Padding="12,8">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
 
         <!-- ═══════════════════════════════════════════════════════════════
              MODAL TARJETA — FUERA del ScrollViewer para cubrir toda la pantalla
@@ -504,7 +508,7 @@
 
             <Border Background="{DynamicResource CardBrush}"
                     CornerRadius="20" Padding="0"
-                    MaxWidth="420" MinWidth="300"
+                    MaxWidth="500" MinWidth="320"
                     HorizontalAlignment="Center" VerticalAlignment="Center"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     Effect="{DynamicResource CardDropShadow}">
@@ -529,7 +533,8 @@
                             <TextBlock Grid.Column="1"
                                        Text="{Binding TituloModalTarjeta}"
                                        FontSize="17" FontWeight="Bold"
-                                       Foreground="White" VerticalAlignment="Center"/>
+                                       Foreground="White" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
                             <Button Grid.Column="2" Content="✕" Width="30" Height="30"
                                     FontSize="14" FontWeight="Bold"
                                     Background="#40FFFFFF" Foreground="White"
@@ -559,10 +564,10 @@
                         </Grid>
                     </Border>
 
-                    <!-- Opciones de tarjeta -->
+                    <!-- Opciones de tarjeta — WrapPanel con botones flexibles -->
                     <ItemsControl Grid.Row="2"
                                   ItemsSource="{Binding OpcionesTarjeta}"
-                                  Margin="24,0">
+                                  Margin="20,0">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal"/>
@@ -570,8 +575,9 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Margin="4" Width="160" Height="52"
+                                <Button Margin="4" MinWidth="140" MaxWidth="220" Height="52"
                                         Padding="14,12"
+                                        HorizontalContentAlignment="Left"
                                         Background="{DynamicResource SurfaceBrush}"
                                         Foreground="{DynamicResource TextPrimaryBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
@@ -592,7 +598,8 @@
                                                                 <TextBlock Text="{Binding Icono}" FontSize="18"
                                                                            VerticalAlignment="Center" Margin="0,0,10,0"/>
                                                                 <TextBlock Text="{Binding Nombre}" FontSize="13"
-                                                                           FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                                           FontWeight="SemiBold" VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis"/>
                                                             </StackPanel>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
@@ -616,7 +623,7 @@
 
                     <!-- Botón cancelar -->
                     <Button Grid.Row="3" Content="Cancelar"
-                            Margin="24,16,24,20" Height="36"
+                            Margin="20,16,20,20" Height="36"
                             Padding="16,0" HorizontalAlignment="Stretch"
                             Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}"
                             BorderThickness="0" Cursor="Hand"
