@@ -92,10 +92,25 @@ namespace GestionComercial.Tests.UI
             };
 
             var vm = await CrearVMConMetodosAsync(metodos);
-            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
 
+            // F2 expande Tarjeta
+            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
+            vm.EsNivelRaiz.Should().BeFalse();
+            vm.NivelActual!.Nombre.Should().Be("Tarjeta");
+
+            // Seleccionar Débito
+            var nodoDebito = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Débito");
+            nodoDebito.Should().NotBeNull();
+            vm.SeleccionarNodo(nodoDebito!);
+
+            // Debería mostrar tarjetas débito
+            vm.NodosVisibles.Should().HaveCount(2);
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Mastercard Débito");
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Visa Débito");
+
+            // Seleccionar primera tarjeta
+            vm.SeleccionarNodo(vm.NodosVisibles.First());
             vm.Pagos.Should().HaveCount(1);
-            vm.Pagos.First().IdMetodoPago.Should().Be(5);
         }
 
         [Fact]
@@ -108,14 +123,28 @@ namespace GestionComercial.Tests.UI
             };
 
             var vm = await CrearVMConMetodosAsync(metodos);
-            vm.HandleKeyDown(Key.F3, ModifierKeys.None);
 
+            // F2 expande Tarjeta
+            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
+            vm.EsNivelRaiz.Should().BeFalse();
+
+            // Seleccionar Crédito
+            var nodoCredito = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Crédito");
+            nodoCredito.Should().NotBeNull();
+            vm.SeleccionarNodo(nodoCredito!);
+
+            // Debería mostrar tarjetas crédito
+            vm.NodosVisibles.Should().HaveCount(2);
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Naranja");
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Mastercard Crédito");
+
+            // Seleccionar primera tarjeta
+            vm.SeleccionarNodo(vm.NodosVisibles.First());
             vm.Pagos.Should().HaveCount(1);
-            vm.Pagos.First().IdMetodoPago.Should().Be(7);
         }
 
         [Fact]
-        public async Task AgregarDebito_SinMatch_NoAgregaLinea_YMuestraError()
+        public async Task AgregarDebito_SinMetodos_NoExpande()
         {
             var metodos = new List<MetodoPago>
             {
@@ -123,15 +152,20 @@ namespace GestionComercial.Tests.UI
             };
 
             var vm = await CrearVMConMetodosAsync(metodos);
-            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
 
-            vm.Pagos.Should().BeEmpty();
-            vm.TieneError.Should().BeTrue();
-            vm.MensajeError.Should().Contain("débito");
+            // F2 expande Tarjeta (aunque solo tenga Crédito)
+            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
+            vm.EsNivelRaiz.Should().BeFalse();
+            vm.NivelActual!.Nombre.Should().Be("Tarjeta");
+
+            // No debería tener Débito
+            vm.NodosVisibles.Should().HaveCount(1);
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Crédito");
+            vm.NodosVisibles.Should().NotContain(n => n.Nombre == "Débito");
         }
 
         [Fact]
-        public async Task AgregarCredito_SinMatch_NoAgregaLinea_YMuestraError()
+        public async Task AgregarCredito_SinMetodos_NoExpande()
         {
             var metodos = new List<MetodoPago>
             {
@@ -139,11 +173,15 @@ namespace GestionComercial.Tests.UI
             };
 
             var vm = await CrearVMConMetodosAsync(metodos);
-            vm.HandleKeyDown(Key.F3, ModifierKeys.None);
 
-            vm.Pagos.Should().BeEmpty();
-            vm.TieneError.Should().BeTrue();
-            vm.MensajeError.Should().Contain("crédito");
+            // F2 expande Tarjeta (aunque solo tenga Débito)
+            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
+            vm.EsNivelRaiz.Should().BeFalse();
+
+            // No debería tener Crédito
+            vm.NodosVisibles.Should().HaveCount(1);
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Débito");
+            vm.NodosVisibles.Should().NotContain(n => n.Nombre == "Crédito");
         }
 
         [Fact]
@@ -155,10 +193,9 @@ namespace GestionComercial.Tests.UI
             };
 
             var vm = await CrearVMConMetodosAsync(metodos);
-            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
 
-            vm.Pagos.Should().BeEmpty();
-            vm.TieneError.Should().BeTrue();
+            // Métodos inactivos no se muestran
+            vm.NodosVisibles.Should().BeEmpty();
         }
 
         // ── T6: Descuentos aplicados tests ──────────────────────────────
@@ -376,6 +413,191 @@ namespace GestionComercial.Tests.UI
             var method = typeof(PagoViewModel).GetMethod("RecalcularDescuentoPreviewAsync",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             await (Task)method!.Invoke(vm, null)!;
+        }
+
+        // ── T6: Tests de jerarquía de métodos de pago ─────────────────────
+
+        [Fact]
+        public async Task SeleccionarNodo_Hoja_SeleccionaYConfirmaPago()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            // Encontrar nodo Efectivo
+            var nodoEfectivo = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Efectivo");
+            nodoEfectivo.Should().NotBeNull();
+            nodoEfectivo!.EsHoja.Should().BeTrue();
+
+            vm.SeleccionarNodo(nodoEfectivo);
+
+            vm.Pagos.Should().HaveCount(1);
+            vm.Pagos.First().IdMetodoPago.Should().Be(1);
+            vm.Pagos.First().NombreMetodo.Should().Be("Efectivo");
+        }
+
+        [Fact]
+        public async Task SeleccionarNodo_NodoNoHoja_ExpandeNivel()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+                new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
+                new() { Id = 3, Nombre = "Crédito", Categoria = "Tarjeta", Subcategoria = "Credito", Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            // Nodo Tarjeta no es hoja
+            var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+            nodoTarjeta.Should().NotBeNull();
+            nodoTarjeta!.EsHoja.Should().BeFalse();
+            nodoTarjeta.Hijos.Should().HaveCount(2); // Débito y Crédito
+
+            vm.SeleccionarNodo(nodoTarjeta);
+
+            // Ahora debería mostrar Débito y Crédito
+            vm.NivelActual.Should().Be(nodoTarjeta);
+            vm.NodosVisibles.Should().HaveCount(2);
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Débito");
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Crédito");
+        }
+
+        [Fact]
+        public async Task Volver_RetrocedeUnNivel()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+                new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            // Navegar a Tarjeta
+            var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+            vm.SeleccionarNodo(nodoTarjeta!);
+            vm.NivelActual.Should().Be(nodoTarjeta);
+
+            // Volver
+            vm.Volver();
+            vm.NivelActual.Should().Be(nodoTarjeta!.Padre);
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Efectivo");
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Tarjeta");
+        }
+
+        [Fact]
+        public async Task Breadcrumb_MuestraRutaCorrecta()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+                new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            // En raíz
+            vm.Breadcrumb.Should().Be("Raíz");
+
+            // Navegar a Tarjeta
+            var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+            vm.SeleccionarNodo(nodoTarjeta!);
+            vm.Breadcrumb.Should().Be("Raíz → Tarjeta");
+
+            // Navegar a Débito
+            var nodoDebito = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Débito");
+            vm.SeleccionarNodo(nodoDebito!);
+            vm.Breadcrumb.Should().Be("Raíz → Tarjeta → Débito");
+        }
+
+        [Fact]
+        public async Task EsNivelRaiz_TrueEnNivelInicial()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            vm.EsNivelRaiz.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task EsNivelRaiz_FalseDespuesDeExpandir()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+                new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+            vm.SeleccionarNodo(nodoTarjeta!);
+
+            vm.EsNivelRaiz.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task HandleKeyDown_EscapeEnNivelNoRaiz_Vuelve()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+                new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            // Navegar a Tarjeta
+            var nodoTarjeta = vm.NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+            vm.SeleccionarNodo(nodoTarjeta!);
+            vm.EsNivelRaiz.Should().BeFalse();
+
+            // Escape debería volver
+            vm.HandleKeyDown(Key.Escape, ModifierKeys.None);
+            vm.EsNivelRaiz.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task HandleKeyDown_F1EnNivelRaiz_SeleccionaEfectivo()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            vm.HandleKeyDown(Key.F1, ModifierKeys.None);
+
+            vm.Pagos.Should().HaveCount(1);
+            vm.Pagos.First().IdMetodoPago.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task HandleKeyDown_F2EnNivelRaiz_ExpandeTarjeta()
+        {
+            var metodos = new List<MetodoPago>
+            {
+                new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 },
+                new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
+            };
+
+            var vm = await CrearVMConMetodosAsync(metodos);
+
+            vm.HandleKeyDown(Key.F2, ModifierKeys.None);
+
+            // Debería expandir Tarjeta
+            vm.EsNivelRaiz.Should().BeFalse();
+            vm.NivelActual!.Nombre.Should().Be("Tarjeta");
+            vm.NodosVisibles.Should().Contain(n => n.Nombre == "Débito");
         }
     }
 }

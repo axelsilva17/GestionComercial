@@ -10,7 +10,9 @@ using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.Views.Comandos;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -31,6 +33,41 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private List<DescuentoConfiguracion>? _descuentosCache;
         private Dictionary<int, Categoria>? _categoriasCache;
 
+        // ── Jerarquía de métodos de pago ─────────────────────────────────────
+        private PagoNodoJerarquico? _nodoRaiz;
+        private PagoNodoJerarquico? _nivelActual;
+        public PagoNodoJerarquico? NivelActual
+        {
+            get => _nivelActual;
+            set { _nivelActual = value; NotifyOfPropertyChange(() => NivelActual); NotifyOfPropertyChange(() => Breadcrumb); NotifyOfPropertyChange(() => EsNivelRaiz); }
+        }
+
+        private ObservableCollection<PagoNodoJerarquico> _nodosVisibles = new();
+        public ObservableCollection<PagoNodoJerarquico> NodosVisibles
+        {
+            get => _nodosVisibles;
+            set { _nodosVisibles = value; NotifyOfPropertyChange(() => NodosVisibles); }
+        }
+
+        public string Breadcrumb
+        {
+            get
+            {
+                var partes = new List<string>();
+                var nodo = NivelActual;
+                while (nodo != null)
+                {
+                    partes.Insert(0, nodo.Nombre);
+                    nodo = nodo.Padre;
+                }
+                return string.Join(" → ", partes);
+            }
+        }
+
+        public bool EsNivelRaiz => NivelActual == null || NivelActual == _nodoRaiz;
+
+        public ICommand VolverCommand { get; }
+
         public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion, IDescuentoConfiguracionServicio descuentoConfiguracionServicio)
         {
             _ventaServicio = ventaServicio;
@@ -38,6 +75,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             _sesion        = sesion;
             _descuentoConfiguracionServicio = descuentoConfiguracionServicio;
             Titulo         = "Cobrar Venta";
+            VolverCommand  = new RelayCommand(() => Volver());
         }
 
         ///         /// Maneja atajos de teclado globales en la vista de pago.
@@ -48,22 +86,27 @@ namespace GestionComercial.UI.ViewModels.Ventas
             switch (key)
             {
                 case Key.F1:
-                    AgregarEfectivo();
+                    var efectivo = NodosVisibles.FirstOrDefault(n => n.Nombre == "Efectivo");
+                    if (efectivo != null) SeleccionarNodo(efectivo);
                     break;
                 case Key.F2:
-                    AgregarDebito();
+                    var tarjeta = NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+                    if (tarjeta != null) SeleccionarNodo(tarjeta);
                     break;
                 case Key.F3:
-                    AgregarCredito();
+                    Volver();
                     break;
                 case Key.F4:
-                    AgregarQR();
+                    Volver();
                     break;
                 case Key.F6:
                     if (PuedeCobrar) _ = Confirmar();
                     break;
                 case Key.Escape:
-                    _ = Cancelar();
+                    if (!EsNivelRaiz)
+                        Volver();
+                    else
+                        _ = Cancelar();
                     break;
             }
         }
@@ -181,6 +224,116 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         Subcategoria = m.Subcategoria,
                         Monto        = 0,
                     }));
+
+                // Construir árbol jerárquico
+                _nodoRaiz = new PagoNodoJerarquico { Id = 0, Nombre = "Raíz", EsHoja = false };
+
+                // Nivel 1: Efectivo (hoja) | Transferencia (hoja) | Tarjeta (no hoja)
+                var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
+                if (efectivo != null)
+                {
+                    _nodoRaiz.Hijos.Add(new PagoNodoJerarquico
+                    {
+                        Id = efectivo.IdMetodoPago,
+                        Nombre = "Efectivo",
+                        EsHoja = true,
+                        MetodoPagoId = efectivo.IdMetodoPago,
+                        Icono = "💵",
+                        Padre = _nodoRaiz
+                    });
+                }
+
+                var transferencia = MetodosPago.FirstOrDefault(m => m.Categoria == "Transferencia");
+                if (transferencia != null)
+                {
+                    _nodoRaiz.Hijos.Add(new PagoNodoJerarquico
+                    {
+                        Id = transferencia.IdMetodoPago,
+                        Nombre = "Transferencia",
+                        EsHoja = true,
+                        MetodoPagoId = transferencia.IdMetodoPago,
+                        Icono = "🏦",
+                        Padre = _nodoRaiz
+                    });
+                }
+
+                var tarjetas = MetodosPago.Where(m => m.Categoria == "Tarjeta").ToList();
+                if (tarjetas.Any())
+                {
+                    var nodoTarjeta = new PagoNodoJerarquico
+                    {
+                        Id = -1,
+                        Nombre = "Tarjeta",
+                        EsHoja = false,
+                        Icono = "💳",
+                        Padre = _nodoRaiz
+                    };
+
+                    // Nivel 2: Débito (no hoja) | Crédito (no hoja)
+                    var debitos = tarjetas.Where(m => m.Subcategoria == "Debito").ToList();
+                    if (debitos.Any())
+                    {
+                        var nodoDebito = new PagoNodoJerarquico
+                        {
+                            Id = -2,
+                            Nombre = "Débito",
+                            EsHoja = false,
+                            Icono = "💳",
+                            Padre = nodoTarjeta
+                        };
+
+                        // Nivel 3: tarjetas específicas débito
+                        foreach (var tarjeta in debitos)
+                        {
+                            nodoDebito.Hijos.Add(new PagoNodoJerarquico
+                            {
+                                Id = tarjeta.IdMetodoPago,
+                                Nombre = tarjeta.NombreMetodo,
+                                EsHoja = true,
+                                MetodoPagoId = tarjeta.IdMetodoPago,
+                                Icono = "💳",
+                                Padre = nodoDebito
+                            });
+                        }
+
+                        nodoTarjeta.Hijos.Add(nodoDebito);
+                    }
+
+                    var creditos = tarjetas.Where(m => m.Subcategoria == "Credito").ToList();
+                    if (creditos.Any())
+                    {
+                        var nodoCredito = new PagoNodoJerarquico
+                        {
+                            Id = -3,
+                            Nombre = "Crédito",
+                            EsHoja = false,
+                            Icono = "💳",
+                            Padre = nodoTarjeta
+                        };
+
+                        // Nivel 3: tarjetas específicas crédito
+                        foreach (var tarjeta in creditos)
+                        {
+                            nodoCredito.Hijos.Add(new PagoNodoJerarquico
+                            {
+                                Id = tarjeta.IdMetodoPago,
+                                Nombre = tarjeta.NombreMetodo,
+                                EsHoja = true,
+                                MetodoPagoId = tarjeta.IdMetodoPago,
+                                Icono = "💳",
+                                Padre = nodoCredito
+                            });
+                        }
+
+                        nodoTarjeta.Hijos.Add(nodoCredito);
+                    }
+
+                    _nodoRaiz.Hijos.Add(nodoTarjeta);
+                }
+
+                // Mostrar nivel 1
+                NivelActual = _nodoRaiz;
+                NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(_nodoRaiz.Hijos);
 
                 MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo")
                                   ?? MetodosPago.FirstOrDefault();
@@ -300,6 +453,34 @@ namespace GestionComercial.UI.ViewModels.Ventas
 			if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
 			SeleccionarOCompletar(qr);
 		}
+
+        public void SeleccionarNodo(PagoNodoJerarquico nodo)
+        {
+            if (nodo == null) return;
+
+            if (nodo.EsHoja && nodo.MetodoPagoId.HasValue)
+            {
+                var metodo = MetodosPago.FirstOrDefault(m => m.IdMetodoPago == nodo.MetodoPagoId);
+                if (metodo != null)
+                {
+                    SeleccionarOCompletar(metodo);
+                }
+            }
+            else if (nodo.Hijos.Any())
+            {
+                NivelActual = nodo;
+                NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(nodo.Hijos);
+            }
+        }
+
+        public void Volver()
+        {
+            if (NivelActual?.Padre != null && NivelActual != _nodoRaiz)
+            {
+                NivelActual = NivelActual.Padre;
+                NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(NivelActual.Hijos);
+            }
+        }
 
         public async Task Confirmar()
         {

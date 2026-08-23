@@ -169,61 +169,51 @@
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,0,0,14"/>
 
-                <!-- Botones grandes de formas de pago -->
-                <UniformGrid Rows="1" Margin="0,0,0,16">
-                    <Button x:Name="AgregarEfectivo"
-                            Height="50"
-                            Background="{DynamicResource SurfaceBrush}"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            Cursor="Hand"
-                            ToolTip="F1 - Efectivo">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💵" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="Efectivo" VerticalAlignment="Center" FontSize="12"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="AgregarDebito"
-                            Height="50"
-                            Background="{DynamicResource SurfaceBrush}"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            Cursor="Hand"
-                            ToolTip="F2 - Débito">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💳" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="Débito" VerticalAlignment="Center" FontSize="12"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="AgregarCredito"
-                            Height="50"
-                            Background="{DynamicResource SurfaceBrush}"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            Cursor="Hand"
-                            ToolTip="F3 - Crédito">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💳" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="Crédito" VerticalAlignment="Center" FontSize="12"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="AgregarQR"
-                            Height="50"
-                            Background="{DynamicResource SurfaceBrush}"
-                            Foreground="{DynamicResource TextPrimaryBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            Cursor="Hand"
-                            ToolTip="F4 - QR">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📱" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="QR" VerticalAlignment="Center" FontSize="12"/>
-                        </StackPanel>
-                    </Button>
-                </UniformGrid>
+                <!-- Botón Volver (visible cuando no está en raíz) -->
+                <Button x:Name="VolverCommand"
+                        Visibility="{Binding EsNivelRaiz, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                        Margin="0,0,0,12"
+                        Height="36"
+                        Padding="12,0"
+                        Background="{DynamicResource SurfaceBrush}"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="←" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Volver" VerticalAlignment="Center" FontSize="12"/>
+                        <TextBlock Text="{Binding Breadcrumb}" VerticalAlignment="Center" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Selector jerárquico de métodos de pago -->
+                <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding NodosVisibles}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Margin="0,0,0,8"
+                                        Height="48"
+                                        Padding="12,14"
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        Cursor="Hand"
+                                        cal:Message.Attach="[Event Click] = [Action SeleccionarNodo($dataContext)]">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Icono}" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Nombre}" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"/>
+                                        <TextBlock Text=" ▸" VerticalAlignment="Center" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Visibility="{Binding EsHoja, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
 
                 <!-- Monto a ingresar -->
                 <Border Background="{DynamicResource SurfaceBrush}"
