@@ -36,6 +36,16 @@ namespace GestionComercial.UI.Views.Main
         {
             InitializeComponent();
             Loaded += ShellView_Loaded;
+            Closing += ShellView_Closing;
+        }
+
+        private async void ShellView_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (VM == null) return;
+
+            var puedeCerrar = await VM.VerificarCajaAntesDeCerrarAsync();
+            if (!puedeCerrar)
+                e.Cancel = true;
         }
 
         private const string PreguntaCustomSentinel = "✏️ Otra pregunta (escribila vos)";
@@ -83,7 +93,14 @@ namespace GestionComercial.UI.Views.Main
                 ? WindowState.Normal
                 : WindowState.Maximized;
 
-private void Close_Click(object sender, RoutedEventArgs e) => Close();
+private async void Close_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM == null) { Close(); return; }
+
+            var puedeCerrar = await VM.VerificarCajaAntesDeCerrarAsync();
+            if (puedeCerrar)
+                Close();
+        }
 
         // ══ RESPONSIVE SIDEBAR ═══════════════════════════════════════════════════
 

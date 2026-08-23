@@ -1,5 +1,7 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.UI.ViewModels.Main;
@@ -15,15 +17,30 @@ using GestionComercial.UI.ViewModels.Reportes;
 using GestionComercial.UI.ViewModels.Ventas;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GestionComercial.UI.ViewModels.Main
 {
     public class ShellViewModel : Conductor<object>
     {
+        private readonly ICajaServicio?   _cajaServicio;
+        private readonly SesionServicio?  _sesion;
+        private readonly IUnitOfWork?     _uow;
+
         private string     _usuarioNombre   = "";
         private string     _usuarioRol      = "";
         private string     _usuarioSucursal = "";
         private RolUsuario _rol             = RolUsuario.Vendedor;
+
+        public ShellViewModel(
+            ICajaServicio?   cajaServicio = null,
+            SesionServicio?  sesion       = null,
+            IUnitOfWork?     uow          = null)
+        {
+            _cajaServicio = cajaServicio!;
+            _sesion       = sesion!;
+            _uow          = uow!;
+        }
 
         public string UsuarioNombre
         {
@@ -184,12 +201,50 @@ namespace GestionComercial.UI.ViewModels.Main
                 await ActivateItemAsync(IoC.Get<ReporteAdminViewModel>(),    CancellationToken.None);
         }
 
-        public void CerrarSesion()
+        public async Task CerrarSesion()
         {
+            // Verificar si la caja está abierta
+            if (_cajaServicio != null && _sesion != null)
+            {
+                var cajaAbierta = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
+                if (cajaAbierta != null)
+                {
+                    var resultado = MessageBox.Show(
+                        "⚠️ La caja está abierta.\n\n¿Desea cerrar sesión de todas formas?\n\nSe recomienda cerrar la caja antes de salir.",
+                        "Caja abierta",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (resultado != MessageBoxResult.Yes)
+                        return;
+                }
+            }
+
             var login = IoC.Get<LoginViewModel>();
             var wm    = IoC.Get<IWindowManager>();
             wm.ShowWindowAsync(login);
             TryCloseAsync();
+        }
+
+        /// Verifica si se puede cerrar la ventana. Retorna true si no hay caja abierta,
+        /// o false y muestra aviso si la caja está abierta.
+        public async Task<bool> VerificarCajaAntesDeCerrarAsync()
+        {
+            if (_cajaServicio == null || _sesion == null)
+                return true;
+
+            var cajaAbierta = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
+            if (cajaAbierta != null)
+            {
+                var resultado = MessageBox.Show(
+                    "⚠️ La caja está abierta.\n\n¿Desea cerrar el sistema de todas formas?\n\nSe recomienda cerrar la caja antes de salir.",
+                    "Caja abierta",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                return resultado == MessageBoxResult.Yes;
+            }
+            return true;
         }
     }
 }
