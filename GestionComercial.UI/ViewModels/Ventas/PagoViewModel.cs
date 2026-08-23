@@ -424,6 +424,18 @@ namespace GestionComercial.UI.ViewModels.Ventas
             if (linea == null) return;
             Pagos.Remove(linea);
             RecalcularTotalPagado();
+
+            // Si no quedan pagos, restaurar el total original inmediatamente (síncrono)
+            if (!Pagos.Any())
+            {
+                TotalVenta = _ventaCompleta != null
+                    ? _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento
+                    : TotalVenta;
+                LineasDescuento.Clear();
+                NotificarDescuentos();
+                MontoIngresado = TotalVenta.ToString("F2");
+            }
+
             _ = RecalcularDescuentoPreviewAsync();
         }
 
