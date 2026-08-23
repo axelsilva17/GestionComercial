@@ -423,8 +423,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public void QuitarPago(PagoLineaVm linea)
         {
             if (linea == null) return;
+            var montoAntes = TotalVenta;
             Pagos.Remove(linea);
             RecalcularTotalPagado();
+
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-QuitarPago] Pagos restantes: {Pagos.Count}, TotalVenta ANTES restore: {TotalVenta}, _totalVentaOriginal: {_totalVentaOriginal}");
 
             // Si no quedan pagos, restaurar el total original inmediatamente (síncrono)
             if (!Pagos.Any())
@@ -433,6 +436,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 LineasDescuento.Clear();
                 NotificarDescuentos();
                 MontoIngresado = TotalVenta.ToString("F2");
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-QuitarPago] RESTAURADO TotalVenta a {_totalVentaOriginal}, Faltante: {Faltante}");
             }
 
             _ = RecalcularDescuentoPreviewAsync();
@@ -716,6 +720,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
 
             TotalVenta = _totalVentaOriginal - totalDescuentoMetodoPago;
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-RecalcDesc] TotalVenta={TotalVenta}, descuento={totalDescuentoMetodoPago}, base={_totalVentaOriginal}");
 
             // Si el descuento reduce el total y ya hay pagos, ajustar para evitar vuelto falso
             if (totalDescuentoMetodoPago > 0 && Pagos.Any())
@@ -887,11 +892,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             _idVenta            = idVenta;
             ClienteNombre       = clienteNombre;
-            _totalVentaOriginal = totalFinal; // Guardar el total original SIN descuento de método
+            _totalVentaOriginal = totalFinal;
             TotalVenta          = totalFinal;
             Pagos               = new();
             MontoIngresado      = totalFinal.ToString("F2");
             RecalcularVuelto();
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-Init] totalFinal={totalFinal}, _totalVentaOriginal={_totalVentaOriginal}");
 
             // Cargar venta completa y caches para preview de descuentos
             _ventaCompleta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta);
