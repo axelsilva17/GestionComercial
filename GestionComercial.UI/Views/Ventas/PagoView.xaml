@@ -175,20 +175,16 @@
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
-                            <TextBlock FontSize="32" FontWeight="Bold" HorizontalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Text"       Value="{Binding Faltante, Converter={StaticResource DecimalToMoneda}}"/>
-                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HayVuelto}" Value="True">
-                                                <Setter Property="Text"       Value="{Binding Vuelto, Converter={StaticResource DecimalToMoneda}}"/>
-                                                <Setter Property="Foreground" Value="{DynamicResource PositiveBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                            <!-- Faltante (visible cuando no hay vuelto) -->
+                            <TextBlock FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource ErrorBrush}"
+                                       Text="{Binding Faltante, Converter={StaticResource DecimalToMoneda}}"
+                                       Visibility="{Binding HayVuelto, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"/>
+                            <!-- Vuelto (visible cuando hay vuelto) -->
+                            <TextBlock FontSize="32" FontWeight="Bold" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource PositiveBrush}"
+                                       Text="{Binding Vuelto, Converter={StaticResource DecimalToMoneda}}"
+                                       Visibility="{Binding HayVuelto, Converter={StaticResource BoolToVisibility}}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
