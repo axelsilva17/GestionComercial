@@ -114,6 +114,7 @@ namespace GestionComercial.UI
             _container.PerRequest<IRolServicio, RolServicio>();
             _container.PerRequest<IDescuentoConfiguracionServicio, DescuentoConfiguracionServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
+            _container.Singleton<DemoService>();
             // NOTE: VentaValidator se registra más abajo con Handler para pasar IUnitOfWork.Productos
 
             // ── Validators (FluentValidation) ─────────────────────────────────
@@ -314,6 +315,49 @@ namespace GestionComercial.UI
             {
                 // No bloquear el inicio de la app si el backup falla
                 System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático falló: {ex.Message}");
+            }
+
+            // ── Demo: verificar estado y mostrar showcase en primer inicio ──
+            try
+            {
+                var demoService = _container.GetInstance<DemoService>();
+                if (demoService.EsDemo)
+                {
+                    demoService.RegistrarInicioDemo();
+
+                    if (demoService.DemoExpirada)
+                    {
+                        MessageBox.Show(
+                            $"La versión de demostración ha expirado ({demoService.DiasRestantes} días restantes).\n\n" +
+                            "Contactanos para activar la licencia completa.\n" +
+                            "Email: soporte@gestioncomercial.com",
+                            "Demo Expirada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // Mostrar showcase de funcionalidades en el primer inicio
+                    var showcasePath = System.IO.Path.Combine(
+                        System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".",
+                        ".demo_shown");
+                    if (!System.IO.File.Exists(showcasePath))
+                    {
+                        await DisplayRootViewForAsync<GestionComercial.UI.ViewModels.FeatureShowcaseViewModel>();
+                        System.IO.File.WriteAllText(showcasePath, DateTime.Now.ToString("o"));
+                    }
+
+                    // Avisar días restantes
+                    if (demoService.DiasRestantes <= 7 && demoService.DiasRestantes > 0)
+                    {
+                        MessageBox.Show(
+                            $"Quedan {demoService.DiasRestantes} días de prueba.\n" +
+                            "Contactanos para activar la licencia completa.",
+                            "Aviso Demo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Demo check falló: {ex.Message}");
             }
 
             await DisplayRootViewForAsync<LoginViewModel>();
