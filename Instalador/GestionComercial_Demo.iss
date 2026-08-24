@@ -24,7 +24,7 @@ PrivilegesRequired=lowest
 DisableDirPage=no
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
-SetupIconFile=Instalador\logo.ico
+SetupIconFile=logo.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
