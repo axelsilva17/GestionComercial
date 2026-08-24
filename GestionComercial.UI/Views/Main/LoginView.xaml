@@ -726,11 +726,30 @@
 
                     <Button Grid.Column="0" Content="← Anterior"
                             cal:Message.Attach="Showcase.Retroceder"
-                            IsEnabled="{Binding Showcase.PuedeRetroceder}"
+                            Visibility="{Binding Showcase.PuedeRetroceder, Converter={StaticResource BoolToVisibility}}"
                             Background="{DynamicResource SurfaceBrush}"
                             Foreground="{DynamicResource TextPrimaryBrush}"
                             Padding="16,8" FontSize="13"
-                            BorderThickness="0" Cursor="Hand"/>
+                            BorderThickness="0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <Button Grid.Column="2"
                             cal:Message.Attach="Showcase.Avanzar"
@@ -740,6 +759,20 @@
                             BorderThickness="0" Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource PrimaryHoverBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                                 <Setter Property="Content" Value="Siguiente →"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Showcase.PuedeAvanzar}" Value="False">
