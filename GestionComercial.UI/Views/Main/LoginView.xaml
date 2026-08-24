@@ -725,7 +725,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Button Grid.Column="0" Content="← Anterior"
-                            cal:Message.Attach="Showcase.Retroceder"
+                            Click="ShowcaseAnterior_Click"
                             Visibility="{Binding Showcase.PuedeRetroceder, Converter={StaticResource BoolToVisibility}}"
                             Background="{DynamicResource SurfaceBrush}"
                             Foreground="{DynamicResource TextPrimaryBrush}"
@@ -752,7 +752,7 @@
                     </Button>
 
                     <Button Grid.Column="2"
-                            cal:Message.Attach="Showcase.Avanzar"
+                            Click="ShowcaseSiguiente_Click"
                             Background="{DynamicResource PrimaryBrush}"
                             Foreground="White"
                             Padding="16,8" FontSize="13" FontWeight="SemiBold"

@@ -226,6 +226,19 @@ namespace GestionComercial.UI.Views.Main
         private void VolverAPregunta_Click(object sender, RoutedEventArgs e)
             => MostrarPanel(PanelRecupPregunta);
 
+        // ── Showcase navigation ──────────────────────────────────────────────
+        private void ShowcaseAnterior_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel vm && vm.Showcase != null)
+                vm.Showcase.Retroceder();
+        }
+
+        private void ShowcaseSiguiente_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel vm && vm.Showcase != null)
+                vm.Showcase.Avanzar();
+        }
+
         // ── Helper ────────────────────────────────────────────────────────────
         private static void MostrarError(Border border, TextBlock text, string mensaje)
         {
