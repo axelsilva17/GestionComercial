@@ -24,43 +24,23 @@ PrivilegesRequired=lowest
 DisableDirPage=no
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
+SetupIconFile=Instalador\logo.ico
+UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "credcopy"; Description: "Incluir archivo de credenciales"; GroupDescription: "Opciones de demo:"
 
 [Files]
 ; Copiar todo el contenido de la carpeta publicada
 Source: "C:\GestionComercial_Demo\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Archivo de credenciales
-Source: "Instalador\CredencialesDemo.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
-
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyAppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\{#MyAppExeName}"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName}"; Flags: nowait postinstall skipifsilent
-
-[Code]
-// Mostrar credenciales después de la instalación
-procedure CurStepChanged(CurStep: TSetupStep);
-var
-  ResultCode: Integer;
-begin
-  if CurStep = ssPostInstall then
-  begin
-    // Preguntar si quiere ver las credenciales
-    if MsgBox('Instalación completada.' + #13#10 + #13#10 +
-              '¿Desea ver las credenciales de acceso?', 
-              mbConfirmation, MB_YESNO) = IDYES then
-    begin
-      ShellExec('open', '{app}\CredencialesDemo.txt', '', '', SW_SHOW, ewNoWait, ResultCode);
-    end;
-  end;
-end;
