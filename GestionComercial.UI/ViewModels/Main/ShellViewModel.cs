@@ -26,6 +26,7 @@ namespace GestionComercial.UI.ViewModels.Main
         private readonly ICajaServicio?   _cajaServicio;
         private readonly SesionServicio?  _sesion;
         private readonly IUnitOfWork?     _uow;
+        private readonly DemoService?     _demoService;
 
         private string     _usuarioNombre   = "";
         private string     _usuarioRol      = "";
@@ -35,11 +36,13 @@ namespace GestionComercial.UI.ViewModels.Main
         public ShellViewModel(
             ICajaServicio?   cajaServicio = null,
             SesionServicio?  sesion       = null,
-            IUnitOfWork?     uow          = null)
+            IUnitOfWork?     uow          = null,
+            DemoService?     demoService  = null)
         {
             _cajaServicio = cajaServicio!;
             _sesion       = sesion!;
             _uow          = uow!;
+            _demoService  = demoService!;
         }
 
         public string UsuarioNombre
@@ -78,6 +81,47 @@ namespace GestionComercial.UI.ViewModels.Main
                 NotifyOfPropertyChange(() => MostrarReportes);
                 NotifyOfPropertyChange(() => MostrarConfiguracion);
                 NotifyOfPropertyChange(() => MostrarDescuentos);
+            }
+        }
+
+        // ── Showcase overlay ─────────────────────────────────────────────────
+        private bool _mostrarShowcase;
+        public bool MostrarShowcase
+        {
+            get => _mostrarShowcase;
+            set { _mostrarShowcase = value; NotifyOfPropertyChange(() => MostrarShowcase); }
+        }
+
+        private FeatureShowcaseViewModel? _showcase;
+        public FeatureShowcaseViewModel? Showcase
+        {
+            get => _showcase;
+            set { _showcase = value; NotifyOfPropertyChange(() => Showcase); }
+        }
+
+        public void IniciarShowcase()
+        {
+            Showcase = new FeatureShowcaseViewModel();
+            Showcase.CloseRequested += CerrarShowcase;
+            MostrarShowcase = true;
+        }
+
+        public void CerrarShowcase()
+        {
+            MostrarShowcase = false;
+            Showcase = null;
+        }
+
+        /// <summary>
+        /// Verifica si debe mostrar el showcase de demo (solo primera vez).
+        /// Llamar después de ConfigurarSesion.
+        /// </summary>
+        public void VerificarShowcaseDemo()
+        {
+            if (_demoService != null && _demoService.MostrarShowcasePendiente)
+            {
+                IniciarShowcase();
+                _demoService.MarcarShowcaseMostrado();
             }
         }
 

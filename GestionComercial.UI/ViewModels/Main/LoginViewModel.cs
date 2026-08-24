@@ -69,6 +69,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 shell.IdSucursalActual = sesion.IdSucursal;
                 shell.SesionActual     = sesion;
                 await shell.ConfigurarSesion(sesion.NombreCompleto, sesion.Rol, sesion.Sucursal, sesion);
+                shell.VerificarShowcaseDemo();
                 await _windowManager.ShowWindowAsync(shell);
                 await TryCloseAsync();
             }

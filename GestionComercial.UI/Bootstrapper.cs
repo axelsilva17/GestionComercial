@@ -324,6 +324,7 @@ namespace GestionComercial.UI
                 if (demoService.EsDemo)
                 {
                     demoService.RegistrarInicioDemo();
+                    demoService.GenerarCredencialesIniciales();
 
                     if (demoService.DemoExpirada)
                     {
@@ -333,16 +334,6 @@ namespace GestionComercial.UI
                             "Email: soporte@gestioncomercial.com",
                             "Demo Expirada", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
-                    }
-
-                    // Mostrar showcase de funcionalidades en el primer inicio
-                    var showcasePath = System.IO.Path.Combine(
-                        System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".",
-                        ".demo_shown");
-                    if (!System.IO.File.Exists(showcasePath))
-                    {
-                        await DisplayRootViewForAsync<GestionComercial.UI.ViewModels.FeatureShowcaseViewModel>();
-                        System.IO.File.WriteAllText(showcasePath, DateTime.Now.ToString("o"));
                     }
 
                     // Avisar días restantes

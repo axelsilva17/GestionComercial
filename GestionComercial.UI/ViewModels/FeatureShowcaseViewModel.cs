@@ -1,8 +1,6 @@
 using Caliburn.Micro;
-using GestionComercial.UI.ViewModels.Base;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels
 {
@@ -21,6 +19,8 @@ namespace GestionComercial.UI.ViewModels
         public bool PuedeAvanzar => CurrentIndex < Features.Count - 1;
         public bool PuedeRetroceder => CurrentIndex > 0;
         public string Progreso => $"{CurrentIndex + 1} / {Features.Count}";
+
+        public event System.Action? CloseRequested;
 
         public List<FeatureInfo> Features { get; } = new()
         {
@@ -42,8 +42,8 @@ namespace GestionComercial.UI.ViewModels
                 "5 roles preconfigurados (Admin, Gerente, Vendedor, Compras, Inventario) con permisos granulares por módulo. Contraseñas hasheadas con BCrypt."),
             new("💾", "Backup Automático",
                 "Respaldo automático de la base de datos con configuración de frecuencia y ruta personalizable. Restauración con un clic."),
-            new("⚡", "Rendimiento",
-                "Búsqueda server-side, queries optimizadas, lotes de actualización y 404 tests unitarios garantizando la calidad del código."),
+            new("📋", "Gestión de Compras",
+                "Registro de compras con selección de proveedor, detalle de ítems, cálculo automático de totales y actualización de stock al confirmar."),
         };
 
         public FeatureShowcaseViewModel() { }
@@ -58,9 +58,9 @@ namespace GestionComercial.UI.ViewModels
             if (PuedeRetroceder) CurrentIndex--;
         }
 
-        public async Task Finalizar()
+        public void Finalizar()
         {
-            await TryCloseAsync(true);
+            CloseRequested?.Invoke();
         }
     }
 
