@@ -97,6 +97,7 @@ namespace GestionComercial.Persistencia.Contexto
             SemillaCaja.Sembrar(modelBuilder);
             SemillaVentas.Sembrar(modelBuilder);
             SemillaCompras.Sembrar(modelBuilder);
+            SemillaUsuario.Sembrar(modelBuilder);
 
         }
     }
