@@ -733,7 +733,7 @@
                             BorderThickness="0" Cursor="Hand"/>
 
                     <Button Grid.Column="2"
-                            cal:Message.Attach="Showcase.Siguiente"
+                            cal:Message.Attach="Showcase.Avanzar"
                             Background="{DynamicResource PrimaryBrush}"
                             Foreground="White"
                             Padding="16,8" FontSize="13" FontWeight="SemiBold"

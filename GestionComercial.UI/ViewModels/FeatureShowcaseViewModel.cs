@@ -27,8 +27,7 @@ namespace GestionComercial.UI.ViewModels
         {
             new("🚀", "Gestión Comercial — Versión Completa",
                 "Estás probando la versión demo con 30 días de uso. " +
-                "La versión completa incluye todos los módulos sin límites de productos ni ventas. " +
-                "A continuación te mostramos todo lo que podés tener."),
+                "La versión completa incluye todos los módulos sin límites de productos ni ventas."),
             new("🛒", "Punto de Venta",
                 "Sistema completo de ventas con carrito, descuentos por ítem, múltiples métodos de pago (efectivo, tarjeta, transferencia) y comprobantes automáticos."),
             new("📦", "Gestión de Productos",
@@ -55,20 +54,15 @@ namespace GestionComercial.UI.ViewModels
 
         public void Avanzar()
         {
-            if (PuedeAvanzar) CurrentIndex++;
+            if (EsUltimoSlide)
+                Finalizar();
+            else
+                CurrentIndex++;
         }
 
         public void Retroceder()
         {
             if (PuedeRetroceder) CurrentIndex--;
-        }
-
-        public void Siguiente()
-        {
-            if (EsUltimoSlide)
-                Finalizar();
-            else
-                Avanzar();
         }
 
         public void Finalizar()
