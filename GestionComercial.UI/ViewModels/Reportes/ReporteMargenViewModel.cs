@@ -1,5 +1,7 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Reportes;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
@@ -9,8 +11,17 @@ namespace GestionComercial.UI.ViewModels.Reportes
 {
     public class ReporteMargenViewModel : NavigableViewModel
     {
+        private readonly IReporteServicio _reporteServicio;
+        private readonly SesionServicio _sesion;
+
         public DateTime FechaDesde { get; set; }
         public DateTime FechaHasta { get; set; }
+
+        public ReporteMargenViewModel(IReporteServicio reporteServicio, SesionServicio sesion)
+        {
+            _reporteServicio = reporteServicio;
+            _sesion = sesion;
+        }
 
         private ObservableCollection<ReporteMargenDto> _items = new();
         public ObservableCollection<ReporteMargenDto> Items
@@ -28,20 +39,16 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
         public async Task CargarAsync()
         {
-            await Task.Delay(200); // TODO: await _reporteServicio.ObtenerMargenAsync(FechaDesde, FechaHasta)
-            CargarMock();
-        }
-
-        private void CargarMock()
-        {
-            Items = new ObservableCollection<ReporteMargenDto>
+            try
             {
-                new() { IdProducto = 1, ProductoNombre = "Auriculares Pro X",  Categoria = "Electrónica", PrecioCosto = 15000, PrecioVenta = 24000, MargenUnitario = 9000,  MargenPorcentaje = 37.5m, CantidadVendida = 45, MargenTotal = 405000 },
-                new() { IdProducto = 2, ProductoNombre = "Mouse Inalámbrico",  Categoria = "Electrónica", PrecioCosto = 8000,  PrecioVenta = 12500, MargenUnitario = 4500,  MargenPorcentaje = 36.0m, CantidadVendida = 62, MargenTotal = 279000 },
-                new() { IdProducto = 3, ProductoNombre = "Teclado Mecánico",   Categoria = "Electrónica", PrecioCosto = 22000, PrecioVenta = 34000, MargenUnitario = 12000, MargenPorcentaje = 35.3m, CantidadVendida = 28, MargenTotal = 336000 },
-                new() { IdProducto = 4, ProductoNombre = "Monitor 24\"",       Categoria = "Electrónica", PrecioCosto = 85000, PrecioVenta = 120000,MargenUnitario = 35000, MargenPorcentaje = 29.2m, CantidadVendida = 12, MargenTotal = 420000 },
-                new() { IdProducto = 5, ProductoNombre = "Webcam HD",          Categoria = "Electrónica", PrecioCosto = 12000, PrecioVenta = 18000, MargenUnitario = 6000,  MargenPorcentaje = 33.3m, CantidadVendida = 34, MargenTotal = 204000 },
-            };
+                var datos = await _reporteServicio.MargenPorProductoAsync(
+                    _sesion.IdEmpresa, FechaDesde, FechaHasta);
+                Items = new ObservableCollection<ReporteMargenDto>(datos);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ReporteMargen] Error: {ex.Message}");
+            }
         }
     }
 }

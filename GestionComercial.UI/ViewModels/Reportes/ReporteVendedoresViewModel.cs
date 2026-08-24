@@ -1,16 +1,28 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Reportes;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Reportes
 {
     public class ReporteVendedoresViewModel : NavigableViewModel
     {
+        private readonly IReporteServicio _reporteServicio;
+        private readonly SesionServicio _sesion;
+
         public DateTime FechaDesde { get; set; }
         public DateTime FechaHasta { get; set; }
+
+        public ReporteVendedoresViewModel(IReporteServicio reporteServicio, SesionServicio sesion)
+        {
+            _reporteServicio = reporteServicio;
+            _sesion = sesion;
+        }
 
         private ObservableCollection<ReporteVendedorDto> _items = new();
         public ObservableCollection<ReporteVendedorDto> Items
@@ -19,7 +31,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _items = value; NotifyOfPropertyChange(() => Items); }
         }
 
-        // Top vendedor
         private ReporteVendedorDto _topVendedor;
         public ReporteVendedorDto TopVendedor
         {
@@ -29,16 +40,18 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
         public async Task CargarAsync()
         {
-            await Task.Delay(200); // TODO: await _reporteServicio.ObtenerVendedoresAsync(FechaDesde, FechaHasta)
-            CargarMock();
-        }
-
-        private void CargarMock()
-        {
-            
-
-            // Top vendedor = el primero ordenado por TotalVendido
-            TopVendedor = Items[0];
+            try
+            {
+                var datos = await _reporteServicio.VentasPorVendedorAsync(
+                    _sesion.IdSucursal, FechaDesde, FechaHasta);
+                var lista = datos.OrderByDescending(v => v.TotalVendido).ToList();
+                Items = new ObservableCollection<ReporteVendedorDto>(lista);
+                TopVendedor = lista.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ReporteVendedores] Error: {ex.Message}");
+            }
         }
     }
 }
