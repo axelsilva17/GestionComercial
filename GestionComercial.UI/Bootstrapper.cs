@@ -211,6 +211,51 @@ namespace GestionComercial.UI
                 // Ejecutar migraciones pendientes (incluye baseline + views + triggers).
                 await context.Database.MigrateAsync();
 
+                // ── Seed usuarios demo si no existen ────────────────────
+                // HasData solo inserta en creación de BD nueva; si la BD
+                // ya existía antes de la migración AddDemoUsers, los
+                // usuarios no se insertan. Los agregamos aquí por seguridad.
+                var emailsDemo = new[] { "admin@demo.com", "vendedor@demo.com", "gerente@demo.com" };
+                var existentes = await context.Usuarios
+                    .Where(u => emailsDemo.Contains(u.Email))
+                    .Select(u => u.Email)
+                    .ToListAsync();
+
+                if (!existentes.Contains("admin@demo.com"))
+                {
+                    var nextId = await context.Usuarios.MaxAsync(u => (int?)u.Id) ?? 0 + 1;
+                    context.Usuarios.AddRange(
+                        new Dominio.Entidades.Seguridad.Usuario
+                        {
+                            Id = nextId, Nombre = "Admin", Apellido = "Sistema",
+                            Email = "admin@demo.com",
+                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
+                            Id_sucursal = 1, Id_rol = 2,
+                            IntentosFallidos = 0, Activo = true,
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new Dominio.Entidades.Seguridad.Usuario
+                        {
+                            Id = nextId + 1, Nombre = "Vendedor", Apellido = "Demo",
+                            Email = "vendedor@demo.com",
+                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
+                            Id_sucursal = 1, Id_rol = 3,
+                            IntentosFallidos = 0, Activo = true,
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new Dominio.Entidades.Seguridad.Usuario
+                        {
+                            Id = nextId + 2, Nombre = "Gerente", Apellido = "Demo",
+                            Email = "gerente@demo.com",
+                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
+                            Id_sucursal = 1, Id_rol = 1,
+                            IntentosFallidos = 0, Activo = true,
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                        }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
                 // ── First-run: si no hay usuarios, mostrar configuración inicial ──
                 var tieneUsuarios = await context.Usuarios.AnyAsync();
                 if (!tieneUsuarios)
