@@ -10,12 +10,12 @@ namespace GestionComercial.Persistencia.Repositorio
         public UsuarioRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<Usuario?> ObtenerPorEmailAsync(string email)
-            => 
+            =>
             await _dbSet
                 .Include(u => u.Rol)
                 .Include(u => u.Sucursal)
                     .ThenInclude(s => s.Empresa)
-                .FirstOrDefaultAsync(u => u.Email == email && u.Activo);
+                .FirstOrDefaultAsync(u => u.Email == email.ToLower().Trim() && u.Activo);
 
         public async Task<IEnumerable<Usuario>> ObtenerPorSucursalAsync(int idSucursal)
             => await _dbSet

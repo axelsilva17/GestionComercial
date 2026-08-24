@@ -223,37 +223,75 @@ namespace GestionComercial.UI
 
                 if (!existentes.Contains("admin@demo.com"))
                 {
-                    var nextId = await context.Usuarios.MaxAsync(u => (int?)u.Id) ?? 0 + 1;
-                    context.Usuarios.AddRange(
-                        new Dominio.Entidades.Seguridad.Usuario
+                    try
+                    {
+                        // Verificar que las FK existan (Sucursal Id=1, Rol Id=1..3)
+                        var sucursalExiste = await context.Set<Dominio.Entidades.Organizacion.Sucursal>()
+                            .AnyAsync(s => s.Id == 1);
+                        var rolesExiste = await context.Set<Dominio.Entidades.Seguridad.Rol>()
+                            .CountAsync(r => r.Id >= 1 && r.Id <= 3);
+
+                        if (!sucursalExiste || rolesExiste < 3)
                         {
-                            Id = nextId, Nombre = "Admin", Apellido = "Sistema",
-                            Email = "admin@demo.com",
-                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
-                            Id_sucursal = 1, Id_rol = 2,
-                            IntentosFallidos = 0, Activo = true,
-                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new Dominio.Entidades.Seguridad.Usuario
-                        {
-                            Id = nextId + 1, Nombre = "Vendedor", Apellido = "Demo",
-                            Email = "vendedor@demo.com",
-                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
-                            Id_sucursal = 1, Id_rol = 3,
-                            IntentosFallidos = 0, Activo = true,
-                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new Dominio.Entidades.Seguridad.Usuario
-                        {
-                            Id = nextId + 2, Nombre = "Gerente", Apellido = "Demo",
-                            Email = "gerente@demo.com",
-                            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
-                            Id_sucursal = 1, Id_rol = 1,
-                            IntentosFallidos = 0, Activo = true,
-                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                            System.Diagnostics.Debug.WriteLine(
+                                $"[Bootstrapper] FK no satisfechas para demo users: " +
+                                $"Sucursal(1)={sucursalExiste}, Roles={rolesExiste}/3");
                         }
-                    );
-                    await context.SaveChangesAsync();
+                        else
+                        {
+                            // Precedencia: (MaxAsync ?? 0) + 1 — paréntesis explícitos
+                            var maxId = await context.Usuarios.MaxAsync(u => (int?)u.Id) ?? 0;
+                            var nextId = maxId + 1;
+
+                            var usuariosDemo = new[]
+                            {
+                                new Dominio.Entidades.Seguridad.Usuario
+                                {
+                                    Id = nextId, Nombre = "Admin", Apellido = "Sistema",
+                                    Email = "admin@demo.com",
+                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
+                                    Id_sucursal = 1, Id_rol = 2,
+                                    IntentosFallidos = 0, Activo = true,
+                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                },
+                                new Dominio.Entidades.Seguridad.Usuario
+                                {
+                                    Id = nextId + 1, Nombre = "Vendedor", Apellido = "Demo",
+                                    Email = "vendedor@demo.com",
+                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
+                                    Id_sucursal = 1, Id_rol = 3,
+                                    IntentosFallidos = 0, Activo = true,
+                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                },
+                                new Dominio.Entidades.Seguridad.Usuario
+                                {
+                                    Id = nextId + 2, Nombre = "Gerente", Apellido = "Demo",
+                                    Email = "gerente@demo.com",
+                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
+                                    Id_sucursal = 1, Id_rol = 1,
+                                    IntentosFallidos = 0, Activo = true,
+                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                }
+                            };
+
+                            // Insertar uno por uno para tolerar PK duplicada (BD antigua)
+                            foreach (var u in usuariosDemo)
+                            {
+                                if (!await context.Usuarios.AnyAsync(x => x.Email == u.Email))
+                                {
+                                    context.Usuarios.Add(u);
+                                }
+                            }
+                            await context.SaveChangesAsync();
+                            System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuarios demo insertados correctamente");
+                        }
+                    }
+                    catch (Exception exSeed)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error insertando usuarios demo: {exSeed.Message}");
+                        if (exSeed.InnerException != null)
+                            System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
+                    }
                 }
 
                 // ── First-run: si no hay usuarios, mostrar configuración inicial ──
