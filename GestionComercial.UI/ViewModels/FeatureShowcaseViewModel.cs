@@ -10,7 +10,7 @@ namespace GestionComercial.UI.ViewModels
         public int CurrentIndex
         {
             get => _currentIndex;
-            set { _currentIndex = value; NotifyOfPropertyChange(() => CurrentIndex); NotifyOfPropertyChange(() => TituloActual); NotifyOfPropertyChange(() => DescripcionActual); NotifyOfPropertyChange(() => IconoActual); NotifyOfPropertyChange(() => PuedeAvanzar); NotifyOfPropertyChange(() => PuedeRetroceder); NotifyOfPropertyChange(() => Progreso); }
+            set { _currentIndex = value; NotifyOfPropertyChange(() => CurrentIndex); NotifyOfPropertyChange(() => TituloActual); NotifyOfPropertyChange(() => DescripcionActual); NotifyOfPropertyChange(() => IconoActual); NotifyOfPropertyChange(() => PuedeAvanzar); NotifyOfPropertyChange(() => PuedeRetroceder); NotifyOfPropertyChange(() => EsUltimoSlide); NotifyOfPropertyChange(() => Progreso); }
         }
 
         public string TituloActual => Features[CurrentIndex].Titulo;
@@ -18,12 +18,17 @@ namespace GestionComercial.UI.ViewModels
         public string IconoActual => Features[CurrentIndex].Icono;
         public bool PuedeAvanzar => CurrentIndex < Features.Count - 1;
         public bool PuedeRetroceder => CurrentIndex > 0;
+        public bool EsUltimoSlide => CurrentIndex == Features.Count - 1;
         public string Progreso => $"{CurrentIndex + 1} / {Features.Count}";
 
         public event System.Action? CloseRequested;
 
         public List<FeatureInfo> Features { get; } = new()
         {
+            new("🚀", "Gestión Comercial — Versión Completa",
+                "Estás probando la versión demo con 30 días de uso. " +
+                "La versión completa incluye todos los módulos sin límites de productos ni ventas. " +
+                "A continuación te mostramos todo lo que podés tener."),
             new("🛒", "Punto de Venta",
                 "Sistema completo de ventas con carrito, descuentos por ítem, múltiples métodos de pago (efectivo, tarjeta, transferencia) y comprobantes automáticos."),
             new("📦", "Gestión de Productos",
@@ -56,6 +61,14 @@ namespace GestionComercial.UI.ViewModels
         public void Retroceder()
         {
             if (PuedeRetroceder) CurrentIndex--;
+        }
+
+        public void Siguiente()
+        {
+            if (EsUltimoSlide)
+                Finalizar();
+            else
+                Avanzar();
         }
 
         public void Finalizar()
