@@ -43,9 +43,6 @@ LIMITACIONES DE LA VERSIÓN DEMO:
   - Máximo 200 ventas
   - Funcionalidades completas habilitadas
 
-Para activar la licencia completa, reemplace el archivo
-"licencia.dat" en la carpeta de instalación.
-
 ---------------------------------------------------------------
 Soporte: soporte@gestioncomercial.com
 =============================================================

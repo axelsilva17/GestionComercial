@@ -2648,39 +2648,39 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Apellido = "Sistema",
-                            Email = "admin@sistema.com",
-                            FechaAlta = new DateTime(2026, 4, 26, 17, 44, 55, 979, DateTimeKind.Local).AddTicks(3712),
+                            Email = "admin@demo.com",
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                             Id_rol = 2,
                             Id_sucursal = 1,
                             IntentosFallidos = 0,
-                            Nombre = "Administrador",
-                            PasswordHash = "$2a$12$1afFAY7Q1dY9UOpV5EboqOM9P1IO41RZz4F01zEqC918SeOU0qaRy"
+                            Nombre = "Admin",
+                            PasswordHash = "$2a$10$vZSSeTQhuOMqZQnUDpuO2.cMfnBcqwuzKGUR4jeq5v96n6rD0e13C"
                         },
                         new
                         {
                             Id = 2,
                             Activo = true,
-                            Apellido = "General",
-                            Email = "gerente@sistema.com",
-                            FechaAlta = new DateTime(2026, 4, 26, 17, 44, 55, 979, DateTimeKind.Local).AddTicks(3744),
-                            Id_rol = 1,
+                            Apellido = "Demo",
+                            Email = "vendedor@demo.com",
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                            Id_rol = 3,
                             Id_sucursal = 1,
                             IntentosFallidos = 0,
-                            Nombre = "Gerente",
-                            PasswordHash = "$2a$12$NKA/6TaLtSB80UsdZUsZN.uO0IhAMH03WPDNeRQMOHrN/XRTECI9a"
+                            Nombre = "Vendedor",
+                            PasswordHash = "$2a$10$LUIblGp1Yji4FbTt64k3e.e8I5nNfDu4WznoJ1P3DwB6WIU9g246a"
                         },
                         new
                         {
                             Id = 3,
                             Activo = true,
-                            Apellido = "Sistema",
-                            Email = "vendedor@sistema.com",
-                            FechaAlta = new DateTime(2026, 4, 26, 17, 44, 55, 979, DateTimeKind.Local).AddTicks(3748),
-                            Id_rol = 3,
+                            Apellido = "Demo",
+                            Email = "gerente@demo.com",
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                            Id_rol = 1,
                             Id_sucursal = 1,
                             IntentosFallidos = 0,
-                            Nombre = "Vendedor",
-                            PasswordHash = "$2a$12$v4qlp9oXiSIn8kCyfNdmU.fQJMAETzMpXvXVF9h5U.TnxOvq1yolu"
+                            Nombre = "Gerente",
+                            PasswordHash = "$2a$10$zd3k2FDRQhwROhoa3URlg.kHvSFnim0Hhi/zukq3hAOth4P/EL83y"
                         });
                 });
 
