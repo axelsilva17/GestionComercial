@@ -115,6 +115,7 @@ namespace GestionComercial.UI
             _container.PerRequest<IDescuentoConfiguracionServicio, DescuentoConfiguracionServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
             _container.Singleton<DemoService>();
+            _container.Singleton<DemoFeatureService>();
             // NOTE: VentaValidator se registra más abajo con Handler para pasar IUnitOfWork.Productos
 
             // ── Validators (FluentValidation) ─────────────────────────────────

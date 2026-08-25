@@ -1,10 +1,12 @@
 using Caliburn.Micro;
 using GestionComercial.Dominio.Entidades.Proveedores;
 using ClosedXML.Excel;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -21,18 +23,21 @@ namespace GestionComercial.UI.ViewModels.Productos
         private readonly IInventarioServicio _inventarioServicio;
         private readonly ShellViewModel _shell;
         private readonly ILogger<ProductoListadoViewModel>? _logger;
+        private readonly DemoFeatureService? _demoFeatures;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
         public ProductoListadoViewModel(
             IProductoServicio productoServicio,
             IInventarioServicio inventarioServicio,
             ShellViewModel shell,
-            ILogger<ProductoListadoViewModel>? logger = null)
+            ILogger<ProductoListadoViewModel>? logger = null,
+            DemoFeatureService? demoFeatures = null)
         {
             _productoServicio = productoServicio;
             _inventarioServicio = inventarioServicio;
             _shell = shell;
             _logger = logger;
+            _demoFeatures = demoFeatures;
             Titulo    = "Productos";
             Subtitulo = "Catálogo de productos";
         }
@@ -508,6 +513,11 @@ namespace GestionComercial.UI.ViewModels.Productos
         // ── Ajuste Masivo de Precios ─────────────────────────────────
         public void AbrirAjusteMasivo()
         {
+            if (_demoFeatures?.EsDemo == true && _demoFeatures?.PuedeEjecutarAccion("productos", "ajuste_masivo") == false)
+            {
+                MessageBox.Show(DemoFeatureService.MensajeDemo, "Versión Demo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
             MostrarPopupAjuste = true;
             PorcentajeAjuste = 0;
             MontoFijo = 0;

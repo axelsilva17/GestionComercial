@@ -618,7 +618,7 @@
                 </TabItem>
 
                 <!-- ── ROLES ──────────────────────────────────────────────── -->
-                <TabItem>
+                <TabItem Visibility="{Binding MostrarRoles, Converter={StaticResource BoolToVisibility}}">
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🔑" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -895,7 +895,7 @@
                  </TabItem>
 
                 <!-- ── BACKUP ────────────────────────────────────────────── -->
-                <TabItem>
+                <TabItem Visibility="{Binding MostrarBackup, Converter={StaticResource BoolToVisibility}}">
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💾" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>

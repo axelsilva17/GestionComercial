@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.UI.ViewModels.Caja;
 using GestionComercial.UI.ViewModels.Clientes;
@@ -26,6 +27,7 @@ namespace GestionComercial.UI.ViewModels.Main
         private readonly ICajaServicio?   _cajaServicio;
         private readonly SesionServicio?  _sesion;
         private readonly IUnitOfWork?     _uow;
+        private readonly DemoFeatureService? _demoFeatures;
 
         private string     _usuarioNombre   = "";
         private string     _usuarioRol      = "";
@@ -33,13 +35,15 @@ namespace GestionComercial.UI.ViewModels.Main
         private RolUsuario _rol             = RolUsuario.Vendedor;
 
         public ShellViewModel(
-            ICajaServicio?   cajaServicio = null,
-            SesionServicio?  sesion       = null,
-            IUnitOfWork?     uow          = null)
+            ICajaServicio?      cajaServicio  = null,
+            SesionServicio?     sesion        = null,
+            IUnitOfWork?        uow           = null,
+            DemoFeatureService? demoFeatures  = null)
         {
-            _cajaServicio = cajaServicio!;
-            _sesion       = sesion!;
-            _uow          = uow!;
+            _cajaServicio  = cajaServicio!;
+            _sesion        = sesion!;
+            _uow           = uow!;
+            _demoFeatures  = demoFeatures;
         }
 
         public string UsuarioNombre
@@ -100,18 +104,37 @@ namespace GestionComercial.UI.ViewModels.Main
         private bool HasPermission(string codigo) =>
             SesionActual.Permisos?.Contains(codigo) == true;
 
-        // ── Visibilidad módulos (basada en permisos) ──────────────────────────
-        public bool MostrarVentas       => HasPermission("Ventas.Ver");
-        public bool MostrarCaja         => HasPermission("Caja.Abrir");
-        public bool MostrarCompras      => HasPermission("Compras.Ver");
-        public bool MostrarCatalogo     => HasPermission("Productos.Ver");
-        public bool MostrarProductos    => HasPermission("Productos.Ver");
-        public bool MostrarInventario   => HasPermission("Productos.Ver");
-        public bool MostrarClientes     => HasPermission("Clientes.Ver");
-        public bool MostrarProveedores  => HasPermission("Compras.Ver");
-        public bool MostrarReportes     => HasPermission("Reportes.Ver");
-        public bool MostrarConfiguracion => HasPermission("Configuracion.Ver");
-        public bool MostrarDescuentos    => HasPermission("Descuentos.Ver");
+        private string RolNombre => Rol switch
+        {
+            RolUsuario.Gerente       => "Gerente",
+            RolUsuario.Administrador => "Administrador",
+            _                        => "Vendedor",
+        };
+
+        private bool DemoPuede(string modulo) =>
+            _demoFeatures?.PuedeAcceder(modulo, RolNombre) ?? true;
+
+        private void MostrarMensajeDemo()
+        {
+            MessageBox.Show(
+                DemoFeatureService.MensajeDemo,
+                "Versión Demo",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        // ── Visibilidad módulos (basada en permisos + demo) ───────────────────
+        public bool MostrarVentas       => HasPermission("Ventas.Ver") && DemoPuede("ventas");
+        public bool MostrarCaja         => HasPermission("Caja.Abrir") && DemoPuede("caja");
+        public bool MostrarCompras      => HasPermission("Compras.Ver") && DemoPuede("compras");
+        public bool MostrarCatalogo     => HasPermission("Productos.Ver") && DemoPuede("productos");
+        public bool MostrarProductos    => HasPermission("Productos.Ver") && DemoPuede("productos");
+        public bool MostrarInventario   => HasPermission("Productos.Ver") && DemoPuede("inventario");
+        public bool MostrarClientes     => HasPermission("Clientes.Ver") && DemoPuede("clientes");
+        public bool MostrarProveedores  => HasPermission("Compras.Ver") && DemoPuede("proveedores");
+        public bool MostrarReportes     => HasPermission("Reportes.Ver") && DemoPuede("reportes");
+        public bool MostrarConfiguracion => HasPermission("Configuracion.Ver") && DemoPuede("configuracion");
+        public bool MostrarDescuentos    => HasPermission("Descuentos.Ver") && DemoPuede("descuentos");
 
 
         public int              IdEmpresaActual  { get; internal set; }
@@ -163,18 +186,31 @@ namespace GestionComercial.UI.ViewModels.Main
 
         // ── Navegación ────────────────────────────────────────────────────────
         public async Task IrDashboard()     => await ActivateItemAsync(IoC.Get<DashboardViewModel>(),        CancellationToken.None);
-        public async Task IrVentas()        => await ActivateItemAsync(IoC.Get<VentaViewModel>(),            CancellationToken.None);
+        public async Task IrVentas()
+        {
+            if (!DemoPuede("ventas")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
+        }
         public async Task IrVentasPendientes()
         {
+            if (!DemoPuede("ventas")) { MostrarMensajeDemo(); return; }
             var vm = IoC.Get<VentaListadoViewModel>();
             vm.FiltroEstado = "Pendiente";
             await ActivateItemAsync(vm, CancellationToken.None);
         }
-        public async Task IrCompras()       => await ActivateItemAsync(IoC.Get<CompraListadoViewModel>(),    CancellationToken.None);
-        public async Task IrCaja()          => await ActivateItemAsync(IoC.Get<CajaViewModel>(),             CancellationToken.None);
+        public async Task IrCompras()
+        {
+            if (!DemoPuede("compras")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<CompraListadoViewModel>(), CancellationToken.None);
+        }
+        public async Task IrCaja()
+        {
+            if (!DemoPuede("caja")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<CajaViewModel>(), CancellationToken.None);
+        }
         public async Task IrProductos()
         {
-            // Resetear filtro de stock crítico al navegar normal
+            if (!DemoPuede("productos")) { MostrarMensajeDemo(); return; }
             var vm = IoC.Get<ProductoListadoViewModel>();
             vm.MostrarSoloStockCritico = false;
             await ActivateItemAsync(vm, CancellationToken.None);
@@ -182,19 +218,41 @@ namespace GestionComercial.UI.ViewModels.Main
 
         public async Task IrProductosStockCritico()
         {
+            if (!DemoPuede("productos")) { MostrarMensajeDemo(); return; }
             var vm = IoC.Get<ProductoListadoViewModel>();
             vm.MostrarSoloStockCritico = true;
             await ActivateItemAsync(vm, CancellationToken.None);
         }
-        public async Task IrInventario()    => await ActivateItemAsync(IoC.Get<InventarioViewModel>(),       CancellationToken.None);
-        public async Task IrClientes()      => await ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(),   CancellationToken.None);
-        public async Task IrProveedores()   => await ActivateItemAsync(IoC.Get<ProveedorListadoViewModel>(), CancellationToken.None);
-        public async Task IrConfiguracion() => await ActivateItemAsync(IoC.Get<ConfiguracionViewModel>(),    CancellationToken.None);
-        public async Task IrDescuentos()    => await ActivateItemAsync(IoC.Get<DescuentoListadoViewModel>(), CancellationToken.None);
+        public async Task IrInventario()
+        {
+            if (!DemoPuede("inventario")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<InventarioViewModel>(), CancellationToken.None);
+        }
+        public async Task IrClientes()
+        {
+            if (!DemoPuede("clientes")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(), CancellationToken.None);
+        }
+        public async Task IrProveedores()
+        {
+            if (!DemoPuede("proveedores")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<ProveedorListadoViewModel>(), CancellationToken.None);
+        }
+        public async Task IrConfiguracion()
+        {
+            if (!DemoPuede("configuracion")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<ConfiguracionViewModel>(), CancellationToken.None);
+        }
+        public async Task IrDescuentos()
+        {
+            if (!DemoPuede("descuentos")) { MostrarMensajeDemo(); return; }
+            await ActivateItemAsync(IoC.Get<DescuentoListadoViewModel>(), CancellationToken.None);
+        }
 
         // Reportes diferenciados por rol
         public async Task IrReportes()
         {
+            if (!DemoPuede("reportes")) { MostrarMensajeDemo(); return; }
             if (EsGerente || EsUsuarioUnico)
                 await ActivateItemAsync(IoC.Get<ReporteGerenciaViewModel>(), CancellationToken.None);
             else
