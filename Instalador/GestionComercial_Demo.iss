@@ -34,10 +34,8 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; DB pre-cargada: solo copiar si no existe (no sobrescribir datos del usuario)
-Source: "C:\GestionComercial_Demo\GestionComercial.db"; DestDir: "{app}"; Flags: onlyifdoesntexist
-; Copiar resto de archivos (exe, dlls, etc.)
-Source: "C:\GestionComercial_Demo\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "GestionComercial.db"
+; Copiar todo el contenido de la carpeta publicada (incluye DB pre-cargada)
+Source: "C:\GestionComercial_Demo\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyAppExeName}"

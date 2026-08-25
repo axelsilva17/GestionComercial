@@ -212,18 +212,15 @@ namespace GestionComercial.UI
                 await context.Database.MigrateAsync();
 
                 // ── Seed usuarios demo si no existen ────────────────────
-                // HasData solo inserta en creación de BD nueva; si la BD
-                // ya existía antes de la migración AddDemoUsers, los
-                // usuarios no se insertan. Los agregamos aquí por seguridad.
-                var emailsDemo = new[] { "admin@demo.com", "vendedor@demo.com", "gerente@demo.com" };
-                var existentes = await context.Usuarios
-                    .Where(u => emailsDemo.Contains(u.Email))
-                    .Select(u => u.Email)
-                    .ToListAsync();
-
-                if (!existentes.Contains("admin@demo.com"))
+                // Las migraciones insertan usuarios con emails viejos
+                // (@sistema.com / @miempresa.com). Si admin@demo.com no
+                // existe, reemplazamos los usuarios viejos por los demo.
+                try
                 {
-                    try
+                    var adminDemo = await context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Email == "admin@demo.com");
+
+                    if (adminDemo == null)
                     {
                         // Verificar que las FK existan (Sucursal Id=1, Rol Id=1..3)
                         var sucursalExiste = await context.Set<Dominio.Entidades.Organizacion.Sucursal>()
@@ -239,15 +236,26 @@ namespace GestionComercial.UI
                         }
                         else
                         {
-                            // Precedencia: (MaxAsync ?? 0) + 1 — paréntesis explícitos
-                            var maxId = await context.Usuarios.MaxAsync(u => (int?)u.Id) ?? 0;
-                            var nextId = maxId + 1;
+                            // Eliminar usuarios viejos de migraciones (emails incorrectos)
+                            var emailsViejos = await context.Usuarios
+                                .Where(u => u.Email != "admin@demo.com"
+                                         && u.Email != "vendedor@demo.com"
+                                         && u.Email != "gerente@demo.com")
+                                .ToListAsync();
 
-                            var usuariosDemo = new[]
+                            if (emailsViejos.Count > 0)
                             {
+                                context.Usuarios.RemoveRange(emailsViejos);
+                                await context.SaveChangesAsync();
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"[Bootstrapper] Eliminados {emailsViejos.Count} usuarios viejos de migraciones");
+                            }
+
+                            // Insertar usuarios demo con IDs fijos (1, 2, 3)
+                            context.Usuarios.AddRange(
                                 new Dominio.Entidades.Seguridad.Usuario
                                 {
-                                    Id = nextId, Nombre = "Admin", Apellido = "Sistema",
+                                    Id = 1, Nombre = "Admin", Apellido = "Sistema",
                                     Email = "admin@demo.com",
                                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
                                     Id_sucursal = 1, Id_rol = 2,
@@ -256,7 +264,7 @@ namespace GestionComercial.UI
                                 },
                                 new Dominio.Entidades.Seguridad.Usuario
                                 {
-                                    Id = nextId + 1, Nombre = "Vendedor", Apellido = "Demo",
+                                    Id = 2, Nombre = "Vendedor", Apellido = "Demo",
                                     Email = "vendedor@demo.com",
                                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
                                     Id_sucursal = 1, Id_rol = 3,
@@ -265,33 +273,24 @@ namespace GestionComercial.UI
                                 },
                                 new Dominio.Entidades.Seguridad.Usuario
                                 {
-                                    Id = nextId + 2, Nombre = "Gerente", Apellido = "Demo",
+                                    Id = 3, Nombre = "Gerente", Apellido = "Demo",
                                     Email = "gerente@demo.com",
                                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
                                     Id_sucursal = 1, Id_rol = 1,
                                     IntentosFallidos = 0, Activo = true,
                                     FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                                 }
-                            };
-
-                            // Insertar uno por uno para tolerar PK duplicada (BD antigua)
-                            foreach (var u in usuariosDemo)
-                            {
-                                if (!await context.Usuarios.AnyAsync(x => x.Email == u.Email))
-                                {
-                                    context.Usuarios.Add(u);
-                                }
-                            }
+                            );
                             await context.SaveChangesAsync();
                             System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuarios demo insertados correctamente");
                         }
                     }
-                    catch (Exception exSeed)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error insertando usuarios demo: {exSeed.Message}");
-                        if (exSeed.InnerException != null)
-                            System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
-                    }
+                }
+                catch (Exception exSeed)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error insertando usuarios demo: {exSeed.Message}");
+                    if (exSeed.InnerException != null)
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
                 }
 
                 // ── First-run: si no hay usuarios, mostrar configuración inicial ──
