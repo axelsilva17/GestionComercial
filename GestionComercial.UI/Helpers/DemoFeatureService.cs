@@ -17,7 +17,7 @@ namespace GestionComercial.UI.Helpers
 
         public bool EsDemo => _demoService.EsDemo;
 
-        public const string MensajeDemo = "Esta funcionalidad está disponible en la versión completa.\n\nContactanos: soporte@gestioncomercial.com";
+        public const string MensajeDemo = "Esta funcionalidad está disponible en la versión completa.";
 
         /// <summary>
         /// Verifica si un módulo está habilitado para el rol dado en modo demo.
