@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using System.Collections.Generic;
@@ -11,13 +12,16 @@ namespace GestionComercial.UI.ViewModels.Configuracion
     {
         private readonly AutenticacionServicio        _authServicio;
         private readonly RecuperacionContrasenaServicio _recuperacionServicio;
+        private readonly IUsuarioServicio              _usuarioServicio;
 
         public PerfilViewModel(
             AutenticacionServicio authServicio,
-            RecuperacionContrasenaServicio recuperacionServicio)
+            RecuperacionContrasenaServicio recuperacionServicio,
+            IUsuarioServicio usuarioServicio)
         {
             _authServicio         = authServicio;
             _recuperacionServicio = recuperacionServicio;
+            _usuarioServicio      = usuarioServicio;
         }
 
         // ── Datos del usuario logueado ────────────────────────────────────────
@@ -164,7 +168,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             LimpiarError();
             try
             {
-                await Task.Delay(300); // TODO: await _usuarioServicio.ActualizarDatosAsync(...)
+                await _usuarioServicio.ActualizarDatosAsync(Sesion.IdUsuario, EditNombre, EditApellido);
                 Sesion = new UsuarioSesionDto
                 {
                     IdUsuario  = Sesion.IdUsuario,
@@ -213,7 +217,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 var sesion = await _authServicio.LoginAsync(Sesion.Email, PassActual);
                 if (sesion == null) { MostrarError("La contraseña actual es incorrecta."); return; }
 
-                await _recuperacionServicio.CambiarContrasenaAsync(Sesion.Email, PassNuevo);
+                await _recuperacionServicio.CambiarContrasenaAsync(Sesion.Email, PassNuevo, esRecuperacionOlvidada: false);
                 MensajeExito         = "Contraseña actualizada correctamente.";
                 PanelPasswordVisible = false;
             }

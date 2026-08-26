@@ -1,4 +1,6 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Collections.ObjectModel;
@@ -18,12 +20,14 @@ namespace GestionComercial.UI.ViewModels.Productos
         private readonly IProductoServicio _productoServicio;
         private readonly ShellViewModel _shell;
         private readonly ILogger<ProductoFormularioViewModel>? _logger;
+        private readonly DemoFeatureService? _demoFeatures;
 
-        public ProductoFormularioViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoFormularioViewModel>? logger = null)
+        public ProductoFormularioViewModel(IProductoServicio productoServicio, ShellViewModel shell, ILogger<ProductoFormularioViewModel>? logger = null, DemoFeatureService? demoFeatures = null)
         {
             _productoServicio = productoServicio;
             _shell = shell;
             _logger = logger;
+            _demoFeatures = demoFeatures;
         }
 
         // ── Modo ──────────────────────────────────────────────────────────────
@@ -42,8 +46,8 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
         }
 
-        /// El botón "Importar desde Excel" solo se muestra en modo Crear.
-        public bool MostrarBotonImportar => !IsEditMode;
+        /// El botón "Importar desde Excel" solo se muestra en modo Crear y si no es demo.
+        public bool MostrarBotonImportar => !IsEditMode && (_demoFeatures == null || _demoFeatures.PuedeEjecutarAccion("productos", "importar"));
 
         public string TituloFormulario    => IsEditMode ? "Editar Producto"  : "Nuevo Producto";
         public string SubtituloFormulario => IsEditMode
@@ -186,11 +190,12 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
 
         /// Configura el formulario en modo Editar cargando el producto indicado.
-        public void InicializarParaEditar(int idProducto)
+        public async void InicializarParaEditar(int idProducto)
         {
             IsEditMode = true;
             _idProducto   = idProducto;
             LimpiarError();
+            await CargarReferenciasAsync();
             _ = CargarProductoAsync(idProducto);
         }
 

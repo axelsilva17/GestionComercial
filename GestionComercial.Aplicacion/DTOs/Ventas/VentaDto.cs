@@ -35,6 +35,8 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal Subtotal { get; set; }
         /// Descuento aplicado directamente al ítem (no al total de la venta).
         public decimal DescuentoPorItem { get; set; }
+        /// Descripción del descuento aplicado al ítem (ej: "Descuento 20%").
+        public string? DescripcionDescuento { get; set; }
         /// Lista de descuentos aplicados al ítem (nuevo en spec modulo-ventas-full).
         public List<DescuentoItemDto> Descuentos { get; set; } = new();
     }

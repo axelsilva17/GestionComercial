@@ -111,7 +111,11 @@ namespace GestionComercial.UI
             _container.PerRequest<IInventarioServicio, InventarioServicio>();
             _container.PerRequest<IReporteServicio, ReporteServicio>();
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
+            _container.PerRequest<IRolServicio, RolServicio>();
+            _container.PerRequest<IDescuentoConfiguracionServicio, DescuentoConfiguracionServicio>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
+            _container.Singleton<DemoService>();
+            _container.Singleton<DemoFeatureService>();
             // NOTE: VentaValidator se registra más abajo con Handler para pasar IUnitOfWork.Productos
 
             // ── Validators (FluentValidation) ─────────────────────────────────
@@ -207,6 +211,88 @@ namespace GestionComercial.UI
                 
                 // Ejecutar migraciones pendientes (incluye baseline + views + triggers).
                 await context.Database.MigrateAsync();
+
+                // ── Seed usuarios demo si no existen ────────────────────
+                // Las migraciones insertan usuarios con emails viejos
+                // (@sistema.com / @miempresa.com). Si admin@demo.com no
+                // existe, reemplazamos los usuarios viejos por los demo.
+                try
+                {
+                    var adminDemo = await context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Email == "admin@demo.com");
+
+                    if (adminDemo == null)
+                    {
+                        // Verificar que las FK existan (Sucursal Id=1, Rol Id=1..3)
+                        var sucursalExiste = await context.Set<Dominio.Entidades.Organizacion.Sucursal>()
+                            .AnyAsync(s => s.Id == 1);
+                        var rolesExiste = await context.Set<Dominio.Entidades.Seguridad.Rol>()
+                            .CountAsync(r => r.Id >= 1 && r.Id <= 3);
+
+                        if (!sucursalExiste || rolesExiste < 3)
+                        {
+                            System.Diagnostics.Debug.WriteLine(
+                                $"[Bootstrapper] FK no satisfechas para demo users: " +
+                                $"Sucursal(1)={sucursalExiste}, Roles={rolesExiste}/3");
+                        }
+                        else
+                        {
+                            // Eliminar usuarios viejos de migraciones (emails incorrectos)
+                            var emailsViejos = await context.Usuarios
+                                .Where(u => u.Email != "admin@demo.com"
+                                         && u.Email != "vendedor@demo.com"
+                                         && u.Email != "gerente@demo.com")
+                                .ToListAsync();
+
+                            if (emailsViejos.Count > 0)
+                            {
+                                context.Usuarios.RemoveRange(emailsViejos);
+                                await context.SaveChangesAsync();
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"[Bootstrapper] Eliminados {emailsViejos.Count} usuarios viejos de migraciones");
+                            }
+
+                            // Insertar usuarios demo con IDs fijos (1, 2, 3)
+                            context.Usuarios.AddRange(
+                                new Dominio.Entidades.Seguridad.Usuario
+                                {
+                                    Id = 1, Nombre = "Admin", Apellido = "Sistema",
+                                    Email = "admin@demo.com",
+                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
+                                    Id_sucursal = 1, Id_rol = 2,
+                                    IntentosFallidos = 0, Activo = true,
+                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                },
+                                new Dominio.Entidades.Seguridad.Usuario
+                                {
+                                    Id = 2, Nombre = "Vendedor", Apellido = "Demo",
+                                    Email = "vendedor@demo.com",
+                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
+                                    Id_sucursal = 1, Id_rol = 3,
+                                    IntentosFallidos = 0, Activo = true,
+                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                },
+                                new Dominio.Entidades.Seguridad.Usuario
+                                {
+                                    Id = 3, Nombre = "Gerente", Apellido = "Demo",
+                                    Email = "gerente@demo.com",
+                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
+                                    Id_sucursal = 1, Id_rol = 1,
+                                    IntentosFallidos = 0, Activo = true,
+                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                }
+                            );
+                            await context.SaveChangesAsync();
+                            System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuarios demo insertados correctamente");
+                        }
+                    }
+                }
+                catch (Exception exSeed)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error insertando usuarios demo: {exSeed.Message}");
+                    if (exSeed.InnerException != null)
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
+                }
 
                 // ── First-run: si no hay usuarios, mostrar configuración inicial ──
                 var tieneUsuarios = await context.Usuarios.AnyAsync();
@@ -312,6 +398,40 @@ namespace GestionComercial.UI
             {
                 // No bloquear el inicio de la app si el backup falla
                 System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático falló: {ex.Message}");
+            }
+
+            // ── Demo: verificar estado y mostrar showcase en primer inicio ──
+            try
+            {
+                var demoService = _container.GetInstance<DemoService>();
+                if (demoService.EsDemo)
+                {
+                    demoService.RegistrarInicioDemo();
+                    demoService.GenerarCredencialesIniciales();
+
+                    if (demoService.DemoExpirada)
+                    {
+                        MessageBox.Show(
+                            $"La versión de demostración ha expirado ({demoService.DiasRestantes} días restantes).\n\n" +
+                            "Contactanos para activar la licencia completa.\n" +
+                            "Email: soporte@gestioncomercial.com",
+                            "Demo Expirada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // Avisar días restantes
+                    if (demoService.DiasRestantes <= 7 && demoService.DiasRestantes > 0)
+                    {
+                        MessageBox.Show(
+                            $"Quedan {demoService.DiasRestantes} días de prueba.\n" +
+                            "Contactanos para activar la licencia completa.",
+                            "Aviso Demo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Demo check falló: {ex.Message}");
             }
 
             await DisplayRootViewForAsync<LoginViewModel>();

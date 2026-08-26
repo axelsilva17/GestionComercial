@@ -1,4 +1,5 @@
 using GestionComercial.Aplicacion.DTOs.Usuarios;
+using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Interfaces;
@@ -24,14 +25,30 @@ namespace GestionComercial.Aplicacion.Servicios
             if (usuario == null)
                 return null;
 
+            if (usuario.EstaBloqueado)
+            {
+                var restante = (int)(usuario.BloqueadoHasta!.Value - DateTime.Now).TotalMinutes + 1;
+                throw new NegocioException($"Demasiados intentos fallidos. Intentá de nuevo en {restante} minutos o usá la opción '¿Olvidaste tu contraseña?'.");
+            }
+
+            if (!usuario.PuedeAcceder)
+                return null;
+
             bool passwordValido = _passwordHasher.VerifyPassword(password, usuario.PasswordHash);
 
             if (!passwordValido)
-                return null;
+            {
+                usuario.RegistrarAccesoFallido(maxIntentos: 5);
+                _uow.Usuarios.Actualizar(usuario);
+                await _uow.GuardarCambiosAsync();
+                throw new NegocioException("Email o contraseña incorrectos.");
+            }
 
-            usuario.UltimoAcceso = DateTime.Now;
+            usuario.RegistrarAccesoExitoso();
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
+
+            var permisos = await _uow.Usuarios.ObtenerPermisosAsync(usuario.Id);
 
             return new UsuarioSesionDto
             {
@@ -44,6 +61,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Sucursal = usuario.Sucursal?.Nombre ?? string.Empty,
                 IdEmpresa = usuario.Sucursal?.Id_empresa ?? 0,
                 Empresa = usuario.Sucursal?.Empresa?.Nombre ?? string.Empty,
+                Permisos = new HashSet<string>(permisos),
             };
         }
 

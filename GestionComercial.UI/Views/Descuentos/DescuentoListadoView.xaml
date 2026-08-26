@@ -1,0 +1,89 @@
+<UserControl x:Class="GestionComercial.UI.Views.Descuentos.DescuentoListadoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cal="http://www.caliburnproject.org"
+             Background="Transparent">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <Button Content="Nuevo Descuento" cal:Message.Attach="NuevoDescuento"
+                    Height="36" Padding="16,0" FontSize="13" Cursor="Hand"
+                    Background="{DynamicResource PrimaryBrush}" Foreground="White"
+                    BorderThickness="0" HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Filters -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="Buscar:" VerticalAlignment="Center" Margin="0,0,8,0"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBox Width="250" Height="32" FontSize="12" Padding="8,0"
+                     Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
+                     Background="{DynamicResource SurfaceBrush}"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"/>
+        </StackPanel>
+
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Items}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  Foreground="{DynamicResource TextPrimaryBrush}"
+                  RowBackground="{DynamicResource CardBrush}"
+                  AlternatingRowBackground="{DynamicResource SurfaceBrush}"
+                  SelectionMode="Single"
+                  MouseDoubleClick="DataGrid_MouseDoubleClick">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="*"/>
+                <DataGridTextColumn Header="Ámbito" Binding="{Binding ProductoNombre, StringFormat={}{0}}" Width="140">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{Binding CategoriaNombre}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Id_producto}" Value="{x:Null}">
+                                    <Setter Property="Text" Value="{Binding CategoriaNombre}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Id_producto}">
+                                    <Setter Property="Text" Value="{Binding ProductoNombre}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Pago" Width="160">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="MetodosPagoNombres" FallbackValue=""/>
+                    </DataGridTextColumn.Binding>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="Cualquier método"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding AplicaCualquierMetodoPago}" Value="False">
+                                    <Setter Property="Text" Value="{Binding MetodosPagoNombres}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Valor %" Binding="{Binding Valor}" Width="70"/>
+                <DataGridTextColumn Header="Activo" Binding="{Binding Activo}" Width="60"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

@@ -1,10 +1,12 @@
 using Caliburn.Micro;
 using GestionComercial.Dominio.Entidades.Proveedores;
 using ClosedXML.Excel;
+using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -21,18 +23,21 @@ namespace GestionComercial.UI.ViewModels.Productos
         private readonly IInventarioServicio _inventarioServicio;
         private readonly ShellViewModel _shell;
         private readonly ILogger<ProductoListadoViewModel>? _logger;
+        private readonly DemoFeatureService? _demoFeatures;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
         public ProductoListadoViewModel(
             IProductoServicio productoServicio,
             IInventarioServicio inventarioServicio,
             ShellViewModel shell,
-            ILogger<ProductoListadoViewModel>? logger = null)
+            ILogger<ProductoListadoViewModel>? logger = null,
+            DemoFeatureService? demoFeatures = null)
         {
             _productoServicio = productoServicio;
             _inventarioServicio = inventarioServicio;
             _shell = shell;
             _logger = logger;
+            _demoFeatures = demoFeatures;
             Titulo    = "Productos";
             Subtitulo = "Catálogo de productos";
         }
@@ -270,48 +275,32 @@ namespace GestionComercial.UI.ViewModels.Productos
             try
             {
                 IsLoading = true;
-                var productos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
-                var productosList = productos.ToList();
 
-                // Aplicar filtros
-                var filtrados = productosList.AsEnumerable();
+                // Búsqueda server-side: filtros se aplican en SQL
+                bool? soloActivos = FiltroActivo == 1 ? true : FiltroActivo == 2 ? false : null;
+                int? idCategoria = CategoriaSeleccionada?.IdCategoria > 0 ? CategoriaSeleccionada.IdCategoria : null;
+                string? texto = string.IsNullOrWhiteSpace(TextoBusqueda) ? null : TextoBusqueda.Trim();
 
-                // Filtro por texto de búsqueda
-                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
-                {
-                    var busqueda = TextoBusqueda.Trim().ToLower();
-                    filtrados = filtrados.Where(p =>
-                        (p.Nombre?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                        (p.CodigoBarra?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false));
-                }
+                var productos = await _productoServicio.BuscarProductosAsync(
+                    _shell.IdEmpresaActual, texto, idCategoria, soloActivos);
+                var filtradosList = productos.ToList();
 
-                // Filtro por categoría (IdCategoria == 0 = "Todos")
-                if (CategoriaSeleccionada?.IdCategoria > 0)
-                {
-                    filtrados = filtrados.Where(p => p.IdCategoria == CategoriaSeleccionada.IdCategoria);
-                }
-
-                // Filtro por estado activo/inactivo
-                if (FiltroActivo == 1)
-                    filtrados = filtrados.Where(p => p.Activo);
-                else if (FiltroActivo == 2)
-                    filtrados = filtrados.Where(p => !p.Activo);
-
-                // Filtro stock crítico (desde dashboard "Ver todos")
+                // Filtro stock crítico (desde dashboard "Ver todos") — se aplica en memoria
                 if (MostrarSoloStockCritico)
                 {
                     var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_shell.IdEmpresaActual);
-                    filtrados = filtrados.Where(p => p.StockActual <= umbral);
+                    filtradosList = filtradosList.Where(p => p.StockActual <= umbral).ToList();
                 }
 
-                var filtradosList = filtrados.ToList();
                 Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);
                 TotalProductos = filtradosList.Count;
 
-                // Métricas (sobre toda la lista, no filtrada)
-                ProductosActivos = productosList.Count(p => p.Activo);
-                ProductosStockBajo = productosList.Count(p => p.StockActual > 0 && p.StockActual <= 10);
-                ProductosSinStock = productosList.Count(p => p.StockActual <= 0);
+                // Métricas: se cargan por separado (baratas, solo counts)
+                var todos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual, soloActivos: true);
+                var todosList = todos.ToList();
+                ProductosActivos = todosList.Count(p => p.Activo);
+                ProductosStockBajo = todosList.Count(p => p.StockActual > 0 && p.StockActual <= 10);
+                ProductosSinStock = todosList.Count(p => p.StockActual <= 0);
             }
             catch (Exception ex)
             {
@@ -524,6 +513,11 @@ namespace GestionComercial.UI.ViewModels.Productos
         // ── Ajuste Masivo de Precios ─────────────────────────────────
         public void AbrirAjusteMasivo()
         {
+            if (_demoFeatures?.EsDemo == true && _demoFeatures?.PuedeEjecutarAccion("productos", "ajuste_masivo") == false)
+            {
+                MessageBox.Show(DemoFeatureService.MensajeDemo, "Versión Demo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
             MostrarPopupAjuste = true;
             PorcentajeAjuste = 0;
             MontoFijo = 0;
@@ -667,39 +661,27 @@ namespace GestionComercial.UI.ViewModels.Productos
             try
             {
                 IsLoading = true;
-                int actualizada = 0;
 
+                var dtos = new List<ProductoActualizarDto>();
                 foreach (var p in ProductosPreview)
                 {
-                    // Obtener producto actual de la DB para actualizar
-                    var producto = await _productoServicio.ObtenerPorIdAsync(p.IdProducto);
-                    if (producto != null)
+                    dtos.Add(new ProductoActualizarDto
                     {
-                        if (AplicarAPrecioVenta)
-                            producto.PrecioVentaActual = p.PrecioVentaNuevo ?? producto.PrecioVentaActual;
-                        if (AplicarAPrecioCosto)
-                            producto.PrecioCostoActual = p.PrecioCostoNuevo ?? producto.PrecioCostoActual;
-
-                        // Map to DTO
-                        var dto = new ProductoActualizarDto
-                        {
-                            IdProducto = producto.IdProducto,
-                            Nombre = producto.Nombre,
-                            CodigoBarra = producto.CodigoBarra,
-                            PrecioVentaActual = producto.PrecioVentaActual,
-                            PrecioCostoActual = producto.PrecioCostoActual,
-                            StockMinimo = producto.StockMinimo,
-                            Activo = producto.Activo,
-                            IdCategoria = producto.IdCategoria,
-                            IdUnidadMedida = producto.IdUnidadMedida
-                        };
-                        
-                        await _productoServicio.ActualizarAsync(dto);
-                        actualizada++;
-                    }
+                        IdProducto = p.IdProducto,
+                        Nombre = p.Nombre,
+                        CodigoBarra = p.CodigoBarra,
+                        PrecioVentaActual = AplicarAPrecioVenta ? (p.PrecioVentaNuevo ?? p.PrecioVentaActual) : p.PrecioVentaActual,
+                        PrecioCostoActual = AplicarAPrecioCosto ? (p.PrecioCostoNuevo ?? p.PrecioCostoActual) : p.PrecioCostoActual,
+                        StockMinimo = p.StockMinimo,
+                        Activo = true,
+                        IdCategoria = p.IdCategoria,
+                        IdUnidadMedida = 0
+                    });
                 }
 
-                MessageBox.Show($"Se actualizaron {actualizada} productos correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _productoServicio.ActualizarPreciosLoteAsync(dtos);
+
+                MessageBox.Show($"Se actualizaron {ProductosActualizados} productos correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 
                 MostrarPopupAjuste = false;
                 await CargarAsync(); // Recargar lista

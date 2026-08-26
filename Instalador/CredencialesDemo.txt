@@ -1,0 +1,48 @@
+=============================================================
+  GestionComercial — Credenciales de Acceso (Versión Demo)
+=============================================================
+
+USUARIOS PRECARGADOS:
+---------------------------------------------------------------
+  Admin:
+    Email:    admin@demo.com
+    Password: Admin123!
+    Rol:      Administrador
+    Acceso:   Todo el sistema
+
+  Vendedor:
+    Email:    vendedor@demo.com
+    Password: Vendedor123!
+    Rol:      Vendedor
+    Acceso:   Ventas, Productos, Clientes
+
+  Gerente:
+    Email:    gerente@demo.com
+    Password: Gerente123!
+    Rol:      Gerente
+    Acceso:   Reportes, Ventas, Productos, Clientes
+
+---------------------------------------------------------------
+EMPRESA PRECARGADA:
+  Nombre:   Demo Store
+  CUIT:     20-12345678-9
+  Dirección: Av. Ejemplo 1234, Buenos Aires
+  Sucursal:  Principal
+
+---------------------------------------------------------------
+MÉTODOS DE PAGO DISPONIBLES:
+  - Efectivo (con descuento automático 5%)
+  - Tarjeta de Débito
+  - Tarjeta de Crédito
+  - Transferencia Bancaria
+
+---------------------------------------------------------------
+LIMITACIONES DE LA VERSIÓN DEMO:
+  - Período de prueba: 30 días
+  - Máximo 100 productos
+  - Máximo 200 ventas
+  - Funcionalidades completas habilitadas
+
+---------------------------------------------------------------
+Soporte: soporte@gestioncomercial.com
+=============================================================

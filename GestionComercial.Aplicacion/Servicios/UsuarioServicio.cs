@@ -11,11 +11,13 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         private readonly IUnitOfWork _uow;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly SesionServicio? _sesion;
 
-        public UsuarioServicio(IUnitOfWork uow, IPasswordHasher passwordHasher)
+        public UsuarioServicio(IUnitOfWork uow, IPasswordHasher passwordHasher, SesionServicio? sesion = null)
         {
             _uow = uow;
             _passwordHasher = passwordHasher;
+            _sesion = sesion;
         }
 
         public async Task<IEnumerable<UsuarioDto>> ObtenerTodosAsync(int idSucursal)
@@ -32,6 +34,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<UsuarioDto> CrearAsync(string nombre, string apellido, string email, string password, int idRol, int idSucursal)
         {
+            if (_sesion != null && !_sesion.HasPermission("Usuarios.Gestionar"))
+                throw new InvalidOperationException("No tenés permiso para crear usuarios.");
+
             if (await _uow.Usuarios.ExisteAsync(u => u.Email == email))
                 throw new InvalidOperationException($"El email {email} ya está en uso");
 
@@ -45,6 +50,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task CambiarPasswordAsync(int idUsuario, string passwordActual, string passwordNuevo)
         {
+            if (_sesion != null && !_sesion.HasPermission("Usuarios.Gestionar"))
+                throw new InvalidOperationException("No tenés permiso para cambiar contraseñas.");
+
             var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario)
                 ?? throw new KeyNotFoundException($"Usuario {idUsuario} no encontrado");
 
@@ -59,10 +67,24 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task DesactivarAsync(int id)
         {
+            if (_sesion != null && !_sesion.HasPermission("Usuarios.Gestionar"))
+                throw new InvalidOperationException("No tenés permiso para desactivar usuarios.");
+
             var usuario = await _uow.Usuarios.ObtenerPorIdAsync(id)
                 ?? throw new KeyNotFoundException($"Usuario {id} no encontrado");
 
             usuario.Inactivar();
+            _uow.Usuarios.Actualizar(usuario);
+            await _uow.GuardarCambiosAsync();
+        }
+
+        public async Task ActualizarDatosAsync(int idUsuario, string nombre, string apellido)
+        {
+            var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario)
+                ?? throw new KeyNotFoundException($"Usuario {idUsuario} no encontrado");
+
+            usuario.Nombre = nombre;
+            usuario.Apellido = apellido;
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
         }

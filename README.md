@@ -20,8 +20,9 @@
 | **Clientes** | CRUD completo, historial de ventas asociado |
 | **Proveedores** | CRUD completo, historial de compras asociado |
 | **Reportes** | Dashboard ejecutivo con gráficos de torta y barras (ventas diarias/semanales), reporte diario de ventas, stock crítico, exportación a Excel |
-| **Seguridad** | Autenticación por email con BCrypt, dos roles (Admin / Vendedor), sesión por empresa |
-| **Configuración** | Datos de la empresa, métodos de pago (categoría y cuenta contable), backup y restauración de base de datos, perfil de usuario, cambio de contraseña |
+| **Descuentos** | Configuración de descuentos globales y por categoría |
+| **Seguridad** | Autenticación por email con BCrypt, tres roles (Gerente / Administrador / Vendedor) con permisos granulares por módulo, sesión por empresa |
+| **Configuración** | Datos de la empresa, sucursales, métodos de pago (categoría y cuenta contable), gestión de usuarios y roles, backup y restauración de base de datos, perfil de usuario, cambio de contraseña |
 
 ---
 
@@ -29,19 +30,10 @@
 
 | Componente | Tecnología |
 |------------|------------|
+| Lenguaje | C# |
 | Framework | .NET 8.0 |
-| UI | WPF (Windows Presentation Foundation) |
 | ORM | Entity Framework Core 8.0 |
-| Base de datos | SQLite (local, sin servidor) |
-| MVVM | Caliburn.Micro |
-| Gráficos | LiveChartsCore.SkiaSharpView.WPF |
-| Excel | ClosedXML |
-| Contraseñas | BCrypt.Net-Next |
-| Testing | xUnit + FluentAssertions + Moq |
-
----
-
-> La base de datos SQLite se crea automáticamente en la primera ejecución con las migraciones de EF Core aplicadas. El usuario administrador se genera junto con la empresa y sucursal por defecto mediante el asistente de configuración inicial.
+| Base de datos | SQLite |
 
 ---
 

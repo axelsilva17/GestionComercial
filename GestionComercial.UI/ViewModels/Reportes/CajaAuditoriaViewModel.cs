@@ -1,6 +1,7 @@
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
@@ -29,6 +30,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
 
         // ── Turno filter ──────────────────────────────────────────────
         public ObservableCollection<string> TurnosDisponibles { get; } = new() { "Todos", "Mañana", "Tarde", "Noche" };
+        public ObservableCollection<string> TurnosCaja { get; } = new() { "Mañana", "Tarde", "Noche" };
 
         private string _turnoFiltro = "Todos";
         public string TurnoFiltro
@@ -255,7 +257,7 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             try
             {
                 await _cajaServicio.AbrirCajaAsync(
-                    _sesion.IdSucursal, _sesion.IdUsuario, 0, turno: TurnoNuevaCaja);
+                    _sesion.IdSucursal, _sesion.IdUsuario, 0, turno: TurnoCajaEnumExtensions.FromString(TurnoNuevaCaja));
                 await CargarDatosAsync();
             }
             catch (Exception ex)
@@ -321,6 +323,39 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        // ── Eliminar caja ─────────────────────────────────────────────────────
+        public async Task EliminarCaja()
+        {
+            if (CajaSeleccionada == null) return;
+
+            if (CajaSeleccionada.Estado == "Abierta")
+            {
+                System.Windows.MessageBox.Show(
+                    "No se puede eliminar una caja abierta. Cerrala primero.",
+                    "Caja abierta", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            var confirmacion = System.Windows.MessageBox.Show(
+                $"¿Eliminar la caja #{CajaSeleccionada.Id}?\n\n" +
+                "Esta acción no se puede deshacer.",
+                "Confirmar eliminación",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirmacion != System.Windows.MessageBoxResult.Yes) return;
+
+            try
+            {
+                await _cajaServicio.EliminarCajaAsync(CajaSeleccionada.Id);
+                await CargarDatosAsync();
+            }
+            catch (Exception ex)
+            {
+                MostrarError(ex.Message);
             }
         }
 

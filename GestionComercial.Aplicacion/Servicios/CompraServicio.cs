@@ -11,11 +11,13 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         private readonly IUnitOfWork _uow;
         private readonly IInventarioServicio _inventarioServicio;
+        private readonly SesionServicio _sesion;
 
-        public CompraServicio(IUnitOfWork uow, IInventarioServicio inventarioServicio)
+        public CompraServicio(IUnitOfWork uow, IInventarioServicio inventarioServicio, SesionServicio sesion)
         {
             _uow = uow;
             _inventarioServicio = inventarioServicio;
+            _sesion = sesion;
         }
 
         public async Task<IEnumerable<CompraDto>> ObtenerPorSucursalAsync(int idSucursal)
@@ -44,6 +46,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<CompraDto> CrearAsync(CompraCrearDto dto)
         {
+            if (!_sesion.HasPermission("Compras.Crear"))
+                throw new KeyNotFoundException("No tenés permiso para crear compras.");
+
             // ── Crear la compra con factory method (DDD) ──
             var compra = Compra.Crear(
                 idProveedor: dto.IdProveedor,
@@ -52,11 +57,16 @@ namespace GestionComercial.Aplicacion.Servicios
                 observacion: dto.Observacion
             );
 
+            // Batch fetch: traer todos los productos de una sola vez
+            var idsProductos = dto.Items.Select(i => i.IdProducto).Distinct().ToList();
+            var productos = await _uow.Productos.BuscarAsync(p => idsProductos.Contains(p.Id));
+            var productosDict = productos.ToDictionary(p => p.Id);
+
             // ── Agregar detalles con factory methods (DDD) ──
             foreach (var item in dto.Items)
             {
-                var producto = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
-                    ?? throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
+                if (!productosDict.TryGetValue(item.IdProducto, out var producto))
+                    throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
 
                 // Factory method: CompraDetalle.Crear() calcula el subtotal SOLO
                 var detalle = CompraDetalle.Crear(producto, item.Cantidad, item.PrecioCosto);
@@ -76,7 +86,9 @@ namespace GestionComercial.Aplicacion.Servicios
                     item.Cantidad,
                     $"Compra #{compra.Id} - {producto.Nombre}",
                     dto.IdSucursal,
-                    dto.IdUsuario
+                    dto.IdUsuario,
+                    guardarCambios: false,
+                    unidadTrabajo: _uow
                 );
             }
 

@@ -10,5 +10,7 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal CostoUnitario  { get; set; }
         public decimal Subtotal       { get; set; }
         public decimal MargenUnitario { get; set; }
+        public decimal DescuentoPorItem { get; set; }
+        public List<DescuentoItemDto> Descuentos { get; set; } = new();
     }
 }

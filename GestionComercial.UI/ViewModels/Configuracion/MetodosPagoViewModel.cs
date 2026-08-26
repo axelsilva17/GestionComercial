@@ -27,9 +27,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _seleccionado = value; NotifyOfPropertyChange(() => Seleccionado); }
         }
 
-        private string _editNombre    = string.Empty;
-        private string _editCategoria = "Otro";
-        private bool   _esNuevo;
+        private string  _editNombre      = string.Empty;
+        private string  _editCategoria   = "Otro";
+        private string? _editSubcategoria;
+        private bool    _esNuevo;
 
         public string EditNombre
         {
@@ -39,8 +40,19 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public string EditCategoria
         {
             get => _editCategoria;
-            set { _editCategoria = value; NotifyOfPropertyChange(() => EditCategoria); }
+            set
+            {
+                _editCategoria = value;
+                NotifyOfPropertyChange(() => EditCategoria);
+                NotifyOfPropertyChange(() => MostrarSubcategoria);
+            }
         }
+        public string? EditSubcategoria
+        {
+            get => _editSubcategoria;
+            set { _editSubcategoria = value; NotifyOfPropertyChange(() => EditSubcategoria); }
+        }
+        public bool MostrarSubcategoria => EditCategoria == "Tarjeta";
 
         private bool   _panelVisible;
         private string _tituloPanel = "Nuevo Método";
@@ -73,6 +85,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         IdMetodoPago = m.Id,
                         Nombre       = m.Nombre,
                         Categoria    = m.Categoria ?? "Otro",
+                        Subcategoria = m.Subcategoria,
                         IdEmpresa    = m.Id_empresa
                     })
                 );
@@ -83,21 +96,23 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
         public void NuevoMetodo()
         {
-            _esNuevo      = true;
-            TituloPanel   = "Nuevo Método de Pago";
-            EditNombre    = string.Empty;
-            EditCategoria = "Otro";
-            PanelVisible  = true;
+            _esNuevo        = true;
+            TituloPanel     = "Nuevo Método de Pago";
+            EditNombre      = string.Empty;
+            EditCategoria   = "Otro";
+            EditSubcategoria = null;
+            PanelVisible    = true;
         }
 
         public void Editar(MetodoPagoDto item)
         {
-            _esNuevo     = false;
-            TituloPanel  = "Editar Método de Pago";
-            Seleccionado = item;
-            EditNombre   = item.Nombre;
-            EditCategoria = item.Categoria;
-            PanelVisible = true;
+            _esNuevo         = false;
+            TituloPanel      = "Editar Método de Pago";
+            Seleccionado     = item;
+            EditNombre       = item.Nombre;
+            EditCategoria    = item.Categoria;
+            EditSubcategoria = item.Subcategoria;
+            PanelVisible     = true;
         }
 
         public void CerrarPanel() => PanelVisible = false;
@@ -105,6 +120,18 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public async Task Guardar()
         {
             if (string.IsNullOrWhiteSpace(EditNombre)) { MostrarError("El nombre es obligatorio."); return; }
+
+            // Validación: Tarjeta requiere Subcategoria
+            if (EditCategoria == "Tarjeta" && string.IsNullOrWhiteSpace(EditSubcategoria))
+            {
+                MostrarError("Debe seleccionar una categoría (Crédito o Débito).");
+                return;
+            }
+
+            // Si no es Tarjeta, limpiar Subcategoria
+            if (EditCategoria != "Tarjeta")
+                EditSubcategoria = null;
+
             IsLoading = true;
             LimpiarError();
             try
@@ -120,10 +147,11 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
                     var metodo = new MetodoPago
                     {
-                        Nombre     = EditNombre,
-                        Categoria  = EditCategoria,
-                        Activo     = true,
-                        Id_empresa = empresa.Id
+                        Nombre       = EditNombre,
+                        Categoria    = EditCategoria,
+                        Subcategoria = EditSubcategoria,
+                        Activo       = true,
+                        Id_empresa   = empresa.Id
                     };
 
                     await _uow.MetodosPago.AgregarAsync(metodo);
@@ -134,6 +162,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         IdMetodoPago = metodo.Id,
                         Nombre       = metodo.Nombre,
                         Categoria    = metodo.Categoria ?? "Otro",
+                        Subcategoria = metodo.Subcategoria,
                         IdEmpresa    = metodo.Id_empresa
                     });
                 }
@@ -142,13 +171,15 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     var metodo = await _uow.MetodosPago.ObtenerPorIdAsync(Seleccionado.IdMetodoPago);
                     if (metodo != null)
                     {
-                        metodo.Nombre    = EditNombre;
-                        metodo.Categoria = EditCategoria;
+                        metodo.Nombre       = EditNombre;
+                        metodo.Categoria    = EditCategoria;
+                        metodo.Subcategoria = EditSubcategoria;
                         _uow.MetodosPago.Actualizar(metodo);
                         await _uow.GuardarCambiosAsync();
 
-                        Seleccionado.Nombre    = metodo.Nombre;
-                        Seleccionado.Categoria = metodo.Categoria ?? "Otro";
+                        Seleccionado.Nombre       = metodo.Nombre;
+                        Seleccionado.Categoria    = metodo.Categoria ?? "Otro";
+                        Seleccionado.Subcategoria = metodo.Subcategoria;
                         var idx = Items.IndexOf(Seleccionado);
                         Items.RemoveAt(idx);
                         Items.Insert(idx, Seleccionado);

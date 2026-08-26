@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.DTOs;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Dominio.DTOs.Inventario;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
@@ -142,8 +143,11 @@ namespace GestionComercial.Aplicacion.Servicios
             string? observacion,
             int idSucursal,
             int idUsuario,
-            bool guardarCambios = true)
+            bool guardarCambios = true,
+            IUnitOfWork? unidadTrabajo = null)
         {
+            var uow = unidadTrabajo ?? _uow;
+
             _logger?.LogDebug("[Inventario] Iniciando RegistrarMovimientoAsync - Producto: {IdProducto}, Tipo: {Tipo}, Cantidad: {Cantidad}, guardarCambios: {Guardar}",
                 idProducto, tipoMovimiento, cantidad, guardarCambios);
 
@@ -151,7 +155,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new ArgumentException("La cantidad debe ser mayor a 0", nameof(cantidad));
 
             // Obtener producto actual
-            var producto = await _uow.Productos.ObtenerPorIdAsync(idProducto)
+            var producto = await uow.Productos.ObtenerPorIdAsync(idProducto)
                 ?? throw new KeyNotFoundException($"Producto {idProducto} no encontrado");
 
             var stockAnterior = producto.StockActual;
@@ -174,12 +178,12 @@ namespace GestionComercial.Aplicacion.Servicios
 
             // Actualizar stock del producto
             producto.StockActual = movimiento.StockNuevo;
-            _uow.Productos.Actualizar(producto);
+            uow.Productos.Actualizar(producto);
 
             // Adjuntar las entidades relacionadas al contexto si no están ya adjuntadas
             // Esto es necesario para que EF Core pueda guardar las foreign keys
-            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal);
-            var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario);
+            var sucursal = await uow.Sucursales.ObtenerPorIdAsync(idSucursal);
+            var usuario = await uow.Usuarios.ObtenerPorIdAsync(idUsuario);
             
             // Asignar las entidades al movimiento
             movimiento.Sucursal = sucursal!;
@@ -187,7 +191,7 @@ namespace GestionComercial.Aplicacion.Servicios
             movimiento.Producto = producto;
 
             // Guardar movimiento
-            await _uow.MovimientosStock.AgregarAsync(movimiento);
+            await uow.MovimientosStock.AgregarAsync(movimiento);
 
             _logger?.LogInformation(
                 "Movimiento agregado al DBSet: {Tipo}, Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",
@@ -197,7 +201,7 @@ namespace GestionComercial.Aplicacion.Servicios
             if (guardarCambios)
             {
                 _logger?.LogDebug("[Inventario] Antes de GuardarCambiosAsync");
-                await _uow.GuardarCambiosAsync();
+                await uow.GuardarCambiosAsync();
                 _logger?.LogInformation("[Inventario] GuardarCambios completado para movimiento de stock - Producto: {IdProducto}", idProducto);
             }
             else
@@ -226,6 +230,18 @@ namespace GestionComercial.Aplicacion.Servicios
                 SucursalNombre = m.Sucursal?.Nombre ?? "Sin sucursal",
                 UsuarioNombre = m.Usuario != null ? $"{m.Usuario.Nombre} {m.Usuario.Apellido}" : "Sistema"
             }).ToList();
+        }
+
+        public async Task<ResumenMovimientoStockDto> ObtenerResumenPeriodoAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int idEmpresa,
+            int? idSucursal = null)
+        {
+            var resumen = await _uow.MovimientosStock.ObtenerResumenPeriodoAsync(
+                fechaDesde, fechaHasta, idEmpresa, idSucursal);
+
+            return resumen ?? new ResumenMovimientoStockDto();
         }
     }
 }

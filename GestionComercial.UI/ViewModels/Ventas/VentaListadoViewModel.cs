@@ -140,6 +140,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 NotifyOfPropertyChange(() => VentaSeleccionada);
                 NotifyOfPropertyChange(() => PuedeAnular);
                 NotifyOfPropertyChange(() => PuedeVerDetalle);
+                NotifyOfPropertyChange(() => PuedeCobrar);
             }
         }
 
@@ -264,6 +265,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
             if (FiltroEstado != "Todos")
                 filtradas = filtradas.Where(v => v.Estado == FiltroEstado);
             Ventas = new ObservableCollection<VentaResumenDto>(filtradas);
+        }
+
+        public async Task Volver()
+        {
+            await IoC.Get<ShellViewModel>()
+                     .IrDashboard();
         }
     }
 }

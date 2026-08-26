@@ -11,6 +11,7 @@
             <converters:BoolToColorConverter x:Key="BoolToColor"/>
             <converters:BoolToOpacityConverter x:Key="BoolToOpacity"/>
             <converters:InverseBoolConverter x:Key="InverseBool"/>
+            <converters:StringEqualsConverter x:Key="StringEquals"/>
             <converters:NullVisibilityConverter x:Key="NullVisibility"/>
             <converters:NullToVisibilityConverter x:Key="NullToVisibility"/>
             <converters:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
