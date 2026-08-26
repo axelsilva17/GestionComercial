@@ -1,16 +1,28 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Reportes;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Reportes
 {
     public class ReporteStockViewModel : NavigableViewModel
     {
+        private readonly IReporteServicio _reporteServicio;
+        private readonly SesionServicio _sesion;
+
         public DateTime FechaDesde { get; set; }
         public DateTime FechaHasta { get; set; }
+
+        public ReporteStockViewModel(IReporteServicio reporteServicio, SesionServicio sesion)
+        {
+            _reporteServicio = reporteServicio;
+            _sesion = sesion;
+        }
 
         private ObservableCollection<ReportesStockDto> _items = new();
         public ObservableCollection<ReportesStockDto> Items
@@ -19,7 +31,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
             set { _items = value; NotifyOfPropertyChange(() => Items); }
         }
 
-        // Totales resumen
         private int _totalSinStock;
         public int TotalSinStock
         {
@@ -36,21 +47,17 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
         public async Task CargarAsync()
         {
-            await Task.Delay(200); // TODO: await _reporteServicio.ObtenerStockAsync()
-            CargarMock();
-        }
-
-        private void CargarMock()
-        {
-           
-
-            // Calcular totales usando las propiedades calculadas del DTO
-            TotalSinStock  = 0;
-            TotalStockBajo = 0;
-            foreach (var item in Items)
+            try
             {
-                if (item.SinStock)  TotalSinStock++;
-                else if (item.StockBajo) TotalStockBajo++;
+                var datos = await _reporteServicio.StockCriticoAsync(_sesion.IdEmpresa);
+                var lista = datos.ToList();
+                Items = new ObservableCollection<ReportesStockDto>(lista);
+                TotalSinStock = lista.Count(i => i.SinStock);
+                TotalStockBajo = lista.Count(i => i.StockBajo);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ReporteStock] Error: {ex.Message}");
             }
         }
     }

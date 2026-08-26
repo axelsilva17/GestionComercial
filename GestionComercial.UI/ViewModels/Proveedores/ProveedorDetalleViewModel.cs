@@ -1,5 +1,6 @@
 using Caliburn.Micro;
-using GestionComercial.Aplicacion.DTOs.Proveedores;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Threading;
@@ -7,28 +8,26 @@ using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Proveedores
 {
-    ///     /// ViewModel de solo lectura — se activa al hacer clic en una fila del listado
-    /// cuando se quiere ver el detalle completo en pantalla propia (no sidebar).
     public class ProveedorDetalleViewModel : NavigableViewModel
     {
         private readonly ShellViewModel _shell;
+        private readonly IProveedorServicio _proveedorServicio;
 
-        public ProveedorDetalleViewModel(ShellViewModel shell)
+        public ProveedorDetalleViewModel(ShellViewModel shell, IProveedorServicio proveedorServicio)
         {
             _shell = shell;
+            _proveedorServicio = proveedorServicio;
         }
 
         private int _idProveedor;
 
-        // ── Datos ─────────────────────────────────────────────────────────────
-        private ProveedorDto _proveedor;
-        public ProveedorDto Proveedor
+        private Proveedor _proveedor;
+        public Proveedor Proveedor
         {
             get => _proveedor;
             set { _proveedor = value; NotifyOfPropertyChange(() => Proveedor); }
         }
 
-        // ── Inicialización ────────────────────────────────────────────────────
         public void Inicializar(int idProveedor)
         {
             _idProveedor = idProveedor;
@@ -41,13 +40,12 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             LimpiarError();
             try
             {
-                await Task.Delay(150); // TODO: Proveedor = await _proveedorServicio.ObtenerAsync(_idProveedor);
+                Proveedor = await _proveedorServicio.ObtenerPorIdAsync(_idProveedor);
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
         }
 
-        // ── Acciones ──────────────────────────────────────────────────────────
         public async Task Editar()
         {
             var vm = IoC.Get<ProveedorFormularioViewModel>();

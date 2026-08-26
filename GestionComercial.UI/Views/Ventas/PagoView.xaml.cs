@@ -58,5 +58,11 @@ namespace GestionComercial.UI.Views.Ventas
                 e.Handled = true;
             }
         }
+
+        private void CerrarModalTarjeta_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is PagoViewModel vm)
+                vm.CerrarModal();
+        }
     }
 }

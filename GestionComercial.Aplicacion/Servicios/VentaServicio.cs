@@ -5,9 +5,12 @@ using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Pagos.Strategies;
+using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 
 namespace GestionComercial.Aplicacion.Servicios
@@ -18,6 +21,7 @@ namespace GestionComercial.Aplicacion.Servicios
         private readonly IServicioImpresion _servicioImpresion;
         private readonly SesionServicio _sesion;
         private readonly IInventarioServicio _inventarioServicio;
+        private readonly IDescuentoConfiguracionServicio _descuentoConfiguracionServicio;
         private readonly ILogger<VentaServicio>? _logger;
         private readonly PaymentStrategyFactory _paymentStrategyFactory;
 
@@ -26,12 +30,14 @@ namespace GestionComercial.Aplicacion.Servicios
             IServicioImpresion servicioImpresion,
             SesionServicio sesion,
             IInventarioServicio inventarioServicio,
+            IDescuentoConfiguracionServicio descuentoConfiguracionServicio,
             ILogger<VentaServicio>? logger = null)
         {
             _uow = uow;
             _servicioImpresion = servicioImpresion;
             _sesion = sesion;
             _inventarioServicio = inventarioServicio;
+            _descuentoConfiguracionServicio = descuentoConfiguracionServicio;
             _logger = logger;
             _paymentStrategyFactory = new PaymentStrategyFactory();
         }
@@ -85,14 +91,22 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<VentaDto> CrearAsync(VentaCrearDto dto)
         {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para crear ventas.");
+
             // ── Validar stock y crear venta en una TRANSACCIÓN ───────────────
             await _uow.EjecutarEnTransaccionAsync(async () =>
             {
+                // Batch fetch: traer todos los productos de una sola vez
+                var idsProductos = dto.Items.Select(i => i.IdProducto).Distinct().ToList();
+                var productos = await _uow.Productos.BuscarAsync(p => idsProductos.Contains(p.Id));
+                var productosDict = productos.ToDictionary(p => p.Id);
+
                 // Validar stock antes de tocar nada
                 foreach (var item in dto.Items)
                 {
-                    var p = await _uow.Productos.ObtenerPorIdAsync(item.IdProducto)
-                        ?? throw new ProductoNoEncontradoException(item.IdProducto);
+                    if (!productosDict.TryGetValue(item.IdProducto, out var p))
+                        throw new ProductoNoEncontradoException(item.IdProducto);
                     if (p.StockActual < item.Cantidad)
                         throw new StockInsuficienteException(p.Nombre, (int)p.StockActual, item.Cantidad);
                 }
@@ -102,7 +116,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
                 foreach (var item in dto.Items)
                 {
-                    var producto = (await _uow.Productos.ObtenerPorIdAsync(item.IdProducto))!;
+                    var producto = productosDict[item.IdProducto];
                     var descuentoPorItem = item.Descuentos.Sum(d => d.Monto);
 
                     // Crear detalle usando factory method DDD
@@ -136,7 +150,8 @@ namespace GestionComercial.Aplicacion.Servicios
                         $"Venta #{venta.Id} - {producto.Nombre}",
                         dto.IdSucursal,
                         dto.IdUsuario,
-                        guardarCambios: false // No guardar ahora, la transacción lo manejará al final
+                        guardarCambios: false,
+                        unidadTrabajo: _uow
                     );
                     _logger?.LogInformation("[VentaVM] RegistrarMovimientoAsync completado");
                 }
@@ -145,8 +160,7 @@ namespace GestionComercial.Aplicacion.Servicios
             });
 
             // Recargar para devolver
-            var ventaCreada = await _uow.Ventas.ObtenerConDetallesAsync(dto.Items.First().IdProducto);
-            // Obtener la venta recien creada por ID si es posible, si no buscar por recent
+            // Obtener la venta recien creada por recientes, si no existe lanzar error
             var ventasRecientes = await _uow.Ventas.ObtenerPorFechaAsync(DateTime.Now.AddDays(-1), DateTime.Now, dto.IdSucursal);
             var ventaResult = ventasRecientes
                 .Where(v => v.Estado == (int)EstadoVentaEnum.Pendiente && v.Id_usuario == dto.IdUsuario)
@@ -165,6 +179,9 @@ namespace GestionComercial.Aplicacion.Servicios
         /// El vuelto se registra como egreso en la caja.
         public async Task RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos)
         {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para registrar pagos.");
+
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
                 ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
 
@@ -172,6 +189,17 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new VentaInvalidaException("La venta ya está pagada.");
             if (venta.Estado == (int)EstadoVentaEnum.Anulada)
                 throw new VentaInvalidaException("La venta está anulada y no puede pagarse.");
+
+            // ── Resolver descuento combinado ANTES de validar total ──
+            var idsMetodosPago = pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
+            var esPagoUnico = idsMetodosPago.Count == 1;
+
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
+            var idEmpresa = sucursal?.Id_empresa ?? 0;
+            if (idEmpresa > 0)
+            {
+                await AplicarDescuentosPorMetodoPagoAsync(venta, idsMetodosPago, esPagoUnico, idEmpresa);
+            }
 
             var totalPagado = pagos.Sum(p => p.Monto);
             if (totalPagado < venta.TotalFinal)
@@ -205,6 +233,9 @@ namespace GestionComercial.Aplicacion.Servicios
         /// Útil para "Cobrar" rápido desde el historial.
         public async Task CobrarVentaAsync(int idVenta)
         {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para cobrar ventas.");
+
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta)
                 ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
 
@@ -213,12 +244,19 @@ namespace GestionComercial.Aplicacion.Servicios
 
             // Buscar método de pago en efectivo
             var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal);
-            var metodos = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(sucursal?.Id_empresa ?? 0);
+            var idEmpresa = sucursal?.Id_empresa ?? 0;
+            var metodos = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(idEmpresa);
             var efectivo = metodos.FirstOrDefault(m => m.Categoria == "Efectivo")
                         ?? metodos.FirstOrDefault()
                         ?? throw new NegocioException("No hay métodos de pago configurados.");
 
-            // Crear pago único por el total
+            // Aplicar descuentos por método de pago a cada detalle
+            if (idEmpresa > 0)
+            {
+                await AplicarDescuentosPorMetodoPagoAsync(venta, new List<int> { efectivo.Id }, esPagoUnico: true, idEmpresa);
+            }
+
+            // Crear pago único por el total final
             var pagoEntity = Pago.Crear(venta.TotalFinal, idVenta, efectivo.Id);
             var strategy = _paymentStrategyFactory.Resolve(efectivo.Categoria ?? "Otro");
             await strategy.ProcesarPagoAsync(pagoEntity, venta, _uow);
@@ -229,6 +267,66 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
 
             _ = ImprimirTicketAsync(venta.Id);
+        }
+
+        /// <summary>
+        /// Aplica descuentos por método de pago a cada detalle de la venta.
+        /// Lógica centralizada usada por RegistrarPagoAsync y CobrarVentaAsync.
+        /// REGLA: descuento por método de pago solo aplica con UN ÚNICO método (pago único).
+        /// REGLA B: si no hubo descuento per-item, intenta descuento total-venta.
+        /// </summary>
+        private async Task AplicarDescuentosPorMetodoPagoAsync(
+            Venta venta, List<int> idsMetodosPago, bool esPagoUnico, int idEmpresa)
+        {
+            var descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(idEmpresa);
+
+            var categoriasCache = new Dictionary<int, Categoria>();
+            var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+            foreach (var cat in categorias)
+                categoriasCache[cat.Id] = cat;
+
+            decimal totalDescuentoMetodoPago = 0;
+
+            foreach (var detalle in venta.Detalles)
+            {
+                var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
+                if (subtotalDetalle <= 0) continue;
+
+                var descuentoAplicable = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
+                    idEmpresa,
+                    detalle.Id_producto,
+                    detalle.Producto?.Id_categoria,
+                    idsMetodosPago,
+                    esPagoUnico,
+                    descuentosCache,
+                    categoriasCache);
+
+                if (descuentoAplicable != null)
+                {
+                    var descuentoMonto = subtotalDetalle * descuentoAplicable.Valor / 100;
+                    var descuentoEntity = VentaDetalleDescuento.PorPorcentaje(
+                        descuentoAplicable.Valor, subtotalDetalle, detalle.Id, descuentoAplicable.Nombre);
+                    detalle.AgregarDescuento(descuentoEntity);
+                    totalDescuentoMetodoPago += descuentoMonto;
+                }
+            }
+
+            // ── REGLA B: descuento total-venta (solo si no hubo per-item) ──
+            if (totalDescuentoMetodoPago == 0 && esPagoUnico && idEmpresa > 0)
+            {
+                var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
+                    idEmpresa, idsMetodosPago[0], descuentosCache);
+                if (descuentoTotalVenta != null)
+                {
+                    var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
+                    var monto = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                    totalDescuentoMetodoPago += monto;
+                }
+            }
+
+            venta.DescuentoMetodoPago = totalDescuentoMetodoPago;
+            venta.Id_metodoPagoDescuento = totalDescuentoMetodoPago > 0 && esPagoUnico ? idsMetodosPago[0] : null;
+            venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - totalDescuentoMetodoPago;
         }
 
         ///         /// Imprime el ticket de manera asíncrona (no bloquea la respuesta).
@@ -268,6 +366,9 @@ namespace GestionComercial.Aplicacion.Servicios
         /// <exception cref="ArgumentException">Si el motivo está vacío</exception>
         public async Task CancelarAsync(int id, string motivo)
         {
+            if (!_sesion.HasPermission("Ventas.Anular"))
+                throw new NegocioException("No tenés permiso para anular ventas.");
+
             if (string.IsNullOrWhiteSpace(motivo))
                 throw new ArgumentException("El motivo de anulación es obligatorio.", nameof(motivo));
 
@@ -332,6 +433,13 @@ namespace GestionComercial.Aplicacion.Servicios
                 CostoUnitario  = d.CostoUnitario,
                 Subtotal       = d.Subtotal,
                 MargenUnitario = d.MargenUnitario,
+                DescuentoPorItem = d.Descuento,
+                Descuentos     = d.Descuentos?.Select(dd => new DescuentoItemDto
+                {
+                    Porcentaje  = dd.Porcentaje,
+                    Monto       = dd.Monto,
+                    Descripcion = dd.Descripcion
+                }).ToList() ?? new List<DescuentoItemDto>(),
             }).ToList(),
             Pagos = v.Pagos.Select(p => new PagoDto
             {

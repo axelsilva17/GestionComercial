@@ -61,6 +61,8 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         public int Id_cliente { get => _id_cliente; set => _id_cliente = value; }
         public int Id_usuario { get => _id_usuario; set => _id_usuario = value; }
         public int? Id_caja { get => _id_caja; set => _id_caja = value; }
+        public decimal DescuentoMetodoPago { get; set; }
+        public int? Id_metodoPagoDescuento { get; set; }
         public decimal? EfectivoRecibido 
         { 
             get => _efectivoRecibido; 

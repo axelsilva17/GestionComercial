@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
+using GestionComercial.Dominio.DTOs.Inventario;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
@@ -343,25 +344,16 @@ namespace GestionComercial.UI.ViewModels.Inventario
 
         private async Task CalcularResumenPeriodoAsync()
         {
-            // Obtener todos los movimientos del período para el resumen (sin paginación)
-            var resultado = await _inventarioServicio.ObtenerMovimientosAsync(
-                null,  // sin filtro búsqueda
-                null,  // sin filtro tipo
-                null,  // sin filtro usuario
-                null,  // sin filtro sucursal
+            var resumen = await _inventarioServicio.ObtenerResumenPeriodoAsync(
                 FechaDesde,
                 FechaHasta,
-                1,     // página 1
-                int.MaxValue, // todos los registros
                 IdEmpresa);
 
-            var lista = resultado.Items;
-
-            TotalEntradas      = lista.Count(m => m.TipoMovimiento == "Entrada");
-            TotalSalidas       = lista.Count(m => m.TipoMovimiento == "Salida");
-            TotalAjustes       = lista.Count(m => m.TipoMovimiento == "Ajuste");
-            UnidadesIngresadas = lista.Where(m => m.TipoMovimiento == "Entrada").Sum(m => m.Cantidad);
-            UnidadesEgresadas  = lista.Where(m => m.TipoMovimiento == "Salida").Sum(m => m.Cantidad);
+            TotalEntradas      = resumen.TotalEntradas;
+            TotalSalidas       = resumen.TotalSalidas;
+            TotalAjustes       = resumen.TotalAjustes;
+            UnidadesIngresadas = resumen.UnidadesIngresadas;
+            UnidadesEgresadas  = resumen.UnidadesEgresadas;
 
             NotifyOfPropertyChange(() => BalanceNeto);
         }

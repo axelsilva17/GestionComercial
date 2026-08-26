@@ -21,6 +21,8 @@ namespace GestionComercial.Dominio.Interfaces
         IAuditoriaRepositorio       Auditoria        { get; }
         IProveedorProductoCostoRepositorio ProveedoresCostos { get; }
         IRolRepositorio             Roles            { get; }
+        IPermisoRepositorio         Permisos         { get; }
+        IDescuentoConfiguracionRepositorio DescuentoConfiguraciones { get; }
         Task<int> GuardarCambiosAsync();
         Task      EjecutarEnTransaccionAsync(Func<Task> operacion);
     }

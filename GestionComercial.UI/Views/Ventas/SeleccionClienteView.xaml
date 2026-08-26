@@ -178,8 +178,6 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
@@ -197,15 +195,12 @@
                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                  FontSize="13" VerticalContentAlignment="Center"
                                  Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
-                                 Padding="0,0,10,0"/>
+                                 Padding="0,0,10,0"
+                                 KeyDown="TextoBusqueda_KeyDown"/>
                     </Grid>
                 </Border>
 
-                <Button x:Name="Buscar" Grid.Column="2"
-                        Content="Buscar" Height="38" Padding="18,0"
-                        FontSize="13" Style="{StaticResource PrimaryButton}"/>
-
-                <Button x:Name="NuevoCliente" Grid.Column="4"
+                <Button x:Name="NuevoCliente" Grid.Column="2"
                         Height="38" Padding="18,0" FontSize="13"
                         Style="{StaticResource PrimaryButton}">
                     <StackPanel Orientation="Horizontal">

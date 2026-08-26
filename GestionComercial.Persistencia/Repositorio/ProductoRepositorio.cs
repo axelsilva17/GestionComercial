@@ -34,13 +34,17 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-        public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa)
-            => await _dbSet
-                .Where(p => p.Id_empresa == idEmpresa && p.Activo)
+        public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true)
+        {
+            var query = _dbSet.Where(p => p.Id_empresa == idEmpresa);
+            if (soloActivos)
+                query = query.Where(p => p.Activo);
+            return await query
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
+        }
 
         public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa)
         {
@@ -115,5 +119,29 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderBy(p => p.StockActual)
                 .Take(limite)
                 .ToListAsync();
+
+        public async Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos)
+        {
+            var query = _dbSet.Where(p => p.Id_empresa == idEmpresa);
+
+            if (!string.IsNullOrWhiteSpace(texto))
+            {
+                var busqueda = texto.Trim().ToLower();
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Nombre.ToLower(), $"%{busqueda}%") ||
+                    EF.Functions.Like(p.CodigoBarra.ToLower(), $"%{busqueda}%"));
+            }
+
+            if (idCategoria.HasValue && idCategoria.Value > 0)
+                query = query.Where(p => p.Id_categoria == idCategoria.Value);
+
+            if (soloActivos.HasValue)
+                query = query.Where(p => p.Activo == soloActivos.Value);
+
+            return await query
+                .Include(p => p.Categoria)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+        }
     }
 }

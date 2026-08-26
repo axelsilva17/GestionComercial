@@ -7,8 +7,9 @@ namespace GestionComercial.Dominio.Entidades.Pagos
     {
         public int    Id         { get; set; }
         public string Nombre     { get; set; } = string.Empty;
-        public string Categoria  { get; set; } = "Otro";
-        public bool   Activo     { get; set; } = true;
+        public string  Categoria    { get; set; } = "Otro";
+        public string? Subcategoria { get; set; }
+        public bool    Activo       { get; set; } = true;
         public int    Id_empresa { get; set; }
 
         public Empresa           Empresa { get; set; } = null!;

@@ -1,6 +1,7 @@
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Entidades.Compras;
+using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Pagos;
@@ -209,6 +210,7 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.ToTable("MetodoPago");
                 b.HasKey(m => m.Id);
                 b.Property(m => m.Nombre).HasMaxLength(50).IsRequired();
+                b.Property(m => m.Subcategoria).HasMaxLength(20);
                 b.HasOne(m => m.Empresa).WithMany(e => e.MetodosPago)
                  .HasForeignKey(m => m.Id_empresa).OnDelete(DeleteBehavior.Restrict);
             }
@@ -254,6 +256,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                  .HasForeignKey(v => v.Id_usuario).OnDelete(DeleteBehavior.Restrict);
                 b.HasOne(v => v.Caja).WithMany(c => c.Ventas)
                  .HasForeignKey(v => v.Id_caja).OnDelete(DeleteBehavior.Restrict);
+                b.HasIndex(v => v.Id_metodoPagoDescuento);
+                b.Property(v => v.DescuentoMetodoPago).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
             }
         }
 
@@ -367,6 +371,8 @@ namespace GestionComercial.Persistencia.Configuraciones
                 b.Property(c => c.MontoFinal).HasColumnType("decimal(18,2)");
                 b.Property(c => c.Observacion).HasMaxLength(500);
                 b.Ignore(c => c.EstaAbierta);
+                // Propiedad calculada sobre el campo string Turno — no es una columna real
+                b.Ignore(c => c.TurnoAsEnum);
                 b.HasIndex(c => new { c.Id_sucursal, c.Estado });
                 b.HasOne(c => c.Sucursal).WithMany(s => s.Cajas)
                  .HasForeignKey(c => c.Id_sucursal).OnDelete(DeleteBehavior.Restrict);
@@ -392,6 +398,53 @@ namespace GestionComercial.Persistencia.Configuraciones
                 // ── Link a Venta (para trazabilidad) ────────────────────────────
                 b.HasOne(m => m.Venta).WithMany()
                  .HasForeignKey(m => m.Id_venta).OnDelete(DeleteBehavior.Restrict);
+            }
+        }
+
+        public class DescuentoConfiguracionConfiguracion : IEntityTypeConfiguration<DescuentoConfiguracion>
+        {
+            public void Configure(EntityTypeBuilder<DescuentoConfiguracion> b)
+            {
+                b.ToTable("DescuentoConfiguracion");
+                b.HasKey(d => d.Id);
+                b.Property(d => d.Nombre).HasMaxLength(150).IsRequired();
+                b.Property(d => d.ModoDescuento).HasConversion<int>();
+                b.Property(d => d.Alcance).HasConversion<int>().HasDefaultValue(AlcanceDescuentoEnum.Producto);
+                b.Property(d => d.Valor).HasColumnType("decimal(18,2)");
+                b.Property(d => d.AplicaCualquierMetodoPago).HasDefaultValue(true);
+                b.Ignore(d => d.EstaVigente);
+                b.HasIndex(d => d.Id_empresa);
+                b.HasIndex(d => d.Activo);
+                b.HasIndex(d => new { d.Id_empresa, d.Activo });
+                b.HasOne(d => d.Empresa).WithMany()
+                 .HasForeignKey(d => d.Id_empresa).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(d => d.Producto).WithMany()
+                 .HasForeignKey(d => d.Id_producto).OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(d => d.Categoria).WithMany()
+                 .HasForeignKey(d => d.Id_categoria).OnDelete(DeleteBehavior.Restrict);
+                b.HasMany(d => d.DescuentosMetodosPago)
+                 .WithOne(dm => dm.DescuentoConfiguracion)
+                 .HasForeignKey(dm => dm.Id_descuentoConfiguracion)
+                 .OnDelete(DeleteBehavior.Cascade);
+            }
+        }
+
+        public class DescuentoMetodoPagoConfiguracion : IEntityTypeConfiguration<DescuentoMetodoPago>
+        {
+            public void Configure(EntityTypeBuilder<DescuentoMetodoPago> b)
+            {
+                b.ToTable("DescuentoMetodoPago");
+                b.HasKey(d => new { d.Id_descuentoConfiguracion, d.Id_metodoPago });
+
+                b.HasOne(d => d.DescuentoConfiguracion)
+                 .WithMany(dc => dc.DescuentosMetodosPago)
+                 .HasForeignKey(d => d.Id_descuentoConfiguracion)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(d => d.MetodoPago)
+                 .WithMany()
+                 .HasForeignKey(d => d.Id_metodoPago)
+                 .OnDelete(DeleteBehavior.Restrict);
             }
         }
     }

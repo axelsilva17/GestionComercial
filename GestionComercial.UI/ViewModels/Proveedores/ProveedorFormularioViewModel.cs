@@ -3,106 +3,40 @@ using GestionComercial.Aplicacion.DTOs.Proveedores;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Entidades.Proveedores;
-using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GestionComercial.UI.ViewModels.Proveedores
 {
-    public class ProveedorFormularioViewModel : NavigableViewModel
+    public class ProveedorFormularioViewModel : FormularioEntidadViewModel
     {
-        private readonly ShellViewModel _shell;
         private readonly IProveedorServicio _proveedorServicio;
         private readonly SesionServicio _sesion;
 
         public ProveedorFormularioViewModel(ShellViewModel shell, IProveedorServicio proveedorServicio, SesionServicio sesion)
+            : base(shell)
         {
-            _shell = shell;
             _proveedorServicio = proveedorServicio;
             _sesion = sesion;
         }
 
-        // ── Modo ──────────────────────────────────────────────────────────────
-        private bool _esModoEdicion;
-        public bool EsModoEdicion
-        {
-            get => _esModoEdicion;
-            set
-            {
-                _esModoEdicion = value;
-                NotifyOfPropertyChange(() => EsModoEdicion);
-                NotifyOfPropertyChange(() => TituloFormulario);
-                NotifyOfPropertyChange(() => SubtituloFormulario);
-            }
-        }
+        // ── Títulos ───────────────────────────────────────────────────────────
+        public override string TituloFormulario    => EsModoEdicion ? "Editar Proveedor"           : "Nuevo Proveedor";
+        public override string SubtituloFormulario => EsModoEdicion ? "Modificá los datos del proveedor" : "Completá los datos para registrar un nuevo proveedor";
 
-        public string TituloFormulario    => EsModoEdicion ? "Editar Proveedor"           : "Nuevo Proveedor";
-        public string SubtituloFormulario => EsModoEdicion ? "Modificá los datos del proveedor" : "Completá los datos para registrar un nuevo proveedor";
+        // ── Validación ────────────────────────────────────────────────────────
+        public override bool CanGuardar => !string.IsNullOrWhiteSpace(Nombre) && EmailValido && !IsLoading;
 
+        // ── Campos propios ────────────────────────────────────────────────────
         private int _idProveedor;
-
-        // ── Campos ───────────────────────────────────────────────────────────
-        private string _nombre = string.Empty;
-        public string Nombre
-        {
-            get => _nombre;
-            set { _nombre = value; NotifyOfPropertyChange(() => Nombre); NotifyOfPropertyChange(() => CanGuardar); }
-        }
-
-        private string _telefono = string.Empty;
-        public string Telefono
-        {
-            get => _telefono;
-            set { _telefono = value; NotifyOfPropertyChange(() => Telefono); }
-        }
-
-        private string _email = string.Empty;
-        public string Email
-        {
-            get => _email;
-            set { _email = value; NotifyOfPropertyChange(() => Email); ValidarEmail(); }
-        }
-
-        private bool _activo = true;
-        public bool Activo
-        {
-            get => _activo;
-            set { _activo = value; NotifyOfPropertyChange(() => Activo); }
-        }
-
-        // ── Validación básica de email ────────────────────────────────────────
-        private bool _emailInvalido;
-        public bool EmailInvalido
-        {
-            get => _emailInvalido;
-            set { _emailInvalido = value; NotifyOfPropertyChange(() => EmailInvalido); }
-        }
-
-        public bool EmailValido => string.IsNullOrWhiteSpace(Email) || (Email.Contains("@") && Email.Contains("."));
-        
-        private void ValidarEmail()
-        {
-            if (!string.IsNullOrWhiteSpace(Email) && !EmailValido)
-                EmailInvalido = true;
-            else
-                EmailInvalido = false;
-            NotifyOfPropertyChange(() => CanGuardar);
-        }
-
-        public bool CanGuardar  => !string.IsNullOrWhiteSpace(Nombre) && EmailValido && !IsLoading;
 
         // ── Inicialización ────────────────────────────────────────────────────
         public void InicializarParaCrear()
         {
             EsModoEdicion = false;
             _idProveedor  = 0;
-            Nombre        = string.Empty;
-            Telefono      = string.Empty;
-            Email         = string.Empty;
-            Activo        = true;
-            EmailInvalido = false;
-            LimpiarError();
+            LimpiarCamposComunes();
         }
 
         public void InicializarParaEditar(int idProveedor)
@@ -125,7 +59,6 @@ namespace GestionComercial.UI.ViewModels.Proveedores
                     Telefono = dto.Telefono ?? string.Empty;
                     Email    = dto.Email ?? string.Empty;
                     Activo   = dto.Activo;
-                    EmailInvalido = false;
                 }
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
@@ -142,27 +75,25 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             {
                 if (EsModoEdicion)
                 {
-                    // Actualizar proveedor existente
                     var proveedor = await _proveedorServicio.ObtenerPorIdAsync(_idProveedor);
                     if (proveedor != null)
                     {
-                        proveedor.Nombre = Nombre;
+                        proveedor.Nombre   = Nombre;
                         proveedor.Telefono = string.IsNullOrWhiteSpace(Telefono) ? null : Telefono;
-                        proveedor.Email = string.IsNullOrWhiteSpace(Email) ? null : Email;
-                        proveedor.Activo = Activo;
+                        proveedor.Email    = string.IsNullOrWhiteSpace(Email) ? null : Email;
+                        proveedor.Activo   = Activo;
                         await _proveedorServicio.ActualizarAsync(proveedor);
                     }
                 }
                 else
                 {
-                    // Crear nuevo proveedor
                     var nuevoProveedor = new Proveedor
                     {
-                        Nombre = Nombre,
-                        Telefono = string.IsNullOrWhiteSpace(Telefono) ? null : Telefono,
-                        Email = string.IsNullOrWhiteSpace(Email) ? null : Email,
+                        Nombre     = Nombre,
+                        Telefono   = string.IsNullOrWhiteSpace(Telefono) ? null : Telefono,
+                        Email      = string.IsNullOrWhiteSpace(Email) ? null : Email,
                         Id_empresa = _sesion.IdEmpresa,
-                        Activo = true
+                        Activo     = true
                     };
                     await _proveedorServicio.CrearAsync(nuevoProveedor);
                 }
@@ -175,7 +106,7 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         public async Task Volver()
         {
             var listado = IoC.Get<ProveedorListadoViewModel>();
-            await _shell.ActivateItemAsync(listado, CancellationToken.None);
+            await Shell.ActivateItemAsync(listado, CancellationToken.None);
         }
     }
 }

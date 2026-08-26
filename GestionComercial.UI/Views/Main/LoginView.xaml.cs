@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Main;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 
 namespace GestionComercial.UI.Views.Main
@@ -77,6 +78,15 @@ namespace GestionComercial.UI.Views.Main
             PanelRecupEmail.Visibility         = Visibility.Collapsed;
             PanelRecupPregunta.Visibility      = Visibility.Collapsed;
             PanelRecupNuevaContrasena.Visibility = Visibility.Collapsed;
+
+            ErrorRecupEmail.Visibility     = Visibility.Collapsed;
+            ErrorRecupPregunta.Visibility  = Visibility.Collapsed;
+            ErrorNuevaContrasena.Visibility = Visibility.Collapsed;
+
+            // Al volver al login, limpiar el banner de error viejo (ej: mensaje de
+            // bloqueo que ya no aplica porque la recuperación desbloqueó al usuario)
+            if (panel == PanelLogin && DataContext is LoginViewModel vm)
+                vm.ErrorMessage = string.Empty;
 
             panel.Visibility = Visibility.Visible;
             panel.Opacity    = 0;
@@ -173,6 +183,60 @@ namespace GestionComercial.UI.Views.Main
             {
                 MostrarError(ErrorNuevaContrasena, ErrorNuevaContrasenaText, ex.Message);
             }
+        }
+
+        // ── Enter key handlers ────────────────────────────────────────────────
+        private void RecupEmail_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                RecupEmail_Continuar(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void RecupRespuesta_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                RecupPregunta_Verificar(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void NuevaContrasena_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                CambiarContrasena_Click(sender, new RoutedEventArgs());
+            }
+        }
+
+        private void ConfirmarContrasena_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                CambiarContrasena_Click(sender, new RoutedEventArgs());
+            }
+        }
+
+        // ── Volver desde paso 3 a pregunta ────────────────────────────────────
+        private void VolverAPregunta_Click(object sender, RoutedEventArgs e)
+            => MostrarPanel(PanelRecupPregunta);
+
+        // ── Showcase navigation ──────────────────────────────────────────────
+        private void ShowcaseAnterior_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel vm && vm.Showcase != null)
+                vm.Showcase.Retroceder();
+        }
+
+        private void ShowcaseSiguiente_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel vm && vm.Showcase != null)
+                vm.Showcase.Avanzar();
         }
 
         // ── Helper ────────────────────────────────────────────────────────────

@@ -334,6 +334,15 @@
                                        VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
+
+                    <Button x:Name="IrDescuentos" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarDescuentos, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="%" FontSize="15" VerticalAlignment="Center" Width="22"/>
+                            <TextBlock x:Name="TxtDescuentos" Text="Descuentos" FontSize="13"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- ── Footer usuario ── -->
@@ -594,7 +603,12 @@
                                     <StackPanel x:Name="FormPregunta" Visibility="Collapsed">
                                         <TextBlock Text="PREGUNTA SECRETA" Style="{StaticResource FormLabel}"/>
                                         <ComboBox x:Name="CbPreguntas" Height="40" Margin="0,0,0,12"
-                                                  Style="{StaticResource FilterComboBoxStyle}" FontSize="12"/>
+                                                  Style="{StaticResource FilterComboBoxStyle}" FontSize="12"
+                                                  SelectionChanged="CbPreguntas_SelectionChanged"/>
+                                        <TextBlock x:Name="LblPreguntaCustom" Text="TU PROPIA PREGUNTA" Style="{StaticResource FormLabel}"
+                                                   Visibility="Collapsed"/>
+                                        <TextBox x:Name="TxtPreguntaCustom" Style="{StaticResource FormInput}" Margin="0,0,0,12"
+                                                 Visibility="Collapsed" MaxLength="200"/>
                                         <TextBlock Text="TU RESPUESTA" Style="{StaticResource FormLabel}"/>
                                         <PasswordBox x:Name="PbRespuesta" Style="{StaticResource FormPassword}"
                                                      PasswordChanged="PbRespuesta_PasswordChanged" Margin="0,0,0,12"/>
@@ -631,6 +645,7 @@
                     </ScrollViewer>
                 </Grid>
             </Border>
+
         </Grid>
     </Border>
 </Window>

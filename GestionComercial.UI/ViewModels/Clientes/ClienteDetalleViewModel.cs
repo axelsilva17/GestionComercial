@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Clientes;
+using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System.Threading;
@@ -10,8 +11,13 @@ namespace GestionComercial.UI.ViewModels.Clientes
     public class ClienteDetalleViewModel : NavigableViewModel
     {
         private readonly ShellViewModel _shell;
+        private readonly IClienteServicio _clienteServicio;
 
-        public ClienteDetalleViewModel(ShellViewModel shell) { _shell = shell; }
+        public ClienteDetalleViewModel(ShellViewModel shell, IClienteServicio clienteServicio)
+        {
+            _shell = shell;
+            _clienteServicio = clienteServicio;
+        }
 
         private int _idCliente;
 
@@ -34,8 +40,7 @@ namespace GestionComercial.UI.ViewModels.Clientes
             LimpiarError();
             try
             {
-                await Task.Delay(150);
-                // TODO: Cliente = await _clienteServicio.ObtenerAsync(_idCliente);
+                Cliente = await _clienteServicio.ObtenerPorIdAsync(_idCliente);
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }

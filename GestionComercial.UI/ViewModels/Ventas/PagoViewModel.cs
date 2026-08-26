@@ -2,10 +2,17 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Producto;
+using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.Views.Comandos;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -19,14 +26,77 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private readonly IVentaServicio _ventaServicio;
         private readonly IUnitOfWork    _uow;
         private readonly SesionServicio _sesion;
+        private readonly IDescuentoConfiguracionServicio _descuentoConfiguracionServicio;
 
         private int _idVenta;
+        private Venta? _ventaCompleta;
+        private List<DescuentoConfiguracion>? _descuentosCache;
+        private Dictionary<int, Categoria>? _categoriasCache;
 
-        public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion)
+        // ── Jerarquía de métodos de pago ─────────────────────────────────────
+        private PagoNodoJerarquico? _nodoRaiz;
+        private PagoNodoJerarquico? _nivelActual;
+        public PagoNodoJerarquico? NivelActual
+        {
+            get => _nivelActual;
+            set { _nivelActual = value; NotifyOfPropertyChange(() => NivelActual); NotifyOfPropertyChange(() => Breadcrumb); NotifyOfPropertyChange(() => EsNivelRaiz); }
+        }
+
+        private ObservableCollection<PagoNodoJerarquico> _nodosVisibles = new();
+        public ObservableCollection<PagoNodoJerarquico> NodosVisibles
+        {
+            get => _nodosVisibles;
+            set { _nodosVisibles = value; NotifyOfPropertyChange(() => NodosVisibles); }
+        }
+
+        public string Breadcrumb
+        {
+            get
+            {
+                var partes = new List<string>();
+                var nodo = NivelActual;
+                while (nodo != null)
+                {
+                    partes.Insert(0, nodo.Nombre);
+                    nodo = nodo.Padre;
+                }
+                return string.Join(" → ", partes);
+            }
+        }
+
+        public bool EsNivelRaiz => NivelActual == null || NivelActual == _nodoRaiz;
+
+        // ── Modal Tarjeta ─────────────────────────────────────────────────────
+        private bool _mostrarModalTarjeta;
+        public bool MostrarModalTarjeta
+        {
+            get => _mostrarModalTarjeta;
+            set { _mostrarModalTarjeta = value; NotifyOfPropertyChange(() => MostrarModalTarjeta); }
+        }
+
+        private ObservableCollection<PagoNodoJerarquico> _opcionesTarjeta = new();
+        public ObservableCollection<PagoNodoJerarquico> OpcionesTarjeta
+        {
+            get => _opcionesTarjeta;
+            set { _opcionesTarjeta = value; NotifyOfPropertyChange(() => OpcionesTarjeta); }
+        }
+
+        private string _tituloModalTarjeta = "Seleccionar tipo de tarjeta";
+        public string TituloModalTarjeta
+        {
+            get => _tituloModalTarjeta;
+            set { _tituloModalTarjeta = value; NotifyOfPropertyChange(() => TituloModalTarjeta); }
+        }
+
+        private PagoNodoJerarquico? _padreModalActual;
+
+
+        public PagoViewModel(IVentaServicio ventaServicio, IUnitOfWork uow, SesionServicio sesion, IDescuentoConfiguracionServicio descuentoConfiguracionServicio)
         {
             _ventaServicio = ventaServicio;
             _uow           = uow;
             _sesion        = sesion;
+            _descuentoConfiguracionServicio = descuentoConfiguracionServicio;
             Titulo         = "Cobrar Venta";
         }
 
@@ -38,28 +108,36 @@ namespace GestionComercial.UI.ViewModels.Ventas
             switch (key)
             {
                 case Key.F1:
-                    AgregarEfectivo();
+                    var efectivo = NodosVisibles.FirstOrDefault(n => n.Nombre == "Efectivo");
+                    if (efectivo != null) SeleccionarNodo(efectivo);
                     break;
                 case Key.F2:
-                    AgregarDebito();
+                    var tarjeta = NodosVisibles.FirstOrDefault(n => n.Nombre == "Tarjeta");
+                    if (tarjeta != null) SeleccionarNodo(tarjeta);
                     break;
                 case Key.F3:
-                    AgregarCredito();
+                    Volver();
                     break;
                 case Key.F4:
-                    AgregarQR();
+                    Volver();
                     break;
                 case Key.F6:
                     if (PuedeCobrar) _ = Confirmar();
                     break;
                 case Key.Escape:
-                    _ = Cancelar();
+                    if (MostrarModalTarjeta)
+                        CerrarModal();
+                    else if (!EsNivelRaiz)
+                        Volver();
+                    else
+                        _ = Cancelar();
                     break;
             }
         }
 
         // ── Datos de la venta ─────────────────────────────────────────────────
         private string _clienteNombre = "Consumidor Final";
+        private decimal _totalVentaOriginal; // Total sin descuento de método de pago
         public string ClienteNombre
         {
             get => _clienteNombre;
@@ -70,7 +148,15 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public decimal TotalVenta
         {
             get => _totalVenta;
-            set { _totalVenta = value; NotifyOfPropertyChange(() => TotalVenta); RecalcularVuelto(); }
+            set
+            {
+                _totalVenta = value;
+                NotifyOfPropertyChange(() => TotalVenta);
+                NotifyOfPropertyChange(() => Faltante);
+                NotifyOfPropertyChange(() => HayFaltante);
+                NotifyOfPropertyChange(() => PuedeCobrar);
+                RecalcularVuelto();
+            }
         }
 
         private decimal _totalPagado;
@@ -163,13 +249,124 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 }
 
                 MetodosPago = new ObservableCollection<PagoItemDto>(
-                    metodos.Select(m => new PagoItemDto
+                    metodos.Where(m => m.Activo).Select(m => new PagoItemDto
                     {
                         IdMetodoPago = m.Id,
                         NombreMetodo = m.Nombre,
                         Categoria    = m.Categoria ?? "Otro",
+                        Subcategoria = m.Subcategoria,
                         Monto        = 0,
                     }));
+
+                // Construir árbol jerárquico
+                _nodoRaiz = new PagoNodoJerarquico { Id = 0, Nombre = "Raíz", EsHoja = false };
+
+                // Nivel 1: Efectivo (hoja) | Transferencia (hoja) | Tarjeta (no hoja)
+                var efectivo = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo");
+                if (efectivo != null)
+                {
+                    _nodoRaiz.Hijos.Add(new PagoNodoJerarquico
+                    {
+                        Id = efectivo.IdMetodoPago,
+                        Nombre = "Efectivo",
+                        EsHoja = true,
+                        MetodoPagoId = efectivo.IdMetodoPago,
+                        Icono = "💵",
+                        Padre = _nodoRaiz
+                    });
+                }
+
+                var transferencia = MetodosPago.FirstOrDefault(m => m.Categoria == "Transferencia");
+                if (transferencia != null)
+                {
+                    _nodoRaiz.Hijos.Add(new PagoNodoJerarquico
+                    {
+                        Id = transferencia.IdMetodoPago,
+                        Nombre = "Transferencia",
+                        EsHoja = true,
+                        MetodoPagoId = transferencia.IdMetodoPago,
+                        Icono = "🏦",
+                        Padre = _nodoRaiz
+                    });
+                }
+
+                var tarjetas = MetodosPago.Where(m => m.Categoria == "Tarjeta").ToList();
+                if (tarjetas.Any())
+                {
+                    var nodoTarjeta = new PagoNodoJerarquico
+                    {
+                        Id = -1,
+                        Nombre = "Tarjeta",
+                        EsHoja = false,
+                        Icono = "💳",
+                        Padre = _nodoRaiz
+                    };
+
+                    // Nivel 2: Débito (no hoja) | Crédito (no hoja)
+                    var debitos = tarjetas.Where(m => m.Subcategoria == "Debito").ToList();
+                    if (debitos.Any())
+                    {
+                        var nodoDebito = new PagoNodoJerarquico
+                        {
+                            Id = -2,
+                            Nombre = "Débito",
+                            EsHoja = false,
+                            Icono = "💳",
+                            Padre = nodoTarjeta
+                        };
+
+                        // Nivel 3: tarjetas específicas débito
+                        foreach (var tarjeta in debitos)
+                        {
+                            nodoDebito.Hijos.Add(new PagoNodoJerarquico
+                            {
+                                Id = tarjeta.IdMetodoPago,
+                                Nombre = tarjeta.NombreMetodo,
+                                EsHoja = true,
+                                MetodoPagoId = tarjeta.IdMetodoPago,
+                                Icono = "💳",
+                                Padre = nodoDebito
+                            });
+                        }
+
+                        nodoTarjeta.Hijos.Add(nodoDebito);
+                    }
+
+                    var creditos = tarjetas.Where(m => m.Subcategoria == "Credito").ToList();
+                    if (creditos.Any())
+                    {
+                        var nodoCredito = new PagoNodoJerarquico
+                        {
+                            Id = -3,
+                            Nombre = "Crédito",
+                            EsHoja = false,
+                            Icono = "💳",
+                            Padre = nodoTarjeta
+                        };
+
+                        // Nivel 3: tarjetas específicas crédito
+                        foreach (var tarjeta in creditos)
+                        {
+                            nodoCredito.Hijos.Add(new PagoNodoJerarquico
+                            {
+                                Id = tarjeta.IdMetodoPago,
+                                Nombre = tarjeta.NombreMetodo,
+                                EsHoja = true,
+                                MetodoPagoId = tarjeta.IdMetodoPago,
+                                Icono = "💳",
+                                Padre = nodoCredito
+                            });
+                        }
+
+                        nodoTarjeta.Hijos.Add(nodoCredito);
+                    }
+
+                    _nodoRaiz.Hijos.Add(nodoTarjeta);
+                }
+
+                // Mostrar nivel 1
+                NivelActual = _nodoRaiz;
+                NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(_nodoRaiz.Hijos);
 
                 MetodoSeleccionado = MetodosPago.FirstOrDefault(m => m.Categoria == "Efectivo")
                                   ?? MetodosPago.FirstOrDefault();
@@ -183,17 +380,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 MostrarError(mensaje);
                 System.Windows.MessageBox.Show(mensaje, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
-        }
-
-        /// Llamado desde VentaViewModel antes de navegar.
-        public void InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
-        {
-            _idVenta       = idVenta;
-            ClienteNombre  = clienteNombre;
-            TotalVenta     = totalFinal;
-            Pagos          = new();
-            MontoIngresado = totalFinal.ToString("F2");
-            RecalcularVuelto();
         }
 
         // ── Acciones ──────────────────────────────────────────────────────────
@@ -239,13 +425,29 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             MontoIngresado = string.Empty;
             RecalcularTotalPagado();
+            _ = RecalcularDescuentoPreviewAsync();
         }
 
         public void QuitarPago(PagoLineaVm linea)
         {
             if (linea == null) return;
+            var montoAntes = TotalVenta;
             Pagos.Remove(linea);
             RecalcularTotalPagado();
+
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-QuitarPago] Pagos restantes: {Pagos.Count}, TotalVenta ANTES restore: {TotalVenta}, _totalVentaOriginal: {_totalVentaOriginal}");
+
+            // Si no quedan pagos, restaurar el total original inmediatamente (síncrono)
+            if (!Pagos.Any())
+            {
+                TotalVenta = _totalVentaOriginal;
+                LineasDescuento.Clear();
+                NotificarDescuentos();
+                MontoIngresado = TotalVenta.ToString("F2");
+                System.Diagnostics.Debug.WriteLine($"[PagoVM-QuitarPago] RESTAURADO TotalVenta a {_totalVentaOriginal}, Faltante: {Faltante}");
+            }
+
+            _ = RecalcularDescuentoPreviewAsync();
         }
 
 		/// 		/// Agrega un pago con el método seleccionado.
@@ -277,8 +479,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 		public void AgregarDebito()
 		{
 			var debito = MetodosPago.FirstOrDefault(m =>
-				m.NombreMetodo.Contains("Débito", StringComparison.OrdinalIgnoreCase) ||
-				m.NombreMetodo.Contains("Debito", StringComparison.OrdinalIgnoreCase));
+				m.Categoria == "Tarjeta" && m.Subcategoria == "Debito");
 			if (debito == null) { MostrarError("No hay método de pago débito configurado."); return; }
 			SeleccionarOCompletar(debito);
 		}
@@ -286,8 +487,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
 		public void AgregarCredito()
 		{
 			var credito = MetodosPago.FirstOrDefault(m =>
-				m.NombreMetodo.Contains("Crédito", StringComparison.OrdinalIgnoreCase) ||
-				m.NombreMetodo.Contains("Credito", StringComparison.OrdinalIgnoreCase));
+				m.Categoria == "Tarjeta" && m.Subcategoria == "Credito");
 			if (credito == null) { MostrarError("No hay método de pago crédito configurado."); return; }
 			SeleccionarOCompletar(credito);
 		}
@@ -300,6 +500,77 @@ namespace GestionComercial.UI.ViewModels.Ventas
 			if (qr == null) { MostrarError("No hay método de pago QR configurado."); return; }
 			SeleccionarOCompletar(qr);
 		}
+
+        public void SeleccionarNodo(PagoNodoJerarquico nodo)
+        {
+            if (nodo == null) return;
+
+            if (nodo.EsHoja && nodo.MetodoPagoId.HasValue)
+            {
+                var metodo = MetodosPago.FirstOrDefault(m => m.IdMetodoPago == nodo.MetodoPagoId);
+                if (metodo != null)
+                {
+                    SeleccionarOCompletar(metodo);
+                }
+            }
+            else if (nodo.Hijos.Any())
+            {
+                // Si es Tarjeta → abrir modal en vez de navegar
+                if (nodo.Nombre == "Tarjeta")
+                {
+                    AbrirModalTarjeta(nodo);
+                }
+                else
+                {
+                    NivelActual = nodo;
+                    NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(nodo.Hijos);
+                }
+            }
+        }
+
+        private void AbrirModalTarjeta(PagoNodoJerarquico nodoTarjeta)
+        {
+            _padreModalActual = nodoTarjeta;
+            OpcionesTarjeta = new ObservableCollection<PagoNodoJerarquico>(nodoTarjeta.Hijos);
+            TituloModalTarjeta = "Seleccionar tipo de tarjeta";
+            MostrarModalTarjeta = true;
+        }
+
+        public void SeleccionarMetodoModal(PagoNodoJerarquico nodo)
+        {
+            if (nodo == null) return;
+
+            if (nodo.EsHoja && nodo.MetodoPagoId.HasValue)
+            {
+                // Es una tarjeta específica → seleccionar y cerrar
+                var metodo = MetodosPago.FirstOrDefault(m => m.IdMetodoPago == nodo.MetodoPagoId);
+                if (metodo != null)
+                {
+                    MostrarModalTarjeta = false;
+                    SeleccionarOCompletar(metodo);
+                }
+            }
+            else if (nodo.Hijos.Any())
+            {
+                // Es Débito/Crédito → mostrar tarjetas de ese tipo
+                OpcionesTarjeta = new ObservableCollection<PagoNodoJerarquico>(nodo.Hijos);
+                TituloModalTarjeta = $"Tarjetas {nodo.Nombre}";
+            }
+        }
+
+        public void CerrarModal()
+        {
+            MostrarModalTarjeta = false;
+        }
+
+        public void Volver()
+        {
+            if (NivelActual?.Padre != null && NivelActual != _nodoRaiz)
+            {
+                NivelActual = NivelActual.Padre;
+                NodosVisibles = new ObservableCollection<PagoNodoJerarquico>(NivelActual.Hijos);
+            }
+        }
 
         public async Task Confirmar()
         {
@@ -378,6 +649,28 @@ namespace GestionComercial.UI.ViewModels.Ventas
                      .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
 
+        public async Task GuardarPendienteAsync()
+        {
+            var confirmacion = System.Windows.MessageBox.Show(
+                "La venta quedará pendiente de cobro. ¿Desea continuar?",
+                "Confirmar",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
+
+            if (confirmacion != System.Windows.MessageBoxResult.Yes) return;
+
+            // No registrar pago, no marcar pagada, no revertir stock.
+            // La venta ya existe en BD con Estado Pendiente y stock descontado.
+            await IoC.Get<ShellViewModel>()
+                     .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
+
+            System.Windows.MessageBox.Show(
+                "Venta guardada como pendiente.",
+                "Información",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+
         private void RecalcularTotalPagado()
         {
             TotalPagado = Pagos.Sum(p => p.Monto);
@@ -386,6 +679,112 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         private void RecalcularVuelto()
             => Vuelto = TotalPagado > TotalVenta ? TotalPagado - TotalVenta : 0;
+
+        private async Task RecalcularDescuentoPreviewAsync()
+        {
+            if (_descuentosCache == null || _ventaCompleta == null || _categoriasCache == null)
+                return;
+
+            var idsMetodosPago = Pagos.Select(p => p.IdMetodoPago).Distinct().ToList();
+            var esPagoUnico = idsMetodosPago.Count == 1;
+            decimal totalDescuentoMetodoPago = 0;
+            decimal porcentajeDescuentoMetodo = 0;
+
+            if (esPagoUnico && idsMetodosPago.Count == 1)
+            {
+                // Per-item discounts
+                foreach (var detalle in _ventaCompleta.Detalles)
+                {
+                    var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
+                    if (subtotalDetalle <= 0) continue;
+
+                    var descuento = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
+                        _sesion.IdEmpresa,
+                        detalle.Id_producto,
+                        detalle.Producto?.Id_categoria,
+                        idsMetodosPago,
+                        esPagoUnico: true,
+                        _descuentosCache,
+                        _categoriasCache);
+                    if (descuento != null)
+                    {
+                        totalDescuentoMetodoPago += Math.Round(subtotalDetalle * descuento.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        porcentajeDescuentoMetodo = descuento.Valor;
+                    }
+                }
+
+                // REGLA B: total-venta solo si no hubo per-item
+                if (totalDescuentoMetodoPago == 0)
+                {
+                    var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
+                        _sesion.IdEmpresa, idsMetodosPago[0], _descuentosCache);
+                    if (descuentoTotalVenta != null)
+                    {
+                        var baseCalculo = _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento;
+                        totalDescuentoMetodoPago = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        porcentajeDescuentoMetodo = descuentoTotalVenta.Valor;
+                    }
+                }
+            }
+
+            TotalVenta = _totalVentaOriginal - totalDescuentoMetodoPago;
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-RecalcDesc] TotalVenta={TotalVenta}, descuento={totalDescuentoMetodoPago}, base={_totalVentaOriginal}");
+
+            // Si el descuento reduce el total y ya hay pagos, ajustar para evitar vuelto falso
+            if (totalDescuentoMetodoPago > 0 && Pagos.Any())
+            {
+                var totalPagadoActual = Pagos.Sum(p => p.Monto);
+                if (totalPagadoActual > TotalVenta && TotalVenta > 0)
+                {
+                    // Recalcular: el último pago ajusta la diferencia
+                    var pagosPrevios = Pagos.Take(Pagos.Count - 1).Sum(p => p.Monto);
+                    var montoUltimoPago = Math.Round(TotalVenta - pagosPrevios, 2);
+                    if (montoUltimoPago >= 0)
+                    {
+                        Pagos[Pagos.Count - 1].Monto = montoUltimoPago;
+                        NotifyOfPropertyChange(() => Pagos);
+                        RecalcularTotalPagado();
+                    }
+                }
+            }
+
+            // Sincronizar línea de descuento por método de pago en el preview
+            var lineaMetodo = LineasDescuento.FirstOrDefault(l => l.EsMetodoPago);
+            if (totalDescuentoMetodoPago > 0)
+            {
+                var descuentoTexto = porcentajeDescuentoMetodo > 0
+                    ? $"Método de pago -{porcentajeDescuentoMetodo:0.##}%"
+                    : "Método de pago";
+                if (lineaMetodo == null)
+                {
+                    LineasDescuento.Add(new DescuentoLineaVm
+                    {
+                        ProductoNombre = "Método de pago",
+                        Monto = totalDescuentoMetodoPago,
+                        Descripcion = descuentoTexto,
+                        EsMetodoPago = true,
+                        Porcentaje = porcentajeDescuentoMetodo
+                    });
+                }
+                else
+                {
+                    var idx = LineasDescuento.IndexOf(lineaMetodo);
+                    LineasDescuento[idx] = new DescuentoLineaVm
+                    {
+                        ProductoNombre = "Método de pago",
+                        Monto = totalDescuentoMetodoPago,
+                        Descripcion = descuentoTexto,
+                        EsMetodoPago = true,
+                        Porcentaje = porcentajeDescuentoMetodo
+                    };
+                }
+            }
+            else if (lineaMetodo != null)
+            {
+                LineasDescuento.Remove(lineaMetodo);
+            }
+            NotificarDescuentos();
+        }
 
         // ── Popup Historial (same as VentaViewModel) ─────────────────────────────
         private bool _mostrarHistorial;
@@ -477,6 +876,99 @@ namespace GestionComercial.UI.ViewModels.Ventas
             get => _ventaCompletada;
             set { _ventaCompletada = value; NotifyOfPropertyChange(() => VentaCompletada); }
         }
+
+        // ── Descuentos aplicados ─────────────────────────────────────────
+        private ObservableCollection<DescuentoLineaVm> _lineasDescuento = new();
+        public ObservableCollection<DescuentoLineaVm> LineasDescuento
+        {
+            get => _lineasDescuento;
+            set { _lineasDescuento = value; NotifyOfPropertyChange(() => LineasDescuento); NotifyOfPropertyChange(() => TieneDescuentos); }
+        }
+
+        public bool TieneDescuentos => LineasDescuento.Any();
+
+        /// Notifica explícitamente que TieneDescuentos pudo haber cambiado.
+        private void NotificarDescuentos()
+        {
+            NotifyOfPropertyChange(() => TieneDescuentos);
+            NotifyOfPropertyChange(() => LineasDescuento);
+        }
+
+        ///         /// Inicializa el PagoViewModel con los datos de la venta.
+        /// Carga los descuentos aplicados desde la base de datos.
+        public async Task InicializarConVenta(int idVenta, string clienteNombre, decimal totalFinal)
+        {
+            _idVenta            = idVenta;
+            ClienteNombre       = clienteNombre;
+            _totalVentaOriginal = totalFinal;
+            TotalVenta          = totalFinal;
+            Pagos               = new();
+            MontoIngresado      = totalFinal.ToString("F2");
+            RecalcularVuelto();
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-Init] totalFinal={totalFinal}, _totalVentaOriginal={_totalVentaOriginal}");
+
+            // Cargar venta completa y caches para preview de descuentos
+            _ventaCompleta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta);
+            if (_ventaCompleta != null && _sesion.IdEmpresa > 0)
+            {
+                _descuentosCache = await _descuentoConfiguracionServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
+                var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
+                _categoriasCache = new Dictionary<int, Categoria>();
+                if (categorias != null)
+                {
+                    foreach (var cat in categorias)
+                        _categoriasCache[cat.Id] = cat;
+                }
+            }
+
+            // Cargar descuentos aplicados desde la venta
+            await CargarDescuentosAsync(idVenta);
+        }
+
+        private async Task CargarDescuentosAsync(int idVenta)
+        {
+            try
+            {
+                var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta);
+                if (venta == null) return;
+
+                var lineas = new List<DescuentoLineaVm>();
+
+                // Líneas de descuento por configuración (por detalle)
+                foreach (var detalle in venta.Detalles.Where(d => d.Descuento > 0 || d.Descuentos.Any()))
+                {
+                    var descuentoConfig = detalle.Descuentos?.FirstOrDefault();
+                    lineas.Add(new DescuentoLineaVm
+                    {
+                        ProductoNombre = detalle.Producto?.Nombre ?? $"Item #{detalle.Id_producto}",
+                        Monto = detalle.DescuentoTotal,
+                        Descripcion = descuentoConfig != null ? $"-{descuentoConfig.Porcentaje:0.##}%" : "Configurado",
+                        EsMetodoPago = false,
+                        Porcentaje = descuentoConfig?.Porcentaje ?? 0
+                    });
+                }
+
+                // Línea de descuento por método de pago
+                if (venta.DescuentoMetodoPago > 0)
+                {
+                    lineas.Add(new DescuentoLineaVm
+                    {
+                        ProductoNombre = "Método de pago",
+                        Monto = venta.DescuentoMetodoPago,
+                        Descripcion = "Método de pago",
+                        EsMetodoPago = true,
+                        Porcentaje = 0
+                    });
+                }
+
+                LineasDescuento = new ObservableCollection<DescuentoLineaVm>(lineas);
+                NotifyOfPropertyChange(() => TieneDescuentos);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PagoVM] Error cargando descuentos: {ex.Message}");
+            }
+        }
     }
 
     public class PagoLineaVm
@@ -485,5 +977,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public string  NombreMetodo { get; set; } = string.Empty;
         public string  Categoria    { get; set; } = "Otro";
         public decimal Monto        { get; set; }
+    }
+
+    public class DescuentoLineaVm
+    {
+        public string  ProductoNombre { get; set; } = string.Empty;
+        public decimal Monto          { get; set; }
+        public string  Descripcion    { get; set; } = string.Empty;
+        public bool    EsMetodoPago   { get; set; }
+        public decimal Porcentaje     { get; set; }
     }
 }

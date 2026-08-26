@@ -4,7 +4,7 @@
 #if true
 
 using ClosedXML.Excel;
-using GestionComercial.UI.ViewModels.Productos;
+using GestionComercial.Aplicacion.DTOs.Productos;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -197,10 +197,10 @@ namespace GestionComercial.Aplicacion.Servicios
     {
         ///         /// Lee un CSV simple como alternativa al Excel.
         /// Formato esperado: Nombre;CodigoBarra;PrecioVenta;PrecioCosto;StockActual;StockMinimo;Categoria;UnidadMedida
-        public static System.Collections.Generic.List<GestionComercial.UI.ViewModels.Productos.FilaImportacionDto>
+        public static System.Collections.Generic.List<GestionComercial.Aplicacion.DTOs.Productos.FilaImportacionDto>
             LeerCsv(string rutaArchivo, char separador = ';')
         {
-            var resultado = new System.Collections.Generic.List<GestionComercial.UI.ViewModels.Productos.FilaImportacionDto>();
+            var resultado = new System.Collections.Generic.List<GestionComercial.Aplicacion.DTOs.Productos.FilaImportacionDto>();
             var lineas    = System.IO.File.ReadAllLines(rutaArchivo, System.Text.Encoding.UTF8);
 
             if (lineas.Length < 2) return resultado;
@@ -228,7 +228,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 int GetInt(string nombre) =>
                     int.TryParse(Get(nombre), out var v) ? v : 0;
 
-                var fila = new GestionComercial.UI.ViewModels.Productos.FilaImportacionDto
+                var fila = new GestionComercial.Aplicacion.DTOs.Productos.FilaImportacionDto
                 {
                     Fila         = n + 1,
                     Nombre       = Get("Nombre"),

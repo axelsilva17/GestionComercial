@@ -1,3 +1,4 @@
+using GestionComercial.Dominio.DTOs.Inventario;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Entidades.Compras;
@@ -26,6 +27,12 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             DateTime fechaHasta,
             int pagina,
             int itemsPorPagina);
+
+        Task<ResumenMovimientoStockDto?> ObtenerResumenPeriodoAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int? idEmpresa,
+            int? idSucursal = null);
     }
 
 

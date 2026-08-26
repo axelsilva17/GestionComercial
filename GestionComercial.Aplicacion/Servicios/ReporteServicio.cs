@@ -145,9 +145,74 @@ public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int id
             {
                 Metodo = p.Metodo,
                 Total = p.Total,
-                Cantidad = 0, // No tenemos quantity from this method, would need another call
+                Cantidad = 0,
                 Porcentaje = totalGeneral > 0 ? (double)(p.Total / totalGeneral) * 100 : 0,
-});
+            });
+        }
+
+        public async Task<IEnumerable<VentaPorDiaDto>> VentasPorDiaAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        {
+            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
+            return ventas
+                .GroupBy(v => v.Fecha.Date)
+                .Select(g => new VentaPorDiaDto
+                {
+                    Dia = g.Key.ToString("dd/MM"),
+                    Total = g.Sum(v => v.TotalFinal),
+                    Cantidad = g.Count(),
+                })
+                .OrderBy(d => d.Dia);
+        }
+
+        public async Task<IEnumerable<VentaPorSucursalDto>> VentasPorSucursalAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        {
+            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
+            var totalGeneral = ventas.Sum(v => v.TotalFinal);
+            return ventas
+                .GroupBy(v => v.Id_sucursal)
+                .Select(g => new VentaPorSucursalDto
+                {
+                    SucursalNombre = g.FirstOrDefault()?.Sucursal?.Nombre ?? $"Sucursal {g.Key}",
+                    Total = g.Sum(v => v.TotalFinal),
+                    Cantidad = g.Count(),
+                    Porcentaje = totalGeneral > 0 ? (g.Sum(v => v.TotalFinal) / totalGeneral) * 100 : 0,
+                })
+                .OrderByDescending(s => s.Total);
+        }
+
+        public async Task<KpiGeneralDto> KpisGeneralesAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
+        {
+            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
+            var totalVentas = ventas.Sum(v => v.TotalFinal);
+            var totalTransacciones = ventas.Count();
+            var stockCritico = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
+
+            // Top vendedor
+            var topVendedor = ventas
+                .GroupBy(v => v.Id_usuario)
+                .OrderByDescending(g => g.Sum(v => v.TotalFinal))
+                .FirstOrDefault();
+            var nombreVendedor = topVendedor?.FirstOrDefault()?.Usuario != null
+                ? $"{topVendedor.First().Usuario.Nombre} {topVendedor.First().Usuario.Apellido}"
+                : "";
+
+            // Top producto
+            var topProducto = ventas
+                .SelectMany(v => v.Detalles)
+                .GroupBy(d => d.Id_producto)
+                .OrderByDescending(g => g.Sum(d => d.Subtotal))
+                .FirstOrDefault();
+            var nombreProducto = topProducto?.FirstOrDefault()?.Producto?.Nombre ?? "";
+
+            return new KpiGeneralDto
+            {
+                TotalVentasPeriodo = totalVentas,
+                TotalTransacciones = totalTransacciones,
+                TicketPromedio = totalTransacciones > 0 ? totalVentas / totalTransacciones : 0,
+                ProductosBajoStock = stockCritico.Count(),
+                MejorVendedor = nombreVendedor,
+                MejorProducto = nombreProducto,
+            };
         }
     }
 }

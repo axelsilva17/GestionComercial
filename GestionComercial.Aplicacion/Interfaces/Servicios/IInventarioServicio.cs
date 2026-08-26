@@ -1,6 +1,8 @@
 using GestionComercial.Aplicacion.DTOs;
 using GestionComercial.Aplicacion.DTOs.Inventario;
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Dominio.DTOs.Inventario;
+using GestionComercial.Dominio.Interfaces;
 
 namespace GestionComercial.Aplicacion.Interfaces.Servicios
 {
@@ -43,6 +45,13 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
             string? observacion,
             int idSucursal,
             int idUsuario,
-            bool guardarCambios = true);
+            bool guardarCambios = true,
+            IUnitOfWork? unidadTrabajo = null);
+
+        Task<ResumenMovimientoStockDto> ObtenerResumenPeriodoAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int idEmpresa,
+            int? idSucursal = null);
     }
 }

@@ -22,30 +22,35 @@ namespace GestionComercial.Persistencia.Semillas
                 new Permiso { Id = 12, Nombre = "Caja.Abrir",         Descripcion = "Abrir caja"          },
                 new Permiso { Id = 13, Nombre = "Caja.Cerrar",        Descripcion = "Cerrar caja"         },
                 new Permiso { Id = 14, Nombre = "Configuracion.Ver",  Descripcion = "Ver configuración"   },
-                new Permiso { Id = 15, Nombre = "Usuarios.Gestionar", Descripcion = "Gestionar usuarios"  }
+                new Permiso { Id = 15, Nombre = "Usuarios.Gestionar", Descripcion = "Gestionar usuarios"  },
+                new Permiso { Id = 16, Nombre = "Descuentos.Ver",     Descripcion = "Ver descuentos"       }
             );
 
             // Gerente - todos los permisos
             builder.Entity<RolPermiso>().HasData(
-                Enumerable.Range(1, 15).Select(i =>
+                Enumerable.Range(1, 16).Select(i =>
                     new RolPermiso { Id = i, Id_rol = 1, Id_permiso = i }).ToArray()
             );
 
             // Administrador - todo menos Usuarios.Gestionar
             builder.Entity<RolPermiso>().HasData(
-                Enumerable.Range(1, 14).Select(i =>
-                    new RolPermiso { Id = 15 + i, Id_rol = 2, Id_permiso = i }).ToArray()
+                Enumerable.Range(1, 15).Select(i =>
+                    new RolPermiso { Id = 16 + i, Id_rol = 2, Id_permiso = i }).ToArray()
+            );
+            // Administrador - permiso Id=16 (Descuentos.Ver)
+            builder.Entity<RolPermiso>().HasData(
+                new RolPermiso { Id = 32, Id_rol = 2, Id_permiso = 16 }
             );
 
             // Vendedor
             builder.Entity<RolPermiso>().HasData(
-                new RolPermiso { Id = 30, Id_rol = 3, Id_permiso = 1  },
-                new RolPermiso { Id = 31, Id_rol = 3, Id_permiso = 2  },
-                new RolPermiso { Id = 32, Id_rol = 3, Id_permiso = 6  },
-                new RolPermiso { Id = 33, Id_rol = 3, Id_permiso = 9  },
-                new RolPermiso { Id = 34, Id_rol = 3, Id_permiso = 10 },
-                new RolPermiso { Id = 35, Id_rol = 3, Id_permiso = 12 },
-                new RolPermiso { Id = 36, Id_rol = 3, Id_permiso = 13 }
+                new RolPermiso { Id = 37, Id_rol = 3, Id_permiso = 1  },
+                new RolPermiso { Id = 38, Id_rol = 3, Id_permiso = 2  },
+                new RolPermiso { Id = 39, Id_rol = 3, Id_permiso = 6  },
+                new RolPermiso { Id = 40, Id_rol = 3, Id_permiso = 9  },
+                new RolPermiso { Id = 41, Id_rol = 3, Id_permiso = 10 },
+                new RolPermiso { Id = 42, Id_rol = 3, Id_permiso = 12 },
+                new RolPermiso { Id = 43, Id_rol = 3, Id_permiso = 13 }
             );
         }
     }

@@ -175,7 +175,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             EsPrimaria = false,
                             Estado = 2,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7123),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9306),
                             FechaApertura = new DateTime(2025, 10, 1, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             FechaCierre = new DateTime(2025, 10, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
                             Id_sucursal = 1,
@@ -191,7 +191,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             EsPrimaria = false,
                             Estado = 2,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7135),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9318),
                             FechaApertura = new DateTime(2025, 11, 1, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             FechaCierre = new DateTime(2025, 11, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
                             Id_sucursal = 1,
@@ -207,7 +207,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             EsPrimaria = false,
                             Estado = 2,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7140),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9323),
                             FechaApertura = new DateTime(2025, 12, 1, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             FechaCierre = new DateTime(2025, 12, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
                             Id_sucursal = 1,
@@ -223,7 +223,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             EsPrimaria = false,
                             Estado = 2,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7145),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9327),
                             FechaApertura = new DateTime(2026, 1, 1, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             FechaCierre = new DateTime(2026, 1, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
                             Id_sucursal = 1,
@@ -239,7 +239,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             EsPrimaria = false,
                             Estado = 2,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7150),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9332),
                             FechaApertura = new DateTime(2026, 2, 1, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             FechaCierre = new DateTime(2026, 2, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
                             Id_sucursal = 1,
@@ -255,7 +255,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             EsPrimaria = false,
                             Estado = 2,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7154),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9337),
                             FechaApertura = new DateTime(2026, 3, 1, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             FechaCierre = new DateTime(2026, 3, 1, 20, 0, 0, 0, DateTimeKind.Unspecified),
                             Id_sucursal = 1,
@@ -354,7 +354,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Documento = 0,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6931),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9096),
                             Id_empresa = 1,
                             Nombre = "Consumidor Final"
                         },
@@ -364,7 +364,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Documento = 30111111,
                             Email = "juan@gmail.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6934),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9099),
                             Id_empresa = 1,
                             Nombre = "Juan Pérez",
                             Telefono = "3794555001"
@@ -375,7 +375,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Documento = 32222222,
                             Email = "maria@gmail.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6936),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9101),
                             Id_empresa = 1,
                             Nombre = "María González",
                             Telefono = "3794555002"
@@ -386,7 +386,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Documento = 28333333,
                             Email = "carlos@empresa.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6938),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9103),
                             Id_empresa = 1,
                             Nombre = "Carlos Rodríguez",
                             Telefono = "3794555003"
@@ -397,7 +397,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Documento = 35444444,
                             Email = "laura@gmail.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6940),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9105),
                             Id_empresa = 1,
                             Nombre = "Laura Martínez",
                             Telefono = "3794555004"
@@ -408,7 +408,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Documento = 30555555,
                             Email = "compras@constructora.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6943),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9108),
                             Id_empresa = 1,
                             Nombre = "Constructora ABC",
                             Telefono = "3794555005"
@@ -446,7 +446,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Documento Nacional de Identidad",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6329),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8500),
                             Nombre = "DNI"
                         },
                         new
@@ -454,7 +454,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Clave Única de Identificación Tributaria",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6331),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8502),
                             Nombre = "CUIT"
                         },
                         new
@@ -462,7 +462,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 3,
                             Activo = true,
                             Descripcion = "Pasaporte",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6333),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8504),
                             Nombre = "Pasaporte"
                         });
                 });
@@ -518,7 +518,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7693),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9903),
                             Id_proveedor = 1,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -530,7 +530,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7697),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9914),
                             Id_proveedor = 2,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -542,7 +542,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7709),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9922),
                             Id_proveedor = 3,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -554,7 +554,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7712),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9925),
                             Id_proveedor = 4,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -566,7 +566,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7721),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9928),
                             Id_proveedor = 1,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -578,7 +578,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7724),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9931),
                             Id_proveedor = 2,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -590,7 +590,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7727),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9934),
                             Id_proveedor = 3,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -602,7 +602,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7730),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9938),
                             Id_proveedor = 4,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -614,7 +614,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7733),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9940),
                             Id_proveedor = 1,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -626,7 +626,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7736),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9944),
                             Id_proveedor = 2,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -638,7 +638,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2026, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7739),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9947),
                             Id_proveedor = 1,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -650,7 +650,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Estado = 2,
                             Fecha = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7742),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9950),
                             Id_proveedor = 3,
                             Id_sucursal = 1,
                             Id_usuario = 1,
@@ -978,6 +978,84 @@ namespace GestionComercial.Persistencia.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Alcance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<bool>("AplicaCualquierMetodoPago")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("FechaAlta")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FechaDesde")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FechaHasta")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Id_categoria")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id_empresa")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Id_producto")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ModoDescuento")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Activo");
+
+                    b.HasIndex("Id_categoria");
+
+                    b.HasIndex("Id_empresa");
+
+                    b.HasIndex("Id_producto");
+
+                    b.HasIndex("Id_empresa", "Activo");
+
+                    b.ToTable("DescuentoConfiguracion", (string)null);
+                });
+
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Descuento.DescuentoMetodoPago", b =>
+                {
+                    b.Property<int>("Id_descuentoConfiguracion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id_metodoPago")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id_descuentoConfiguracion", "Id_metodoPago");
+
+                    b.HasIndex("Id_metodoPago");
+
+                    b.ToTable("DescuentoMetodoPago", (string)null);
+                });
+
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Movimientos.MovimientoStock", b =>
                 {
                     b.Property<int>("Id")
@@ -1057,7 +1135,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Ingreso de mercadería",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6282),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8420),
                             Nombre = "Entrada"
                         },
                         new
@@ -1065,7 +1143,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Egreso de mercadería",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6284),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8422),
                             Nombre = "Salida"
                         },
                         new
@@ -1073,7 +1151,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 3,
                             Activo = true,
                             Descripcion = "Ajuste positivo de stock",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6285),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8423),
                             Nombre = "Ajuste Positivo"
                         },
                         new
@@ -1081,7 +1159,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 4,
                             Activo = true,
                             Descripcion = "Ajuste negativo de stock",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6287),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8425),
                             Nombre = "Ajuste Negativo"
                         });
                 });
@@ -1144,7 +1222,7 @@ namespace GestionComercial.Persistencia.Migrations
                             CUIT = "20-12345678-9",
                             Direccion = "Dirección Principal 123",
                             Email = "admin@miempresa.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6644),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8853),
                             Nombre = "Mi Empresa",
                             Telefono = "3794000000",
                             UmbralStockCritico = 10
@@ -1192,7 +1270,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Direccion = "Dirección Principal 123",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6683),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8891),
                             Id_empresa = 1,
                             Nombre = "Casa Central",
                             Telefono = "3794000000"
@@ -1220,6 +1298,10 @@ namespace GestionComercial.Persistencia.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Subcategoria")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Id_empresa");
@@ -1241,7 +1323,8 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Categoria = "Tarjeta",
                             Id_empresa = 1,
-                            Nombre = "Débito"
+                            Nombre = "Débito",
+                            Subcategoria = "Debito"
                         },
                         new
                         {
@@ -1249,7 +1332,8 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             Categoria = "Tarjeta",
                             Id_empresa = 1,
-                            Nombre = "Crédito"
+                            Nombre = "Crédito",
+                            Subcategoria = "Credito"
                         },
                         new
                         {
@@ -1304,7 +1388,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 1,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7600),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9804),
                             Id_metodoPago = 1,
                             Id_venta = 1,
                             Monto = 25700m
@@ -1312,7 +1396,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 2,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7603),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9808),
                             Id_metodoPago = 3,
                             Id_venta = 2,
                             Monto = 85000m
@@ -1320,7 +1404,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 3,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7605),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9809),
                             Id_metodoPago = 1,
                             Id_venta = 3,
                             Monto = 17575m
@@ -1328,7 +1412,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 4,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7606),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9811),
                             Id_metodoPago = 4,
                             Id_venta = 4,
                             Monto = 54800m
@@ -1336,7 +1420,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 5,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7608),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9813),
                             Id_metodoPago = 2,
                             Id_venta = 5,
                             Monto = 30400m
@@ -1344,7 +1428,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 6,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7610),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9814),
                             Id_metodoPago = 1,
                             Id_venta = 6,
                             Monto = 42000m
@@ -1352,7 +1436,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 7,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7611),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9816),
                             Id_metodoPago = 5,
                             Id_venta = 7,
                             Monto = 12500m
@@ -1360,7 +1444,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 8,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7613),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9817),
                             Id_metodoPago = 4,
                             Id_venta = 8,
                             Monto = 88920m
@@ -1368,7 +1452,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 9,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7614),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9819),
                             Id_metodoPago = 1,
                             Id_venta = 9,
                             Monto = 27300m
@@ -1376,7 +1460,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 10,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7616),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9820),
                             Id_metodoPago = 2,
                             Id_venta = 10,
                             Monto = 16800m
@@ -1384,7 +1468,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 11,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7617),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9822),
                             Id_metodoPago = 3,
                             Id_venta = 11,
                             Monto = 68400m
@@ -1392,7 +1476,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 12,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7619),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9823),
                             Id_metodoPago = 1,
                             Id_venta = 12,
                             Monto = 9800m
@@ -1400,7 +1484,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 13,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7620),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9825),
                             Id_metodoPago = 4,
                             Id_venta = 13,
                             Monto = 47500m
@@ -1408,7 +1492,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 14,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7621),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9826),
                             Id_metodoPago = 3,
                             Id_venta = 14,
                             Monto = 148200m
@@ -1416,7 +1500,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 15,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7623),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9828),
                             Id_metodoPago = 1,
                             Id_venta = 15,
                             Monto = 22400m
@@ -1424,7 +1508,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 16,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7624),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9829),
                             Id_metodoPago = 1,
                             Id_venta = 16,
                             Monto = 38500m
@@ -1432,7 +1516,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 17,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7626),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9831),
                             Id_metodoPago = 3,
                             Id_venta = 17,
                             Monto = 87400m
@@ -1440,7 +1524,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 18,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7627),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9832),
                             Id_metodoPago = 2,
                             Id_venta = 18,
                             Monto = 27300m
@@ -1448,7 +1532,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 19,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7629),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9833),
                             Id_metodoPago = 4,
                             Id_venta = 19,
                             Monto = 54000m
@@ -1456,7 +1540,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 20,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7630),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9835),
                             Id_metodoPago = 1,
                             Id_venta = 20,
                             Monto = 17575m
@@ -1464,7 +1548,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 21,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7632),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9836),
                             Id_metodoPago = 3,
                             Id_venta = 21,
                             Monto = 85000m
@@ -1472,7 +1556,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 22,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7633),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9838),
                             Id_metodoPago = 1,
                             Id_venta = 22,
                             Monto = 39900m
@@ -1480,7 +1564,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 23,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7635),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9839),
                             Id_metodoPago = 2,
                             Id_venta = 23,
                             Monto = 32000m
@@ -1488,7 +1572,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 24,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7636),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9841),
                             Id_metodoPago = 4,
                             Id_venta = 24,
                             Monto = 68400m
@@ -1496,7 +1580,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 25,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7638),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9842),
                             Id_metodoPago = 1,
                             Id_venta = 25,
                             Monto = 16800m
@@ -1504,7 +1588,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 26,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7639),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9843),
                             Id_metodoPago = 5,
                             Id_venta = 26,
                             Monto = 54800m
@@ -1512,7 +1596,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 27,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7640),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9845),
                             Id_metodoPago = 3,
                             Id_venta = 27,
                             Monto = 88920m
@@ -1520,7 +1604,7 @@ namespace GestionComercial.Persistencia.Migrations
                         new
                         {
                             Id = 28,
-                            Fecha = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7642),
+                            Fecha = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9846),
                             Id_metodoPago = 1,
                             Id_venta = 28,
                             Monto = 25700m
@@ -1563,7 +1647,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 1,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6763),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8969),
                             Id_empresa = 1,
                             Nombre = "Herramientas"
                         },
@@ -1571,7 +1655,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 2,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6765),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8971),
                             Id_empresa = 1,
                             Nombre = "Materiales"
                         },
@@ -1579,7 +1663,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 3,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6767),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8973),
                             Id_empresa = 1,
                             Nombre = "Electricidad"
                         },
@@ -1587,7 +1671,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 4,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6769),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8975),
                             Id_empresa = 1,
                             Nombre = "Pintura"
                         },
@@ -1595,7 +1679,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 5,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6771),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8977),
                             Id_empresa = 1,
                             Nombre = "Plomería"
                         },
@@ -1604,7 +1688,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 6,
                             Activo = true,
                             CategoriaPadre_id = 1,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6773),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8979),
                             Id_empresa = 1,
                             Nombre = "Manuales"
                         },
@@ -1613,7 +1697,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 7,
                             Activo = true,
                             CategoriaPadre_id = 1,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6775),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8981),
                             Id_empresa = 1,
                             Nombre = "Eléctricas"
                         },
@@ -1622,7 +1706,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 8,
                             Activo = true,
                             CategoriaPadre_id = 4,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6777),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8983),
                             Id_empresa = 1,
                             Nombre = "Látex"
                         },
@@ -1631,7 +1715,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 9,
                             Activo = true,
                             CategoriaPadre_id = 4,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6779),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8985),
                             Id_empresa = 1,
                             Nombre = "Esmalte"
                         });
@@ -1708,7 +1792,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             CodigoBarra = "7790001000001",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6984),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9172),
                             Id_categoria = 6,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1723,7 +1807,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 2,
                             Activo = true,
                             CodigoBarra = "7790001000002",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7012),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9184),
                             Id_categoria = 6,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1738,7 +1822,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 3,
                             Activo = true,
                             CodigoBarra = "7790001000003",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7015),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9193),
                             Id_categoria = 6,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1753,7 +1837,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 4,
                             Activo = true,
                             CodigoBarra = "7790001000004",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7019),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9197),
                             Id_categoria = 6,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1768,7 +1852,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 5,
                             Activo = true,
                             CodigoBarra = "7790001000005",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7022),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9201),
                             Id_categoria = 7,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1783,7 +1867,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 6,
                             Activo = true,
                             CodigoBarra = "7790001000006",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7026),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9204),
                             Id_categoria = 7,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1798,7 +1882,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 7,
                             Activo = true,
                             CodigoBarra = "7790001000007",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7029),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9208),
                             Id_categoria = 8,
                             Id_empresa = 1,
                             Id_unidadMedida = 4,
@@ -1813,7 +1897,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 8,
                             Activo = true,
                             CodigoBarra = "7790001000008",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7033),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9211),
                             Id_categoria = 8,
                             Id_empresa = 1,
                             Id_unidadMedida = 4,
@@ -1828,7 +1912,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 9,
                             Activo = true,
                             CodigoBarra = "7790001000009",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7052),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9235),
                             Id_categoria = 9,
                             Id_empresa = 1,
                             Id_unidadMedida = 4,
@@ -1843,7 +1927,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 10,
                             Activo = true,
                             CodigoBarra = "7790001000010",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7056),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9238),
                             Id_categoria = 9,
                             Id_empresa = 1,
                             Id_unidadMedida = 4,
@@ -1858,7 +1942,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 11,
                             Activo = true,
                             CodigoBarra = "7790001000011",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7060),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9242),
                             Id_categoria = 3,
                             Id_empresa = 1,
                             Id_unidadMedida = 3,
@@ -1873,7 +1957,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 12,
                             Activo = true,
                             CodigoBarra = "7790001000012",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7063),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9245),
                             Id_categoria = 3,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1888,7 +1972,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 13,
                             Activo = true,
                             CodigoBarra = "7790001000013",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7067),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9249),
                             Id_categoria = 3,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -1903,7 +1987,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 14,
                             Activo = true,
                             CodigoBarra = "7790001000014",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7070),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9253),
                             Id_categoria = 5,
                             Id_empresa = 1,
                             Id_unidadMedida = 3,
@@ -1918,7 +2002,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 15,
                             Activo = true,
                             CodigoBarra = "7790001000015",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7074),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9257),
                             Id_categoria = 5,
                             Id_empresa = 1,
                             Id_unidadMedida = 1,
@@ -2028,7 +2112,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             CUIT = "30-11111111-1",
                             Email = "norte@proveedor.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6855),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9059),
                             Id_empresa = 1,
                             Nombre = "Distribuidora Norte",
                             Telefono = "3794111111"
@@ -2039,7 +2123,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             CUIT = "30-22222222-2",
                             Email = "sur@pinturerias.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6858),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9062),
                             Id_empresa = 1,
                             Nombre = "Pinturerias del Sur",
                             Telefono = "3794222222"
@@ -2050,7 +2134,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             CUIT = "30-33333333-3",
                             Email = "ventas@electro.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6860),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9065),
                             Id_empresa = 1,
                             Nombre = "Electro Mayorista",
                             Telefono = "3794333333"
@@ -2061,7 +2145,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Activo = true,
                             CUIT = "30-44444444-4",
                             Email = "info@constructor.com",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6862),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9067),
                             Id_empresa = 1,
                             Nombre = "Materiales El Constructor",
                             Telefono = "3794444444"
@@ -2138,7 +2222,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Ver ventas",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6368),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8545),
                             Nombre = "Ventas.Ver"
                         },
                         new
@@ -2146,7 +2230,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Crear ventas",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6370),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8547),
                             Nombre = "Ventas.Crear"
                         },
                         new
@@ -2154,7 +2238,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 3,
                             Activo = true,
                             Descripcion = "Anular ventas",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6372),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8549),
                             Nombre = "Ventas.Anular"
                         },
                         new
@@ -2162,7 +2246,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 4,
                             Activo = true,
                             Descripcion = "Ver compras",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6373),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8550),
                             Nombre = "Compras.Ver"
                         },
                         new
@@ -2170,7 +2254,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 5,
                             Activo = true,
                             Descripcion = "Crear compras",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6385),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8561),
                             Nombre = "Compras.Crear"
                         },
                         new
@@ -2178,7 +2262,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 6,
                             Activo = true,
                             Descripcion = "Ver productos",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6399),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8577),
                             Nombre = "Productos.Ver"
                         },
                         new
@@ -2186,7 +2270,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 7,
                             Activo = true,
                             Descripcion = "Crear productos",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6401),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8579),
                             Nombre = "Productos.Crear"
                         },
                         new
@@ -2194,7 +2278,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 8,
                             Activo = true,
                             Descripcion = "Editar productos",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6403),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8581),
                             Nombre = "Productos.Editar"
                         },
                         new
@@ -2202,7 +2286,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 9,
                             Activo = true,
                             Descripcion = "Ver clientes",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6404),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8583),
                             Nombre = "Clientes.Ver"
                         },
                         new
@@ -2210,7 +2294,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 10,
                             Activo = true,
                             Descripcion = "Crear clientes",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6406),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8585),
                             Nombre = "Clientes.Crear"
                         },
                         new
@@ -2218,7 +2302,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 11,
                             Activo = true,
                             Descripcion = "Ver reportes",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6408),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8586),
                             Nombre = "Reportes.Ver"
                         },
                         new
@@ -2226,7 +2310,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 12,
                             Activo = true,
                             Descripcion = "Abrir caja",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6409),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8588),
                             Nombre = "Caja.Abrir"
                         },
                         new
@@ -2234,7 +2318,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 13,
                             Activo = true,
                             Descripcion = "Cerrar caja",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6411),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8590),
                             Nombre = "Caja.Cerrar"
                         },
                         new
@@ -2242,7 +2326,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 14,
                             Activo = true,
                             Descripcion = "Ver configuración",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6413),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8591),
                             Nombre = "Configuracion.Ver"
                         },
                         new
@@ -2250,8 +2334,16 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 15,
                             Activo = true,
                             Descripcion = "Gestionar usuarios",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6414),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8593),
                             Nombre = "Usuarios.Gestionar"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Activo = true,
+                            Descripcion = "Ver descuentos",
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8595),
+                            Nombre = "Descuentos.Ver"
                         });
                 });
 
@@ -2289,7 +2381,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 1,
                             Activo = true,
                             Descripcion = "Acceso total al sistema",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6086),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8032),
                             Nombre = "Gerente"
                         },
                         new
@@ -2297,7 +2389,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 2,
                             Activo = true,
                             Descripcion = "Administración general",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6089),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8035),
                             Nombre = "Administrador"
                         },
                         new
@@ -2305,7 +2397,7 @@ namespace GestionComercial.Persistencia.Migrations
                             Id = 3,
                             Activo = true,
                             Descripcion = "Operaciones de venta",
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6091),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8037),
                             Nombre = "Vendedor"
                         });
                 });
@@ -2341,7 +2433,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 1,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6487),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8674),
                             Id_permiso = 1,
                             Id_rol = 1
                         },
@@ -2349,7 +2441,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 2,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6490),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8677),
                             Id_permiso = 2,
                             Id_rol = 1
                         },
@@ -2357,7 +2449,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 3,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6491),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8678),
                             Id_permiso = 3,
                             Id_rol = 1
                         },
@@ -2365,7 +2457,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 4,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6492),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8679),
                             Id_permiso = 4,
                             Id_rol = 1
                         },
@@ -2373,7 +2465,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 5,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6493),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8680),
                             Id_permiso = 5,
                             Id_rol = 1
                         },
@@ -2381,7 +2473,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 6,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6494),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8681),
                             Id_permiso = 6,
                             Id_rol = 1
                         },
@@ -2389,7 +2481,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 7,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6496),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8683),
                             Id_permiso = 7,
                             Id_rol = 1
                         },
@@ -2397,7 +2489,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 8,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6497),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8684),
                             Id_permiso = 8,
                             Id_rol = 1
                         },
@@ -2405,7 +2497,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 9,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6498),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8685),
                             Id_permiso = 9,
                             Id_rol = 1
                         },
@@ -2413,7 +2505,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 10,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6499),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8686),
                             Id_permiso = 10,
                             Id_rol = 1
                         },
@@ -2421,7 +2513,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 11,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6500),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8687),
                             Id_permiso = 11,
                             Id_rol = 1
                         },
@@ -2429,7 +2521,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 12,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6501),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8688),
                             Id_permiso = 12,
                             Id_rol = 1
                         },
@@ -2437,7 +2529,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 13,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6502),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8689),
                             Id_permiso = 13,
                             Id_rol = 1
                         },
@@ -2445,7 +2537,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 14,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6503),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8690),
                             Id_permiso = 14,
                             Id_rol = 1
                         },
@@ -2453,7 +2545,7 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 15,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6505),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8692),
                             Id_permiso = 15,
                             Id_rol = 1
                         },
@@ -2461,167 +2553,191 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 16,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6542),
-                            Id_permiso = 1,
-                            Id_rol = 2
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8693),
+                            Id_permiso = 16,
+                            Id_rol = 1
                         },
                         new
                         {
                             Id = 17,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6544),
-                            Id_permiso = 2,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8730),
+                            Id_permiso = 1,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 18,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6545),
-                            Id_permiso = 3,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8732),
+                            Id_permiso = 2,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 19,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6547),
-                            Id_permiso = 4,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8733),
+                            Id_permiso = 3,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 20,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6548),
-                            Id_permiso = 5,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8734),
+                            Id_permiso = 4,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 21,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6549),
-                            Id_permiso = 6,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8735),
+                            Id_permiso = 5,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 22,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6550),
-                            Id_permiso = 7,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8736),
+                            Id_permiso = 6,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 23,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6551),
-                            Id_permiso = 8,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8737),
+                            Id_permiso = 7,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 24,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6552),
-                            Id_permiso = 9,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8739),
+                            Id_permiso = 8,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 25,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6553),
-                            Id_permiso = 10,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8740),
+                            Id_permiso = 9,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 26,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6554),
-                            Id_permiso = 11,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8741),
+                            Id_permiso = 10,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 27,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6555),
-                            Id_permiso = 12,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8742),
+                            Id_permiso = 11,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 28,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6557),
-                            Id_permiso = 13,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8743),
+                            Id_permiso = 12,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 29,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6558),
-                            Id_permiso = 14,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8744),
+                            Id_permiso = 13,
                             Id_rol = 2
                         },
                         new
                         {
                             Id = 30,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6587),
-                            Id_permiso = 1,
-                            Id_rol = 3
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8745),
+                            Id_permiso = 14,
+                            Id_rol = 2
                         },
                         new
                         {
                             Id = 31,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6588),
-                            Id_permiso = 2,
-                            Id_rol = 3
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8746),
+                            Id_permiso = 15,
+                            Id_rol = 2
                         },
                         new
                         {
                             Id = 32,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6590),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8777),
+                            Id_permiso = 16,
+                            Id_rol = 2
+                        },
+                        new
+                        {
+                            Id = 37,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8798),
+                            Id_permiso = 1,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 38,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8799),
+                            Id_permiso = 2,
+                            Id_rol = 3
+                        },
+                        new
+                        {
+                            Id = 39,
+                            Activo = true,
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8801),
                             Id_permiso = 6,
                             Id_rol = 3
                         },
                         new
                         {
-                            Id = 33,
+                            Id = 40,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6591),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8803),
                             Id_permiso = 9,
                             Id_rol = 3
                         },
                         new
                         {
-                            Id = 34,
+                            Id = 41,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6593),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8804),
                             Id_permiso = 10,
                             Id_rol = 3
                         },
                         new
                         {
-                            Id = 35,
+                            Id = 42,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6602),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8806),
                             Id_permiso = 12,
                             Id_rol = 3
                         },
                         new
                         {
-                            Id = 36,
+                            Id = 43,
                             Activo = true,
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(6604),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(8807),
                             Id_permiso = 13,
                             Id_rol = 3
                         });
@@ -2690,6 +2806,47 @@ namespace GestionComercial.Persistencia.Migrations
                     b.HasIndex("Id_sucursal");
 
                     b.ToTable("Usuario", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Apellido = "Sistema",
+                            Email = "admin@demo.com",
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id_rol = 2,
+                            Id_sucursal = 1,
+                            IntentosFallidos = 0,
+                            Nombre = "Admin",
+                            PasswordHash = "$2a$10$vZSSeTQhuOMqZQnUDpuO2.cMfnBcqwuzKGUR4jeq5v96n6rD0e13C"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Apellido = "Demo",
+                            Email = "vendedor@demo.com",
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id_rol = 3,
+                            Id_sucursal = 1,
+                            IntentosFallidos = 0,
+                            Nombre = "Vendedor",
+                            PasswordHash = "$2a$10$LUIblGp1Yji4FbTt64k3e.e8I5nNfDu4WznoJ1P3DwB6WIU9g246a"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            Apellido = "Demo",
+                            Email = "gerente@demo.com",
+                            FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Id_rol = 1,
+                            Id_sucursal = 1,
+                            IntentosFallidos = 0,
+                            Nombre = "Gerente",
+                            PasswordHash = "$2a$10$zd3k2FDRQhwROhoa3URlg.kHvSFnim0Hhi/zukq3hAOth4P/EL83y"
+                        });
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Ventas.Venta", b =>
@@ -2700,6 +2857,11 @@ namespace GestionComercial.Persistencia.Migrations
 
                     b.Property<bool>("Activo")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("DescuentoMetodoPago")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<decimal?>("EfectivoRecibido")
                         .HasColumnType("decimal(18,2)");
@@ -2720,6 +2882,9 @@ namespace GestionComercial.Persistencia.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Id_cliente")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Id_metodoPagoDescuento")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Id_sucursal")
@@ -2756,6 +2921,8 @@ namespace GestionComercial.Persistencia.Migrations
 
                     b.HasIndex("Id_cliente");
 
+                    b.HasIndex("Id_metodoPagoDescuento");
+
                     b.HasIndex("Id_usuario");
 
                     b.HasIndex("Id_sucursal", "Fecha");
@@ -2767,9 +2934,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 1,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7213),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9394),
                             Id_caja = 1,
                             Id_cliente = 2,
                             Id_sucursal = 1,
@@ -2782,9 +2950,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 2,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7222),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9402),
                             Id_caja = 1,
                             Id_cliente = 1,
                             Id_sucursal = 1,
@@ -2797,9 +2966,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 3,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7226),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9406),
                             Id_caja = 1,
                             Id_cliente = 3,
                             Id_sucursal = 1,
@@ -2812,9 +2982,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 4,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7230),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9411),
                             Id_caja = 1,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -2827,9 +2998,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 5,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7234),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9414),
                             Id_caja = 1,
                             Id_cliente = 4,
                             Id_sucursal = 1,
@@ -2842,9 +3014,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 6,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7238),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9418),
                             Id_caja = 2,
                             Id_cliente = 1,
                             Id_sucursal = 1,
@@ -2857,9 +3030,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 7,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7248),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9432),
                             Id_caja = 2,
                             Id_cliente = 2,
                             Id_sucursal = 1,
@@ -2872,9 +3046,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 8,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7253),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9436),
                             Id_caja = 2,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -2887,9 +3062,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 9,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7257),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9440),
                             Id_caja = 2,
                             Id_cliente = 5,
                             Id_sucursal = 1,
@@ -2902,9 +3078,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 10,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 11, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7261),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9444),
                             Id_caja = 2,
                             Id_cliente = 3,
                             Id_sucursal = 1,
@@ -2917,9 +3094,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 11,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7265),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9448),
                             Id_caja = 3,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -2932,9 +3110,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 12,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7269),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9452),
                             Id_caja = 3,
                             Id_cliente = 1,
                             Id_sucursal = 1,
@@ -2947,9 +3126,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 13,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7273),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9456),
                             Id_caja = 3,
                             Id_cliente = 4,
                             Id_sucursal = 1,
@@ -2962,9 +3142,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 14,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7277),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9460),
                             Id_caja = 3,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -2977,9 +3158,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 15,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2025, 12, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7282),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9464),
                             Id_caja = 3,
                             Id_cliente = 2,
                             Id_sucursal = 1,
@@ -2992,9 +3174,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 16,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7286),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9468),
                             Id_caja = 4,
                             Id_cliente = 1,
                             Id_sucursal = 1,
@@ -3007,9 +3190,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 17,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7290),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9472),
                             Id_caja = 4,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -3022,9 +3206,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 18,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7294),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9475),
                             Id_caja = 4,
                             Id_cliente = 3,
                             Id_sucursal = 1,
@@ -3037,9 +3222,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 19,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7298),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9479),
                             Id_caja = 4,
                             Id_cliente = 4,
                             Id_sucursal = 1,
@@ -3052,9 +3238,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 20,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 1, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7302),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9483),
                             Id_caja = 4,
                             Id_cliente = 2,
                             Id_sucursal = 1,
@@ -3067,9 +3254,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 21,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7306),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9487),
                             Id_caja = 5,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -3082,9 +3270,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 22,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7310),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9491),
                             Id_caja = 5,
                             Id_cliente = 1,
                             Id_sucursal = 1,
@@ -3097,9 +3286,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 23,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7314),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9495),
                             Id_caja = 5,
                             Id_cliente = 5,
                             Id_sucursal = 1,
@@ -3112,9 +3302,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 24,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7319),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9499),
                             Id_caja = 5,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -3127,9 +3318,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 25,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 2, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7323),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9503),
                             Id_caja = 5,
                             Id_cliente = 3,
                             Id_sucursal = 1,
@@ -3142,9 +3334,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 26,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 3, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7327),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9508),
                             Id_caja = 6,
                             Id_cliente = 4,
                             Id_sucursal = 1,
@@ -3157,9 +3350,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 27,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 3, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7331),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9512),
                             Id_caja = 6,
                             Id_cliente = 6,
                             Id_sucursal = 1,
@@ -3172,9 +3366,10 @@ namespace GestionComercial.Persistencia.Migrations
                         {
                             Id = 28,
                             Activo = true,
+                            DescuentoMetodoPago = 0m,
                             Estado = 2,
                             Fecha = new DateTime(2026, 3, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            FechaAlta = new DateTime(2026, 7, 11, 17, 43, 1, 538, DateTimeKind.Local).AddTicks(7335),
+                            FechaAlta = new DateTime(2026, 8, 24, 9, 32, 31, 932, DateTimeKind.Local).AddTicks(9516),
                             Id_caja = 6,
                             Id_cliente = 2,
                             Id_sucursal = 1,
@@ -4085,6 +4280,50 @@ namespace GestionComercial.Persistencia.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion", b =>
+                {
+                    b.HasOne("GestionComercial.Dominio.Entidades.Producto.Categoria", "Categoria")
+                        .WithMany()
+                        .HasForeignKey("Id_categoria")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GestionComercial.Dominio.Entidades.Organizacion.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("Id_empresa")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GestionComercial.Dominio.Entidades.Producto.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("Id_producto")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Categoria");
+
+                    b.Navigation("Empresa");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Descuento.DescuentoMetodoPago", b =>
+                {
+                    b.HasOne("GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion", "DescuentoConfiguracion")
+                        .WithMany("DescuentosMetodosPago")
+                        .HasForeignKey("Id_descuentoConfiguracion")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GestionComercial.Dominio.Entidades.Pagos.MetodoPago", "MetodoPago")
+                        .WithMany()
+                        .HasForeignKey("Id_metodoPago")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DescuentoConfiguracion");
+
+                    b.Navigation("MetodoPago");
+                });
+
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Movimientos.MovimientoStock", b =>
                 {
                     b.HasOne("GestionComercial.Dominio.Entidades.Producto.Producto", "Producto")
@@ -4363,6 +4602,11 @@ namespace GestionComercial.Persistencia.Migrations
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Compras.Compra", b =>
                 {
                     b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion", b =>
+                {
+                    b.Navigation("DescuentosMetodosPago");
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Organizacion.Empresa", b =>

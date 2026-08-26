@@ -77,6 +77,12 @@ namespace GestionComercial.Aplicacion.Servicios
             {
                 sb.AppendLine($"{item.Cantidad} x {item.ProductoNombre}");
                 sb.AppendLine($"   {item.PrecioUnitario:N2} c/u ............ {item.Subtotal:N2}");
+
+                if (item.DescuentoPorItem > 0)
+                {
+                    var descDescuento = item.Descuentos?.FirstOrDefault()?.Descripcion ?? "Descuento";
+                    sb.AppendLine($"   {descDescuento} ............ -${item.DescuentoPorItem:N2}");
+                }
             }
 
             sb.AppendLine(linea);

@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Configuracion;
 using GestionComercial.UI.ViewModels.Main;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,12 +36,30 @@ namespace GestionComercial.UI.Views.Main
         {
             InitializeComponent();
             Loaded += ShellView_Loaded;
+            Closing += ShellView_Closing;
         }
+
+        private async void ShellView_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (VM == null) return;
+
+            var puedeCerrar = await VM.VerificarCajaAntesDeCerrarAsync();
+            if (!puedeCerrar)
+                e.Cancel = true;
+        }
+
+        private const string PreguntaCustomSentinel = "✏️ Otra pregunta (escribila vos)";
 
         private void ShellView_Loaded(object sender, RoutedEventArgs e)
         {
-            // Cargar preguntas en el ComboBox
-            CbPreguntas.ItemsSource = PreguntasSecretas.Lista;
+            // Cargar preguntas en el ComboBox + opción personalizada
+            // (construir la lista completa antes de asignar ItemsSource —
+            //  NO usar Items.Add mientras ItemsSource está en uso)
+            var preguntas = new List<string>(PreguntasSecretas.Lista)
+            {
+                PreguntaCustomSentinel
+            };
+            CbPreguntas.ItemsSource = preguntas;
             if (CbPreguntas.Items.Count > 0)
                 CbPreguntas.SelectedIndex = 0;
 
@@ -74,7 +93,14 @@ namespace GestionComercial.UI.Views.Main
                 ? WindowState.Normal
                 : WindowState.Maximized;
 
-private void Close_Click(object sender, RoutedEventArgs e) => Close();
+private async void Close_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM == null) { Close(); return; }
+
+            var puedeCerrar = await VM.VerificarCajaAntesDeCerrarAsync();
+            if (puedeCerrar)
+                Close();
+        }
 
         // ══ RESPONSIVE SIDEBAR ═══════════════════════════════════════════════════
 
@@ -249,6 +275,9 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
             ErrorDatos.Visibility    = Visibility.Collapsed;
             ErrorPassword.Visibility = Visibility.Collapsed;
             ErrorPregunta.Visibility = Visibility.Collapsed;
+            TxtErrorDatos.Text       = string.Empty;
+            TxtErrorPassword.Text    = string.Empty;
+            TxtErrorPregunta.Text    = string.Empty;
         }
 
         private async Task ActualizarEstadoPreguntaAsync()
@@ -342,7 +371,7 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
                 if (sesion == null)
                 { MostrarError(ErrorPassword, TxtErrorPassword, "La contraseña actual es incorrecta."); return; }
 
-                await _recuperacionServicio.CambiarContrasenaAsync(VM.SesionActual.Email, _passNuevo);
+                await _recuperacionServicio.CambiarContrasenaAsync(VM.SesionActual.Email, _passNuevo, esRecuperacionOlvidada: false);
 
                 FormPassword.Visibility = Visibility.Collapsed;
                 PbActual.Clear(); PbNuevo.Clear(); PbConfirmar.Clear();
@@ -366,12 +395,27 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
             OcultarTodosLosFormularios();
             PbRespuesta.Clear(); PbConfirmarRespuesta.Clear();
             _respuesta = _confirmarRespuesta = string.Empty;
+            TxtPreguntaCustom.Text = string.Empty;
+            TxtPreguntaCustom.Visibility = Visibility.Collapsed;
+            LblPreguntaCustom.Visibility = Visibility.Collapsed;
             if (CbPreguntas.Items.Count > 0) CbPreguntas.SelectedIndex = 0;
             FormPregunta.Visibility = Visibility.Visible;
         }
 
         private void CancelarPregunta_Click(object sender, RoutedEventArgs e)
-            => FormPregunta.Visibility = Visibility.Collapsed;
+        {
+            FormPregunta.Visibility = Visibility.Collapsed;
+            TxtPreguntaCustom.Visibility = Visibility.Collapsed;
+            LblPreguntaCustom.Visibility = Visibility.Collapsed;
+        }
+
+        private void CbPreguntas_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool esCustom = CbPreguntas.SelectedItem?.ToString() == PreguntaCustomSentinel;
+            TxtPreguntaCustom.Visibility = esCustom ? Visibility.Visible : Visibility.Collapsed;
+            LblPreguntaCustom.Visibility = esCustom ? Visibility.Visible : Visibility.Collapsed;
+            if (!esCustom) TxtPreguntaCustom.Text = string.Empty;
+        }
 
         private async void GuardarPregunta_Click(object sender, RoutedEventArgs e)
         {
@@ -379,6 +423,12 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
             if (CbPreguntas.SelectedItem == null)
             { MostrarError(ErrorPregunta, TxtErrorPregunta, "Seleccioná una pregunta."); return; }
+
+            bool esCustom = CbPreguntas.SelectedItem?.ToString() == PreguntaCustomSentinel;
+            string pregunta = esCustom ? TxtPreguntaCustom.Text.Trim() : CbPreguntas.SelectedItem!.ToString()!;
+
+            if (esCustom && string.IsNullOrWhiteSpace(pregunta))
+            { MostrarError(ErrorPregunta, TxtErrorPregunta, "Escribí tu propia pregunta."); return; }
             if (string.IsNullOrWhiteSpace(_respuesta))
             { MostrarError(ErrorPregunta, TxtErrorPregunta, "Ingresá tu respuesta."); return; }
             if (_respuesta != _confirmarRespuesta)
@@ -390,10 +440,12 @@ private void Close_Click(object sender, RoutedEventArgs e) => Close();
             {
                 await _recuperacionServicio.ConfigurarPreguntaAsync(
                     VM.SesionActual.Email,
-                    CbPreguntas.SelectedItem.ToString(),
+                    pregunta,
                     _respuesta);
 
                 FormPregunta.Visibility = Visibility.Collapsed;
+                TxtPreguntaCustom.Visibility = Visibility.Collapsed;
+                LblPreguntaCustom.Visibility = Visibility.Collapsed;
                 PbRespuesta.Clear(); PbConfirmarRespuesta.Clear();
                 await ActualizarEstadoPreguntaAsync();
                 MostrarExito("Pregunta secreta configurada correctamente.");

@@ -43,7 +43,7 @@ namespace GestionComercial.UI.Views.Main
 
         // ── Vendedor ────────────────────────────────────────────────────────────
         private void CobrarPendiente_Click(object sender, RoutedEventArgs e)
-            => Shell?.IrVentas(); // Navega a ventas (pendientes se filtran en el listado)
+            => Shell?.IrVentasPendientes();
 
         private void NuevoCliente_Click(object sender, RoutedEventArgs e)
             => Shell?.IrClientes(); // Navega a clientes para crear nuevo
