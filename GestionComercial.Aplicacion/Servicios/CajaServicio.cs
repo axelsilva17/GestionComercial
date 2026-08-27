@@ -389,7 +389,6 @@ namespace GestionComercial.Aplicacion.Servicios
             foreach (var (metodo, total) in pagosDelTurno)
             {
                 var categoria = metodosDict.TryGetValue(metodo, out var cat) ? cat : "Otro";
-                var cantidad   = 0; // se puede extender si el repo devuelve cantidad
 
                 resumen.DesglosePorMetodo.Add(new DesglosePagoDto
                 {

@@ -278,8 +278,8 @@ namespace GestionComercial.UI.ViewModels.Main
 
             var login = IoC.Get<LoginViewModel>();
             var wm    = IoC.Get<IWindowManager>();
-            wm.ShowWindowAsync(login);
-            TryCloseAsync();
+            await wm.ShowWindowAsync(login);
+            await TryCloseAsync();
         }
 
         /// Verifica si se puede cerrar la ventana.

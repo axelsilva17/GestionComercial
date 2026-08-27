@@ -7,7 +7,6 @@ using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades;
 using System.Collections.Generic;
-using GestionComercial.Dominio.Entidades;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 
 namespace GestionComercial.Aplicacion.Servicios
