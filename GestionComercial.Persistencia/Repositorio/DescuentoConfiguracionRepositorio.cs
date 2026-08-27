@@ -7,11 +7,8 @@ namespace GestionComercial.Persistencia.Repositorio
 {
     public class DescuentoConfiguracionRepositorio : RepositorioBase<DescuentoConfiguracion>, IDescuentoConfiguracionRepositorio
     {
-        private readonly GestionComercialContext _context;
-
         public DescuentoConfiguracionRepositorio(GestionComercialContext context) : base(context)
         {
-            _context = context;
         }
 
         public async Task<List<DescuentoConfiguracion>> ObtenerVigentesPorEmpresaAsync(int idEmpresa)

@@ -318,7 +318,7 @@ public class ProductoServicio : IProductoServicio
             {
                 try
                 {
-                    await _uow.EjecutarEnTransaccionAsync(() =>
+                    await _uow.EjecutarEnTransaccionAsync(async () =>
                     {
                         if (!productosPorCodigo.TryGetValue(dto.CodigoBarra, out var prod)) return;
 
