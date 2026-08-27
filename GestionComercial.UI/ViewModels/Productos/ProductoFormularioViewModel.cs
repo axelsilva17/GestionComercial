@@ -302,6 +302,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                         CodigoBarra = CodigoBarra,
                         PrecioCostoActual = PrecioCostoActual,
                         PrecioVentaActual = PrecioVentaActual,
+                        StockActual = StockActual,
                         StockMinimo = StockMinimo,
                         IdCategoria = CategoriaSeleccionada?.IdCategoria ?? 0,
                         IdUnidadMedida = UnidadMedidaSeleccionada?.IdUnidadMedida ?? 0,

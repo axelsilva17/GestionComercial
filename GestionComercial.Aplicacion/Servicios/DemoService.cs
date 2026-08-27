@@ -20,13 +20,16 @@ namespace GestionComercial.Aplicacion.Servicios
 
         /// <summary>
         /// Indica si la aplicación está en modo demo.
-        /// Si no existe el archivo demo.dat, es demo.
-        /// Si existe y tiene una fecha dentro del rango, es demo.
-        /// Si la fecha expiró, la demo expiró.
+        /// En DEBUG nunca es demo (desarrollador tiene licencia completa).
+        /// En RELEASE: si no existe licencia.dat, es demo.
         /// </summary>
+#if DEBUG
+        public bool EsDemo => false;
+#else
         public bool EsDemo => !File.Exists(Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? ".",
             "licencia.dat"));
+#endif
 
         public bool DemoExpirada
         {
