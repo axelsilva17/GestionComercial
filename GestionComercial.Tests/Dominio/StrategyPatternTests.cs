@@ -113,10 +113,10 @@ namespace GestionComercial.Tests.Dominio
             _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()), Times.Exactly(2));
             _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
 
-            // Primer movimiento: Ingreso por monto neto (1000 - 200 = 800)
+            // Primer movimiento: Ingreso por monto BRUTO recibido (1000, no 800)
             movimientosGuardados.Should().HaveCount(2);
             movimientosGuardados[0].Tipo.Should().Be(1); // Ingreso
-            movimientosGuardados[0].Monto.Should().Be(800m);
+            movimientosGuardados[0].Monto.Should().Be(1000m);
 
             // Segundo movimiento: Egreso por vuelto
             movimientosGuardados[1].Tipo.Should().Be(2); // Egreso

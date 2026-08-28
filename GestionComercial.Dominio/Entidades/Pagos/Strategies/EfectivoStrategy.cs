@@ -14,12 +14,12 @@ namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
             if (!venta.Id_caja.HasValue)
                 return;
 
-            var montoNeto = pago.Monto - pago.Vuelto;
-
+            // Registrar el monto BRUTO recibido (el cliente entregó 5000, no 3000).
+            // El vuelto ya se registra como Egreso separado más abajo.
             var movimiento = new TipoMovimientoCaja
             {
                 Tipo         = (int)TipoMovimientoCajaEnum.Ingreso,
-                Monto        = montoNeto,
+                Monto        = pago.Monto,
                 Concepto     = $"Venta #{venta.Id} (recibido: ${pago.Monto:N2}, vuelto: ${pago.Vuelto:N2})",
                 ReferenciaId = venta.Id,
                 Id_venta     = venta.Id,
@@ -30,10 +30,11 @@ namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
             await uow.MovimientosCaja.AgregarAsync(movimiento);
 
             // Actualizar saldo de caja en tiempo real
+            // Neto: bruto recibido - vuelto devuelto
             var caja = await uow.Cajas.ObtenerPorIdAsync(venta.Id_caja.Value);
             if (caja != null)
             {
-                caja.MontoFinal = (caja.MontoFinal ?? caja.MontoInicial) + montoNeto;
+                caja.MontoFinal = (caja.MontoFinal ?? caja.MontoInicial) + pago.Monto - pago.Vuelto;
                 uow.Cajas.Actualizar(caja);
             }
 

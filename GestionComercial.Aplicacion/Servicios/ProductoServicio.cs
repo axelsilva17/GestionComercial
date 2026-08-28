@@ -320,7 +320,11 @@ public class ProductoServicio : IProductoServicio
                 {
                     await _uow.EjecutarEnTransaccionAsync(async () =>
                     {
-                        if (!productosPorCodigo.TryGetValue(dto.CodigoBarra, out var prod)) return;
+                        if (!productosPorCodigo.TryGetValue(dto.CodigoBarra, out var prod))
+                        {
+                            await Task.CompletedTask;
+                            return;
+                        }
 
                         var idCat = dto.IdCategoria;
                         if (!string.IsNullOrWhiteSpace(dto.Categoria)
@@ -334,6 +338,7 @@ public class ProductoServicio : IProductoServicio
                         prod.StockMinimo = dto.StockMinimo > 0 ? dto.StockMinimo : 10;
                         prod.Id_categoria = idCat;
                         prod.Id_unidadMedida = dto.IdUnidadMedida > 0 ? dto.IdUnidadMedida : 1;
+                        await Task.CompletedTask;
                     });
                     resultado.Updated++;
                 }
