@@ -194,27 +194,17 @@ namespace GestionComercial.Tests
         {
             // ARRANGE
             var mockUow = new Mock<IUnitOfWork>();
-            var mockSucursalRepo = new Mock<ISucursalRepositorio>();
             var mockVentaRepo = new Mock<IVentaRepostorio>();
             
-            // Configurar sucursal mock
-            mockSucursalRepo
-                .Setup(s => s.ObtenerPorIdAsync(1))
-                .ReturnsAsync(new GestionComercial.Dominio.Entidades.Organizacion.Sucursal 
-                { 
-                    Id = 1, 
-                    Id_empresa = 1 
-                });
-            
-            // Configurar ventas mock (vacías para este test simple)
+            // Configurar mock del nuevo método SQL agrupado
             mockVentaRepo
-                .Setup(r => r.ObtenerConDetallesPorFechaAsync(
+                .Setup(r => r.ObtenerTopProductosAgrupadoAsync(
                     It.IsAny<int>(), 
                     It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .ReturnsAsync(new List<Venta>());
+                    It.IsAny<DateTime>(),
+                    It.IsAny<int>()))
+                .ReturnsAsync(new List<(int, string, string, int, decimal, decimal, DateTime?)>());
             
-            mockUow.Setup(u => u.Sucursales).Returns(mockSucursalRepo.Object);
             mockUow.Setup(u => u.Ventas).Returns(mockVentaRepo.Object);
             
             var servicio = new ReporteServicio(mockUow.Object);

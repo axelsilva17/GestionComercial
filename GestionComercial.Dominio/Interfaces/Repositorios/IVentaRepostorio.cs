@@ -16,5 +16,17 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         
         ///         /// Obtiene ventas por período con pagos incluidos para análisis.
         Task<IEnumerable<Venta>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta);
+
+        ///         /// Agregación SQL de top productos (sin cargar entidades a memoria).
+        Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>> 
+            ObtenerTopProductosAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta, int top);
+
+        ///         /// Agregación SQL de top productos por empresa (sin cargar entidades a memoria).
+        Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>> 
+            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int top);
+
+        ///         /// Agregación SQL de rotación por producto (sin cargar entidades a memoria).
+        Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta)>> 
+            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta);
     }
 }

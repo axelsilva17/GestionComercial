@@ -34,29 +34,20 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<ReporteMargenDto>> MargenPorProductoAsync(int idEmpresa, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
-            return ventas
-                .SelectMany(v => v.Detalles)
-                .GroupBy(d => d.Id_producto)
-                .Select(g =>
-                {
-                    var primerDetalle = g.FirstOrDefault();
-                    var ingresos   = g.Sum(d => d.Subtotal);
-                    var costo      = g.Sum(d => d.CostoUnitario * d.Cantidad);
-                    var margenTotal = ingresos - costo;
-                    return new ReporteMargenDto
-                    {
-                        IdProducto       = g.Key,
-                        ProductoNombre   = primerDetalle?.Producto?.Nombre ?? string.Empty,
-                        Categoria        = primerDetalle?.Producto?.Categoria?.Nombre ?? string.Empty,
-                        PrecioVenta      = primerDetalle?.PrecioUnitario ?? 0,
-                        PrecioCosto      = primerDetalle?.CostoUnitario ?? 0,
-                        MargenUnitario   = (primerDetalle?.PrecioUnitario ?? 0) - (primerDetalle?.CostoUnitario ?? 0),
-                        MargenPorcentaje = ingresos > 0 ? (margenTotal / ingresos) * 100 : 0,
-                        CantidadVendida  = (int)g.Sum(d => d.Cantidad),
-                        MargenTotal      = margenTotal,
-                    };
-                });
+            // Agregación SQL directa — no carga entidades a memoria
+            var productos = await _uow.Ventas.ObtenerTopProductosPorEmpresaAgrupadoAsync(idEmpresa, desde, hasta, int.MaxValue);
+            return productos.Select(p => new ReporteMargenDto
+            {
+                IdProducto       = p.IdProducto,
+                ProductoNombre   = p.Nombre,
+                Categoria        = p.Categoria,
+                PrecioVenta      = p.Cantidad > 0 ? p.Ingresos / p.Cantidad : 0,
+                PrecioCosto      = p.Cantidad > 0 ? p.Costo / p.Cantidad : 0,
+                MargenUnitario   = p.Cantidad > 0 ? (p.Ingresos - p.Costo) / p.Cantidad : 0,
+                MargenPorcentaje = p.Ingresos > 0 ? (p.Ingresos - p.Costo) / p.Ingresos * 100 : 0,
+                CantidadVendida  = p.Cantidad,
+                MargenTotal      = p.Ingresos - p.Costo,
+            });
         }
 
         public async Task<IEnumerable<ReportesStockDto>> StockCriticoAsync(int idEmpresa)
@@ -73,67 +64,42 @@ namespace GestionComercial.Aplicacion.Servicios
             });
         }
 
-public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int idEmpresa, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
-            return ventas
-                .SelectMany(v => v.Detalles)
-                .GroupBy(d => d.Id_producto)
-                .Select(g =>
-                {
-                    var primerDetalle = g.FirstOrDefault();
-                    var ingresos   = g.Sum(d => d.Subtotal);
-                    var costo      = g.Sum(d => d.CostoUnitario * d.Cantidad);
-                    var margenTotal = ingresos - costo;
-                    var stockActual = primerDetalle?.Producto?.StockActual ?? 0;
-                    return new ReporteRotacionDto
-                    {
-                        IdProducto       = g.Key,
-                        ProductoNombre   = primerDetalle?.Producto?.Nombre ?? string.Empty,
-                        Categoria        = primerDetalle?.Producto?.Categoria?.Nombre ?? string.Empty,
-                        StockActual      = (int)stockActual,
-                        CantidadVendida  = (int)g.Sum(d => d.Cantidad),
-                        CantidadComprada = 0, // requiere cruzar con compras
-                        IndiceRotacion   = stockActual > 0
-                            ? g.Sum(d => d.Cantidad) / stockActual
-                            : 0,
-                        UltimaVenta  = ventas
-                            .Where(v => v.Detalles.Any(d => d.Id_producto == g.Key))
-                            .Max(v => v.Fecha),
-                        UltimaCompra = DateTime.MinValue,
-                    };
-                })
-                .OrderByDescending(r => r.CantidadVendida);
+            // Agregación SQL directa — no carga entidades a memoria
+            var rotacion = await _uow.Ventas.ObtenerRotacionProductosAgrupadoAsync(idEmpresa, desde, hasta);
+            return rotacion.Select(r => new ReporteRotacionDto
+            {
+                IdProducto       = r.IdProducto,
+                ProductoNombre   = r.Nombre,
+                Categoria        = r.Categoria,
+                StockActual      = (int)r.StockActual,
+                CantidadVendida  = r.CantidadVendida,
+                CantidadComprada = 0,
+                IndiceRotacion   = r.StockActual > 0
+                    ? r.CantidadVendida / r.StockActual
+                    : 0,
+                UltimaVenta  = r.UltimaVenta ?? DateTime.MinValue,
+                UltimaCompra = DateTime.MinValue,
+            });
         }
 
         public async Task<IEnumerable<ReporteTopProductoDto>> TopProductosAsync(int idSucursal, DateTime desde, DateTime hasta, int top = 20)
         {
-            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal);
-            var idEmpresa = sucursal?.Id_empresa ?? 0;
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
-            var ventasSucursal = ventas.Where(v => v.Id_sucursal == idSucursal);
-            return ventasSucursal
-                .SelectMany(v => v.Detalles)
-                .GroupBy(d => d.Id_producto)
-                .Select(g =>
-                {
-                    var primerDetalle = g.FirstOrDefault();
-                    var ingresos = g.Sum(d => d.Subtotal);
-                    var costo = g.Sum(d => d.CostoUnitario * d.Cantidad);
-                    var margenTotal = ingresos - costo;
-                    return new ReporteTopProductoDto
-                    {
-                        IdProducto = g.Key,
-                        ProductoNombre = primerDetalle?.Producto?.Nombre ?? string.Empty,
-                        Categoria = primerDetalle?.Producto?.Categoria?.Nombre ?? string.Empty,
-                        CantidadVendida = (int)g.Sum(d => d.Cantidad),
-                        Ingresos = ingresos,
-                        MargenTotal = margenTotal,
-                        MargenPorcentaje = ingresos > 0 ? (double)(margenTotal / ingresos) * 100 : 0,
-                    };
-                })
-                .OrderByDescending(r => r.CantidadVendida)
-                .Take(top);
+            // Agregación SQL directa — no carga entidades a memoria
+            var topProductos = await _uow.Ventas.ObtenerTopProductosAgrupadoAsync(idSucursal, desde, hasta, top);
+            return topProductos.Select(tp => new ReporteTopProductoDto
+            {
+                IdProducto       = tp.IdProducto,
+                ProductoNombre   = tp.Nombre,
+                Categoria        = tp.Categoria,
+                CantidadVendida  = tp.Cantidad,
+                Ingresos         = tp.Ingresos,
+                MargenTotal      = tp.Ingresos - tp.Costo,
+                MargenPorcentaje = tp.Ingresos > 0
+                    ? (double)((tp.Ingresos - tp.Costo) / tp.Ingresos) * 100
+                    : 0,
+            });
         }
 
         public async Task<IEnumerable<ReporteMetodosPagoDto>> MetodosPagoUtilizadosAsync(int idSucursal, DateTime desde, DateTime hasta)
