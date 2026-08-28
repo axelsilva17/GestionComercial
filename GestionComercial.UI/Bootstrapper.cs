@@ -233,15 +233,12 @@ namespace GestionComercial.UI
                 }
 
                 // ── Seed usuarios demo si no existen ────────────────────
-                // Las migraciones insertan usuarios con emails viejos
-                // (@sistema.com / @miempresa.com). Si admin@demo.com no
-                // existe, reemplazamos los usuarios viejos por los demo.
                 try
                 {
-                    var adminDemo = await context.Usuarios
-                        .FirstOrDefaultAsync(u => u.Email == "admin@demo.com");
+                    var adminExiste = await context.Usuarios
+                        .AnyAsync(u => u.Email == "admin@miempresa.com");
 
-                    if (adminDemo == null)
+                    if (!adminExiste)
                     {
                         // Verificar que las FK existan (Sucursal Id=1, Rol Id=1..3)
                         var sucursalExiste = await context.Set<Dominio.Entidades.Organizacion.Sucursal>()
@@ -249,35 +246,13 @@ namespace GestionComercial.UI
                         var rolesExiste = await context.Set<Dominio.Entidades.Seguridad.Rol>()
                             .CountAsync(r => r.Id >= 1 && r.Id <= 3);
 
-                        if (!sucursalExiste || rolesExiste < 3)
+                        if (sucursalExiste && rolesExiste >= 3)
                         {
-                            System.Diagnostics.Debug.WriteLine(
-                                $"[Bootstrapper] FK no satisfechas para demo users: " +
-                                $"Sucursal(1)={sucursalExiste}, Roles={rolesExiste}/3");
-                        }
-                        else
-                        {
-                            // Eliminar usuarios viejos de migraciones (emails incorrectos)
-                            var emailsViejos = await context.Usuarios
-                                .Where(u => u.Email != "admin@demo.com"
-                                         && u.Email != "vendedor@demo.com"
-                                         && u.Email != "gerente@demo.com")
-                                .ToListAsync();
-
-                            if (emailsViejos.Count > 0)
-                            {
-                                context.Usuarios.RemoveRange(emailsViejos);
-                                await context.SaveChangesAsync();
-                                System.Diagnostics.Debug.WriteLine(
-                                    $"[Bootstrapper] Eliminados {emailsViejos.Count} usuarios viejos de migraciones");
-                            }
-
-                            // Insertar usuarios demo con IDs fijos (1, 2, 3)
                             context.Usuarios.AddRange(
                                 new Dominio.Entidades.Seguridad.Usuario
                                 {
                                     Id = 1, Nombre = "Admin", Apellido = "Sistema",
-                                    Email = "admin@demo.com",
+                                    Email = "admin@miempresa.com",
                                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
                                     Id_sucursal = 1, Id_rol = 2,
                                     IntentosFallidos = 0, Activo = true,
@@ -286,7 +261,7 @@ namespace GestionComercial.UI
                                 new Dominio.Entidades.Seguridad.Usuario
                                 {
                                     Id = 2, Nombre = "Vendedor", Apellido = "Demo",
-                                    Email = "vendedor@demo.com",
+                                    Email = "vendedor@miempresa.com",
                                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
                                     Id_sucursal = 1, Id_rol = 3,
                                     IntentosFallidos = 0, Activo = true,
@@ -295,7 +270,7 @@ namespace GestionComercial.UI
                                 new Dominio.Entidades.Seguridad.Usuario
                                 {
                                     Id = 3, Nombre = "Gerente", Apellido = "Demo",
-                                    Email = "gerente@demo.com",
+                                    Email = "gerente@miempresa.com",
                                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
                                     Id_sucursal = 1, Id_rol = 1,
                                     IntentosFallidos = 0, Activo = true,
