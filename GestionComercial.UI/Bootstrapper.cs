@@ -16,6 +16,7 @@ using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Infraestructura.Servicios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
+using GestionComercial.Persistencia.Seed;
 using GestionComercial.UI.Helpers;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Producto;
@@ -211,6 +212,19 @@ namespace GestionComercial.UI
                 
                 // Ejecutar migraciones pendientes (incluye baseline + views + triggers).
                 await context.Database.MigrateAsync();
+
+                // ── Auto-seed: si la DB está vacía, cargar datos de prueba ──
+                // Solo en máquina del desarrollador (DEBUG o sin licencia.dat)
+                try
+                {
+                    await DatabaseSeeder.SeedIfNeededAsync(context);
+                }
+                catch (Exception exSeed)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Auto-seed falló: {exSeed.Message}");
+                    if (exSeed.InnerException != null)
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
+                }
 
                 // ── Seed usuarios demo si no existen ────────────────────
                 // Las migraciones insertan usuarios con emails viejos
