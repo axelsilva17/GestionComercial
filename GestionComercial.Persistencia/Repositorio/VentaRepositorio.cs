@@ -10,7 +10,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public VentaRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<Venta?> ObtenerConDetallesAsync(int idVenta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(v => v.Detalles).ThenInclude(d => d.Producto)
                 .Include(v => v.Detalles).ThenInclude(d => d.Descuentos)
                 .Include(v => v.Pagos).ThenInclude(p => p.MetodoPago)
@@ -19,7 +19,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .FirstOrDefaultAsync(v => v.Id == idVenta);
 
         public async Task<IEnumerable<Venta>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(v => v.Fecha >= desde && v.Fecha <= hasta && v.Id_sucursal == idSucursal)
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)
@@ -27,13 +27,13 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
 
         public async Task<IEnumerable<Venta>> ObtenerPorClienteAsync(int idCliente)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(v => v.Id_cliente == idCliente)
                 .OrderByDescending(v => v.Fecha)
                 .ToListAsync();
 
         public async Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(v => v.Sucursal.Id_empresa == idEmpresa
                          && v.Fecha >= desde
                          && v.Fecha <= hasta)
@@ -52,14 +52,14 @@ namespace GestionComercial.Persistencia.Repositorio
         }
 
         public async Task<IEnumerable<Venta>> ObtenerVentasAnuladasAsync(DateTime desde, DateTime hasta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(v => v.Fecha >= desde && v.Fecha <= hasta && v.Estado == 3) // 3 = Anulada
                 .Include(v => v.Usuario)
                 .OrderByDescending(v => v.Fecha)
                 .ToListAsync();
 
         public async Task<IEnumerable<Venta>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(v => v.Fecha >= desde && v.Fecha <= hasta)
                 .Include(v => v.Usuario)
                 .Include(v => v.Pagos).ThenInclude(p => p.MetodoPago)

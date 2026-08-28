@@ -14,7 +14,7 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
     public MovimientoStockRepositorio(GestionComercialContext context) : base(context) { }
 
     public async Task<IEnumerable<MovimientoStock>> ObtenerPorProductoAsync(int idProducto)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(m => m.Id_producto == idProducto)
             .Include(m => m.Usuario)
             .OrderByDescending(m => m.Fecha)
@@ -22,7 +22,7 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
 
     public async Task<IEnumerable<MovimientoStock>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int? idSucursal = null)
         {
-            var query = _dbSet
+            var query = _dbSet.AsNoTracking()
                 .Include(m => m.Producto)
                     .ThenInclude(p => p!.Categoria)
                 .Include(m => m.Usuario)
@@ -49,7 +49,7 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
         int pagina,
         int itemsPorPagina)
     {
-        var query = _dbSet
+        var query = _dbSet.AsNoTracking()
             .Include(m => m.Producto)
                 .ThenInclude(p => p!.Categoria)
             .Include(m => m.Usuario)

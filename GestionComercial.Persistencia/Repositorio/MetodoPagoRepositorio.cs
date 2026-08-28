@@ -10,7 +10,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public MetodoPagoRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<IEnumerable<MetodoPago>> ObtenerTodosPorEmpresaAsync(int idEmpresa)
-            => await _context.MetodosPago
+            => await _context.MetodosPago.AsNoTracking()
                 .Where(m => m.Id_empresa == idEmpresa)
                 .OrderBy(m => m.Nombre)
                 .ToListAsync();

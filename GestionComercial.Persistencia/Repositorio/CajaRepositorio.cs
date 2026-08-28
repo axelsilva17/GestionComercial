@@ -10,21 +10,21 @@ namespace GestionComercial.Persistencia.Repositorio
         public CajaRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(c => c.UsuarioApertura)
                 .FirstOrDefaultAsync(c => c.Id_sucursal == idSucursal && c.Estado == 1);
         public async Task<bool> ExisteCajaAbiertaAsync(int idSucursal)
     => await _dbSet.AnyAsync(c => c.Id_sucursal == idSucursal && c.Estado == 1);
 
         public async Task<Caja?> ObtenerConMovimientosAsync(int idCaja)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(c => c.Movimientos)
                 .Include(c => c.UsuarioApertura)
                 .Include(c => c.UsuarioCierre)
                 .FirstOrDefaultAsync(c => c.Id == idCaja);
 
         public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(c => c.Ventas)
                 .Include(c => c.Movimientos)
                     .ThenInclude(m => m.Usuario)
@@ -35,7 +35,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
 
         public async Task<List<Caja>> ObtenerCajasPorTurnoAsync(int idSucursal, string turno)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_sucursal == idSucursal && c.Turno == turno)
                 .OrderBy(c => c.FechaApertura)
                 .ToListAsync();
@@ -44,7 +44,7 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet.AnyAsync(c => c.Id_sucursal == idSucursal && c.Turno == turno && c.Estado == 1);
 
         public async Task<Caja?> ObtenerCajaAbiertaPorSucursYTurnoAsync(int idSucursal, string turno)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(c => c.UsuarioApertura)
                 .FirstOrDefaultAsync(c => c.Id_sucursal == idSucursal && c.Turno == turno && c.Estado == 1);
     }

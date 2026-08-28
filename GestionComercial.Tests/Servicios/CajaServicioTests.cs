@@ -32,6 +32,8 @@ namespace GestionComercial.Tests.Servicios
             _mockUow.Setup(u => u.Ventas).Returns(_mockVentaRepo.Object);
             _mockUow.Setup(u => u.Pagos).Returns(_mockPagoRepo.Object);
             _mockUow.Setup(u => u.MetodosPago).Returns(_mockMetodoPagoRepo.Object);
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
+                .Returns<Func<Task>>(callback => callback());
 
             _mockAuditoria
                 .Setup(a => a.RegistrarAuditoriaAsync(

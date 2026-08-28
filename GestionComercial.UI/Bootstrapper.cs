@@ -74,7 +74,13 @@ namespace GestionComercial.UI
             sqliteConn.Open();
             using (var cmd = sqliteConn.CreateCommand())
             {
-                cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
+                cmd.CommandText = @"
+                    PRAGMA journal_mode=WAL;
+                    PRAGMA synchronous=NORMAL;
+                    PRAGMA temp_store=MEMORY;
+                    PRAGMA cache_size=-64000;
+                    PRAGMA mmap_size=268435456;
+                    PRAGMA foreign_keys=ON;";
                 cmd.ExecuteNonQuery();
             }
             sqliteConn.Close();

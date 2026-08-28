@@ -10,7 +10,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public ProductoRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<Producto?> ObtenerPorCodigoBarraAsync(string codigoBarra)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .FirstOrDefaultAsync(p => p.CodigoBarra == codigoBarra && p.Activo);
@@ -28,7 +28,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Select(p => p.StockActual)
                 .FirstOrDefaultAsync();
         public async Task<IEnumerable<Producto>> ObtenerConStockBajoAsync(int idEmpresa)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
                 .Include(p => p.Categoria)
                 .OrderBy(p => p.Nombre)
@@ -36,7 +36,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true)
         {
-            var query = _dbSet.Where(p => p.Id_empresa == idEmpresa);
+            var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
             if (soloActivos)
                 query = query.Where(p => p.Activo);
             return await query
@@ -49,7 +49,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa)
         {
             // Materializar primero y ordenar en memoria porque SQLite no soporta ORDER BY con decimal
-            var productos = await _dbSet
+            var productos = await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
                 .Include(p => p.Categoria)
                 .ToListAsync();
@@ -57,7 +57,7 @@ namespace GestionComercial.Persistencia.Repositorio
         }
 
         public async Task<Producto?> ObtenerPorIdConDetallesAsync(int id)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -83,7 +83,7 @@ namespace GestionComercial.Persistencia.Repositorio
         // ── Nuevos métodos para eliminar dependencias EF Core de la capa Aplicacion ──
 
         public async Task<List<UnidadMedida>> ObtenerUnidadesMedidaDistintasAsync()
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(p => p.UnidadMedida)
                 .Select(p => p.UnidadMedida)
                 .Where(u => u != null)
@@ -91,14 +91,14 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync()!;
 
         public async Task<List<Producto>> ObtenerPorCategoriaAsync(int idCategoria)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(p => p.Id_categoria == idCategoria)
                 .Include(p => p.Categoria)
                 .Include(p => p.UnidadMedida)
                 .ToListAsync();
 
         public async Task<List<Producto>> ObtenerConCodigoBarraPorEmpresaAsync(int idEmpresa)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa && p.CodigoBarra != null)
                 .ToListAsync();
 
@@ -110,7 +110,7 @@ namespace GestionComercial.Persistencia.Repositorio
                               && p.StockActual > 0);
 
         public async Task<List<Producto>> ObtenerConStockBajoConLimiteAsync(int idEmpresa, int limite)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa
                          && p.Activo
                          && p.StockActual <= p.StockMinimo
@@ -122,7 +122,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos)
         {
-            var query = _dbSet.Where(p => p.Id_empresa == idEmpresa);
+            var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
 
             if (!string.IsNullOrWhiteSpace(texto))
             {

@@ -31,16 +31,18 @@ namespace GestionComercial.Aplicacion.Servicios
                 nombre, valor, idEmpresa, idProducto, idCategoria,
                 aplicaCualquierMetodoPago, idsMetodosPago, fechaDesde, fechaHasta, alcance);
 
-            await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
-            await _unitOfWork.GuardarCambiosAsync();
-
-            // Persistir relaciones N:M (solo cuando restringe métodos específicos)
-            if (!aplicaCualquierMetodoPago && idsMetodosPago != null && idsMetodosPago.Count > 0)
+            // ── Todo en una transacción: descuento + relaciones N:M ─────────────────
+            await _unitOfWork.EjecutarEnTransaccionAsync(async () =>
             {
-                await _unitOfWork.DescuentoConfiguraciones
-                    .ActualizarMetodosPagoAsync(descuento.Id, idsMetodosPago);
-                await _unitOfWork.GuardarCambiosAsync();
-            }
+                await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
+
+                // Persistir relaciones N:M (solo cuando restringe métodos específicos)
+                if (!aplicaCualquierMetodoPago && idsMetodosPago != null && idsMetodosPago.Count > 0)
+                {
+                    await _unitOfWork.DescuentoConfiguraciones
+                        .ActualizarMetodosPagoAsync(descuento.Id, idsMetodosPago);
+                }
+            });
 
             return descuento;
         }

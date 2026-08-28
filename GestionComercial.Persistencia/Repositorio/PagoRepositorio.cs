@@ -15,7 +15,7 @@ namespace GestionComercial.Persistencia.Repositorio
             int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null)
         {
             // Traer todos los pagos y agrupar en memoria (SQLite no soporta Sum en decimal)
-            var query = _dbSet
+            var query = _dbSet.AsNoTracking()
                 .Where(p => p.Venta.Id_sucursal == idSucursal
                          && p.Venta.Fecha >= desde
                          && p.Venta.Fecha <= hasta
@@ -46,7 +46,7 @@ namespace GestionComercial.Persistencia.Repositorio
         }
 
         public async Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(p => p.Venta.Fecha >= desde && p.Venta.Fecha <= hasta)
                 .Include(p => p.MetodoPago)
                 .Include(p => p.Venta)

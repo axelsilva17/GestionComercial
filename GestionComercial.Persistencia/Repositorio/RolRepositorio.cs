@@ -10,7 +10,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public RolRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<IEnumerable<Rol>> ObtenerTodosConPermisosAsync()
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(r => r.RolPermisos)
                     .ThenInclude(rp => rp.Permiso)
                 .OrderBy(r => r.Nombre)

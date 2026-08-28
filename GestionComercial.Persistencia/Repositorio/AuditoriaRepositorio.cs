@@ -49,7 +49,7 @@ namespace GestionComercial.Persistencia.Repositorio
             string nombreTabla,
             int registroId)
         {
-            return await _context.AuditoriaLogs
+            return await _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.NombreTabla == nombreTabla && a.RegistroId == registroId)
                 .OrderByDescending(a => a.FechaOperacion)
                 .ToListAsync();
@@ -60,7 +60,7 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null)
         {
-            var query = _context.AuditoriaLogs
+            var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.IdUsuario == idUsuario);
 
             if (fechaDesde.HasValue)
@@ -79,7 +79,7 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null)
         {
-            var query = _context.AuditoriaLogs
+            var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.IdEmpresa == idEmpresa);
 
             if (fechaDesde.HasValue)
@@ -98,7 +98,7 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null)
         {
-            var query = _context.AuditoriaLogs
+            var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.IdSucursal == idSucursal);
 
             if (fechaDesde.HasValue)
@@ -117,7 +117,7 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null)
         {
-            var query = _context.AuditoriaLogs
+            var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.NombreTabla == "Cajas");
 
             if (idCaja.HasValue)
@@ -139,7 +139,7 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null)
         {
-            var query = _context.AuditoriaLogs
+            var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.NombreTabla == "MovimientosCaja");
 
             if (idMovimiento.HasValue)
@@ -163,7 +163,7 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null)
         {
-            var query = _context.AuditoriaLogs.AsQueryable();
+            var query = _context.AuditoriaLogs.AsNoTracking().AsQueryable();
 
             if (idUsuario.HasValue)
                 query = query.Where(a => a.IdUsuario == idUsuario.Value);
@@ -194,7 +194,7 @@ namespace GestionComercial.Persistencia.Repositorio
             int pagina,
             int tamanioPagina)
         {
-            var query = _context.AuditoriaLogs.AsQueryable();
+            var query = _context.AuditoriaLogs.AsNoTracking().AsQueryable();
 
             if (idUsuario.HasValue)
                 query = query.Where(a => a.IdUsuario == idUsuario.Value);

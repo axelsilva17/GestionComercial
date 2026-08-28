@@ -10,21 +10,21 @@ namespace GestionComercial.Persistencia.Repositorio
         public CompraRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<Compra?> ObtenerConDetallesAsync(int idCompra)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Include(c => c.Detalles).ThenInclude(d => d.Producto)
                 .Include(c => c.Proveedor)
                 .Include(c => c.Usuario)
                 .FirstOrDefaultAsync(c => c.Id == idCompra);
 
         public async Task<IEnumerable<Compra>> ObtenerPorProveedorAsync(int idProveedor)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_proveedor == idProveedor)
                 .Include(c => c.Detalles)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync();
 
         public async Task<IEnumerable<Compra>> ObtenerPorSucursalAsync(int idSucursal)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_sucursal == idSucursal)
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
@@ -32,7 +32,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
 
         public async Task<IEnumerable<Compra>> ObtenerPorPeriodoAsync(int idSucursal, DateTime desde, DateTime hasta)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta)
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)

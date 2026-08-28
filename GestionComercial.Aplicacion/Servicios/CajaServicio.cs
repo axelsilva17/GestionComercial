@@ -64,94 +64,84 @@ namespace GestionComercial.Aplicacion.Servicios
                 caja.EsPrimaria
             });
 
-            LogHelper.Log("[DEBUG-AbrirCaja] Paso 1: Agregando caja...");
-            await _uow.Cajas.AgregarAsync(caja);
-            await _uow.GuardarCambiosAsync();
-            LogHelper.Log($"[DEBUG-AbrirCaja] Caja guardada con ID: {caja.Id}");
+            // ── Todo en una transacción: caja + auditoría + movimiento ──────────────
+            await _uow.EjecutarEnTransaccionAsync(async () =>
+            {
+                LogHelper.Log("[DEBUG-AbrirCaja] Paso 1: Agregando caja...");
+                await _uow.Cajas.AgregarAsync(caja);
+                LogHelper.Log($"[DEBUG-AbrirCaja] Caja guardada con ID: {caja.Id}");
 
-            // Registrar auditoría de apertura de caja
-            try
-            {
-                LogHelper.Log("[DEBUG-AbrirCaja] Paso 2: Registrando auditoría de caja...");
-                await _uow.Auditoria.RegistrarAuditoriaAsync(
-                    nombreTabla: "Cajas",
-                    registroId: caja.Id,
-                    tipoOperacion: OperacionAuditoriaEnum.Insert,
-                    idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
-                    nombreUsuario: _sesion.Nombre ?? "Sistema",
-                    valoresAnteriores: null,
-                    valoresNuevos: valoresNuevos,
-                    workstation: Environment.MachineName,
-                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal
-                );
-                await _uow.GuardarCambiosAsync();
-                LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de caja guardada OK");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de caja", ex);
-                // Continuar aunque falle la auditoría
-            }
+                // Registrar auditoría de apertura de caja
+                try
+                {
+                    LogHelper.Log("[DEBUG-AbrirCaja] Paso 2: Registrando auditoría de caja...");
+                    await _uow.Auditoria.RegistrarAuditoriaAsync(
+                        nombreTabla: "Cajas",
+                        registroId: caja.Id,
+                        tipoOperacion: OperacionAuditoriaEnum.Insert,
+                        idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
+                        nombreUsuario: _sesion.Nombre ?? "Sistema",
+                        valoresAnteriores: null,
+                        valoresNuevos: valoresNuevos,
+                        workstation: Environment.MachineName,
+                        idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal
+                    );
+                    LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de caja guardada OK");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de caja", ex);
+                }
 
-            // Registrar movimiento de apertura
-            var movimientoApertura = new TipoMovimientoCaja
-            {
-                Id_caja    = caja.Id,
-                Tipo       = (int)TipoMovimientoCajaEnum.Apertura,
-                Monto      = montoInicial,
-                Fecha      = DateTime.Now,
-                Concepto   = "Apertura de caja",
-                Id_usuario = idUsuario,
-            };
+                // Registrar movimiento de apertura
+                var movimientoApertura = new TipoMovimientoCaja
+                {
+                    Id_caja    = caja.Id,
+                    Tipo       = (int)TipoMovimientoCajaEnum.Apertura,
+                    Monto      = montoInicial,
+                    Fecha      = DateTime.Now,
+                    Concepto   = "Apertura de caja",
+                    Id_usuario = idUsuario,
+                };
 
-            // Auditoría del movimiento de apertura
-            var movimientoValoresNuevos = JsonSerializer.Serialize(new
-            {
-                movimientoApertura.Id_caja,
-                movimientoApertura.Tipo,
-                movimientoApertura.Monto,
-                movimientoApertura.Fecha,
-                movimientoApertura.Concepto,
-                movimientoApertura.Id_usuario
-            });
+                // Auditoría del movimiento de apertura
+                var movimientoValoresNuevos = JsonSerializer.Serialize(new
+                {
+                    movimientoApertura.Id_caja,
+                    movimientoApertura.Tipo,
+                    movimientoApertura.Monto,
+                    movimientoApertura.Fecha,
+                    movimientoApertura.Concepto,
+                    movimientoApertura.Id_usuario
+                });
 
-            try
-            {
-                LogHelper.Log("[DEBUG-AbrirCaja] Paso 3: Registrando auditoría de movimiento...");
-                await _uow.Auditoria.RegistrarAuditoriaAsync(
-                    nombreTabla: "MovimientosCaja",
-                    registroId: 0,
-                    tipoOperacion: OperacionAuditoriaEnum.Insert,
-                    idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
-                    nombreUsuario: _sesion.Nombre ?? "Sistema",
-                    valoresAnteriores: null,
-                    valoresNuevos: movimientoValoresNuevos,
-                    workstation: Environment.MachineName,
-                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal
-                );
-                await _uow.GuardarCambiosAsync();
-                LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de movimiento guardada OK");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de movimiento", ex);
-                // Continuar aunque falle la auditoría
-            }
+                try
+                {
+                    LogHelper.Log("[DEBUG-AbrirCaja] Paso 3: Registrando auditoría de movimiento...");
+                    await _uow.Auditoria.RegistrarAuditoriaAsync(
+                        nombreTabla: "MovimientosCaja",
+                        registroId: 0,
+                        tipoOperacion: OperacionAuditoriaEnum.Insert,
+                        idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
+                        nombreUsuario: _sesion.Nombre ?? "Sistema",
+                        valoresAnteriores: null,
+                        valoresNuevos: movimientoValoresNuevos,
+                        workstation: Environment.MachineName,
+                        idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal
+                    );
+                    LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de movimiento guardada OK");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError("[ERROR-AbrirCaja] Fallo en auditoría de movimiento", ex);
+                }
 
-            try
-            {
                 LogHelper.Log("[DEBUG-AbrirCaja] Paso 4: Agregando movimiento de apertura...");
                 await _uow.MovimientosCaja.AgregarAsync(movimientoApertura);
-                await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-AbrirCaja] TODO EXITOSO!");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[ERROR-AbrirCaja] Fallo al guardar movimiento", ex);
-                throw;
-            }
+            });
 
             return caja;
         }
@@ -180,7 +170,6 @@ namespace GestionComercial.Aplicacion.Servicios
 
             LogHelper.Log("[DEBUG-CerrarCaja] Paso 1: Cerrando caja con método de dominio...");
             caja.Cerrar(idUsuario, montoFinal);
-            _uow.Cajas.Actualizar(caja);
 
             // Registrar auditoría de cierre de caja
             var valoresNuevos = JsonSerializer.Serialize(new
@@ -195,86 +184,81 @@ namespace GestionComercial.Aplicacion.Servicios
                 caja.UsuarioCierre_id
             });
 
-            try
+            // ── Todo en una transacción: caja + auditoría + movimiento ──────────────
+            await _uow.EjecutarEnTransaccionAsync(async () =>
             {
-                LogHelper.Log("[DEBUG-CerrarCaja] Paso 2: Registrando auditoría de caja...");
-                await _uow.Auditoria.RegistrarAuditoriaAsync(
-                    nombreTabla: "Cajas",
-                    registroId: caja.Id,
-                    tipoOperacion: OperacionAuditoriaEnum.Update,
-                    idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
-                    nombreUsuario: _sesion.Nombre ?? "Sistema",
-                    valoresAnteriores: valoresAnteriores,
-                    valoresNuevos: valoresNuevos,
-                    workstation: Environment.MachineName,
-                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-                );
-                await _uow.GuardarCambiosAsync();
-                LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de caja guardada OK");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de caja", ex);
-            }
+                _uow.Cajas.Actualizar(caja);
 
-            // Registrar movimiento de cierre
-            var movimientoCierre = new TipoMovimientoCaja
-            {
-                Id_caja    = caja.Id,
-                Tipo       = (int)TipoMovimientoCajaEnum.Cierre,
-                Monto      = montoFinal,
-                Fecha      = DateTime.Now,
-                Concepto   = "Cierre de caja",
-                Id_usuario = idUsuario,
-            };
+                try
+                {
+                    LogHelper.Log("[DEBUG-CerrarCaja] Paso 2: Registrando auditoría de caja...");
+                    await _uow.Auditoria.RegistrarAuditoriaAsync(
+                        nombreTabla: "Cajas",
+                        registroId: caja.Id,
+                        tipoOperacion: OperacionAuditoriaEnum.Update,
+                        idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
+                        nombreUsuario: _sesion.Nombre ?? "Sistema",
+                        valoresAnteriores: valoresAnteriores,
+                        valoresNuevos: valoresNuevos,
+                        workstation: Environment.MachineName,
+                        idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
+                    );
+                    LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de caja guardada OK");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de caja", ex);
+                }
 
-            // Auditoría del movimiento de cierre
-            var movimientoValoresNuevos = JsonSerializer.Serialize(new
-            {
-                movimientoCierre.Id_caja,
-                movimientoCierre.Tipo,
-                movimientoCierre.Monto,
-                movimientoCierre.Fecha,
-                movimientoCierre.Concepto,
-                movimientoCierre.Id_usuario
-            });
+                // Registrar movimiento de cierre
+                var movimientoCierre = new TipoMovimientoCaja
+                {
+                    Id_caja    = caja.Id,
+                    Tipo       = (int)TipoMovimientoCajaEnum.Cierre,
+                    Monto      = montoFinal,
+                    Fecha      = DateTime.Now,
+                    Concepto   = "Cierre de caja",
+                    Id_usuario = idUsuario,
+                };
 
-            try
-            {
-                LogHelper.Log("[DEBUG-CerrarCaja] Paso 3: Registrando auditoría de movimiento...");
-                await _uow.Auditoria.RegistrarAuditoriaAsync(
-                    nombreTabla: "MovimientosCaja",
-                    registroId: 0,
-                    tipoOperacion: OperacionAuditoriaEnum.Insert,
-                    idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
-                    nombreUsuario: _sesion.Nombre ?? "Sistema",
-                    valoresAnteriores: null,
-                    valoresNuevos: movimientoValoresNuevos,
-                    workstation: Environment.MachineName,
-                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-                );
-                await _uow.GuardarCambiosAsync();
-                LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de movimiento guardada OK");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de movimiento", ex);
-            }
+                // Auditoría del movimiento de cierre
+                var movimientoValoresNuevos = JsonSerializer.Serialize(new
+                {
+                    movimientoCierre.Id_caja,
+                    movimientoCierre.Tipo,
+                    movimientoCierre.Monto,
+                    movimientoCierre.Fecha,
+                    movimientoCierre.Concepto,
+                    movimientoCierre.Id_usuario
+                });
 
-            try
-            {
+                try
+                {
+                    LogHelper.Log("[DEBUG-CerrarCaja] Paso 3: Registrando auditoría de movimiento...");
+                    await _uow.Auditoria.RegistrarAuditoriaAsync(
+                        nombreTabla: "MovimientosCaja",
+                        registroId: 0,
+                        tipoOperacion: OperacionAuditoriaEnum.Insert,
+                        idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : idUsuario,
+                        nombreUsuario: _sesion.Nombre ?? "Sistema",
+                        valoresAnteriores: null,
+                        valoresNuevos: movimientoValoresNuevos,
+                        workstation: Environment.MachineName,
+                        idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
+                    );
+                    LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de movimiento guardada OK");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError("[ERROR-CerrarCaja] Fallo en auditoría de movimiento", ex);
+                }
+
                 LogHelper.Log("[DEBUG-CerrarCaja] Paso 4: Agregando movimiento de cierre...");
                 await _uow.MovimientosCaja.AgregarAsync(movimientoCierre);
-                await _uow.GuardarCambiosAsync();
                 LogHelper.Log("[DEBUG-CerrarCaja] TODO EXITOSO!");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[ERROR-CerrarCaja] Fallo al guardar movimiento", ex);
-                throw;
-            }
+            });
 
             return caja;
         }
@@ -604,37 +588,39 @@ namespace GestionComercial.Aplicacion.Servicios
             });
 
             caja.Inactivar();
-            _uow.Cajas.Actualizar(caja);
-            await _uow.GuardarCambiosAsync();
 
-            // Registrar auditoría
-            try
+            // ── Todo en una transacción: inactivar + auditoría ──────────────────────
+            await _uow.EjecutarEnTransaccionAsync(async () =>
             {
-                var valoresNuevos = JsonSerializer.Serialize(new
+                _uow.Cajas.Actualizar(caja);
+
+                try
                 {
-                    caja.Id,
-                    caja.Activo,
-                    caja.Estado
-                });
+                    var valoresNuevos = JsonSerializer.Serialize(new
+                    {
+                        caja.Id,
+                        caja.Activo,
+                        caja.Estado
+                    });
 
-                await _uow.Auditoria.RegistrarAuditoriaAsync(
-                    nombreTabla: "Cajas",
-                    registroId: caja.Id,
-                    tipoOperacion: OperacionAuditoriaEnum.Delete,
-                    idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : null,
-                    nombreUsuario: _sesion.Nombre ?? "Sistema",
-                    valoresAnteriores: valoresAnteriores,
-                    valoresNuevos: valoresNuevos,
-                    workstation: Environment.MachineName,
-                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-                );
-                await _uow.GuardarCambiosAsync();
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError("[CajaServicio] Error al registrar auditoría de eliminación", ex);
-            }
+                    await _uow.Auditoria.RegistrarAuditoriaAsync(
+                        nombreTabla: "Cajas",
+                        registroId: caja.Id,
+                        tipoOperacion: OperacionAuditoriaEnum.Delete,
+                        idUsuario: _sesion.IdUsuario != 0 ? _sesion.IdUsuario : null,
+                        nombreUsuario: _sesion.Nombre ?? "Sistema",
+                        valoresAnteriores: valoresAnteriores,
+                        valoresNuevos: valoresNuevos,
+                        workstation: Environment.MachineName,
+                        idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
+                    );
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.LogError("[CajaServicio] Error al registrar auditoría de eliminación", ex);
+                }
+            });
         }
     }
 }

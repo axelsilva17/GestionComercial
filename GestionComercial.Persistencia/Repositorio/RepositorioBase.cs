@@ -20,13 +20,13 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet.FindAsync(id);
 
         public async Task<IEnumerable<T>> ObtenerTodosAsync()
-            => await _dbSet.ToListAsync();
+            => await _dbSet.AsNoTracking().ToListAsync();
 
         public async Task<IEnumerable<T>> BuscarAsync(Expression<Func<T, bool>> criterio)
-            => await _dbSet.Where(criterio).ToListAsync();
+            => await _dbSet.AsNoTracking().Where(criterio).ToListAsync();
 
         public async Task<T?> PrimerODefaultAsync(Expression<Func<T, bool>> criterio)
-            => await _dbSet.FirstOrDefaultAsync(criterio);
+            => await _dbSet.AsNoTracking().FirstOrDefaultAsync(criterio);
 
         public async Task<bool> ExisteAsync(Expression<Func<T, bool>> criterio)
             => await _dbSet.AnyAsync(criterio);

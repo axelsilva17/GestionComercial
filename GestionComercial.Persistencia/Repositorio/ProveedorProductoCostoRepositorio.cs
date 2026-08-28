@@ -13,9 +13,9 @@ namespace GestionComercial.Persistencia.Repositorio
         public ProveedorProductoCostoRepositorio(GestionComercialContext context) : base(context) { }
 
         public async Task<IEnumerable<ProveedorProductoCosto>> ObtenerPorProveedorAsync(int idProveedor)
-            => await _dbSet.Where(p => p.IdProveedor == idProveedor).ToListAsync();
+            => await _dbSet.AsNoTracking().Where(p => p.IdProveedor == idProveedor).ToListAsync();
 
         public async Task<ProveedorProductoCosto?> ObtenerPorProveedorYProductoAsync(int idProveedor, int idProducto)
-            => await _dbSet.FirstOrDefaultAsync(p => p.IdProveedor == idProveedor && p.IdProducto == idProducto);
+            => await _dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.IdProveedor == idProveedor && p.IdProducto == idProducto);
     }
 }

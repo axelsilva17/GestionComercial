@@ -10,6 +10,6 @@ public class EmpresaRepositorio : RepositorioBase<Empresa>, IEmpresaRepositorio
     public EmpresaRepositorio(GestionComercialContext context) : base(context) { }
 
     public async Task<Empresa?> ObtenerPorCUITAsync(string cuit)
-        => await _dbSet.FirstOrDefaultAsync(e => e.CUIT == cuit);
+        => await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => e.CUIT == cuit);
 }
 }

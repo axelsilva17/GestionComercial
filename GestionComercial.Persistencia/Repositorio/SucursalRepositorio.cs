@@ -10,7 +10,7 @@ public class SucursalRepositorio : RepositorioBase<Sucursal>, ISucursalRepositor
     public SucursalRepositorio(GestionComercialContext context) : base(context) { }
 
     public async Task<IEnumerable<Sucursal>> ObtenerPorEmpresaAsync(int idEmpresa)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(s => s.Id_empresa == idEmpresa && s.Activo)
             .OrderBy(s => s.Nombre)
             .ToListAsync();

@@ -13,7 +13,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<List<DescuentoConfiguracion>> ObtenerVigentesPorEmpresaAsync(int idEmpresa)
         {
-            return await _dbSet
+            return await _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago)
                 .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente)
                 .ToListAsync();
@@ -21,7 +21,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<List<DescuentoConfiguracion>> ObtenerConMetodosPagoAsync(int idEmpresa)
         {
-            return await _dbSet
+            return await _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago).ThenInclude(dm => dm.MetodoPago)
                 .Where(d => d.Id_empresa == idEmpresa && d.Activo)
                 .ToListAsync();
@@ -29,7 +29,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<List<DescuentoConfiguracion>> ObtenerConMetodosPagoPorIdAsync(int id)
         {
-            return await _dbSet
+            return await _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago).ThenInclude(dm => dm.MetodoPago)
                 .Where(d => d.Id == id)
                 .ToListAsync();
@@ -37,7 +37,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<List<DescuentoConfiguracion>> BuscarAsync(int idEmpresa, string? texto, bool? activo)
         {
-            var query = _dbSet
+            var query = _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago).ThenInclude(dm => dm.MetodoPago)
                 .Include(d => d.Producto)
                 .Include(d => d.Categoria)

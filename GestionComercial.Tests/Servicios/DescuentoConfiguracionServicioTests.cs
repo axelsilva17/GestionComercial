@@ -17,6 +17,8 @@ namespace GestionComercial.Tests.Servicios
         public DescuentoConfiguracionServicioTests()
         {
             _mockUow.Setup(u => u.DescuentoConfiguraciones).Returns(_mockRepo.Object);
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
+                .Returns<Func<Task>>(callback => callback());
             _servicio = new DescuentoConfiguracionServicio(_mockUow.Object);
         }
 
@@ -41,7 +43,7 @@ namespace GestionComercial.Tests.Servicios
             resultado.Valor.Should().Be(10);
             resultado.AplicaCualquierMetodoPago.Should().BeTrue();
             _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()), Times.Once);
         }
 
         [Fact]
@@ -61,7 +63,7 @@ namespace GestionComercial.Tests.Servicios
             _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
             _mockRepo.Verify(r => r.ActualizarMetodosPagoAsync(
                 It.IsAny<int>(), It.Is<List<int>>(ids => ids.SequenceEqual(new[] { 1, 2 }))), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.AtLeastOnce);
+            _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()), Times.Once);
         }
 
         [Fact]

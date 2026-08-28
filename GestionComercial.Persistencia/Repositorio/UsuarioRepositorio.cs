@@ -11,14 +11,14 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<Usuario?> ObtenerPorEmailAsync(string email)
             =>
-            await _dbSet
+            await _dbSet.AsNoTracking()
                 .Include(u => u.Rol)
                 .Include(u => u.Sucursal)
                     .ThenInclude(s => s.Empresa)
                 .FirstOrDefaultAsync(u => u.Email == email.ToLower().Trim() && u.Activo);
 
         public async Task<IEnumerable<Usuario>> ObtenerPorSucursalAsync(int idSucursal)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(u => u.Id_sucursal == idSucursal && u.Activo)
                 .Include(u => u.Rol)
                 .OrderBy(u => u.Apellido)
