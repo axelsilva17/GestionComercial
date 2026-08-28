@@ -12,6 +12,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<Venta?> ObtenerConDetallesAsync(int idVenta)
             => await _dbSet
                 .Include(v => v.Detalles).ThenInclude(d => d.Producto)
+                .Include(v => v.Detalles).ThenInclude(d => d.Descuentos)
                 .Include(v => v.Pagos).ThenInclude(p => p.MetodoPago)
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)

@@ -128,7 +128,9 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             Impuestos.Add(impuesto);
         }
 
-        public decimal DescuentoTotal => _descuento + Descuentos.Sum(d => d.Monto);
+        public decimal DescuentoTotal => Descuentos.Any()
+            ? Descuentos.Sum(d => d.Monto)
+            : _descuento;
         
         public decimal ImpuestosTotal => Impuestos.Sum(i => i.Monto);
         

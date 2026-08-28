@@ -120,12 +120,16 @@ namespace GestionComercial.Aplicacion.Servicios
                     var descuentoPorItem = item.Descuentos.Sum(d => d.Monto);
 
                     // Crear detalle usando factory method DDD
+                    // IMPORTANTE: Se pasa descuentoPorItem=0 porque los descuentos
+                    // se agregan via AgregarDescuento(). Si se pasara el monto aquí
+                    // Y además se agregara via Descuentos, Recalcular() duplicaría
+                    // el descuento al sumar _descuento + Descuentos.Sum().
                     var detalle = VentaDetalle.Crear(
                         producto,
                         item.Cantidad,
                         producto.PrecioVentaActual,
                         producto.PrecioCostoActual,
-                        descuentoPorItem);
+                        0);
 
                     // Aplicar descuentos por item usando factory methods
                     foreach (var dtoDesc in item.Descuentos)
