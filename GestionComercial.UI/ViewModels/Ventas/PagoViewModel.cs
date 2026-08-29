@@ -730,24 +730,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
             TotalVenta = _totalVentaOriginal - totalDescuentoMetodoPago;
             System.Diagnostics.Debug.WriteLine($"[PagoVM-RecalcDesc] TotalVenta={TotalVenta}, descuento={totalDescuentoMetodoPago}, base={_totalVentaOriginal}");
 
-            // Si el descuento reduce el total y ya hay pagos, ajustar para evitar vuelto falso
-            if (totalDescuentoMetodoPago > 0 && Pagos.Any())
-            {
-                var totalPagadoActual = Pagos.Sum(p => p.Monto);
-                if (totalPagadoActual > TotalVenta && TotalVenta > 0)
-                {
-                    // Recalcular: el último pago ajusta la diferencia
-                    var pagosPrevios = Pagos.Take(Pagos.Count - 1).Sum(p => p.Monto);
-                    var montoUltimoPago = Math.Round(TotalVenta - pagosPrevios, 2);
-                    if (montoUltimoPago >= 0)
-                    {
-                        Pagos[Pagos.Count - 1].Monto = montoUltimoPago;
-                        NotifyOfPropertyChange(() => Pagos);
-                        RecalcularTotalPagado();
-                    }
-                }
-            }
-
             // Sincronizar línea de descuento por método de pago en el preview
             var lineaMetodo = LineasDescuento.FirstOrDefault(l => l.EsMetodoPago);
             if (totalDescuentoMetodoPago > 0)
