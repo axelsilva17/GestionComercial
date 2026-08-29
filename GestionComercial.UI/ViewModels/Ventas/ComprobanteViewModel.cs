@@ -15,10 +15,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
 {
     public class ComprobanteItemVm
     {
-        public string  Descripcion    { get; set; } = string.Empty;
-        public int     Cantidad       { get; set; }
-        public decimal PrecioUnitario { get; set; }
-        public decimal Subtotal       { get; set; }
+        public string  Descripcion      { get; set; } = string.Empty;
+        public int     Cantidad         { get; set; }
+        public decimal PrecioUnitario   { get; set; }
+        public decimal Subtotal         { get; set; }
+        public decimal DescuentoPorItem { get; set; }
+        public string? DescuentoDetalle { get; set; }
+        public bool    TieneDescuento   => DescuentoPorItem > 0;
     }
 
     public class ComprobantePagoVm
@@ -145,10 +148,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 Items = new ObservableCollection<ComprobanteItemVm>(
                     venta.Items.Select(i => new ComprobanteItemVm
                     {
-                        Descripcion    = i.ProductoNombre,
-                        Cantidad       = i.Cantidad,
-                        PrecioUnitario = i.PrecioUnitario,
-                        Subtotal       = i.Subtotal,
+                        Descripcion      = i.ProductoNombre,
+                        Cantidad         = i.Cantidad,
+                        PrecioUnitario   = i.PrecioUnitario,
+                        Subtotal         = i.Subtotal,
+                        DescuentoPorItem = i.DescuentoPorItem,
+                        DescuentoDetalle = i.Descuentos?.FirstOrDefault()?.Descripcion,
                     }));
                     
                 System.Diagnostics.Debug.WriteLine("[ComprobanteVM-Cargar] Carga completada exitosamente");
@@ -200,12 +205,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private string GenerarHtml()
         {
             var filas = string.Join("\n", Items.Select(i =>
-                $@"<tr>
+            {
+                var descLinea = i.TieneDescuento
+                    ? $"\n<tr class='desc'><td colspan='3' style='padding-left:12px;font-size:11px;'>  ↳ {HtmlEnc(i.DescuentoDetalle ?? "Descuento")}</td><td class='r'>-${i.DescuentoPorItem:N2}</td></tr>"
+                    : string.Empty;
+                return $@"<tr>
                      <td>{HtmlEnc(i.Descripcion)}</td>
                      <td class='c'>{i.Cantidad}</td>
                      <td class='r'>${i.PrecioUnitario:N2}</td>
                      <td class='r'>${i.Subtotal:N2}</td>
-                   </tr>"));
+                   </tr>{descLinea}";
+            }));
 
             var descuentoFila = HayDescuento
                 ? $"<tr class='desc'><td colspan='3'>Descuento</td><td class='r'>-${TotalDescuento:N2}</td></tr>"

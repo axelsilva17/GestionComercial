@@ -137,8 +137,18 @@ namespace GestionComercial.Aplicacion.Servicios
             {
                 sb.AddRange(Encoding.ASCII.GetBytes($"{item.Cantidad} x {item.ProductoNombre}\n"));
                 sb.AddRange(Encoding.ASCII.GetBytes($"   ${item.PrecioUnitario:N2} ---- ${item.Subtotal:N2}\n"));
+
+                if (item.DescuentoPorItem > 0)
+                {
+                    var descDescuento = item.Descuentos?.FirstOrDefault()?.Descripcion ?? "Descuento";
+                    sb.AddRange(Encoding.ASCII.GetBytes($"   {descDescuento} ---- -${item.DescuentoPorItem:N2}\n"));
+                }
             }
 
+            sb.AddRange(Encoding.ASCII.GetBytes("----------------------------\n"));
+            sb.AddRange(Encoding.ASCII.GetBytes($"SUBTOTAL:    ${venta.TotalBruto:N2}\n"));
+            if (venta.TotalDescuento > 0)
+                sb.AddRange(Encoding.ASCII.GetBytes($"DESCUENTOS:  -${venta.TotalDescuento:N2}\n"));
             sb.AddRange(Encoding.ASCII.GetBytes("----------------------------\n"));
             sb.AddRange(Encoding.ASCII.GetBytes($"TOTAL: ${venta.TotalFinal:N2}\n"));
             sb.AddRange(new byte[] { 0x1B, 0x45, 0x01 }); // Negrita ON
