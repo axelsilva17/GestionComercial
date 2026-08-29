@@ -56,6 +56,7 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>()))
                 .Returns<MovimientoStock>(m => Task.FromResult(m));
 
+            // guardarCambios=false: el caller (VentaServicio.CrearAsync) actualiza el stock
             await _servicio.RegistrarMovimientoAsync(
                 idProducto: 1,
                 tipoMovimiento: "Salida",
@@ -72,7 +73,8 @@ namespace GestionComercial.Tests.Servicios
                     m.StockAnterior == 10 &&
                     m.StockNuevo == 7)), Times.Once);
 
-            producto.StockActual.Should().Be(7);
+            // guardarCambios=false: NO actualiza el stock del producto (lo hace el caller)
+            producto.StockActual.Should().Be(10);
         }
 
         [Fact]

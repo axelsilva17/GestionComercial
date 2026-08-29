@@ -488,6 +488,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task CancelarAsync_VentaPendiente_AnulaYDevuelveStock()
         {
             var venta = CrearVentaPendiente();
+            // CrearDetalle ya crea un Producto con Id=1 dentro
             venta.AgregarDetalle(CrearDetalle(100m, 50m, 2)); // cantidad 2
             venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
 
@@ -495,6 +496,9 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerConDetallesAsync(1))
                 .ReturnsAsync(venta);
 
+            // El Producto dentro del detalle tiene StockActual = 0 (default)
+            // Configurar ObtenerPorIdAsync para un producto con stock = 8
+            // (ya no se usa en CancelarAsync — ahora usa detalle.Producto directamente)
             var producto = new ProdEntity
             {
                 Id = 1,
@@ -507,13 +511,17 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerPorIdAsync(1))
                 .ReturnsAsync(producto);
 
+            // Obtener el producto que viene en el detalle
+            var detalleProducto = venta.Detalles.First().Producto;
+            detalleProducto.StockActual = 8; // simular stock previo
+
             await _servicio.CancelarAsync(1, "Error en la venta");
 
             venta.EsAnulada.Should().BeTrue();
             venta.MotivoAnulacion.Should().Be("Error en la venta");
 
             // Verificar que devolvió stock: 8 + 2 = 10
-            producto.StockActual.Should().Be(10);
+            detalleProducto.StockActual.Should().Be(10);
 
             _mockVentaRepo.Verify(r => r.Actualizar(It.Is<Venta>(v => v.Estado == 3)), Times.Once);
             _mockProductoRepo.Verify(r => r.Actualizar(It.Is<ProdEntity>(p => p.StockActual == 10)), Times.Once);

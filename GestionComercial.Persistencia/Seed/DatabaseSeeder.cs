@@ -112,9 +112,9 @@ namespace GestionComercial.Persistencia.Seed
             var hash1 = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10);
             var hash2 = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10);
             var hash3 = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10);
-            await ExecAsync(c, $"INSERT INTO Usuario (Id, Nombre, Apellido, Email, PasswordHash, Id_sucursal, Id_rol, IntentosFallidos, Activo, FechaAlta) VALUES (1, 'Admin', 'Sistema', 'admin@demo.com', '{hash1}', {sucId}, 2, 0, 1, datetime('now'))");
-            await ExecAsync(c, $"INSERT INTO Usuario (Id, Nombre, Apellido, Email, PasswordHash, Id_sucursal, Id_rol, IntentosFallidos, Activo, FechaAlta) VALUES (2, 'Vendedor', 'Demo', 'vendedor@demo.com', '{hash2}', {sucId}, 3, 0, 1, datetime('now'))");
-            await ExecAsync(c, $"INSERT INTO Usuario (Id, Nombre, Apellido, Email, PasswordHash, Id_sucursal, Id_rol, IntentosFallidos, Activo, FechaAlta) VALUES (3, 'Gerente', 'Demo', 'gerente@demo.com', '{hash3}', {sucId}, 1, 0, 1, datetime('now'))");
+            await ExecAsync(c, $"INSERT INTO Usuario (Id, Nombre, Apellido, Email, PasswordHash, Id_sucursal, Id_rol, IntentosFallidos, Activo, FechaAlta) VALUES (1, 'Admin', 'Sistema', 'admin@miempresa.com', '{hash1}', {sucId}, 2, 0, 1, datetime('now'))");
+            await ExecAsync(c, $"INSERT INTO Usuario (Id, Nombre, Apellido, Email, PasswordHash, Id_sucursal, Id_rol, IntentosFallidos, Activo, FechaAlta) VALUES (2, 'Vendedor', 'Demo', 'vendedor@miempresa.com', '{hash2}', {sucId}, 3, 0, 1, datetime('now'))");
+            await ExecAsync(c, $"INSERT INTO Usuario (Id, Nombre, Apellido, Email, PasswordHash, Id_sucursal, Id_rol, IntentosFallidos, Activo, FechaAlta) VALUES (3, 'Gerente', 'Demo', 'gerente@miempresa.com', '{hash3}', {sucId}, 1, 0, 1, datetime('now'))");
             return 1;
         }
 

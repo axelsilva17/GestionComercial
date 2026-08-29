@@ -139,6 +139,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 }
 
                 LogHelper.Log("[DEBUG-AbrirCaja] Paso 4: Agregando movimiento de apertura...");
+                // Asignar navegación para que EF Core fix-up el FK Id_caja correctamente
+                movimientoApertura.Caja = caja;
                 await _uow.MovimientosCaja.AgregarAsync(movimientoApertura);
                 LogHelper.Log("[DEBUG-AbrirCaja] TODO EXITOSO!");
             });

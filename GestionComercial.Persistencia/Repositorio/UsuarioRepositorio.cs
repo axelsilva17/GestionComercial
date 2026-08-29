@@ -27,7 +27,7 @@ namespace GestionComercial.Persistencia.Repositorio
     => await _dbSet.AnyAsync(u => u.Email == email);
 
         public async Task<IEnumerable<string>> ObtenerPermisosAsync(int usuarioId)
-            => await _dbSet
+            => await _dbSet.AsNoTracking()
                 .Where(u => u.Id == usuarioId)
                 .SelectMany(u => u.Rol!.RolPermisos)
                 .Select(rp => rp.Permiso!.Nombre)

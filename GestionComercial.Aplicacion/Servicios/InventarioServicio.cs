@@ -154,7 +154,7 @@ namespace GestionComercial.Aplicacion.Servicios
             if (cantidad <= 0)
                 throw new ArgumentException("La cantidad debe ser mayor a 0", nameof(cantidad));
 
-            // Obtener producto actual
+            // Obtener producto actual (siempre AsNoTracking para evitar conflictos de ChangeTracker)
             var producto = await uow.Productos.ObtenerPorIdAsync(idProducto)
                 ?? throw new KeyNotFoundException($"Producto {idProducto} no encontrado");
 
@@ -162,6 +162,7 @@ namespace GestionComercial.Aplicacion.Servicios
             var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>( tipoMovimiento, ignoreCase: true);
 
             // Crear movimiento usando factory method DDD
+            // NOTA: Los factory methods setean los FK values internamente
             MovimientoStock movimiento = tipoEnum switch
             {
                 TipoMovimientoStockEnum.Entrada => MovimientoStock.Entrada(
@@ -176,40 +177,43 @@ namespace GestionComercial.Aplicacion.Servicios
                 _ => throw new ArgumentException($"Tipo de movimiento inválido: {tipoMovimiento}")
             };
 
-            // Actualizar stock del producto
-            producto.StockActual = movimiento.StockNuevo;
-            uow.Productos.Actualizar(producto);
-
-            // Adjuntar las entidades relacionadas al contexto si no están ya adjuntadas
-            // Esto es necesario para que EF Core pueda guardar las foreign keys
-            var sucursal = await uow.Sucursales.ObtenerPorIdAsync(idSucursal);
-            var usuario = await uow.Usuarios.ObtenerPorIdAsync(idUsuario);
-            
-            // Asignar las entidades al movimiento
-            movimiento.Sucursal = sucursal!;
-            movimiento.Usuario = usuario!;
-            movimiento.Producto = producto;
-
-            // Guardar movimiento
-            await uow.MovimientosStock.AgregarAsync(movimiento);
-
-            _logger?.LogInformation(
-                "Movimiento agregado al DBSet: {Tipo}, Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",
-                tipoMovimiento, idProducto, cantidad, stockAnterior, movimiento.StockNuevo);
-
-            // Guardar cambios solo si se solicita (para evitar transacciones anidadas)
             if (guardarCambios)
             {
-                _logger?.LogDebug("[Inventario] Antes de GuardarCambiosAsync");
+                // ── Modo standalone (fuera de transacción) ──
+                // Se trackea todo: Producto, Sucursal, Usuario, MovimientoStock
+                producto.StockActual = movimiento.StockNuevo;
+                uow.Productos.Actualizar(producto);
+
+                var sucursal = await uow.Sucursales.ObtenerPorIdAsync(idSucursal);
+                var usuario = await uow.Usuarios.ObtenerPorIdAsync(idUsuario);
+                
+                movimiento.Sucursal = sucursal!;
+                movimiento.Usuario = usuario!;
+                movimiento.Producto = producto;
+
+                await uow.MovimientosStock.AgregarAsync(movimiento);
+
+                _logger?.LogInformation(
+                    "Movimiento agregado al DBSet: {Tipo}, Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",
+                    tipoMovimiento, idProducto, cantidad, stockAnterior, movimiento.StockNuevo);
+
                 await uow.GuardarCambiosAsync();
-                _logger?.LogInformation("[Inventario] GuardarCambios completado para movimiento de stock - Producto: {IdProducto}", idProducto);
+                _logger?.LogInformation("[Inventario] GuardarCambios completado para movimiento de stock - Producto: {ProductoId}", idProducto);
             }
             else
             {
-                _logger?.LogInformation("[Inventario] GuardarCambios omitido (dentro de transacción), se guardará al final - Producto: {IdProducto}", idProducto);
+                // ── Modo transacción (guardarCambios=false) ──
+                // NO trackear entidades: el caller (VentaServicio.CrearAsync) maneja
+                // el tracking del Producto y la Venta en el mismo contexto.
+                // Solo agregamos el MovimientoStock con FK values (seteados por el factory).
+                await uow.MovimientosStock.AgregarAsync(movimiento);
+
+                _logger?.LogInformation(
+                    "[Inventario] Movimiento agregado (sin tracking) al DBSet: {Tipo}, Producto {ProductoId}, Cantidad {Cantidad}, Stock: {Anterior} -> {Nuevo}",
+                    tipoMovimiento, idProducto, cantidad, stockAnterior, movimiento.StockNuevo);
             }
 
-            _logger?.LogDebug("[Inventario] Fin RegistrarMovimientoAsync - Producto: {IdProducto}", idProducto);
+            _logger?.LogDebug("[Inventario] Fin RegistrarMovimientoAsync - Producto: {ProductoId}", idProducto);
         }
 
         public async Task<IEnumerable<MovimientoStockDto>> ObtenerMovimientosPorProductoAsync(int idProducto)

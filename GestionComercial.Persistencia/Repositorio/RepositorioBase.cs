@@ -17,7 +17,7 @@ namespace GestionComercial.Persistencia.Repositorio
         }
 
         public async Task<T?> ObtenerPorIdAsync(int id)
-            => await _dbSet.FindAsync(id);
+            => await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
 
         public async Task<IEnumerable<T>> ObtenerTodosAsync()
             => await _dbSet.AsNoTracking().ToListAsync();

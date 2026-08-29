@@ -115,9 +115,10 @@ namespace GestionComercial.UI.ViewModels.Main
             {
                 ErrorMessage = ex.Message;
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
-                ErrorMessage = "Error al conectar con la base de datos. Intentá de nuevo.";
+                System.Diagnostics.Debug.WriteLine($"[Login] Excepción: {ex}");
+                ErrorMessage = $"Error al conectar con la base de datos: {ex.InnerException?.Message ?? ex.Message}";
             }
             finally
             {

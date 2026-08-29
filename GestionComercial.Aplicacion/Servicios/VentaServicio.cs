@@ -160,6 +160,27 @@ namespace GestionComercial.Aplicacion.Servicios
                     _logger?.LogInformation("[VentaVM] RegistrarMovimientoAsync completado");
                 }
 
+                // ── Actualizar stock en las instancias originales (Instance A) ──
+                // RegistrarMovimientoAsync (guardarCambios=false) NO trackea el Producto,
+                // así que actualizamos y trackeamos las instancias de productosDict.
+                // Esto evita el conflict: "cannot be tracked because another instance
+                // with the same key is already tracked" (Instance A vs Instance B).
+                foreach (var item in dto.Items)
+                {
+                    var producto = productosDict[item.IdProducto];
+                    var tipoMovimiento = TipoMovimientoStockEnum.Salida;
+                    decimal stockAnterior = producto.StockActual;
+                    decimal stockNuevo = tipoMovimiento switch
+                    {
+                        TipoMovimientoStockEnum.Entrada => stockAnterior + item.Cantidad,
+                        TipoMovimientoStockEnum.Salida => stockAnterior - item.Cantidad,
+                        TipoMovimientoStockEnum.Ajuste => item.Cantidad,
+                        _ => stockAnterior
+                    };
+                    producto.StockActual = stockNuevo;
+                    _uow.Productos.Actualizar(producto);
+                }
+
                 await _uow.Ventas.AgregarAsync(venta);
             });
 
@@ -383,9 +404,11 @@ namespace GestionComercial.Aplicacion.Servicios
                 throw new VentaInvalidaException("La venta ya está anulada.");
 
             // Devolver stock siempre (estaba pendiente o pagada)
+            // IMPORTANTE: Usar las instancias de Producto YA cargadas via ObtenerConDetallesAsync
+            // (ThenInclude d => d.Producto) para evitar tracking conflicts con ChangeTracker.
             foreach (var detalle in venta.Detalles)
             {
-                var producto = await _uow.Productos.ObtenerPorIdAsync(detalle.Id_producto);
+                var producto = detalle.Producto;
                 if (producto != null)
                 {
                     producto.StockActual += detalle.Cantidad;

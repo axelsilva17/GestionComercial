@@ -34,6 +34,7 @@ namespace GestionComercial.UI
     public class Bootstrapper : BootstrapperBase
     {
         private SimpleContainer _container = null!;
+        private string _connectionString = null!;
 
         public Bootstrapper() => Initialize();
 
@@ -65,7 +66,12 @@ namespace GestionComercial.UI
 
                 connBuilder.DataSource = File.Exists(sourcePath) ? sourcePath : assemblyPath;
             }
+            // Desactivar pooling para que cada conexión arranque con PRAGMAs por defecto.
+            // Sin esto, el seeder deja foreign_keys=ON en una conexión pooled y
+            // la siguiente operación EF Core reutiliza esa conexión con FKs activas.
+            connBuilder.Pooling = false;
             connectionString = connBuilder.ConnectionString;
+            _connectionString = connectionString;
 
             // ── Optimización SQLite: WAL mode + synchronous=NORMAL ────────────
             //    WAL permite lecturas concurrentes sin bloqueos.
@@ -211,19 +217,23 @@ namespace GestionComercial.UI
 
         protected override async void OnStartup(object sender, StartupEventArgs e)
         {
-            // ── Asegurar base de datos con MigrateAsync (migraciones EF Core) ──
+            // ── Contexto SEPARADO para operaciones de arranque ──────────────
+            // Se descarta al final para que el contexto del DI container
+            // (usado por login/servicios) esté LIMPIO sin ChangeTracker.
+            using var bootCtx = new GestionComercial.Persistencia.Contexto.GestionComercialContext(
+                new DbContextOptionsBuilder<GestionComercial.Persistencia.Contexto.GestionComercialContext>()
+                    .UseSqlite(_connectionString)
+                    .Options);
+
             try
             {
-                var context = _container.GetInstance<GestionComercial.Persistencia.Contexto.GestionComercialContext>();
-                
-                // Ejecutar migraciones pendientes (incluye baseline + views + triggers).
-                await context.Database.MigrateAsync();
+                // ── Ejecutar migraciones ──
+                await bootCtx.Database.MigrateAsync();
 
                 // ── Auto-seed: si la DB está vacía, cargar datos de prueba ──
-                // Solo en máquina del desarrollador (DEBUG o sin licencia.dat)
                 try
                 {
-                    await DatabaseSeeder.SeedIfNeededAsync(context);
+                    await DatabaseSeeder.SeedIfNeededAsync(bootCtx);
                 }
                 catch (Exception exSeed)
                 {
@@ -232,144 +242,166 @@ namespace GestionComercial.UI
                         System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
                 }
 
-                // ── Seed usuarios demo si no existen ────────────────────
+                // ── Fix usuarios demo: raw SqliteConnection, cero EF Core ──
                 try
                 {
-                    var adminExiste = await context.Usuarios
-                        .AnyAsync(u => u.Email == "admin@miempresa.com");
+                    var hashAdmin = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10);
+                    var hashVendedor = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10);
+                    var hashGerente = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10);
 
-                    if (!adminExiste)
+                    using var rawConn = new SqliteConnection(_connectionString);
+                    await rawConn.OpenAsync();
+
+                    // Desactivar FKs por si hay registros hijos
+                    using (var fkCmd = rawConn.CreateCommand())
                     {
-                        // Verificar que las FK existan (Sucursal Id=1, Rol Id=1..3)
-                        var sucursalExiste = await context.Set<Dominio.Entidades.Organizacion.Sucursal>()
-                            .AnyAsync(s => s.Id == 1);
-                        var rolesExiste = await context.Set<Dominio.Entidades.Seguridad.Rol>()
-                            .CountAsync(r => r.Id >= 1 && r.Id <= 3);
+                        fkCmd.CommandText = "PRAGMA foreign_keys=OFF;";
+                        await fkCmd.ExecuteNonQueryAsync();
+                    }
 
-                        if (sucursalExiste && rolesExiste >= 3)
+                    var upsertSql = @"INSERT OR REPLACE INTO Usuario 
+                        (Id,Nombre,Apellido,Email,PasswordHash,Id_sucursal,Id_rol,IntentosFallidos,Activo,FechaAlta) 
+                        VALUES ($id,$nom,$ape,$email,$hash,$suc,$rol,0,1,$fec)";
+
+                    // Admin - Id=1, Rol=2 (Administrador)
+                    using (var cmd = rawConn.CreateCommand())
+                    {
+                        cmd.CommandText = upsertSql;
+                        cmd.Parameters.AddWithValue("$id", 1);
+                        cmd.Parameters.AddWithValue("$nom", "Admin");
+                        cmd.Parameters.AddWithValue("$ape", "Sistema");
+                        cmd.Parameters.AddWithValue("$email", "admin@miempresa.com");
+                        cmd.Parameters.AddWithValue("$hash", hashAdmin);
+                        cmd.Parameters.AddWithValue("$suc", 1);
+                        cmd.Parameters.AddWithValue("$rol", 2);
+                        cmd.Parameters.AddWithValue("$fec", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        var affected = await cmd.ExecuteNonQueryAsync();
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Admin upsert: {affected} rows");
+                    }
+
+                    // Vendedor - Id=2, Rol=3 (Vendedor)
+                    using (var cmd = rawConn.CreateCommand())
+                    {
+                        cmd.CommandText = upsertSql;
+                        cmd.Parameters.AddWithValue("$id", 2);
+                        cmd.Parameters.AddWithValue("$nom", "Vendedor");
+                        cmd.Parameters.AddWithValue("$ape", "Demo");
+                        cmd.Parameters.AddWithValue("$email", "vendedor@miempresa.com");
+                        cmd.Parameters.AddWithValue("$hash", hashVendedor);
+                        cmd.Parameters.AddWithValue("$suc", 1);
+                        cmd.Parameters.AddWithValue("$rol", 3);
+                        cmd.Parameters.AddWithValue("$fec", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        var affected = await cmd.ExecuteNonQueryAsync();
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Vendedor upsert: {affected} rows");
+                    }
+
+                    // Gerente - Id=3, Rol=1 (Gerente)
+                    using (var cmd = rawConn.CreateCommand())
+                    {
+                        cmd.CommandText = upsertSql;
+                        cmd.Parameters.AddWithValue("$id", 3);
+                        cmd.Parameters.AddWithValue("$nom", "Gerente");
+                        cmd.Parameters.AddWithValue("$ape", "Demo");
+                        cmd.Parameters.AddWithValue("$email", "gerente@miempresa.com");
+                        cmd.Parameters.AddWithValue("$hash", hashGerente);
+                        cmd.Parameters.AddWithValue("$suc", 1);
+                        cmd.Parameters.AddWithValue("$rol", 1);
+                        cmd.Parameters.AddWithValue("$fec", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        var affected = await cmd.ExecuteNonQueryAsync();
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Gerente upsert: {affected} rows");
+                    }
+
+                    // Restaurar FKs
+                    using (var fkCmd = rawConn.CreateCommand())
+                    {
+                        fkCmd.CommandText = "PRAGMA foreign_keys=ON;";
+                        await fkCmd.ExecuteNonQueryAsync();
+                    }
+
+                    // VERIFICAR que los hashes quedaron correctos
+                    using (var verifyCmd = rawConn.CreateCommand())
+                    {
+                        verifyCmd.CommandText = "SELECT Email, PasswordHash FROM Usuario ORDER BY Id";
+                        using var reader = await verifyCmd.ExecuteReaderAsync();
+                        while (await reader.ReadAsync())
                         {
-                            context.Usuarios.AddRange(
-                                new Dominio.Entidades.Seguridad.Usuario
-                                {
-                                    Id = 1, Nombre = "Admin", Apellido = "Sistema",
-                                    Email = "admin@miempresa.com",
-                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!", 10),
-                                    Id_sucursal = 1, Id_rol = 2,
-                                    IntentosFallidos = 0, Activo = true,
-                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                                },
-                                new Dominio.Entidades.Seguridad.Usuario
-                                {
-                                    Id = 2, Nombre = "Vendedor", Apellido = "Demo",
-                                    Email = "vendedor@miempresa.com",
-                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Vendedor123!", 10),
-                                    Id_sucursal = 1, Id_rol = 3,
-                                    IntentosFallidos = 0, Activo = true,
-                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                                },
-                                new Dominio.Entidades.Seguridad.Usuario
-                                {
-                                    Id = 3, Nombre = "Gerente", Apellido = "Demo",
-                                    Email = "gerente@miempresa.com",
-                                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Gerente123!", 10),
-                                    Id_sucursal = 1, Id_rol = 1,
-                                    IntentosFallidos = 0, Activo = true,
-                                    FechaAlta = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                                }
-                            );
-                            await context.SaveChangesAsync();
-                            System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuarios demo insertados correctamente");
+                            var email = reader.GetString(0);
+                            var hashDb = reader.GetString(1);
+                            var wf = hashDb.Length >= 7 ? hashDb.Substring(0, 7) : "?";
+                            System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Verify: {email} hash_prefix={wf} len={hashDb.Length}");
                         }
                     }
+
+                    await rawConn.CloseAsync();
+                    System.Diagnostics.Debug.WriteLine("[Bootstrapper] Usuarios demo OK");
                 }
-                catch (Exception exSeed)
+                catch (Exception exUsers)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error insertando usuarios demo: {exSeed.Message}");
-                    if (exSeed.InnerException != null)
-                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exSeed.InnerException.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Error fix usuarios: {exUsers.Message}");
+                    if (exUsers.InnerException != null)
+                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {exUsers.InnerException.Message}");
                 }
 
-                // ── First-run: si no hay usuarios, mostrar configuración inicial ──
-                var tieneUsuarios = await context.Usuarios.AnyAsync();
+                // ── First-run: si no hay usuarios, configuración inicial ──
+                var tieneUsuarios = await bootCtx.Usuarios.AnyAsync();
                 if (!tieneUsuarios)
                 {
                     await DisplayRootViewForAsync<GestionComercial.UI.ViewModels.Configuracion.ConfiguracionInicialViewModel>();
                     return;
                 }
-                
-                // ── Seed movimientos de stock inicial ─────────────────
-                var tieneMovimientos = await context.MovimientosStock.AnyAsync();
+
+                // ── Seed movimientos de stock inicial ──
+                var tieneMovimientos = await bootCtx.MovimientosStock.AnyAsync();
                 if (!tieneMovimientos)
                 {
-                    var productosConStock = await context.Productos
-                        .Where(p => p.StockActual > 0)
-                        .ToListAsync();
+                    var productosConStock = await bootCtx.Productos
+                        .Where(p => p.StockActual > 0).ToListAsync();
 
                     if (productosConStock.Count > 0)
                     {
                         var hoy = DateTime.Now;
                         var diaBase = hoy.AddDays(-5);
-                        var dias = Enumerable.Range(0, productosConStock.Count)
-                            .Select(i => diaBase.AddMinutes(i * 15))  // 15 min entre cada uno
-                            .ToList();
-
                         foreach (var prod in productosConStock)
                         {
                             var idx = productosConStock.IndexOf(prod);
                             var mov = MovimientoStock.Ajuste(
-                                cantidad: prod.StockActual,
-                                stockAnterior: 0,
-                                idProducto: prod.Id,
-                                idSucursal: 1,
-                                idUsuario: 1,
-                                observacion: "Stock inicial",
-                                referenciaId: null
-                            );
-                            // Setear fecha explícita para no tener todos iguales
-                            mov.Fecha = dias[idx];
-                            context.MovimientosStock.Add(mov);
+                                prod.StockActual, 0, prod.Id, 1, 1, "Stock inicial", null);
+                            mov.Fecha = diaBase.AddMinutes(idx * 15);
+                            bootCtx.MovimientosStock.Add(mov);
                         }
-
-                        await context.SaveChangesAsync();
-                        System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Creados {productosConStock.Count} movimientos de stock inicial");
+                        await bootCtx.SaveChangesAsync();
                     }
+                    bootCtx.ChangeTracker.Clear();
                 }
 
-                // ── Backfill Turno en cajas existentes ────────────────
-                var cajasSinTurno = await context.Cajas
-                    .Where(c => c.Turno == null || c.Turno == "")
-                    .ToListAsync();
+                // ── Backfill Turno en cajas existentes ──
+                var turnos = new[] { "Mañana", "Tarde", "Noche" };
+                var cajasSinTurno = await bootCtx.Cajas
+                    .Where(c => c.Turno == null || c.Turno == "").ToListAsync();
                 if (cajasSinTurno.Count > 0)
                 {
-                    var turnos = new[] { "Mañana", "Tarde", "Noche" };
                     var rng = new Random();
                     foreach (var caja in cajasSinTurno)
                         caja.Turno = turnos[rng.Next(turnos.Length)];
-
-                    await context.SaveChangesAsync();
-                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Asignados turnos a {cajasSinTurno.Count} cajas");
+                    await bootCtx.SaveChangesAsync();
+                    bootCtx.ChangeTracker.Clear();
                 }
 
-                // Verify
-                var count = await context.Usuarios.CountAsync();
-                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Total usuarios: {count}");
-
-                // ── Cerrar cajas huérfanas ───────────────────────
-                var cajasAbiertas = await context.Cajas
-                    .Where(c => c.Estado == 1)
-                    .ToListAsync();
-                
-                foreach (var caja in cajasAbiertas)
-                {
-                    caja.Estado = 2;
-                    caja.FechaCierre = DateTime.Now;
-                }
-                
+                // ── Cerrar cajas huérfanas ──
+                var cajasAbiertas = await bootCtx.Cajas
+                    .Where(c => c.Estado == 1).ToListAsync();
                 if (cajasAbiertas.Count > 0)
                 {
-                    await context.SaveChangesAsync();
-                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Cerradas {cajasAbiertas.Count} cajas huérfanas");
+                    foreach (var caja in cajasAbiertas)
+                    {
+                        caja.Estado = 2;
+                        caja.FechaCierre = DateTime.Now;
+                    }
+                    await bootCtx.SaveChangesAsync();
+                    bootCtx.ChangeTracker.Clear();
                 }
+
+                System.Diagnostics.Debug.WriteLine("[Bootstrapper] Startup OK");
             }
             catch (Exception ex)
             {
@@ -377,6 +409,7 @@ namespace GestionComercial.UI
                 if (ex.InnerException != null)
                     System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Inner: {ex.InnerException.Message}");
             }
+            // bootCtx se descarta aquí (using) — el contexto del DI container queda LIMPIO
             
             // ── Backup automático (si está habilitado) ───────────────────────
             try
