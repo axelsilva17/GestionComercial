@@ -1,8 +1,8 @@
+using System;
+
 namespace GestionComercial.Dominio.DTOs.Infraestructura
 {
-    /// <summary>
-    /// Configuración para backup automático.
-    /// </summary>
+    [Obsolete("Usar BackupConfig entity en GestionComercial.Dominio.Entidades.Configuracion en su lugar.")]
     public class BackupAutoConfig
     {
         public bool Enabled { get; set; }
