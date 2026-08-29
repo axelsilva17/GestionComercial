@@ -115,6 +115,9 @@
                             <ComboBox ItemsSource="{Binding Productos}"
                                       DisplayMemberPath="Nombre"
                                       SelectedItem="{Binding ProductoSeleccionado}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      TextSearch.TextPath="Nombre"
                                       IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
                                       Height="36" FontSize="13"/>
                         </StackPanel>
@@ -125,6 +128,9 @@
                             <ComboBox ItemsSource="{Binding Categorias}"
                                       DisplayMemberPath="Nombre"
                                       SelectedItem="{Binding CategoriaSeleccionada}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      TextSearch.TextPath="Nombre"
                                       IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
                                       Height="36" FontSize="13"/>
                         </StackPanel>

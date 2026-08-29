@@ -82,7 +82,6 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Valor %" Binding="{Binding Valor}" Width="70"/>
-                <DataGridTextColumn Header="Activo" Binding="{Binding Activo}" Width="60"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

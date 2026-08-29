@@ -692,36 +692,21 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             if (esPagoUnico && idsMetodosPago.Count == 1)
             {
-                // Per-item discounts
-                foreach (var detalle in _ventaCompleta.Detalles)
-                {
-                    var subtotalDetalle = detalle.Cantidad * detalle.PrecioUnitario - detalle.Descuento;
-                    if (subtotalDetalle <= 0) continue;
+                // REGLA NO ACUMULABLE:
+                // _totalVentaOriginal YA contiene los descuentos por producto/categoría
+                // (Venta.TotalFinal = TotalBruto - TotalDescuento).
+                // Si YA hay descuentos por producto en la venta, NO aplicar descuento
+                // por método de pago. Solo aplicar si NO hay descuentos por producto.
+                bool tieneDescuentosPorProducto = _ventaCompleta.TotalDescuento > 0;
 
-                    var descuento = await _descuentoConfiguracionServicio.ObtenerDescuentoAplicableAsync(
-                        _sesion.IdEmpresa,
-                        detalle.Id_producto,
-                        detalle.Producto?.Id_categoria,
-                        idsMetodosPago,
-                        esPagoUnico: true,
-                        _descuentosCache,
-                        _categoriasCache);
-                    if (descuento != null)
-                    {
-                        totalDescuentoMetodoPago += Math.Round(subtotalDetalle * descuento.Valor / 100, 2, MidpointRounding.AwayFromZero);
-                        porcentajeDescuentoMetodo = descuento.Valor;
-                    }
-                }
-
-                // REGLA B: total-venta solo si no hubo per-item
-                if (totalDescuentoMetodoPago == 0)
+                if (!tieneDescuentosPorProducto)
                 {
+                    // No hay descuentos por producto → aplicar descuento por método de pago
                     var descuentoTotalVenta = await _descuentoConfiguracionServicio.ObtenerDescuentoTotalVentaAsync(
                         _sesion.IdEmpresa, idsMetodosPago[0], _descuentosCache);
                     if (descuentoTotalVenta != null)
                     {
-                        var baseCalculo = _ventaCompleta.TotalBruto - _ventaCompleta.TotalDescuento;
-                        totalDescuentoMetodoPago = Math.Round(baseCalculo * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                        totalDescuentoMetodoPago = Math.Round(_totalVentaOriginal * descuentoTotalVenta.Valor / 100, 2, MidpointRounding.AwayFromZero);
                         porcentajeDescuentoMetodo = descuentoTotalVenta.Valor;
                     }
                 }

@@ -382,30 +382,27 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public async Task Preview_SinMatch_SoloPerItem()
         {
+            // Cuando YA hay descuentos por producto en la venta (TotalDescuento > 0),
+            // NO se aplica descuento por método de pago (regla no acumulable).
+            // TotalFinal ya incluye los descuentos por producto.
             var venta = CrearVentaParaPreview(1000m);
+            venta.GetType().GetProperty("TotalDescuento")!.SetValue(venta, 100m); // Simula descuento por producto
             var perItem = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
                 "Prod 10%", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
 
             SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { perItem });
-            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
-                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
-                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
-                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>()))
-                .ReturnsAsync(perItem);
-            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoTotalVentaAsync(
-                    1, 2, It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>()))
-                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
 
             var vm = CrearVM();
             await vm.InicializarConVenta(1, "Test", 1000);
 
-            // Pago único con Visa (2) que no tiene descuento total-venta → solo per-item 10%
+            // Pago único con Visa (2) → no se aplica descuento porque ya hay per-item
             vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 2, NombreMetodo = "Visa", Categoria = "Tarjeta" };
-            vm.MontoIngresado = "900";
+            vm.MontoIngresado = "1000";
             vm.AgregarPago();
             await InvocarRecalcularDescuentoPreviewAsync(vm);
 
-            vm.TotalVenta.Should().Be(900m); // 1000 - 10% = 900
+            // TotalVenta se mantiene porque los descuentos por producto ya están incluidos
+            vm.TotalVenta.Should().Be(1000m);
         }
 
         private static async Task InvocarRecalcularDescuentoPreviewAsync(PagoViewModel vm)
