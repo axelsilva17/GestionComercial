@@ -2,6 +2,7 @@ using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Entidades.Compras;
+using GestionComercial.Dominio.Entidades.Configuracion;
 using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
@@ -51,6 +52,9 @@ namespace GestionComercial.Persistencia.Contexto
         public DbSet<DescuentoConfiguracion> DescuentoConfiguraciones { get; set; }
         public DbSet<DescuentoMetodoPago> DescuentoMetodosPago { get; set; }
 
+        // ── Configuración ──────────────────────────────────────────
+        public DbSet<BackupConfig> BackupConfigs { get; set; }
+
         // ── Vistas (entidades de solo lectura) ──────────────────────
         public DbSet<VistaVentasResumida> VistaVentasResumidas { get; set; }
         public DbSet<VistaProductosConStock> VistaProductosConStock { get; set; }
@@ -82,6 +86,16 @@ namespace GestionComercial.Persistencia.Contexto
             modelBuilder.Entity<Cliente>()
                 .HasIndex(c => c.Id_empresa)
                 .HasDatabaseName("IX_Cliente_IdEmpresa");
+
+            // BackupConfig: singleton configuration table
+            modelBuilder.Entity<BackupConfig>(entity =>
+            {
+                entity.ToTable("BackupConfig");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Frecuencia).HasConversion<int>();
+                entity.Property(e => e.DiaSemana).HasConversion<int?>();
+                entity.Property(e => e.HoraProgramada).HasConversion<string?>();
+            });
 
             SemillaRoles.Sembrar(modelBuilder);
             SemillaTipoMovimiento.Sembrar(modelBuilder);

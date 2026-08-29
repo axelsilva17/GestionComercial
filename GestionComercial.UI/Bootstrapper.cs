@@ -109,7 +109,9 @@ namespace GestionComercial.UI
 
             // Servicios de Dominio (implementados en Infraestructura)
             _container.Singleton<IPasswordHasher, PasswordHasher>();
-            _container.Handler<IBackupService>(_ => new BackupService(connectionString));
+            _container.Handler<IBackupService>(_ => new BackupService(
+                connectionString,
+                _container.GetInstance<GestionComercialContext>()));
 
             _container.PerRequest<AutenticacionServicio>();
             _container.PerRequest<IClienteServicio, ClienteServicio>();
@@ -414,18 +416,55 @@ namespace GestionComercial.UI
             // ── Backup automático (si está habilitado) ───────────────────────
             try
             {
-                var backupService = _container.GetInstance<GestionComercial.Dominio.Interfaces.Servicios.IBackupService>();
-                var resultado = await backupService.BackupAutomaticoSiHabilitadoAsync();
-                if (resultado != null && resultado.Success)
-                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático realizado: {resultado.RutaBackup}");
-                else if (resultado != null && !resultado.Success)
-                    System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático falló: {resultado.ErrorMessage}");
-                // Si null → estaba deshabilitado, no hacer nada
+                var backupConfig = await bootCtx.BackupConfigs.FirstOrDefaultAsync();
+                if (backupConfig != null &&
+                    backupConfig.Frecuencia != GestionComercial.Dominio.Enumeraciones.FrecuenciaBackupEnum.Desactivado)
+                {
+                    bool debeEjecutar = backupConfig.Frecuencia switch
+                    {
+                        GestionComercial.Dominio.Enumeraciones.FrecuenciaBackupEnum.AlAbrirApp =>
+                            backupConfig.UltimoBackup == null || backupConfig.UltimoBackup.Value.Date != DateTime.Today,
+
+                        GestionComercial.Dominio.Enumeraciones.FrecuenciaBackupEnum.Diario =>
+                            backupConfig.UltimoBackup == null || backupConfig.UltimoBackup.Value.Date < DateTime.Today,
+
+                        GestionComercial.Dominio.Enumeraciones.FrecuenciaBackupEnum.Semanal =>
+                            backupConfig.DiaSemana.HasValue &&
+                            DateTime.Today.DayOfWeek == backupConfig.DiaSemana.Value &&
+                            (backupConfig.UltimoBackup == null ||
+                             backupConfig.UltimoBackup.Value.Date.AddDays(7) <= DateTime.Today),
+
+                        _ => false
+                    };
+
+                    if (debeEjecutar)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var backupService = _container
+                                    .GetInstance<GestionComercial.Dominio.Interfaces.Servicios.IBackupService>();
+                                var resultado = await backupService.GenerarBackupAsync("automatico");
+                                if (resultado != null && resultado.Success)
+                                    System.Diagnostics.Debug.WriteLine(
+                                        $"[Bootstrapper] Backup automático: {resultado.RutaBackup}");
+                                else if (resultado != null)
+                                    System.Diagnostics.Debug.WriteLine(
+                                        $"[Bootstrapper] Backup automático falló: {resultado.ErrorMessage}");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"[Bootstrapper] Backup automático exception: {ex.Message}");
+                            }
+                        });
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // No bloquear el inicio de la app si el backup falla
-                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup automático falló: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[Bootstrapper] Backup check falló: {ex.Message}");
             }
 
             // ── Demo: verificar estado y mostrar showcase en primer inicio ──

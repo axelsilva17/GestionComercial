@@ -1,0 +1,185 @@
+<UserControl x:Class="GestionComercial.UI.Views.Configuracion.BackupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource BackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Backup de Base de Datos" FontSize="26" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="Configuración de backups automáticos y manuales"
+                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <!-- Config Section -->
+        <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="12" Padding="24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Col 0: Config izquierda -->
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="FRECUENCIA" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <ComboBox ItemsSource="{Binding FrecuenciasDisponibles}"
+                              SelectedItem="{Binding FrecuenciaSeleccionada}"
+                              Height="38" FontSize="13"
+                              Background="{DynamicResource SurfaceBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="2">
+                    <TextBlock Text="DÍA DE LA SEMANA" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <ComboBox ItemsSource="{Binding DiasSemana}"
+                              SelectedItem="{Binding DiaSemanaSeleccionado}"
+                              IsEnabled="{Binding DiaSemanaHabilitado}"
+                              Height="38" FontSize="13"
+                              Background="{DynamicResource SurfaceBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
+                              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="4">
+                    <TextBlock Text="HORA PROGRAMADA" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding HoraProgramada, StringFormat=HH:mm}"
+                             Height="38" FontSize="13"
+                             Background="{DynamicResource SurfaceBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                             VerticalContentAlignment="Center" Padding="12,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="MÁXIMO DE BACKUPS" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding MaxBackups}"
+                             Height="38" FontSize="13"
+                             Background="{DynamicResource SurfaceBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                             VerticalContentAlignment="Center" Padding="12,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.Column="2">
+                    <TextBlock Text="ÚLTIMO BACKUP" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="{Binding UltimoBackupFormato}" FontSize="14"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               VerticalAlignment="Center" Height="38"/>
+                </StackPanel>
+
+                <!-- Row 4: Carpeta destino full width -->
+                <StackPanel Grid.Row="4" Grid.ColumnSpan="5">
+                    <TextBlock Text="CARPETA DESTINO" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding CarpetaDestino, Mode=OneWay}"
+                             IsReadOnly="True" Height="38" FontSize="13"
+                             Background="{DynamicResource SurfaceBrush}"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
+                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                             VerticalContentAlignment="Center" Padding="12,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Backup List -->
+        <Border Grid.Row="4" Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="12" ClipToBounds="True">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="20,16,20,12">
+                    <TextBlock Text="Backups existentes" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                </Grid>
+
+                <DataGrid Grid.Row="1" Margin="0,0,0,12"
+                          ItemsSource="{Binding Backups}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectedItem="{Binding BackupSeleccionado}"
+                          Background="Transparent" BorderThickness="0"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="None"
+                          RowBackground="{DynamicResource CardBrush}"
+                          AlternatingRowBackground="{DynamicResource SurfaceBrush}"
+                          ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nombre" Binding="{Binding FileName}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                    <Setter Property="Margin" Value="8,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Tamaño" Binding="{Binding FileSizeBytes}" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                    <Setter Property="Margin" Value="8,0"/>
+                                    <Setter Property="TextAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Fecha" Binding="{Binding CreatedAt, StringFormat=dd/MM/yyyy HH:mm}" Width="150">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                    <Setter Property="Margin" Value="8,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Guardar Configuración" Command="{Binding GuardarConfiguracion}"
+                    Style="{StaticResource PrimaryButton}" Height="38" Padding="16,0"
+                    FontSize="13" Margin="0,0,10,0"/>
+            <Button Content="Backup manual ahora" Command="{Binding RealizarBackup}"
+                    Style="{StaticResource PrimaryButton}" Height="38" Padding="16,0"
+                    FontSize="13" Margin="0,0,10,0"/>
+            <Button Content="Eliminar" Command="{Binding EliminarBackup}"
+                    Style="{StaticResource CancelBtn}" Height="38" Padding="16,0"
+                    FontSize="13"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
