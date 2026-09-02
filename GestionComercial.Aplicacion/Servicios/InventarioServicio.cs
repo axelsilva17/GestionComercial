@@ -159,23 +159,35 @@ namespace GestionComercial.Aplicacion.Servicios
                 ?? throw new KeyNotFoundException($"Producto {idProducto} no encontrado");
 
             var stockAnterior = producto.StockActual;
-            var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>( tipoMovimiento, ignoreCase: true);
+            var esAjuste = tipoMovimiento.Equals("Ajuste", StringComparison.OrdinalIgnoreCase);
 
             // Crear movimiento usando factory method DDD
             // NOTA: Los factory methods setean los FK values internamente
-            MovimientoStock movimiento = tipoEnum switch
+            MovimientoStock movimiento;
+            if (esAjuste)
             {
-                TipoMovimientoStockEnum.Entrada => MovimientoStock.Entrada(
-                    cantidad, stockAnterior, idProducto, idSucursal, idUsuario, observacion),
-                
-                TipoMovimientoStockEnum.Salida => MovimientoStock.Salida(
-                    cantidad, stockAnterior, idProducto, idSucursal, idUsuario, observacion),
-                
-                TipoMovimientoStockEnum.Ajuste => MovimientoStock.Ajuste(
-                    cantidad, stockAnterior, idProducto, idSucursal, idUsuario, observacion),
-                
-                _ => throw new ArgumentException($"Tipo de movimiento inválido: {tipoMovimiento}")
-            };
+                // La UI envía "Ajuste" con una cantidad que representa el STOCK OBJETIVO
+                // absoluto (NuevaCantidad, siempre > 0). Calculamos el delta firmado
+                // respecto al stock anterior y el factory lo clasifica como
+                // AjustePositivo (delta >= 0) o AjusteNegativo (delta < 0), conservando el signo.
+                var delta = cantidad - stockAnterior;
+                movimiento = MovimientoStock.Ajuste(
+                    delta, stockAnterior, idProducto, idSucursal, idUsuario, observacion);
+            }
+            else
+            {
+                var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>(tipoMovimiento, ignoreCase: true);
+                movimiento = tipoEnum switch
+                {
+                    TipoMovimientoStockEnum.Entrada => MovimientoStock.Entrada(
+                        cantidad, stockAnterior, idProducto, idSucursal, idUsuario, observacion),
+
+                    TipoMovimientoStockEnum.Salida => MovimientoStock.Salida(
+                        cantidad, stockAnterior, idProducto, idSucursal, idUsuario, observacion),
+
+                    _ => throw new ArgumentException($"Tipo de movimiento inválido: {tipoMovimiento}")
+                };
+            }
 
             if (guardarCambios)
             {

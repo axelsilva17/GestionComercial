@@ -257,7 +257,7 @@ namespace GestionComercial.Tests.Servicios
                 CrearMovimiento(TipoMovimientoStockEnum.Entrada, 5, 0, 5, 1),
                 CrearMovimiento(TipoMovimientoStockEnum.Salida, 3, 5, 2, 1),
                 CrearMovimiento(TipoMovimientoStockEnum.Salida, 1, 2, 1, 1),
-                CrearMovimiento(TipoMovimientoStockEnum.Ajuste, 10, 1, 10, 1),
+                CrearMovimiento(TipoMovimientoStockEnum.AjustePositivo, 10, 1, 10, 1),
             };
 
             _mockMovimientosRepo
@@ -271,7 +271,7 @@ namespace GestionComercial.Tests.Servicios
 
             lista.Count(m => m.TipoMovimiento == "Salida").Should().Be(2);
             lista.Count(m => m.TipoMovimiento == "Entrada").Should().Be(1);
-            lista.Count(m => m.TipoMovimiento == "Ajuste").Should().Be(1);
+            lista.Count(m => m.TipoMovimiento == "AjustePositivo").Should().Be(1);
         }
 
         [Fact]
@@ -464,8 +464,11 @@ namespace GestionComercial.Tests.Servicios
                     cantidad, stockAnterior, idProducto, idSucursal: 1, idUsuario: 1, "Test"),
                 TipoMovimientoStockEnum.Salida => MovimientoStock.Salida(
                     cantidad, stockAnterior, idProducto, idSucursal: 1, idUsuario: 1, "Test"),
-                TipoMovimientoStockEnum.Ajuste => MovimientoStock.Ajuste(
-                    stockNuevo, stockAnterior, idProducto, idSucursal: 1, idUsuario: 1, "Test"),
+                // Ajustes: el stock nuevo es stockAnterior + delta, así que delta = stockNuevo - stockAnterior
+                TipoMovimientoStockEnum.AjustePositivo => MovimientoStock.Ajuste(
+                    stockNuevo - stockAnterior, stockAnterior, idProducto, idSucursal: 1, idUsuario: 1, "Test"),
+                TipoMovimientoStockEnum.AjusteNegativo => MovimientoStock.Ajuste(
+                    stockNuevo - stockAnterior, stockAnterior, idProducto, idSucursal: 1, idUsuario: 1, "Test"),
                 _ => throw new ArgumentException($"Tipo inválido: {tipo}")
             };
             return mov;

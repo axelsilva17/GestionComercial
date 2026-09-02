@@ -59,8 +59,18 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
         // Filtrar por tipo
         if (!string.IsNullOrWhiteSpace(filtroTipo) && filtroTipo != "Todos")
         {
-            var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>(filtroTipo, ignoreCase: true);
-            query = query.Where(m => m.TipoMovimiento == (int)tipoEnum);
+            // "Ajuste" es un filtro genérico que abarca ambos ajustes (positivo y negativo).
+            if (filtroTipo.Equals("Ajuste", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(m =>
+                    m.TipoMovimiento == (int)TipoMovimientoStockEnum.AjustePositivo ||
+                    m.TipoMovimiento == (int)TipoMovimientoStockEnum.AjusteNegativo);
+            }
+            else
+            {
+                var tipoEnum = Enum.Parse<TipoMovimientoStockEnum>(filtroTipo, ignoreCase: true);
+                query = query.Where(m => m.TipoMovimiento == (int)tipoEnum);
+            }
         }
 
         // Filtrar por usuario
@@ -135,7 +145,9 @@ public class MovimientoStockRepositorio : RepositorioBase<MovimientoStock>, IMov
         {
             TotalEntradas = grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Entrada)?.Cantidad ?? 0,
             TotalSalidas = grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Salida)?.Cantidad ?? 0,
-            TotalAjustes = grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Ajuste)?.Cantidad ?? 0,
+            TotalAjustes =
+                (grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.AjustePositivo)?.Cantidad ?? 0) +
+                (grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.AjusteNegativo)?.Cantidad ?? 0),
             UnidadesIngresadas = (int)(grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Entrada)?.Unidades ?? 0),
             UnidadesEgresadas = (int)(grupo.FirstOrDefault(g => g.TipoMovimiento == (int)TipoMovimientoStockEnum.Salida)?.Unidades ?? 0),
         };

@@ -726,7 +726,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                 // Mostrar resumen
                 var entradas = lista.Count(m => m.TipoMovimiento == "Entrada");
                 var salidas = lista.Count(m => m.TipoMovimiento == "Salida");
-                var ajustes = lista.Count(m => m.TipoMovimiento == "Ajuste");
+                var ajustes = lista.Count(m => m.TipoMovimiento == "AjustePositivo" || m.TipoMovimiento == "AjusteNegativo");
 
                 var mensaje = $"Movimientos de '{ProductoSeleccionado.Nombre}':\n\n";
                 mensaje += $"Entradas: {entradas}\n";

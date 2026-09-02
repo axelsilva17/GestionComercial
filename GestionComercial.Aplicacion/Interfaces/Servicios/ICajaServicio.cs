@@ -26,6 +26,10 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         /// de otros métodos de pago. Usar antes de mostrar el cierre.
         Task<ResumenCierreDto> ObtenerResumenCierreAsync(int idCaja);
 
+        ///         /// Calcula la diferencia entre el conteo físico (MontoFinal) y el saldo esperado.
+        /// Devuelve 0 si la caja sigue abierta (sin MontoFinal).
+        Task<decimal> ObtenerDiferenciaCierreAsync(int idCaja);
+
         ///         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
         Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia);
 

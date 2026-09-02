@@ -20,13 +20,14 @@ namespace GestionComercial.Aplicacion.DTOs.Inventario
         // Para UI
         public bool   EsEntrada  => TipoMovimiento == "Entrada";
         public bool   EsSalida   => TipoMovimiento == "Salida";
-        public bool   EsAjuste   => TipoMovimiento == "Ajuste";
+        public bool   EsAjuste   => TipoMovimiento == "AjustePositivo" || TipoMovimiento == "AjusteNegativo";
         public string TipoIcono  => TipoMovimiento switch
         {
-            "Entrada" => "↑",
-            "Salida"  => "↓",
-            "Ajuste"  => "⇄",
-            _         => "·"
+            "Entrada"       => "↑",
+            "Salida"        => "↓",
+            "AjustePositivo" => "⇄",
+            "AjusteNegativo" => "⇄",
+            _               => "·"
         };
     }
 }

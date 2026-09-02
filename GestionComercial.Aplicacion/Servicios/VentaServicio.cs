@@ -174,7 +174,6 @@ namespace GestionComercial.Aplicacion.Servicios
                     {
                         TipoMovimientoStockEnum.Entrada => stockAnterior + item.Cantidad,
                         TipoMovimientoStockEnum.Salida => stockAnterior - item.Cantidad,
-                        TipoMovimientoStockEnum.Ajuste => item.Cantidad,
                         _ => stockAnterior
                     };
                     producto.StockActual = stockNuevo;

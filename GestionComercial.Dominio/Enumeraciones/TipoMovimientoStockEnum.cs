@@ -4,6 +4,7 @@ namespace GestionComercial.Dominio.Enumeraciones
     {
         Entrada = 1,
         Salida  = 2,
-        Ajuste  = 3
+        AjustePositivo  = 3,
+        AjusteNegativo  = 4
     }
 }

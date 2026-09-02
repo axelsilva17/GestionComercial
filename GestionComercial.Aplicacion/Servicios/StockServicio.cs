@@ -34,10 +34,11 @@ namespace GestionComercial.Aplicacion.Servicios
             producto.StockActual += cantidad;
             _uow.Productos.Actualizar(producto);
 
-            // ── Usar factory method DDD según el tipo de movimiento ────────
-            var movimiento = cantidad >= 0
-                ? MovimientoStock.Entrada(Math.Abs(cantidad), stockAnterior, idProducto, idSucursal, idUsuario, motivo)
-                : MovimientoStock.Ajuste(producto.StockActual, stockAnterior, idProducto, idSucursal, idUsuario, motivo);
+            // ── Usar el camino canónico: ajuste con signo ─────────────────────
+            // El signo del delta decide AjustePositivo/AjusteNegativo; NO se registra
+            // un ajuste positivo como una "Entrada" (era el bug previo).
+            var movimiento = MovimientoStock.Ajuste(
+                cantidad, stockAnterior, idProducto, idSucursal, idUsuario, motivo);
 
             await _uow.MovimientosStock.AgregarAsync(movimiento);
 

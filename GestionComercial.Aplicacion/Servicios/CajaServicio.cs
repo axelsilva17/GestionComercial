@@ -424,6 +424,21 @@ namespace GestionComercial.Aplicacion.Servicios
             return resumen;
         }
 
+        ///         /// Diferencia entre el conteo físico y el saldo esperado, calculada
+        /// a partir del resumen centralizado. Devuelve 0 si la caja sigue abierta.
+        public async Task<decimal> ObtenerDiferenciaCierreAsync(int idCaja)
+        {
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+                ?? throw new CajaNoAbiertaException();
+
+            // Caja abierta: no hay conteo físico todavía, por lo que no existe diferencia.
+            if (!caja.MontoFinal.HasValue)
+                return 0m;
+
+            var resumen = await ObtenerResumenCierreAsync(idCaja);
+            return caja.MontoFinal.Value - resumen.SaldoEsperado;
+        }
+
             // Helper: obtener IdEmpresa desde IdSucursal
         private async Task<int> ObtenerIdEmpresaDeSucursalAsync(int idSucursal)
         {

@@ -142,20 +142,23 @@ namespace GestionComercial.UI.ViewModels.Cajas
                     EstadoColor     = c.EstaAbierta ? "#F59E0B" : "#10B981"
                 }).ToList();
 
-                // Obtener ventas efectivo por caja
+                // Obtener resumen y diferencia por caja usando el cálculo centralizado
                 foreach (var caja in cajasDto)
                 {
-                    var ventasEfvo = await _cajaServicio.ObtenerTotalEfectivoPorCajaAsync(caja.Id);
-                    caja.VentasEfectivo = ventasEfvo;
-                    caja.EfectivoEnCaja = caja.MontoInicial + ventasEfvo;
-                    caja.Ingresos = ventasEfvo;
-                    caja.Egresos = 0;
+                    var resumen = await _cajaServicio.ObtenerResumenCierreAsync(caja.Id);
+                    var diferencia = await _cajaServicio.ObtenerDiferenciaCierreAsync(caja.Id);
 
-                    if (caja.MontoFinal.HasValue)
-                    {
-                        caja.DiferenciaSinEfectivo = caja.MontoFinal.Value - caja.MontoInicial;
-                        caja.DiferenciaConEfectivo = caja.MontoFinal.Value - caja.EfectivoEnCaja;
-                    }
+                    caja.VentasEfectivo = resumen.VentasEfectivo;
+                    caja.Ingresos = resumen.IngresosEfectivo;
+                    caja.Egresos = resumen.EgresosEfectivo;
+                    caja.EfectivoEnCaja = resumen.SaldoEsperado;
+
+                    // Diferencia con efectivo: fuente única de verdad (CajaServicio)
+                    caja.DiferenciaConEfectivo = diferencia;
+                    // Diferencia sin ventas: solo conteo físico vs monto inicial
+                    caja.DiferenciaSinEfectivo = caja.MontoFinal.HasValue
+                        ? caja.MontoFinal.Value - caja.MontoInicial
+                        : 0m;
                 }
 
                 Cajas = new ObservableCollection<CajaAuditoriaItemDto>(cajasDto);

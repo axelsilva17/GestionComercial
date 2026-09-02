@@ -87,18 +87,22 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
             return Crear(TipoMovimientoStockEnum.Salida, cantidad, stockActual, idProducto, idSucursal, idUsuario, observacion, referenciaId);
         }
 
-        ///         /// Crea un movimiento de ajuste (recount, etc.)
-        public static MovimientoStock Ajuste(decimal cantidad, decimal stockAnterior,
+        ///         /// Crea un movimiento de ajuste con signo.
+        /// 'delta' es el cambio firmado sobre el stock anterior:
+        ///   delta > 0 -> AjustePositivo (aumenta stock)
+        ///   delta < 0 -> AjusteNegativo (disminuye stock)
+        /// El stock nuevo se calcula como stockAnterior + delta (piso 0)
+        /// y la Cantidad almacenada queda como el valor absoluto del delta.
+        public static MovimientoStock Ajuste(decimal delta, decimal stockAnterior,
             int idProducto, int idSucursal, int idUsuario, string? observacion = null, int? referenciaId = null)
         {
-            return Crear(TipoMovimientoStockEnum.Ajuste, cantidad, stockAnterior, idProducto, idSucursal, idUsuario, observacion, referenciaId);
+            var tipo = delta >= 0 ? TipoMovimientoStockEnum.AjustePositivo : TipoMovimientoStockEnum.AjusteNegativo;
+            return Crear(tipo, delta, stockAnterior, idProducto, idSucursal, idUsuario, observacion, referenciaId);
         }
 
         private static MovimientoStock Crear(TipoMovimientoStockEnum tipo, decimal cantidad, decimal stockAnterior,
             int idProducto, int idSucursal, int idUsuario, string? observacion, int? referenciaId)
         {
-            if (cantidad <= 0)
-                throw new ArgumentException("La cantidad debe ser mayor a 0.", nameof(cantidad));
             if (idProducto <= 0)
                 throw new ArgumentException("ID de producto inválido.", nameof(idProducto));
             if (idSucursal <= 0)
@@ -110,17 +114,24 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
             switch (tipo)
             {
                 case TipoMovimientoStockEnum.Entrada:
+                    if (cantidad <= 0)
+                        throw new ArgumentException("La cantidad debe ser mayor a 0.", nameof(cantidad));
                     stockNuevo = stockAnterior + cantidad;
                     break;
                 case TipoMovimientoStockEnum.Salida:
+                    if (cantidad <= 0)
+                        throw new ArgumentException("La cantidad debe ser mayor a 0.", nameof(cantidad));
                     if (stockAnterior < cantidad)
                         throw new InvalidOperationException($"Stock insuficiente. Actual: {stockAnterior}, solicitado: {cantidad}");
                     stockNuevo = stockAnterior - cantidad;
                     break;
-                case TipoMovimientoStockEnum.Ajuste:
-                    // En ajustes, 'cantidad' es el stock nuevo, no el delta
-                    stockNuevo = cantidad;
-                    cantidad = Math.Abs(cantidad - stockAnterior);  // Convertir a delta para consistencia
+                case TipoMovimientoStockEnum.AjustePositivo:
+                case TipoMovimientoStockEnum.AjusteNegativo:
+                    // 'cantidad' es el delta CON SIGNO. Validamos que la magnitud sea > 0.
+                    if (cantidad == 0)
+                        throw new ArgumentException("El ajuste no puede ser cero.", nameof(cantidad));
+                    stockNuevo = Math.Max(0, stockAnterior + cantidad);
+                    cantidad = Math.Abs(cantidad);  // Guardar magnitud (consistente con Entrada/Salida)
                     break;
                 default:
                     throw new ArgumentException($"Tipo de movimiento inválido: {tipo}");
@@ -143,7 +154,9 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
 
         public bool EsEntrada => _tipoMovimiento == (int)TipoMovimientoStockEnum.Entrada;
         public bool EsSalida  => _tipoMovimiento == (int)TipoMovimientoStockEnum.Salida;
-        public bool EsAjuste => _tipoMovimiento == (int)TipoMovimientoStockEnum.Ajuste;
+        public bool EsAjustePositivo => _tipoMovimiento == (int)TipoMovimientoStockEnum.AjustePositivo;
+        public bool EsAjusteNegativo => _tipoMovimiento == (int)TipoMovimientoStockEnum.AjusteNegativo;
+        public bool EsAjuste => EsAjustePositivo || EsAjusteNegativo;
 
         public string TipoDisplay => ((TipoMovimientoStockEnum)_tipoMovimiento).ToString();
 
