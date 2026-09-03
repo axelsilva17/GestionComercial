@@ -1,5 +1,6 @@
 using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using System.Threading;
 
 namespace GestionComercial.Dominio.Interfaces.Repositorios
 {
@@ -7,11 +8,11 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     {
         ///         /// Agrupa los pagos por método de pago en un rango de fechas para una sucursal.
         /// Opcionalmente filtra por una caja específica.
-        /// Retorna lista de (NombreMetodo, MontoTotal).
-        Task<IEnumerable<(string Metodo, decimal Total)>> ObtenerTotalesPorMetodoAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null);
+        /// Retorna lista de (NombreMetodo, MontoTotal, Cantidad).
+        Task<IEnumerable<(string Metodo, decimal Total, int Cantidad)>> ObtenerTotalesPorMetodoAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null, CancellationToken ct = default);
         
         ///         /// Obtiene todos los pagos en un período para análisis de auditoría.
-        Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta);
+        Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta, CancellationToken ct = default);
     }
 }

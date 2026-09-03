@@ -5,6 +5,7 @@ using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
@@ -58,26 +59,26 @@ namespace GestionComercial.Persistencia.Repositorio
             MantenimientoLogs = new MantenimientoLogRepositorio(context);
         }
 
-        public async Task<int> GuardarCambiosAsync()
+        public async Task<int> GuardarCambiosAsync(CancellationToken ct = default)
         {
-            var result = await _context.SaveChangesAsync();
+            var result = await _context.SaveChangesAsync(ct);
             foreach (var entry in _context.ChangeTracker.Entries().ToList())
                 entry.State = EntityState.Detached;
             return result;
         }
 
-        public async Task EjecutarEnTransaccionAsync(Func<Task> operacion)
+        public async Task EjecutarEnTransaccionAsync(Func<Task> operacion, CancellationToken ct = default)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
             try
             {
                 await operacion();
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(ct);
                 throw;
             }
         }

@@ -1,4 +1,5 @@
 using GestionComercial.Dominio.Entidades.Auditoria;
+using System.Threading;
 
 namespace GestionComercial.Dominio.Interfaces.Repositorios
 {
@@ -16,42 +17,49 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             string? valoresNuevos,
             string? workstation = null,
             int? idEmpresa = null,
-            int? idSucursal = null);
+            int? idSucursal = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene el historial de auditoría de una tabla específica.
         Task<IEnumerable<AuditoriaLog>> ObtenerPorTablaYRegistroAsync(
             string nombreTabla,
-            int registroId);
+            int registroId,
+            CancellationToken ct = default);
 
         ///         /// Obtiene el historial de auditoría de un usuario.
         Task<IEnumerable<AuditoriaLog>> ObtenerPorUsuarioAsync(
             int idUsuario,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null);
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene el historial de auditoría de una empresa.
         Task<IEnumerable<AuditoriaLog>> ObtenerPorEmpresaAsync(
             int idEmpresa,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null);
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene el historial de auditoría de una sucursal.
         Task<IEnumerable<AuditoriaLog>> ObtenerPorSucursalAsync(
             int idSucursal,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null);
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene los cambios en la tabla Caja.
         Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaCajaAsync(
             int? idCaja = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null);
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene los cambios en la tabla MovimientoCaja.
         Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaMovimientoCajaAsync(
             int? idMovimiento = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null);
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene auditoría filtrada por múltiples criterios (todos los registros).
         Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaFiltradaAsync(
@@ -59,7 +67,8 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             int? tipoOperacion = null,
             string? nombreTabla = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null);
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default);
 
         ///         /// Obtiene auditoría filtrada con paginación en SQL (sin materializar todo).
         /// Devuelve los items de la página + el total de registros.
@@ -70,6 +79,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             DateTime? fechaDesde,
             DateTime? fechaHasta,
             int pagina,
-            int tamanioPagina);
+            int tamanioPagina,
+            CancellationToken ct = default);
     }
 }

@@ -1,5 +1,6 @@
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using System.Threading;
 
 namespace GestionComercial.Dominio.Interfaces
 {
@@ -25,7 +26,7 @@ namespace GestionComercial.Dominio.Interfaces
         IPermisoRepositorio         Permisos         { get; }
         IDescuentoConfiguracionRepositorio DescuentoConfiguraciones { get; }
         IMantenimientoLogRepositorio MantenimientoLogs { get; }
-        Task<int> GuardarCambiosAsync();
-        Task      EjecutarEnTransaccionAsync(Func<Task> operacion);
+        Task<int> GuardarCambiosAsync(CancellationToken ct = default);
+        Task      EjecutarEnTransaccionAsync(Func<Task> operacion, CancellationToken ct = default);
     }
 }
