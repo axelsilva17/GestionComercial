@@ -35,14 +35,21 @@ namespace GestionComercial.Aplicacion.Servicios
             // ── Todo en una transacción: descuento + relaciones N:M ─────────────────
             await _unitOfWork.EjecutarEnTransaccionAsync(async () =>
             {
-                await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
-
-                // Persistir relaciones N:M (solo cuando restringe métodos específicos)
+                // Agregar los métodos a la colección del agregado ANTES de persistir el
+                // principal: así EF resuelve el FK con el Id generado y evitamos el error
+                // "Id_descuentoConfiguracion is unknown" al intentar guardar.
                 if (!aplicaCualquierMetodoPago && idsMetodosPago != null && idsMetodosPago.Count > 0)
                 {
-                    await _unitOfWork.DescuentoConfiguraciones
-                        .ActualizarMetodosPagoAsync(descuento.Id, idsMetodosPago);
+                    foreach (var idMetodoPago in idsMetodosPago)
+                    {
+                        descuento.DescuentosMetodosPago.Add(new DescuentoMetodoPago
+                        {
+                            Id_metodoPago = idMetodoPago
+                        });
+                    }
                 }
+
+                await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
             });
 
             return descuento;

@@ -4,6 +4,10 @@ using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.Persistencia.Contexto;
+using GestionComercial.Persistencia.Repositorio;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 
 namespace GestionComercial.Tests.Servicios
@@ -60,9 +64,11 @@ namespace GestionComercial.Tests.Servicios
 
             resultado.Should().NotBeNull();
             resultado.AplicaCualquierMetodoPago.Should().BeFalse();
+            // El servicio acumula los métodos en la colección del agregado para que EF
+            // resuelva el FK con el Id generado del principal (evita el error 'unknown FK').
+            resultado.DescuentosMetodosPago.Select(dm => dm.Id_metodoPago)
+                .Should().BeEquivalentTo(new[] { 1, 2 });
             _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
-            _mockRepo.Verify(r => r.ActualizarMetodosPagoAsync(
-                It.IsAny<int>(), It.Is<List<int>>(ids => ids.SequenceEqual(new[] { 1, 2 }))), Times.Once);
             _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()), Times.Once);
         }
 
@@ -692,6 +698,106 @@ namespace GestionComercial.Tests.Servicios
                 alcance: AlcanceDescuentoEnum.MetodoPago);
 
             await act.Should().ThrowAsync<InvalidOperationException>();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // Reproducción del bug: 'unknown FK' al guardar con métodos de pago
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task CrearAsync_ConMetodosPago_PersisteConFKValidaSinErrorDesconocido()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
+
+            var options = new DbContextOptionsBuilder<GestionComercialContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            // Crear el esquema (se aplican también las semillas via HasData)
+            using (var ctx = new GestionComercialContext(options))
+                ctx.Database.EnsureCreated();
+
+            int idDescuento;
+            using (var ctx = new GestionComercialContext(options))
+            {
+                var uow = new UnitOfWork(ctx);
+                var servicio = new DescuentoConfiguracionServicio(uow, sesion: null);
+
+                // Descuento de alcance "Método de Pago" (Débito = método 2).
+                // Antes de la corrección esto lanzaba el error de FK desconocida.
+                var descuento = await servicio.CrearAsync(
+                    idEmpresa: 1, nombre: "Débito 5%", valor: 5,
+                    idProducto: null, idCategoria: null,
+                    aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                    fechaDesde: null, fechaHasta: null,
+                    alcance: AlcanceDescuentoEnum.MetodoPago);
+
+                descuento.Id.Should().BeGreaterThan(0);
+                idDescuento = descuento.Id;
+            }
+
+            // Verificar que las filas N:M quedaron vinculadas con la FK válida
+            using (var ctx = new GestionComercialContext(options))
+            {
+                var rows = ctx.DescuentoMetodosPago
+                    .Where(dm => dm.Id_descuentoConfiguracion == idDescuento)
+                    .ToList();
+
+                rows.Should().ContainSingle(dm => dm.Id_metodoPago == 2);
+                rows.Should().OnlyContain(dm => dm.Id_descuentoConfiguracion == idDescuento);
+                ctx.DescuentoConfiguraciones.Count(d => d.Id == idDescuento).Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public async Task ActualizarAsync_ConMetodosPago_ReemplazaConFKValidaSinError()
+        {
+            using var connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
+
+            var options = new DbContextOptionsBuilder<GestionComercialContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            using (var ctx = new GestionComercialContext(options))
+                ctx.Database.EnsureCreated();
+
+            int idDescuento;
+            using (var ctx = new GestionComercialContext(options))
+            {
+                var servicio = new DescuentoConfiguracionServicio(new UnitOfWork(ctx), sesion: null);
+
+                var descuento = await servicio.CrearAsync(
+                    idEmpresa: 1, nombre: "Débito 5%", valor: 5,
+                    idProducto: null, idCategoria: null,
+                    aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                    fechaDesde: null, fechaHasta: null,
+                    alcance: AlcanceDescuentoEnum.MetodoPago);
+                idDescuento = descuento.Id;
+            }
+
+            // Actualizar en un contexto nuevo (como una petición distinta) cambiando de método
+            using (var ctx = new GestionComercialContext(options))
+            {
+                var servicio = new DescuentoConfiguracionServicio(new UnitOfWork(ctx), sesion: null);
+
+                await servicio.ActualizarAsync(
+                    idDescuento, "Crédito 7%", 7, null, null,
+                    aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 3 },
+                    fechaDesde: null, fechaHasta: null,
+                    alcance: AlcanceDescuentoEnum.MetodoPago);
+            }
+
+            using (var ctx = new GestionComercialContext(options))
+            {
+                var rows = ctx.DescuentoMetodosPago
+                    .Where(dm => dm.Id_descuentoConfiguracion == idDescuento)
+                    .ToList();
+
+                rows.Should().ContainSingle(dm => dm.Id_metodoPago == 3);
+                rows.Should().OnlyContain(dm => dm.Id_descuentoConfiguracion == idDescuento);
+            }
         }
     }
 }
