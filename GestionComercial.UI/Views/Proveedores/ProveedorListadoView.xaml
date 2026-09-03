@@ -459,6 +459,10 @@
                                 Style="{StaticResource GhostBtn}" Margin="0,0,0,8"
                                 Click="VerCompras_Click"/>
 
+                        <Button Content="Hacer compra" Height="40" FontSize="13"
+                                Style="{StaticResource PrimaryButton}" Margin="0,0,0,8"
+                                Click="HacerCompra_Click"/>
+
                         <!-- Botón dinâmico: Activar o Desactivar según estado -->
                         <Button Height="40" FontSize="13"
                                 Cursor="Hand" Margin="0,0,0,8"

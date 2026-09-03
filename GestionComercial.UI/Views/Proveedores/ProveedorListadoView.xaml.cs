@@ -45,6 +45,14 @@ namespace GestionComercial.UI.Views.Proveedores
             await VM.VerCompras();
         }
 
+        private async void HacerCompra_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.ProveedorSeleccionado == null) return;
+
+            // Navegar a Nueva Compra con el proveedor ya marcado
+            await VM.HacerCompra();
+        }
+
         private async void PaginaAnterior_Click(object sender, RoutedEventArgs e)
             => await VM?.PaginaAnterior();
 

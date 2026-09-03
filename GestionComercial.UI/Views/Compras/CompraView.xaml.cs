@@ -24,6 +24,16 @@ namespace GestionComercial.UI.Views.Compras
             }
         }
 
+        private void ResultadosProveedores_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            // La selección ya quedó vinculada a ProveedorSeleccionado; solo nos aseguramos
+            // de representar la búsqueda con el nombre elegido y cerrar el popup.
+            if (VM?.ProveedorSeleccionado != null)
+            {
+                VM.BusquedaProveedor = VM.ProveedorSeleccionado.Nombre;
+            }
+        }
+
         private async void BuscarProducto_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             await VM?.BuscarProductoAsync();

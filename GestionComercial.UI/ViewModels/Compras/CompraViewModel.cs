@@ -48,20 +48,32 @@ namespace GestionComercial.UI.ViewModels.Compras
 
         private void FiltrarProveedores()
         {
-            if (string.IsNullOrWhiteSpace(_busquedaProveedor))
+            var termino = _busquedaProveedor?.Trim() ?? string.Empty;
+            IEnumerable<ProveedorItemDto> filtrados;
+            if (string.IsNullOrWhiteSpace(termino))
             {
-                Proveedores = new ObservableCollection<ProveedorItemDto>(_todosProveedores);
+                filtrados = _todosProveedores;
             }
             else
             {
-                var termino = _busquedaProveedor.Trim().ToLower();
-                var filtrados = _todosProveedores
-                    .Where(p => (p.Nombre?.ToLower().Contains(termino) ?? false) ||
-                               (p.Telefono?.ToLower().Contains(termino) ?? false) ||
-                               (p.Email?.ToLower().Contains(termino) ?? false))
-                    .ToList();
-                Proveedores = new ObservableCollection<ProveedorItemDto>(filtrados);
+                filtrados = _todosProveedores
+                    .Where(p => (p.Nombre?.ToLower().Contains(termino.ToLower()) ?? false) ||
+                               (p.Telefono?.ToLower().Contains(termino.ToLower()) ?? false) ||
+                               (p.Email?.ToLower().Contains(termino.ToLower()) ?? false));
             }
+            Proveedores = new ObservableCollection<ProveedorItemDto>(filtrados);
+
+            // Mostrar el selector mientras hay texto, sin proveedor confirmado
+            MostrarPopupProveedores = !string.IsNullOrWhiteSpace(termino)
+                                      && _proveedorSeleccionado == null
+                                      && Proveedores.Count > 0;
+        }
+
+        private bool _mostrarPopupProveedores;
+        public bool MostrarPopupProveedores
+        {
+            get => _mostrarPopupProveedores;
+            set { _mostrarPopupProveedores = value; NotifyOfPropertyChange(() => MostrarPopupProveedores); }
         }
 
         private ProveedorItemDto _proveedorSeleccionado;
@@ -75,6 +87,10 @@ namespace GestionComercial.UI.ViewModels.Compras
                 NotifyOfPropertyChange(() => ProveedorNombre);
                 NotifyOfPropertyChange(() => CanGuardar);
                 NotifyOfPropertyChange(() => FiltroProveedorLabel);
+                MostrarPopupProveedores = false;
+                // Mantener el texto de búsqueda alineado con el proveedor seleccionado
+                if (value != null && _busquedaProveedor != value.Nombre)
+                    BusquedaProveedor = value.Nombre;
                 // Cargar historial de compras del proveedor
                 _ = CargarHistorialProveedorAsync();
             }
@@ -84,6 +100,16 @@ namespace GestionComercial.UI.ViewModels.Compras
         public string FiltroProveedorLabel => ProveedorSeleccionado != null 
             ? $"Productos de {ProveedorSeleccionado.Nombre}" 
             : "Seleccioná un proveedor para ver sus productos";
+
+        // ── Preselección de proveedor (desde el listado de proveedores) ──
+        private ProveedorItemDto? _proveedorPendiente;
+
+        /// <summary>
+        /// Indica qué proveedor debe quedar marcado al activar la vista.
+        /// Se aplica en <see cref="OnActivateAsync"/> una vez cargada la lista.
+        /// </summary>
+        public void PreSeleccionarProveedor(ProveedorItemDto proveedor)
+            => _proveedorPendiente = proveedor;
 
         // ── Historial de compras del proveedor ───────────────────────────
         private ObservableCollection<CompraDto> _historialProveedor = new();
@@ -275,6 +301,19 @@ namespace GestionComercial.UI.ViewModels.Compras
                 _todosProveedores = listaProveedores;
                 System.Diagnostics.Debug.WriteLine($"Proveedores activos: {listaProveedores.Count}");
                 Proveedores = new ObservableCollection<ProveedorItemDto>(listaProveedores);
+
+                // Aplicar proveedor preseleccionado (navegación desde el listado de proveedores)
+                if (_proveedorPendiente != null)
+                {
+                    var match = _todosProveedores
+                        .FirstOrDefault(p => p.IdProveedor == _proveedorPendiente.IdProveedor);
+                    if (match != null)
+                    {
+                        ProveedorSeleccionado = match;
+                        BusquedaProveedor = match.Nombre;
+                    }
+                    _proveedorPendiente = null;
+                }
             }
             catch (Exception ex)
             {

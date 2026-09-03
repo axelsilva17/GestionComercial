@@ -91,11 +91,18 @@ namespace GestionComercial.UI.ViewModels.Compras
         }
 
         // Filtros
-        private string _textoBusqueda = string.Empty;
-public string TextoBusqueda
+        private string _busquedaProveedor = string.Empty;
+        public string BusquedaProveedor
         {
-            get => _textoBusqueda;
-            set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
+            get => _busquedaProveedor;
+            set
+            {
+                if (_busquedaProveedor == value) return;
+                _busquedaProveedor = value;
+                NotifyOfPropertyChange(() => BusquedaProveedor);
+                // Auto-filtro en memoria al cambiar el texto
+                _ = Task.Run(async () => await CargarAsync());
+            }
         }
 
         private DateTime? _fechaDesde;
@@ -260,8 +267,8 @@ public string TextoBusqueda
                     filtered = filtered.Where(c => c.Id_proveedor == ProveedorFiltro.IdProveedor);
                 }
                 
-                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
-                    filtered = filtered.Where(c => c.ProveedorNombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrWhiteSpace(BusquedaProveedor))
+                    filtered = filtered.Where(c => c.ProveedorNombre.Contains(BusquedaProveedor.Trim(), StringComparison.OrdinalIgnoreCase));
                 
                 var lista = filtered.ToList();
                 

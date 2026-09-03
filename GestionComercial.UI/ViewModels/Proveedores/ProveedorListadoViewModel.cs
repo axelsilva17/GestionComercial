@@ -263,6 +263,16 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             await _shell.ActivateItemAsync(compraListado, CancellationToken.None);
         }
 
+        public async Task HacerCompra()
+        {
+            if (ProveedorSeleccionado == null) return;
+
+            var compra = IoC.Get<CompraViewModel>();
+            // La vista Nueva Compra marca a este proveedor como seleccionado
+            compra.PreSeleccionarProveedor(ProveedorSeleccionado);
+            await _shell.ActivateItemAsync(compra, CancellationToken.None);
+        }
+
         // ── Paginación ────────────────────────────────────────────────────────
         public bool CanPaginaAnterior  => PaginaActual > 1;
         public bool CanPaginaSiguiente => PaginaActual < TotalPaginas;
