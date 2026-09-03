@@ -81,6 +81,13 @@
                 <!-- Resultados -->
                 <ScrollViewer x:Name="ScrollResultados" VerticalScrollBarVisibility="Auto">
                     <ItemsControl x:Name="ListaResultados" Padding="6">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                        VirtualizingPanel.VirtualizationMode="Recycling"
+                                                        VirtualizingPanel.ScrollUnit="Pixel"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border x:Name="item" Background="Transparent"

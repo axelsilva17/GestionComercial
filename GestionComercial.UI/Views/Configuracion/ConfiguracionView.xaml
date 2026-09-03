@@ -437,8 +437,15 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding Sucursales.Items}" Margin="12,0,12,12">
+<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                 <ItemsControl ItemsSource="{Binding Sucursales.Items}" Margin="12,0,12,12">
+                                     <ItemsControl.ItemsPanel>
+                                         <ItemsPanelTemplate>
+                                             <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                                                     VirtualizingPanel.ScrollUnit="Pixel"/>
+                                         </ItemsPanelTemplate>
+                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}"
@@ -549,8 +556,15 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding Usuarios.Items}" Margin="12,0,12,12">
+<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                 <ItemsControl ItemsSource="{Binding Usuarios.Items}" Margin="12,0,12,12">
+                                     <ItemsControl.ItemsPanel>
+                                         <ItemsPanelTemplate>
+                                             <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                                                     VirtualizingPanel.ScrollUnit="Pixel"/>
+                                         </ItemsPanelTemplate>
+                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}"
@@ -756,6 +770,13 @@
                                         </Grid>
 
                                         <ItemsControl ItemsSource="{Binding Roles.Modulos}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                                            VirtualizingPanel.VirtualizationMode="Recycling"
+                                                                            VirtualizingPanel.ScrollUnit="Pixel"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{DynamicResource SurfaceBrush}"
@@ -879,8 +900,15 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding MetodosPago.Items}" Margin="12,0,12,12">
+<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                 <ItemsControl ItemsSource="{Binding MetodosPago.Items}" Margin="12,0,12,12">
+                                     <ItemsControl.ItemsPanel>
+                                         <ItemsPanelTemplate>
+                                             <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                                                     VirtualizingPanel.ScrollUnit="Pixel"/>
+                                         </ItemsPanelTemplate>
+                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SurfaceBrush}"
@@ -1046,26 +1074,33 @@
                                     Click="GuardarConfigBackup_Click">Guardar</Button>
                         </Grid>
 
-                        <!-- Fila 4: Lista de backups existentes -->
-                        <Border Grid.Row="4" Margin="20,0,20,16"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="8">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                                <Border Grid.Row="0"
-                                        Background="{DynamicResource SurfaceBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                                    <TextBlock Text="  Backups existentes" FontSize="12" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               Padding="12,10,0,10"/>
-                                </Border>
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding Backup.Backups}">
-                                        <ItemsControl.ItemTemplate>
+<!-- Fila 4: Lista de backups existentes -->
+                                <Border Grid.Row="4" Margin="20,0,20,16"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="8">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                        <Border Grid.Row="0"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                                            <TextBlock Text="  Backups existentes" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Padding="12,10,0,10"/>
+                                        </Border>
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding Backup.Backups}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                                            VirtualizingPanel.VirtualizationMode="Recycling"
+                                                                            VirtualizingPanel.ScrollUnit="Pixel"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Margin="12,8">
                                                     <Grid.ColumnDefinitions>

@@ -540,6 +540,13 @@
                             </StackPanel>
                         </Grid>
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding VentasRecientes}" Margin="10,0,10,10">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                            VirtualizingPanel.VirtualizationMode="Recycling"
+                                                            VirtualizingPanel.ScrollUnit="Pixel"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="6" Padding="10,8" Margin="0,2">
@@ -610,6 +617,13 @@
                                     Click="IrProductosStock_Click"/>
                         </Grid>
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding ProductosCriticosList}" Margin="10,0,10,10">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel VirtualizingPanel.IsVirtualizing="True"
+                                                            VirtualizingPanel.VirtualizationMode="Recycling"
+                                                            VirtualizingPanel.ScrollUnit="Pixel"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="6" Padding="10,8" Margin="0,2">
