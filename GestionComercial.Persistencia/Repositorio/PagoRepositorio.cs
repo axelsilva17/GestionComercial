@@ -2,6 +2,7 @@ using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
@@ -11,45 +12,64 @@ namespace GestionComercial.Persistencia.Repositorio
 
         ///         /// Obtiene totales por método de pago filtrando por CAJA específica.
         /// IMPORTANTE: Filtra por Venta.Id_caja para solo incluir pagos de esta caja.
-        public async Task<IEnumerable<(string Metodo, decimal Total)>> ObtenerTotalesPorMetodoAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null)
+        /// Usa SqlQueryRaw con CAST a REAL para trabajar alrededor de la limitación de SQLite con SUM en decimal.
+        public async Task<IEnumerable<(string Metodo, decimal Total, int Cantidad)>> ObtenerTotalesPorMetodoAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int? idCaja = null, CancellationToken ct = default)
         {
-            // Traer todos los pagos y agrupar en memoria (SQLite no soporta Sum en decimal)
-            var query = _dbSet.AsNoTracking()
-                .Where(p => p.Venta.Id_sucursal == idSucursal
-                         && p.Venta.Fecha >= desde
-                         && p.Venta.Fecha <= hasta
-                         && p.Venta.Estado == 2); // solo ventas pagadas
+            string sql;
+            object[] parameters;
 
-            // Agregar filtro de caja si se especifica
             if (idCaja.HasValue)
             {
-                query = query.Where(p => p.Venta.Id_caja == idCaja.Value);
+                sql = @"
+                    SELECT mp.Nombre AS Metodo,
+                           SUM(CAST(p.Monto AS REAL)) AS Total,
+                           COUNT(*) AS Cantidad
+                    FROM Pago p
+                    INNER JOIN Venta v ON p.Id_venta = v.Id
+                    INNER JOIN MetodoPago mp ON p.Id_metodoPago = mp.Id
+                    WHERE v.Id_sucursal = {0}
+                      AND v.Fecha >= {1}
+                      AND v.Fecha <= {2}
+                      AND v.Estado = 2
+                      AND v.Id_caja = {3}
+                    GROUP BY mp.Nombre
+                    ORDER BY Total DESC";
+                parameters = new object[] { idSucursal, desde, hasta, idCaja.Value };
+            }
+            else
+            {
+                sql = @"
+                    SELECT mp.Nombre AS Metodo,
+                           SUM(CAST(p.Monto AS REAL)) AS Total,
+                           COUNT(*) AS Cantidad
+                    FROM Pago p
+                    INNER JOIN Venta v ON p.Id_venta = v.Id
+                    INNER JOIN MetodoPago mp ON p.Id_metodoPago = mp.Id
+                    WHERE v.Id_sucursal = {0}
+                      AND v.Fecha >= {1}
+                      AND v.Fecha <= {2}
+                      AND v.Estado = 2
+                    GROUP BY mp.Nombre
+                    ORDER BY Total DESC";
+                parameters = new object[] { idSucursal, desde, hasta };
             }
 
-            var pagos = await query
-                .Include(p => p.MetodoPago)
-                .ToListAsync();
+            var rows = await _context.Database
+                .SqlQueryRaw<MetodoPagoTotalRaw>(sql, parameters)
+                .ToListAsync(ct);
 
-            // Agrupar en memoria (funciona con decimal)
-            var resultado = pagos
-                .GroupBy(p => p.MetodoPago?.Nombre ?? "Sin método")
-                .Select(g => new
-                {
-                    Metodo = g.Key,
-                    Total = g.Sum(p => p.Monto)
-                })
-                .OrderByDescending(x => x.Total)
-                .ToList();
-
-            return resultado.Select(x => (x.Metodo, x.Total));
+            return rows.Select(r => (r.Metodo, r.Total, r.Cantidad));
         }
 
-        public async Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<Pago>> ObtenerPagosPorPeriodoAsync(DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(p => p.Venta.Fecha >= desde && p.Venta.Fecha <= hasta)
                 .Include(p => p.MetodoPago)
                 .Include(p => p.Venta)
-                .ToListAsync();
+                .ToListAsync(ct);
+
+        // Tipo para SqlQueryRaw
+        private record MetodoPagoTotalRaw(string Metodo, decimal Total, int Cantidad);
     }
 }

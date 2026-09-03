@@ -2,6 +2,7 @@ using GestionComercial.Dominio.Entidades.Auditoria;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
@@ -25,7 +26,8 @@ namespace GestionComercial.Persistencia.Repositorio
             string? valoresNuevos,
             string? workstation = null,
             int? idEmpresa = null,
-            int? idSucursal = null)
+            int? idSucursal = null,
+            CancellationToken ct = default)
         {
             var auditoriaLog = new AuditoriaLog
             {
@@ -42,23 +44,25 @@ namespace GestionComercial.Persistencia.Repositorio
                 IdSucursal = idSucursal
             };
 
-            await _context.AuditoriaLogs.AddAsync(auditoriaLog);
+            await _context.AuditoriaLogs.AddAsync(auditoriaLog, ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerPorTablaYRegistroAsync(
             string nombreTabla,
-            int registroId)
+            int registroId,
+            CancellationToken ct = default)
         {
             return await _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.NombreTabla == nombreTabla && a.RegistroId == registroId)
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerPorUsuarioAsync(
             int idUsuario,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.IdUsuario == idUsuario);
@@ -71,13 +75,14 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return await query
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerPorEmpresaAsync(
             int idEmpresa,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.IdEmpresa == idEmpresa);
@@ -90,13 +95,14 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return await query
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerPorSucursalAsync(
             int idSucursal,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.IdSucursal == idSucursal);
@@ -109,13 +115,14 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return await query
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaCajaAsync(
             int? idCaja = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.NombreTabla == "Cajas");
@@ -131,13 +138,14 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return await query
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaMovimientoCajaAsync(
             int? idMovimiento = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking()
                 .Where(a => a.NombreTabla == "MovimientosCaja");
@@ -153,7 +161,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return await query
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<IEnumerable<AuditoriaLog>> ObtenerAuditoriaFiltradaAsync(
@@ -161,7 +169,8 @@ namespace GestionComercial.Persistencia.Repositorio
             int? tipoOperacion = null,
             string? nombreTabla = null,
             DateTime? fechaDesde = null,
-            DateTime? fechaHasta = null)
+            DateTime? fechaHasta = null,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking().AsQueryable();
 
@@ -182,7 +191,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return await query
                 .OrderByDescending(a => a.FechaOperacion)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<(IEnumerable<AuditoriaLog> Items, int Total)> ObtenerAuditoriaPaginadaAsync(
@@ -192,7 +201,8 @@ namespace GestionComercial.Persistencia.Repositorio
             DateTime? fechaDesde,
             DateTime? fechaHasta,
             int pagina,
-            int tamanioPagina)
+            int tamanioPagina,
+            CancellationToken ct = default)
         {
             var query = _context.AuditoriaLogs.AsNoTracking().AsQueryable();
 
@@ -214,11 +224,11 @@ namespace GestionComercial.Persistencia.Repositorio
             var ordenada = query.OrderByDescending(a => a.FechaOperacion);
 
             // ── Count en SQL + página en SQL ──
-            var total = await ordenada.CountAsync();
+            var total = await ordenada.CountAsync(ct);
             var items = await ordenada
                 .Skip((pagina - 1) * tamanioPagina)
                 .Take(tamanioPagina)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return (items, total);
         }

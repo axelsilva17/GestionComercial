@@ -2,6 +2,7 @@ using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
@@ -9,7 +10,7 @@ namespace GestionComercial.Persistencia.Repositorio
     {
         public VentaRepositorio(GestionComercialContext context) : base(context) { }
 
-        public async Task<Venta?> ObtenerConDetallesAsync(int idVenta)
+        public async Task<Venta?> ObtenerConDetallesAsync(int idVenta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Include(v => v.Detalles).ThenInclude(d => d.Producto)
                 .Include(v => v.Detalles).ThenInclude(d => d.Descuentos)
@@ -17,23 +18,23 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)
                 .AsSplitQuery()
-                .FirstOrDefaultAsync(v => v.Id == idVenta);
+                .FirstOrDefaultAsync(v => v.Id == idVenta, ct);
 
-        public async Task<IEnumerable<Venta>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal)
+        public async Task<IEnumerable<Venta>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Fecha >= desde && v.Fecha <= hasta && v.Id_sucursal == idSucursal)
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)
                 .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-        public async Task<IEnumerable<Venta>> ObtenerPorClienteAsync(int idCliente)
+        public async Task<IEnumerable<Venta>> ObtenerPorClienteAsync(int idCliente, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Id_cliente == idCliente)
                 .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-        public async Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Sucursal.Id_empresa == idEmpresa
                          && v.Fecha >= desde
@@ -42,33 +43,33 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(v => v.Usuario)
                 .Include(v => v.Sucursal)
                 .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-        public async Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal)
+        public async Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default)
         {
             var hoy = DateTime.Today;
             return await _dbSet
                 .Where(v => v.Id_sucursal == idSucursal && v.Fecha >= hoy && v.Estado == 2)
-                .SumAsync(v => v.TotalFinal);
+                .SumAsync(v => v.TotalFinal, ct);
         }
 
-        public async Task<IEnumerable<Venta>> ObtenerVentasAnuladasAsync(DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<Venta>> ObtenerVentasAnuladasAsync(DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Fecha >= desde && v.Fecha <= hasta && v.Estado == 3) // 3 = Anulada
                 .Include(v => v.Usuario)
                 .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
+                .ToListAsync(ct);
 
-        public async Task<IEnumerable<Venta>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<Venta>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Fecha >= desde && v.Fecha <= hasta)
                 .Include(v => v.Usuario)
                 .Include(v => v.Pagos).ThenInclude(p => p.MetodoPago)
                 .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
+                .ToListAsync(ct);
 
         public async Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>>
-            ObtenerTopProductosAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta, int top)
+            ObtenerTopProductosAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<TopProductoAgrupado>(
@@ -91,12 +92,12 @@ namespace GestionComercial.Persistencia.Repositorio
                       ORDER BY Cantidad DESC
                       LIMIT {3}",
                     idSucursal, desde, hasta, top)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.Cantidad, r.Ingresos, r.Costo, r.UltimaFecha)).ToList();
         }
 
         public async Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta)>>
-            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<RotacionProductoAgrupado>(
@@ -118,12 +119,12 @@ namespace GestionComercial.Persistencia.Repositorio
                       GROUP BY vd.Id_producto
                       ORDER BY CantidadVendida DESC",
                     idEmpresa, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.StockActual, r.CantidadVendida, r.UltimaVenta)).ToList();
         }
 
         public async Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>>
-            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int top)
+            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<TopProductoAgrupado>(
@@ -147,12 +148,12 @@ namespace GestionComercial.Persistencia.Repositorio
                       ORDER BY Cantidad DESC
                       LIMIT {3}",
                     idEmpresa, desde, hasta, top)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.Cantidad, r.Ingresos, r.Costo, r.UltimaFecha)).ToList();
         }
 
         public async Task<List<(string Dia, decimal Total, int Cantidad)>>
-            ObtenerVentasPorDiaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+            ObtenerVentasPorDiaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<VentaPorDiaAgrupado>(
@@ -168,12 +169,12 @@ namespace GestionComercial.Persistencia.Repositorio
                       GROUP BY strftime('%Y-%m-%d', v.Fecha)
                       ORDER BY strftime('%Y-%m-%d', v.Fecha)",
                     idEmpresa, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.Select(r => (r.Dia, r.Total, r.Cantidad)).ToList();
         }
 
         public async Task<List<(int IdSucursal, string SucursalNombre, decimal Total, int Cantidad)>>
-            ObtenerVentasPorSucursalAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+            ObtenerVentasPorSucursalAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<VentaPorSucursalAgrupado>(
@@ -190,12 +191,12 @@ namespace GestionComercial.Persistencia.Repositorio
                       GROUP BY v.Id_sucursal
                       ORDER BY Total DESC",
                     idEmpresa, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.Select(r => (r.IdSucursal, r.SucursalNombre, r.Total, r.Cantidad)).ToList();
         }
 
         public async Task<List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>>
-            ObtenerVentasPorVendedorAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta)
+            ObtenerVentasPorVendedorAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<VentaPorVendedorAgrupado>(
@@ -215,12 +216,39 @@ namespace GestionComercial.Persistencia.Repositorio
                       GROUP BY v.Id_usuario
                       ORDER BY TotalVendido DESC",
                     idSucursal, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
+            return rows.Select(r => (r.IdUsuario, r.UsuarioNombre, r.SucursalNombre, r.CantidadVentas, r.TotalVendido, r.TotalDescuentos)).ToList();
+        }
+
+        // ── Nuevo: ventas por vendedor filtrando por Id_usuario ────────────────
+        public async Task<List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>>
+            ObtenerVentasPorVendedorAsync(int idSucursal, int idUsuario, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<VentaPorVendedorAgrupado>(
+                    @"SELECT v.Id_usuario AS IdUsuario,
+                             u.Nombre || ' ' || u.Apellido AS UsuarioNombre,
+                             s.Nombre AS SucursalNombre,
+                             COUNT(*) AS CantidadVentas,
+                             SUM(v.TotalFinal) AS TotalVendido,
+                             SUM(v.TotalDescuento) AS TotalDescuentos
+                      FROM Venta v
+                      INNER JOIN Usuario u ON v.Id_usuario = u.Id
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE v.Id_sucursal = {0}
+                        AND v.Id_usuario = {3}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3
+                      GROUP BY v.Id_usuario
+                      ORDER BY TotalVendido DESC",
+                    idSucursal, desde, hasta, idUsuario)
+                .ToListAsync(ct);
             return rows.Select(r => (r.IdUsuario, r.UsuarioNombre, r.SucursalNombre, r.CantidadVentas, r.TotalVendido, r.TotalDescuentos)).ToList();
         }
 
         public async Task<(decimal TotalVentas, int TotalTransacciones, decimal TicketPromedio)?>
-            ObtenerKpisVentasAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
+            ObtenerKpisVentasAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<KpiVentasAgrupado>(
@@ -234,13 +262,13 @@ namespace GestionComercial.Persistencia.Repositorio
                         AND v.Fecha <= {2}
                         AND v.Estado != 3",
                     idEmpresa, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
             var r = rows.FirstOrDefault();
             if (r == null || r.TotalVentas == 0) return null;
             return (r.TotalVentas, r.TotalTransacciones, r.TicketPromedio);
         }
 
-        public async Task<string?> ObtenerTopVendedorAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        public async Task<string?> ObtenerTopVendedorAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<TopVendedorAgrupado>(
@@ -256,11 +284,11 @@ namespace GestionComercial.Persistencia.Repositorio
                       ORDER BY SUM(v.TotalFinal) DESC
                       LIMIT 1",
                     idEmpresa, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.FirstOrDefault()?.Nombre;
         }
 
-        public async Task<string?> ObtenerTopProductoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        public async Task<string?> ObtenerTopProductoAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
                 .SqlQueryRaw<TopProductoNombreAgrupado>(
@@ -277,12 +305,12 @@ namespace GestionComercial.Persistencia.Repositorio
                       ORDER BY SUM(vd.Subtotal) DESC
                       LIMIT 1",
                     idEmpresa, desde, hasta)
-                .ToListAsync();
+                .ToListAsync(ct);
             return rows.FirstOrDefault()?.Nombre;
         }
 
         public async Task<IEnumerable<(int Id, decimal TotalFinal, int Estado, int? IdCaja, decimal? EfectivoRecibido)>>
-            ObtenerVentasLigerasPorCajaAsync(int idCaja, DateTime desde, DateTime hasta)
+            ObtenerVentasLigerasPorCajaAsync(int idCaja, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var resultado = await _dbSet.AsNoTracking()
                 .Where(v => v.Id_caja == idCaja
@@ -297,13 +325,13 @@ namespace GestionComercial.Persistencia.Repositorio
                     v.Id_caja,
                     v.EfectivoRecibido
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return resultado.Select(v => (v.Id, v.TotalFinal, v.Estado, v.Id_caja, v.EfectivoRecibido));
         }
 
         public async Task<IEnumerable<(string Metodo, decimal Total, int Cantidad)>>
-            ObtenerPagosPorCajaAsync(int idCaja)
+            ObtenerPagosPorCajaAsync(int idCaja, CancellationToken ct = default)
         {
             var resultado = await _context.Pagos
                 .AsNoTracking()
@@ -317,7 +345,7 @@ namespace GestionComercial.Persistencia.Repositorio
                     Cantidad = g.Count()
                 })
                 .OrderByDescending(x => x.Total)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return resultado.Select(x => (x.Metodo, x.Total, x.Cantidad));
         }

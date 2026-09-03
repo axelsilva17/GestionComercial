@@ -2,6 +2,7 @@ using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
@@ -11,31 +12,31 @@ namespace GestionComercial.Persistencia.Repositorio
         {
         }
 
-        public async Task<List<DescuentoConfiguracion>> ObtenerVigentesPorEmpresaAsync(int idEmpresa)
+        public async Task<List<DescuentoConfiguracion>> ObtenerVigentesPorEmpresaAsync(int idEmpresa, CancellationToken ct = default)
         {
             return await _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago)
                 .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<List<DescuentoConfiguracion>> ObtenerConMetodosPagoAsync(int idEmpresa)
+        public async Task<List<DescuentoConfiguracion>> ObtenerConMetodosPagoAsync(int idEmpresa, CancellationToken ct = default)
         {
             return await _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago).ThenInclude(dm => dm.MetodoPago)
                 .Where(d => d.Id_empresa == idEmpresa && d.Activo)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<List<DescuentoConfiguracion>> ObtenerConMetodosPagoPorIdAsync(int id)
+        public async Task<List<DescuentoConfiguracion>> ObtenerConMetodosPagoPorIdAsync(int id, CancellationToken ct = default)
         {
             return await _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago).ThenInclude(dm => dm.MetodoPago)
                 .Where(d => d.Id == id)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<List<DescuentoConfiguracion>> BuscarAsync(int idEmpresa, string? texto, bool? activo)
+        public async Task<List<DescuentoConfiguracion>> BuscarAsync(int idEmpresa, string? texto, bool? activo, CancellationToken ct = default)
         {
             var query = _dbSet.AsNoTracking()
                 .Include(d => d.DescuentosMetodosPago).ThenInclude(dm => dm.MetodoPago)
@@ -49,14 +50,14 @@ namespace GestionComercial.Persistencia.Repositorio
             if (activo.HasValue)
                 query = query.Where(d => d.Activo == activo.Value);
 
-            return await query.OrderBy(d => d.Nombre).ToListAsync();
+            return await query.OrderBy(d => d.Nombre).ToListAsync(ct);
         }
 
-        public async Task ActualizarMetodosPagoAsync(int idDescuento, List<int> idsMetodosPago)
+        public async Task ActualizarMetodosPagoAsync(int idDescuento, List<int> idsMetodosPago, CancellationToken ct = default)
         {
             var existing = await _context.DescuentoMetodosPago
                 .Where(dm => dm.Id_descuentoConfiguracion == idDescuento)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             _context.DescuentoMetodosPago.RemoveRange(existing);
 
@@ -66,7 +67,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 Id_metodoPago = idMp
             }).ToList();
 
-            await _context.DescuentoMetodosPago.AddRangeAsync(newRows);
+            await _context.DescuentoMetodosPago.AddRangeAsync(newRows, ct);
         }
     }
 }
