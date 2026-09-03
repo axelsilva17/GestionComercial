@@ -40,6 +40,13 @@ public class ProductoServicio : IProductoServicio
             return productos.Select(MapearListado);
         }
 
+        public async Task<(IEnumerable<ProductoListadoDto> Items, int TotalCount)> ObtenerTodosPaginadoAsync(
+            int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null)
+        {
+            var (items, totalCount) = await _uow.Productos.ObtenerPorEmpresaPaginadoAsync(idEmpresa, page, pageSize, searchTerm, idCategoria, soloActivos);
+            return (items.Select(MapearListado), totalCount);
+        }
+
         public async Task<IEnumerable<ProductoListadoDto>> ObtenerStockCriticoAsync(int idEmpresa)
         {
             var productos = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);

@@ -5,10 +5,12 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
     public interface IClienteRepositorio : IRepositorioBase<Cliente>
     {
         Task<bool>                  ExisteDocumentoAsync(int documento, int idEmpresa);
-        Task<bool>                  ExisteEmailAsync(string email, int idEmpresa);  // string, no int
+        Task<bool>                  ExisteEmailAsync(string email, int idEmpresa);
         Task<Cliente?>              ObtenerPorDocumentoAsync(int documento, int idEmpresa);
         Task<IEnumerable<Cliente>>  BuscarPorNombreAsync(string nombre, int idEmpresa);
         Task<IEnumerable<Cliente>>  ObtenerPorEmpresaAsync(int idEmpresa);
+        Task<(IEnumerable<Cliente> Items, int TotalCount)> ObtenerPorEmpresaPaginadoAsync(
+            int idEmpresa, int page, int pageSize, string? searchTerm = null, bool? soloActivos = null);
         Task<IEnumerable<Cliente>> ObtenerPorEmpresaYFechaAsync(int idEmpresa, DateTime desde, DateTime hasta);
         Task<int> ContarClientesConVentasAsync(int idEmpresa);
     }

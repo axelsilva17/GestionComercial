@@ -31,6 +31,13 @@ namespace GestionComercial.Aplicacion.Servicios
             return clientes.Select(MapearDto);
         }
 
+        public async Task<(IEnumerable<ClienteDto> Items, int TotalCount)> ObtenerTodosPaginadoAsync(
+            int idEmpresa, int page, int pageSize, string? searchTerm = null, bool? soloActivos = null)
+        {
+            var (items, totalCount) = await _uow.Clientes.ObtenerPorEmpresaPaginadoAsync(idEmpresa, page, pageSize, searchTerm, soloActivos);
+            return (items.Select(MapearDto), totalCount);
+        }
+
         public async Task<ClienteDto?> ObtenerPorIdAsync(int id)
         {
             var c = await _uow.Clientes.ObtenerPorIdAsync(id);

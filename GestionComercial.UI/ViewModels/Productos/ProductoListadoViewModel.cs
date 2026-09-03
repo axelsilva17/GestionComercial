@@ -283,16 +283,18 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 IsLoading = true;
 
-                // Búsqueda server-side: filtros se aplican en SQL
+                // Búsqueda server-side con paginación real: filtros se aplican en SQL
                 bool? soloActivos = FiltroActivo == 1 ? true : FiltroActivo == 2 ? false : null;
                 int? idCategoria = CategoriaSeleccionada?.IdCategoria > 0 ? CategoriaSeleccionada.IdCategoria : null;
                 string? texto = string.IsNullOrWhiteSpace(TextoBusqueda) ? null : TextoBusqueda.Trim();
 
-                var productos = await _productoServicio.BuscarProductosAsync(
-                    _shell.IdEmpresaActual, texto, idCategoria, soloActivos);
+                const int pageSize = 50; // Configurable page size
+                var (productos, totalCount) = await _productoServicio.ObtenerTodosPaginadoAsync(
+                    _shell.IdEmpresaActual, PaginaActual, pageSize, texto, idCategoria, soloActivos);
                 var filtradosList = productos.ToList();
 
                 // Filtro stock crítico (desde dashboard "Ver todos") — se aplica en memoria
+                // Nota: este filtro extra no afecta el totalCount real, solo la página actual
                 if (MostrarSoloStockCritico)
                 {
                     var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_shell.IdEmpresaActual);
@@ -300,7 +302,9 @@ namespace GestionComercial.UI.ViewModels.Productos
                 }
 
                 Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);
-                TotalProductos = filtradosList.Count;
+                ProductosMostrados = filtradosList.Count;
+                TotalPaginas = (int)Math.Ceiling((double)totalCount / pageSize);
+                TotalProductos = totalCount;
 
                 // Métricas: se cargan por separado (baratas, solo counts)
                 var todos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual, soloActivos: true);

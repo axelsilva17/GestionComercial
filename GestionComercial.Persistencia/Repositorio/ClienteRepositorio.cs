@@ -11,10 +11,37 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<IEnumerable<Cliente>> ObtenerPorEmpresaAsync(int idEmpresa)
             => await _dbSet.AsNoTracking()
-                .Include(c => c.Ventas)
                 .Where(c => c.Id_empresa == idEmpresa)
                 .OrderBy(c => c.Nombre)
                 .ToListAsync();
+
+        public async Task<(IEnumerable<Cliente> Items, int TotalCount)> ObtenerPorEmpresaPaginadoAsync(
+            int idEmpresa, int page, int pageSize, string? searchTerm = null, bool? soloActivos = null)
+        {
+            var query = _dbSet.AsNoTracking().Where(c => c.Id_empresa == idEmpresa);
+
+            if (soloActivos.HasValue)
+                query = query.Where(c => c.Activo == soloActivos.Value);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim().ToLower();
+                query = query.Where(c =>
+                    EF.Functions.Like(c.Nombre.ToLower(), $"%{term}%") ||
+                    EF.Functions.Like(c.Email.ToLower(), $"%{term}%") ||
+                    c.Documento.ToString().Contains(term));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(c => c.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
 
         public async Task<Cliente?> ObtenerPorDocumentoAsync(int documento, int idEmpresa)
             => await _dbSet.AsNoTracking()

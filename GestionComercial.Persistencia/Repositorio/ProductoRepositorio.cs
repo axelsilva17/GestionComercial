@@ -143,5 +143,37 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
         }
+
+        public async Task<(IEnumerable<Producto> Items, int TotalCount)> ObtenerPorEmpresaPaginadoAsync(
+            int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null)
+        {
+            var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
+
+            if (soloActivos.HasValue)
+                query = query.Where(p => p.Activo == soloActivos.Value);
+
+            if (idCategoria.HasValue && idCategoria.Value > 0)
+                query = query.Where(p => p.Id_categoria == idCategoria.Value);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim().ToLower();
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Nombre.ToLower(), $"%{term}%") ||
+                    EF.Functions.Like(p.CodigoBarra.ToLower(), $"%{term}%"));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(p => p.Categoria)
+                .Include(p => p.UnidadMedida)
+                .OrderBy(p => p.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
     }
 }

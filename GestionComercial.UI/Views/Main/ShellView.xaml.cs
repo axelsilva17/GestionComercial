@@ -4,13 +4,11 @@ using GestionComercial.UI.ViewModels.Configuracion;
 using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using System.Windows.Interop;
 
 namespace GestionComercial.UI.Views.Main
 {
@@ -34,69 +32,11 @@ namespace GestionComercial.UI.Views.Main
         private RecuperacionContrasenaServicio _recuperacionServicio =>
             IoC.Get<RecuperacionContrasenaServicio>();
 
-        // ── Win32 resize para ventana borderless ───────────────────────────
-        private const int WM_NCHITTEST = 0x0084;
-        private const int HTLEFT      = 10;
-        private const int HTRIGHT     = 11;
-        private const int HTTOP       = 12;
-        private const int HTTOPLEFT   = 13;
-        private const int HTTOPRIGHT  = 14;
-        private const int HTBOTTOM    = 15;
-        private const int HTBOTTOMLEFT  = 16;
-        private const int HTBOTTOMRIGHT = 17;
-        private const int BORDERWIDTH = 6;
-
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out POINT lpPoint);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr WindowFromPoint(POINT Point);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct POINT { public int X; public int Y; }
-
-        private void OnSourceInitialized(object? sender, EventArgs e)
-        {
-            var handle = new WindowInteropHelper(this).Handle;
-            var source = HwndSource.FromHwnd(handle);
-            source?.AddHook(WndProc);
-        }
-
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            if (msg == WM_NCHITTEST)
-            {
-                GetCursorPos(out POINT pt);
-                var window = WindowFromPoint(pt) == new WindowInteropHelper(this).Handle ? this : null;
-                if (window == null) return IntPtr.Zero;
-
-                var pos = PointFromScreen(new Point(pt.X, pt.Y));
-                var w = ActualWidth;
-                var h = ActualHeight;
-
-                bool left   = pos.X < BORDERWIDTH;
-                bool right  = pos.X > w - BORDERWIDTH;
-                bool top    = pos.Y < BORDERWIDTH;
-                bool bottom = pos.Y > h - BORDERWIDTH;
-
-                if (top && left)       { handled = true; return (IntPtr)HTTOPLEFT; }
-                if (top && right)      { handled = true; return (IntPtr)HTTOPRIGHT; }
-                if (bottom && left)    { handled = true; return (IntPtr)HTBOTTOMLEFT; }
-                if (bottom && right)   { handled = true; return (IntPtr)HTBOTTOMRIGHT; }
-                if (top)               { handled = true; return (IntPtr)HTTOP; }
-                if (bottom)            { handled = true; return (IntPtr)HTBOTTOM; }
-                if (left)              { handled = true; return (IntPtr)HTLEFT; }
-                if (right)             { handled = true; return (IntPtr)HTRIGHT; }
-            }
-            return IntPtr.Zero;
-        }
-
         public ShellView()
         {
             InitializeComponent();
             Loaded += ShellView_Loaded;
             Closing += ShellView_Closing;
-            SourceInitialized += OnSourceInitialized;
         }
 
         private async void ShellView_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -127,31 +67,19 @@ namespace GestionComercial.UI.Views.Main
             _ = ActualizarEstadoPreguntaAsync();
         }
 
-        // ══ VENTANA ══════════════════════════════════════════════════════════
+        // ══ VENTANA ═════════════════════════════════════════════════════════
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // Double-click on titlebar area (within CaptionHeight) to maximize/restore
             if (e.ClickCount == 2)
             {
-                Maximize_Click(sender, e);
-                return;
-            }
-            if (!IsPuntoDentroDePanelPerfil(e.GetPosition(this)))
-            {
                 var pos = e.GetPosition(this);
-                bool nearEdge = pos.X < BORDERWIDTH || pos.X > ActualWidth - BORDERWIDTH
-                             || pos.Y < BORDERWIDTH || pos.Y > ActualHeight - BORDERWIDTH;
-                if (!nearEdge) DragMove();
+                if (pos.Y <= 48) // Within CaptionHeight
+                {
+                    Maximize_Click(sender, e);
+                }
             }
-        }
-
-        private bool IsPuntoDentroDePanelPerfil(Point p)
-        {
-            if (PanelPerfil.Visibility != Visibility.Visible) return false;
-            var pos = PanelPerfil.TranslatePoint(new Point(0, 0), this);
-            return p.X >= pos.X && p.Y >= pos.Y
-                && p.X <= pos.X + PanelPerfil.ActualWidth
-                && p.Y <= pos.Y + PanelPerfil.ActualHeight;
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
@@ -162,7 +90,7 @@ namespace GestionComercial.UI.Views.Main
                 ? WindowState.Normal
                 : WindowState.Maximized;
 
-private async void Close_Click(object sender, RoutedEventArgs e)
+        private async void Close_Click(object sender, RoutedEventArgs e)
         {
             if (VM == null) { Close(); return; }
 
@@ -366,7 +294,7 @@ private async void Close_Click(object sender, RoutedEventArgs e)
             catch { /* silencioso */ }
         }
 
-        // ══ DATOS PERSONALES ═════════════════════════════════════════════════
+        // ══ DATOS PERSONALES ════════════════════════════════════════════════
 
         private void AbrirEditarDatos_Click(object sender, RoutedEventArgs e)
         {
@@ -457,7 +385,7 @@ private async void Close_Click(object sender, RoutedEventArgs e)
         private void PbConfirmar_PasswordChanged(object sender, RoutedEventArgs e)
             => _passConfirmar = PbConfirmar.Password;
 
-        // ══ PREGUNTA SECRETA ══════════════════════════════════════════════════
+        // ══ PREGUNTA SECRETA ═════════════════════════════════════════════════
 
         private void AbrirPreguntaSecreta_Click(object sender, RoutedEventArgs e)
         {
@@ -528,7 +456,7 @@ private async void Close_Click(object sender, RoutedEventArgs e)
         private void PbConfirmarRespuesta_PasswordChanged(object sender, RoutedEventArgs e)
             => _confirmarRespuesta = PbConfirmarRespuesta.Password;
 
-        // ══ HELPERS ══════════════════════════════════════════════════════════
+        // ══ HELPERS ════════════════════════════════════════════════════════
 
         private void MostrarError(System.Windows.Controls.Border errorBorder,
                                   System.Windows.Controls.TextBlock errorText, string mensaje)

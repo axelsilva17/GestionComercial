@@ -123,30 +123,21 @@ namespace GestionComercial.UI.ViewModels.Clientes
             try
             {
                 IsLoading = true;
-                var clientes = await _clienteServicio.ObtenerTodosAsync(_shell.IdEmpresaActual);
+                const int pageSize = 50; // Configurable page size
+                var (clientes, totalCount) = await _clienteServicio.ObtenerTodosPaginadoAsync(
+                    _shell.IdEmpresaActual, PaginaActual, pageSize, TextoBusqueda, 
+                    FiltroEstado == EstadoFiltro.Activos ? true : FiltroEstado == EstadoFiltro.Inactivos ? false : null);
 
-                // Filtrar por estado usando FiltroEstado
-                IEnumerable<ClienteDto> filtrados = FiltroEstado switch
-                {
-                    EstadoFiltro.Activos => clientes.Where(c => c.Activo),
-                    EstadoFiltro.Inactivos => clientes.Where(c => !c.Activo),
-                    _ => clientes
-                };
+                Clientes = new ObservableCollection<ClienteDto>(clientes);
+                ClientesMostrados = clientes.Count();
+                TotalPaginas = (int)Math.Ceiling((double)totalCount / pageSize);
+                TotalClientes = totalCount;
 
-                // Filtrar por texto de búsqueda
-                if (!string.IsNullOrWhiteSpace(TextoBusqueda))
-                {
-                    var busqueda = TextoBusqueda.Trim().ToLower();
-                    filtrados = filtrados.Where(c =>
-                        c.Nombre.ToLower().Contains(busqueda) ||
-                        c.Email.ToLower().Contains(busqueda) ||
-                        c.Documento.ToString().Contains(busqueda));
-                }
-
-                Clientes = new ObservableCollection<ClienteDto>(filtrados);
-                TotalClientes = Clientes.Count;
-                ClientesActivos = clientes.Count(c => c.Activo);
-                ClientesInactivos = clientes.Count(c => !c.Activo);
+                // Métricas: cargar totales con métodos optimizados (counts en DB)
+                ClientesActivos = (await _clienteServicio.ObtenerTodosPaginadoAsync(
+                    _shell.IdEmpresaActual, 1, 1, null, true)).TotalCount;
+                ClientesInactivos = (await _clienteServicio.ObtenerTodosPaginadoAsync(
+                    _shell.IdEmpresaActual, 1, 1, null, false)).TotalCount;
                 ClientesConVentas = await _clienteServicio.ContarClientesConVentasAsync(_shell.IdEmpresaActual);
             }
             catch (Exception ex)
