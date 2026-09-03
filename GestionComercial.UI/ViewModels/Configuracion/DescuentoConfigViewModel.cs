@@ -155,6 +155,10 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                         d.DescuentosMetodosPago
                             .Where(dm => dm.MetodoPago != null)
                             .Select(dm => dm.MetodoPago!.Nombre)),
+                    MetodosPagoNombresLista = d.DescuentosMetodosPago
+                        .Where(dm => dm.MetodoPago != null)
+                        .Select(dm => dm.MetodoPago!.Nombre)
+                        .ToList(),
                     FechaDesde = d.FechaDesde,
                     FechaHasta = d.FechaHasta,
                     Activo = d.Activo,
@@ -182,9 +186,14 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
             if (!string.IsNullOrWhiteSpace(FiltroMetodoPago))
             {
+                // Coincidencia EXACTA por nombre de método (no substring): evita que
+                // un método cuyo nombre es subcadena de otro filtre por error.
+                // Los descuentos que aplican a cualquier método no se asocian a uno
+                // específico, por lo que quedan excluidos de este filtro.
                 filtered = filtered.Where(d =>
                     !d.AplicaCualquierMetodoPago &&
-                    d.MetodosPagoNombres.Contains(FiltroMetodoPago));
+                    d.MetodosPagoNombresLista.Contains(
+                        FiltroMetodoPago, StringComparer.OrdinalIgnoreCase));
             }
 
             Items = new ObservableCollection<DescuentoListadoDto>(filtered);

@@ -25,6 +25,11 @@ namespace GestionComercial.Aplicacion.DTOs.Descuentos
         public string? CategoriaNombre { get; set; }
         public bool AplicaCualquierMetodoPago { get; set; } = true;
         public string MetodosPagoNombres { get; set; } = string.Empty;
+        /// <summary>
+        /// Nombres de métodos de pago como lista exacta (sin separar ni concatenar),
+        /// usada para filtrar por método con coincidencia exacta en lugar de substring.
+        /// </summary>
+        public List<string> MetodosPagoNombresLista { get; set; } = new();
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
         public bool Activo { get; set; }
