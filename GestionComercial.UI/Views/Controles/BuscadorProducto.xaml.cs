@@ -1,6 +1,7 @@
 using GestionComercial.Aplicacion.DTOs.Productos;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,10 +18,10 @@ namespace GestionComercial.UI.Controles
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         ///         /// Función de búsqueda que el ViewModel padre debe proveer.
-        /// Recibe el texto y retorna la lista de productos.
+        /// Recibe el texto y un CancellationToken, y retorna la lista de productos.
         /// Ejemplo: BuscarProductos="{Binding BuscarProductosAsync}"
         public static readonly DependencyProperty BuscarFuncProperty =
-            DependencyProperty.Register(nameof(BuscarFunc), typeof(Func<string, Task<IEnumerable<ProductoDto>>>),
+            DependencyProperty.Register(nameof(BuscarFunc), typeof(Func<string, CancellationToken, Task<IEnumerable<ProductoDto>>>),
                 typeof(BuscadorProducto), new PropertyMetadata(null));
 
         public ProductoDto ProductoSeleccionado
@@ -29,9 +30,9 @@ namespace GestionComercial.UI.Controles
             set => SetValue(ProductoSeleccionadoProperty, value);
         }
 
-        public Func<string, Task<IEnumerable<ProductoDto>>> BuscarFunc
+        public Func<string, CancellationToken, Task<IEnumerable<ProductoDto>>> BuscarFunc
         {
-            get => (Func<string, Task<IEnumerable<ProductoDto>>>)GetValue(BuscarFuncProperty);
+            get => (Func<string, CancellationToken, Task<IEnumerable<ProductoDto>>>)GetValue(BuscarFuncProperty);
             set => SetValue(BuscarFuncProperty, value);
         }
 
@@ -77,9 +78,9 @@ namespace GestionComercial.UI.Controles
                 IEnumerable<ProductoDto> resultados;
 
                 if (BuscarFunc != null)
-                    resultados = await BuscarFunc(texto);
+                    resultados = await BuscarFunc(texto, token);
                 else
-                    resultados = BusquedaMock(texto); // fallback para desarrollo
+                    resultados = BusquedaMock(texto, token); // fallback para desarrollo
 
                 if (token.IsCancellationRequested) return;
                 MostrarResultados(resultados);
@@ -162,7 +163,7 @@ namespace GestionComercial.UI.Controles
 
         // ── Mock para desarrollo (reemplazar con servicio real) ───────────────
 
-        private IEnumerable<ProductoDto> BusquedaMock(string texto)
+        private IEnumerable<ProductoDto> BusquedaMock(string texto, CancellationToken ct = default)
         {
             var mock = new List<ProductoDto>
             {

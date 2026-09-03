@@ -100,13 +100,11 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (_busquedaProveedor == value) return;
                 _busquedaProveedor = value;
                 NotifyOfPropertyChange(() => BusquedaProveedor);
-                // Auto-filtro en memoria al cambiar el texto
-                _ = Task.Run(async () => await CargarAsync());
             }
         }
 
-        private DateTime? _fechaDesde;
-        public DateTime? FechaDesde
+        private DateTime _fechaDesde = DateTime.Today.AddDays(-30);
+        public DateTime FechaDesde
         {
             get => _fechaDesde;
             set 
@@ -114,13 +112,11 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (_fechaDesde == value) return;
                 _fechaDesde = value; 
                 NotifyOfPropertyChange(() => FechaDesde);
-                // Auto-filtro al cambiar fecha
-                _ = Task.Run(async () => await CargarAsync());
             }
         }
 
-        private DateTime? _fechaHasta;
-        public DateTime? FechaHasta
+        private DateTime _fechaHasta = DateTime.Today;
+        public DateTime FechaHasta
         {
             get => _fechaHasta;
             set 
@@ -128,8 +124,6 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (_fechaHasta == value) return;
                 _fechaHasta = value; 
                 NotifyOfPropertyChange(() => FechaHasta);
-                // Auto-filtro al cambiar fecha
-                _ = Task.Run(async () => await CargarAsync());
             }
         }
 
@@ -142,8 +136,6 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (ReferenceEquals(_proveedorFiltro, value)) return;
                 _proveedorFiltro = value; 
                 NotifyOfPropertyChange(() => ProveedorFiltro);
-                // Auto-filtro al cambiar proveedor
-                _ = Task.Run(async () => await CargarAsync());
             }
         }
 
@@ -244,52 +236,29 @@ namespace GestionComercial.UI.ViewModels.Compras
                     _proveedorFiltro = proveedorSeleccionado;
                 }
                 
-                // Cargar compras con filtros
-                IEnumerable<CompraDto> compras;
-                if (FechaDesde.HasValue || FechaHasta.HasValue)
-                {
-                    DateTime desde = FechaDesde ?? DateTime.MinValue;
-                    DateTime hasta = FechaHasta ?? DateTime.MaxValue;
-                    compras = await _compraServicio.ObtenerPorPeriodoAsync(
-                        _sesion.IdSucursal, desde, hasta.AddDays(1));
-                }
-                else
-                {
-                    // No period filter: fetch ALL purchases for this branch
-                    compras = await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal);
-                }
+                // Cargar compras paginadas con métricas SQL
+                var desde = FechaDesde.Date;
+                var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
                 
-                // Aplicar filtros
-                var filtered = compras.AsEnumerable();
-                
-                if (ProveedorFiltro != null && ProveedorFiltro.IdProveedor != 0)
+                // Métricas agregadas en SQL
+                var metricas = await _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, desde, hasta);
+                if (metricas != null)
                 {
-                    filtered = filtered.Where(c => c.Id_proveedor == ProveedorFiltro.IdProveedor);
+                    TotalComprasMes = metricas.Total;
+                    CantidadComprasMes = metricas.Count;
+                    PromedioCompra = metricas.Promedio;
+                    ProveedorTop = metricas.ProveedorTop;
+                    ProductosRepuestos = metricas.ProductosRepuestos;
                 }
                 
-                if (!string.IsNullOrWhiteSpace(BusquedaProveedor))
-                    filtered = filtered.Where(c => c.ProveedorNombre.Contains(BusquedaProveedor.Trim(), StringComparison.OrdinalIgnoreCase));
+                // Compras paginadas
+                var (items, totalCount) = await _compraServicio.ObtenerPorSucursalPaginadoAsync(
+                    _sesion.IdSucursal, desde, hasta, PaginaActual, 20);
                 
-                var lista = filtered.ToList();
-                
-                Compras = new ObservableCollection<CompraDto>(lista);
-                TotalCompras = lista.Count;
-                ComprasMostradas = lista.Count;
-                
-                // Calcular métricas sobre la lista FILTRADA
-                TotalComprasMes = lista.Sum(c => c.Total);
-                CantidadComprasMes = lista.Count;
-                PromedioCompra = CantidadComprasMes > 0 ? TotalComprasMes / CantidadComprasMes : 0;
-                
-                // Proveedor más frecuente: calcular sobre TODAS las compras del período (sin filtro)
-                var proveedorAgrupado = compras
-                    .GroupBy(c => c.ProveedorNombre)
-                    .OrderByDescending(g => g.Count())
-                    .FirstOrDefault();
-                ProveedorTop = proveedorAgrupado?.Key ?? "—";
-                
-                // Productos repuestos (suma de cantidad de items)
-                ProductosRepuestos = lista.SelectMany(c => c.Items).Sum(i => i.Cantidad);
+                Compras = new ObservableCollection<CompraDto>(items);
+                TotalCompras = totalCount;
+                TotalPaginas = (int)Math.Ceiling((double)totalCount / 20);
+                ComprasMostradas = Compras.Count;
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }

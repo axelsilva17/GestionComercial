@@ -1,4 +1,5 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Compras;
 using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
@@ -195,26 +196,31 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 LogHelper.Log($"[ReporteGerencia] Filtro: desde={desde:yyyy-MM-dd HH:mm} hasta={hasta:yyyy-MM-dd HH:mm}");
 
-                // Ventas del período
+                // ── KPIs via SQL aggregation (IReporteServicio) ───────────────────
                 sw.Restart();
-                var todasVentas = (await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, desde, hasta)).ToList();
-                VentasAcumuladas = todasVentas.Sum(v => v.TotalFinal);
-                LogHelper.Log($"[ReporteGerencia] Ventas: {todasVentas.Count} registros en {sw.ElapsedMilliseconds}ms");
+                var kpis = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, desde, hasta);
+                if (kpis != null)
+                {
+                    VentasAcumuladas = kpis.TotalVentasPeriodo;
+                }
+                LogHelper.Log($"[ReporteGerencia] KPIs: {sw.ElapsedMilliseconds}ms");
 
-                // Compras del período
+                // Compras metrics via ICompraServicio (new SQL aggregation)
                 sw.Restart();
-                var todasCompras = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                    .Where(c => c.Fecha >= desde && c.Fecha <= hasta).ToList();
-                ComprasAcumuladas = todasCompras.Sum(c => c.Total);
-                LogHelper.Log($"[ReporteGerencia] Compras: {todasCompras.Count} registros en {sw.ElapsedMilliseconds}ms");
+                var metricasCompras = await _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, desde, hasta);
+                if (metricasCompras != null)
+                {
+                    ComprasAcumuladas = metricasCompras.Total;
+                }
+                LogHelper.Log($"[ReporteGerencia] Métricas compras: {sw.ElapsedMilliseconds}ms");
 
                 MargenPromedio = VentasAcumuladas > 0
                     ? (double)(ResultadoAcumulado / VentasAcumuladas * 100) : 0;
 
-                // Calcular meses dentro del rango (máx 12)
+                // ── Ventas por día (SQL aggregation) para gráfico mensual ───────────
                 sw.Restart();
-                var meses = GenerarMeses(desde, hasta, todasVentas, todasCompras);
+                var ventasPorDia = await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, desde, hasta);
+                var meses = GenerarMesesDesdeVentasPorDia(desde, hasta, ventasPorDia, metricasCompras);
                 VentasMensuales = new ObservableCollection<ReporteVentaMensualDto>(meses);
                 LogHelper.Log($"[ReporteGerencia] Meses calculados: {meses.Count} en {sw.ElapsedMilliseconds}ms");
 
@@ -276,20 +282,18 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     }
                 };
 
-                // ── Torta: métodos de pago reales ─────────────────────────────
+                // ── Torta: métodos de pago reales (IReporteServicio) ─────────────
                 sw.Restart();
-                var pagosAgrupados = (await _uow.Pagos.ObtenerTotalesPorMetodoAsync(
-                    _sesion.IdSucursal, desde, hasta)).ToList();
-                LogHelper.Log($"[ReporteGerencia] Métodos pago: {pagosAgrupados.Count} en {sw.ElapsedMilliseconds}ms");
+                var metodosPago = await _reporteServicio.MetodosPagoUtilizadosAsync(_sesion.IdSucursal, desde, hasta);
+                LogHelper.Log($"[ReporteGerencia] Métodos pago: {metodosPago.Count()} en {sw.ElapsedMilliseconds}ms");
 
-                SeriesTorta = pagosAgrupados.Any()
-                    ? pagosAgrupados.Select((item, i) =>
+                SeriesTorta = metodosPago.Any()
+                    ? metodosPago.Select((item, i) =>
                         (ISeries)new PieSeries<double>
                         {
                             Name            = item.Metodo,
                             Values          = new[] { (double)item.Total },
                             Fill            = new SolidColorPaint(_coloresTorta[i % _coloresTorta.Length]),
-                            // Etiqueta dentro de la porción
                             DataLabelsPaint = new SolidColorPaint(SKColors.White),
                             DataLabelsSize  = 11,
                             DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
@@ -316,21 +320,36 @@ namespace GestionComercial.UI.ViewModels.Reportes
             finally { IsLoading = false; }
         }
 
-        private static List<ReporteVentaMensualDto> GenerarMeses(
+        private static List<ReporteVentaMensualDto> GenerarMesesDesdeVentasPorDia(
             DateTime desde, DateTime hasta,
-            List<GestionComercial.Aplicacion.DTOs.Ventas.VentaResumenDto> ventas,
-            List<GestionComercial.Aplicacion.DTOs.Compras.CompraDto> compras)
+            IEnumerable<VentaPorDiaDto> ventasPorDia,
+            MetricasComprasDto? metricasCompras)
         {
             var result = new List<ReporteVentaMensualDto>();
             var cursor = new DateTime(desde.Year, desde.Month, 1);
             var fin    = new DateTime(hasta.Year, hasta.Month, 1);
 
+            // Agrupar compras por mes (aproximado - distribuir total proporcionalmente)
+            // Nota: IReporteServicio no tiene compras por día, usamos métrica total
+            decimal totalCompras = metricasCompras?.Total ?? 0;
+            int mesesEnRango = 0;
+            var tempCursor = new DateTime(desde.Year, desde.Month, 1);
+            while (tempCursor <= fin)
+            {
+                mesesEnRango++;
+                tempCursor = tempCursor.AddMonths(1);
+            }
+            decimal comprasPorMes = mesesEnRango > 0 ? totalCompras / mesesEnRango : 0;
+
             while (cursor <= fin)
             {
                 var inicio = cursor;
                 var finMes = cursor.AddMonths(1).AddDays(-1);
-                var v = ventas.Where(x => x.Fecha >= inicio && x.Fecha <= finMes).Sum(x => x.TotalFinal);
-                var c = compras.Where(x => x.Fecha >= inicio && x.Fecha <= finMes).Sum(x => x.Total);
+                var v = ventasPorDia
+                    .Where(x => DateTime.TryParseExact(x.Dia, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var dt) 
+                             && dt >= inicio && dt <= finMes)
+                    .Sum(x => x.Total);
+                var c = comprasPorMes;
                 result.Add(new ReporteVentaMensualDto
                 {
                     Mes       = cursor.ToString("MMM yy"),
@@ -363,50 +382,34 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 LogHelper.Log($"[ReporteGerencia] Iniciando exportación: {desde:dd/MM} - {hasta:dd/MM}");
 
-                // VentaPorDia: agrupar las ventas ya cargadas en memoria
+                // VentaPorDia: usar IReporteServicio
                 swExport.Restart();
-                var ventas = (await _ventaServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal, desde, hasta)).ToList();
-                LogHelper.Log($"[ReporteGerencia] Export: Ventas cargadas ({ventas.Count}) en {swExport.ElapsedMilliseconds}ms");
-                
-                var ventaPorDia = ventas
-                    .GroupBy(v => v.Fecha.Date)
-                    .Select(g => new VentaPorDiaDto
-                    {
-                        Dia      = g.Key.ToString("dd/MM/yyyy"),
-                        Total    = g.Sum(v => v.TotalFinal),
-                        Cantidad = g.Count(),
-                    })
-                    .OrderBy(d => DateTime.ParseExact(d.Dia, "dd/MM/yyyy", null))
-                    .ToList();
+                var ventaPorDia = (await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, desde, hasta)).ToList();
+                LogHelper.Log($"[ReporteGerencia] Export: VentaPorDia ({ventaPorDia.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Margen: usar IReporteServicio.MargenPorProductoAsync
                 swExport.Restart();
-                var margen = (await _reporteServicio.MargenPorProductoAsync(
-                    _sesion.IdEmpresa, desde, hasta)).ToList();
+                var margen = (await _reporteServicio.MargenPorProductoAsync(_sesion.IdEmpresa, desde, hasta)).ToList();
                 LogHelper.Log($"[ReporteGerencia] Export: Margen ({margen.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Top Productos
                 swExport.Restart();
-                var topProductos = (await _reporteServicio.TopProductosAsync(
-                    _sesion.IdSucursal, desde, hasta, 20)).ToList();
+                var topProductos = (await _reporteServicio.TopProductosAsync(_sesion.IdSucursal, desde, hasta, 20)).ToList();
                 LogHelper.Log($"[ReporteGerencia] Export: Top productos ({topProductos.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Ventas por Vendedor
                 swExport.Restart();
-                var vendedores = (await _reporteServicio.VentasPorVendedorAsync(
-                    _sesion.IdSucursal, desde, hasta)).ToList();
+                var vendedores = (await _reporteServicio.VentasPorVendedorAsync(_sesion.IdSucursal, desde, hasta)).ToList();
                 LogHelper.Log($"[ReporteGerencia] Export: Vendedores ({vendedores.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Rotación de Productos
                 swExport.Restart();
-                var rotacion = (await _reporteServicio.RotacionProductosAsync(
-                    _sesion.IdEmpresa, desde, hasta)).ToList();
+                var rotacion = (await _reporteServicio.RotacionProductosAsync(_sesion.IdEmpresa, desde, hasta)).ToList();
                 LogHelper.Log($"[ReporteGerencia] Export: Rotación ({rotacion.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Métodos de Pago
                 swExport.Restart();
-                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
-                    _sesion.IdSucursal, desde, hasta)).ToList();
+                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(_sesion.IdSucursal, desde, hasta)).ToList();
                 LogHelper.Log($"[ReporteGerencia] Export: Métodos pago ({metodosPago.Count}) en {swExport.ElapsedMilliseconds}ms");
 
                 // Distribución mensual de métodos de pago
@@ -418,8 +421,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 {
                     var inicioMes = cursor;
                     var finMes = cursor.AddMonths(1).AddDays(-1);
-                    var metodosDelMes = await _reporteServicio.MetodosPagoUtilizadosAsync(
-                        _sesion.IdSucursal, inicioMes, finMes);
+                    var metodosDelMes = await _reporteServicio.MetodosPagoUtilizadosAsync(_sesion.IdSucursal, inicioMes, finMes);
                     foreach (var m in metodosDelMes)
                     {
                         metodosMensuales.Add(new MetodosPagoMesDto

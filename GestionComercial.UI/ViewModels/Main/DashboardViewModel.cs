@@ -1,4 +1,5 @@
 using Caliburn.Micro;
+using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
@@ -18,6 +19,7 @@ namespace GestionComercial.UI.ViewModels.Main
         private readonly IProductoServicio _productoServicio;
         private readonly ICompraServicio   _compraServicio;
         private readonly ICajaServicio     _cajaServicio;
+        private readonly IReporteServicio  _reporteServicio;
         private readonly SesionServicio    _sesion;
 
         private ShellViewModel Shell => IoC.Get<ShellViewModel>();
@@ -161,12 +163,14 @@ namespace GestionComercial.UI.ViewModels.Main
             IProductoServicio productoServicio,
             ICompraServicio   compraServicio,
             ICajaServicio     cajaServicio,
+            IReporteServicio  reporteServicio,
             SesionServicio    sesion)
         {
             _ventaServicio    = ventaServicio;
             _productoServicio = productoServicio;
             _compraServicio   = compraServicio;
             _cajaServicio     = cajaServicio;
+            _reporteServicio  = reporteServicio;
             _sesion           = sesion;
             Titulo            = "Dashboard";
         }
@@ -205,25 +209,35 @@ namespace GestionComercial.UI.ViewModels.Main
             var inicioMesAnterior = inicioMes.AddMonths(-1);
             var finMesAnterior    = inicioMes.AddDays(-1);
 
-            var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMes, hoy.AddDays(1))).ToList();
+            // KPIs via IReporteServicio (SQL aggregation)
+            var kpis = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMes, hoy.AddDays(1));
+            if (kpis != null)
+            {
+                TotalVentasMes = kpis.TotalVentasPeriodo;
+                CantidadVentasMes = kpis.TotalTransacciones;
+                TicketPromedio = kpis.TicketPromedio;
+            }
 
-            TotalVentasMes = ventasMes.Sum(v => v.TotalFinal);
-            TicketPromedio = ventasMes.Any() ? TotalVentasMes / ventasMes.Count : 0;
+            var kpisAnterior = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMesAnterior, finMesAnterior);
+            if (kpisAnterior != null)
+            {
+                TotalVentasMesAnterior = kpisAnterior.TotalVentasPeriodo;
+            }
 
-            var ventasMesAnterior = await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMesAnterior, finMesAnterior);
-            TotalVentasMesAnterior = ventasMesAnterior.Sum(v => v.TotalFinal);
-
-            var comprasMes = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                .Where(c => c.Fecha >= inicioMes && c.Fecha <= hoy).ToList();
-            TotalComprasMes = comprasMes.Sum(c => c.Total);
+            var metricasCompras = await _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, inicioMes, hoy);
+            if (metricasCompras != null)
+            {
+                TotalComprasMes = metricasCompras.Total;
+            }
 
             MargenBrutoMes = TotalVentasMes > 0
                 ? (double)(ResultadoNeto / TotalVentasMes * 100) : 0;
 
+            // Ventas recientes via IReporteServicio.TopProductosAsync or VentasPorDia
+            var ventasRecientes = await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, inicioMes, hoy.AddDays(1));
             VentasRecientes = new ObservableCollection<VentaResumenDto>(
-                ventasMes.OrderByDescending(v => v.Fecha).Take(5));
+                ventasRecientes.OrderByDescending(v => DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null)).Take(5)
+                    .Select(v => new VentaResumenDto { IdVenta = 0, Fecha = DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null), TotalFinal = v.Total, Estado = "Pagada", ClienteNombre = "", UsuarioNombre = "" }));
 
             NotifyOfPropertyChange(() => VentasRecientes);
             NotifyOfPropertyChange(() => ResultadoNeto);
@@ -236,29 +250,36 @@ namespace GestionComercial.UI.ViewModels.Main
             var hoy       = DateTime.Today;
             var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
 
-            var ventasMes = (await _ventaServicio.ObtenerPorSucursalAsync(
-                _sesion.IdSucursal, inicioMes, hoy.AddDays(1))).ToList();
-            CantidadVentasMes = ventasMes.Count;
-            VentasPendientes  = ventasMes.Count(v => v.Estado == "Pendiente");
+            // KPIs via IReporteServicio
+            var kpis = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMes, hoy.AddDays(1));
+            if (kpis != null)
+            {
+                CantidadVentasMes = kpis.TotalTransacciones;
+            }
 
-            var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
-            var todosProductos = (await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
-            var stockBajo = todosProductos.Where(p => p.StockActual <= umbral).ToList();
-            ProductosCriticos = stockBajo.Count;
+            // Stock crítico via IProductoServicio.BuscarProductosAsync (prefix search) + IReporteServicio.StockCriticoAsync
+            var stockCritico = await _reporteServicio.StockCriticoAsync(_sesion.IdEmpresa);
+            var criticos = stockCritico.Take(8).ToList();
+            ProductosCriticos = stockCritico.Count();
             ProductosCriticosList = new ObservableCollection<ProductoCriticoDash>(
-                stockBajo.Take(8).Select(p => new ProductoCriticoDash
+                criticos.Select(p => new ProductoCriticoDash
                 {
-                    Nombre      = p.Nombre,
+                    Nombre      = p.ProductoNombre,
                     StockActual = p.StockActual,
                     StockMinimo = p.StockMinimo,
                 }));
 
-            var comprasMes = (await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal))
-                .Where(c => c.Fecha >= inicioMes && c.Fecha <= hoy).ToList();
-            ComprasDelMes = comprasMes.Count;
+            var metricasCompras = await _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, inicioMes, hoy);
+            if (metricasCompras != null)
+            {
+                ComprasDelMes = metricasCompras.Count;
+            }
 
+            // Ventas recientes
+            var ventasRecientes = await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, inicioMes, hoy.AddDays(1));
             VentasRecientes = new ObservableCollection<VentaResumenDto>(
-                ventasMes.OrderByDescending(v => v.Fecha).Take(5));
+                ventasRecientes.OrderByDescending(v => DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null)).Take(5)
+                    .Select(v => new VentaResumenDto { IdVenta = 0, Fecha = DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null), TotalFinal = v.Total, Estado = "Pagada", ClienteNombre = "", UsuarioNombre = "" }));
 
             NotifyOfPropertyChange(() => ProductosCriticosList);
             NotifyOfPropertyChange(() => VentasRecientes);
@@ -290,19 +311,14 @@ namespace GestionComercial.UI.ViewModels.Main
                     HoraAperturaCaja = "--:--";
                 }
 
-                // Ventas de hoy del vendedor
-            var ventasHoy = (await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, hoy, hoy.AddDays(1)))
-                    .Where(v => v.UsuarioNombre != null && v.UsuarioNombre.Contains(
-                        _sesion.Nombre, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                // Ventas de hoy del vendedor via IVentaServicio.ObtenerVentasPorVendedorAsync (nuevo método SQL)
+                var ventasHoy = await _ventaServicio.ObtenerVentasPorVendedorAsync(_sesion.IdSucursal, _sesion.IdUsuario, hoy, hoy.AddDays(1));
 
                 MisVentasHoy        = ventasHoy.Sum(v => v.TotalFinal);
-                MiCantidadVentasHoy = ventasHoy.Count;
+                MiCantidadVentasHoy = ventasHoy.Count();
 
                 // Últimas ventas propias (7 días)
-                var ventasSemana = await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, hoy.AddDays(-7), hoy);
+                var ventasSemana = await _ventaServicio.ObtenerVentasPorVendedorAsync(_sesion.IdSucursal, _sesion.IdUsuario, hoy.AddDays(-7), hoy);
                 VentasRecientes = new ObservableCollection<VentaResumenDto>(
                     ventasSemana.OrderByDescending(v => v.Fecha).Take(5));
 

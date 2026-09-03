@@ -23,9 +23,6 @@ namespace GestionComercial.UI.ViewModels.Inventario
         private readonly ILogger<InventarioViewModel>? _logger;
         private const int ItemsPorPagina = 15;
 
-        // Cache de productos para búsqueda
-        private List<ProductoListadoDto> _productosCache = new();
-
         public InventarioViewModel(
             IInventarioServicio inventarioServicio,
             IProductoServicio productoServicio,
@@ -40,49 +37,32 @@ namespace GestionComercial.UI.ViewModels.Inventario
             Titulo    = "Inventario";
             Subtitulo = "Movimientos de stock";
 
-            // Inicializar función de búsqueda para el BuscadorProducto
-            BuscarProductosFunc = BuscarProductosInternoAsync;
+            // Inicializar función de búsqueda para el BuscadorProducto (prefix search via IProductoServicio)
+            BuscarProductosFunc = BuscarProductosAsync;
         }
 
         // ── Propiedad para BuscadorProducto (WPF no puede bindear métodos directamente) ─
-        public Func<string, Task<IEnumerable<ProductoDto>>> BuscarProductosFunc { get; }
+        public Func<string, CancellationToken, Task<IEnumerable<ProductoDto>>> BuscarProductosFunc { get; }
 
-        // ── Método interno para búsqueda de productos ───────────────────────────────
-        private async Task<IEnumerable<ProductoDto>> BuscarProductosInternoAsync(string texto)
+        // ── Método de búsqueda de productos (prefix search StartsWith) ───────────────────
+        private async Task<IEnumerable<ProductoDto>> BuscarProductosAsync(string texto, CancellationToken ct = default)
         {
-            // Cargar cache si está vacío
-            if (_productosCache.Count == 0)
-            {
-                try
-                {
-                    var todos = await _productoServicio.ObtenerTodosAsync(IdEmpresa);
-                    _productosCache = todos.ToList();
-                }
-                catch
-                {
-                    return Enumerable.Empty<ProductoDto>();
-                }
-            }
-
-            // Filtrar por nombre o código
             if (string.IsNullOrWhiteSpace(texto))
                 return Enumerable.Empty<ProductoDto>();
 
-            var busqueda = texto.Trim().ToLowerInvariant();
-            return _productosCache
-                .Where(p => (p.Nombre?.ToLowerInvariant().Contains(busqueda) ?? false) ||
-                           (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
-                .Take(10)
-                .Select(p => new ProductoDto
-                {
-                    IdProducto = p.IdProducto,
-                    Nombre = p.Nombre,
-                    CodigoBarra = p.CodigoBarra,
-                    PrecioVentaActual = p.PrecioVentaActual,
-                    StockActual = p.StockActual,
-                    IdCategoria = p.IdCategoria,
-                    CategoriaNombre = p.CategoriaNombre
-                });
+            var term = texto.Trim();
+            // Usar IProductoServicio.BuscarProductosAsync con StartsWith (prefijo) para uso de índices
+            var productos = await _productoServicio.BuscarProductosAsync(IdEmpresa, term, null, true, 10, ct);
+            return productos.Select(p => new ProductoDto
+            {
+                IdProducto = p.IdProducto,
+                Nombre = p.Nombre,
+                CodigoBarra = p.CodigoBarra,
+                PrecioVentaActual = p.PrecioVentaActual,
+                StockActual = p.StockActual,
+                IdCategoria = p.IdCategoria,
+                CategoriaNombre = p.CategoriaNombre
+            });
         }
 
         // ── Lista principal ──────────────────────────────────────────────────
@@ -162,7 +142,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
             set { _sucursales = value; NotifyOfPropertyChange(() => Sucursales); }
         }
 
-        // ── Paginación ───────────────���───────────────────────────────────────
+        // ── Paginación ───────────────────────────────────────────────────────
         private int _paginaActual = 1;
         public int PaginaActual
         {
@@ -306,7 +286,25 @@ namespace GestionComercial.UI.ViewModels.Inventario
 
         // ── Activación ───────────────────────────────────────────────────────
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
-            => await CargarAsync();
+        {
+            // Precargar dropdowns de usuarios y sucursales en background
+            _ = PrecargarDropdownsAsync(cancellationToken);
+            await CargarAsync();
+        }
+
+        private async Task PrecargarDropdownsAsync(CancellationToken ct = default)
+        {
+            try
+            {
+                // Usuarios - usar IInventarioServicio o IUnitOfWork si está disponible
+                // Por ahora mantenemos solo "Todos" como placeholder
+                // TODO: Agregar método para obtener usuarios distintos en IMovimientoStockRepositorio
+            }
+            catch
+            {
+                // Ignorar errores de precarga
+            }
+        }
 
         // ── Carga con filtros y paginación ───────────────────────────────────
         private async Task CargarAsync()
