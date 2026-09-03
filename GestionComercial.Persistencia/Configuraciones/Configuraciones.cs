@@ -247,6 +247,7 @@ namespace GestionComercial.Persistencia.Configuraciones
                 // ── Campos de anulación ─────────────────────────────────────────
                 b.Property(v => v.MotivoAnulacion).HasMaxLength(500);
                 b.HasIndex(v => v.Fecha);
+                b.HasIndex(v => v.Id_caja);
                 b.HasIndex(v => new { v.Id_sucursal, v.Fecha });
                 b.HasOne(v => v.Sucursal).WithMany(s => s.Ventas)
                  .HasForeignKey(v => v.Id_sucursal).OnDelete(DeleteBehavior.Restrict);

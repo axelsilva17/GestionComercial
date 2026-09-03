@@ -16,6 +16,7 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Include(v => v.Pagos).ThenInclude(p => p.MetodoPago)
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(v => v.Id == idVenta);
 
         public async Task<IEnumerable<Venta>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal)
