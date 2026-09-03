@@ -10,6 +10,20 @@ namespace GestionComercial.UI.Views.Compras
 
         public CompraView() => InitializeComponent();
 
+        private void BusquedaProveedor_KeyDown(object sender, KeyEventArgs e)
+        {
+            // The search is handled by the ViewModel property setter (debounce/filter)
+            // This handler is here for potential future Enter-key actions
+        }
+
+        private void LimpiarBusquedaProveedor_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (VM != null)
+            {
+                VM.BusquedaProveedor = string.Empty;
+            }
+        }
+
         private async void BuscarProducto_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             await VM?.BuscarProductoAsync();

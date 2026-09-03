@@ -31,6 +31,11 @@ namespace GestionComercial.Tests.Servicios
             _mockUow.Setup(u => u.Compras).Returns(_mockCompraRepo.Object);
             _mockUow.Setup(u => u.Productos).Returns(_mockProductoRepo.Object);
 
+            // Mock para EjecutarEnTransaccionAsync: ejecutar el callback inmediatamente
+            _mockUow
+                .Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
+                .Returns<Func<Task>>(async callback => await callback());
+
             _servicio = new CompraServicio(_mockUow.Object, _mockInventario.Object, _sesionServicio);
         }
 

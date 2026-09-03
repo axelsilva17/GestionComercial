@@ -9,54 +9,33 @@
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
 
-        <Style x:Key="CompraRow" TargetType="DataGridRow">
-            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridRow">
-                        <Border x:Name="rb" Background="Transparent" CornerRadius="8" Margin="4,2">
-                            <DataGridCellsPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="rb" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="rb" Property="Background" Value="#1A3A5C"/>
-                                <Setter TargetName="rb" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                <Setter TargetName="rb" Property="BorderThickness" Value="1"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="ComprasGrid" TargetType="DataGrid">
-            <Setter Property="Background"            Value="Transparent"/>
-            <Setter Property="BorderThickness"       Value="0"/>
-            <Setter Property="GridLinesVisibility"   Value="None"/>
-            <Setter Property="HeadersVisibility"     Value="Column"/>
-            <Setter Property="CanUserAddRows"        Value="False"/>
-            <Setter Property="CanUserDeleteRows"     Value="False"/>
-            <Setter Property="CanUserReorderColumns" Value="False"/>
-            <Setter Property="SelectionMode"         Value="Single"/>
-            <Setter Property="SelectionUnit"         Value="FullRow"/>
-            <Setter Property="AutoGenerateColumns"   Value="False"/>
-            <Setter Property="FontSize"              Value="13"/>
-            <Setter Property="RowHeight"             Value="56"/>
-            <Setter Property="ColumnHeaderHeight"    Value="38"/>
-            <Setter Property="RowStyle"              Value="{StaticResource CompraRow}"/>
+            <Setter Property="Background"               Value="Transparent"/>
+            <Setter Property="BorderThickness"          Value="0"/>
+            <Setter Property="GridLinesVisibility"      Value="None"/>
+            <Setter Property="HeadersVisibility"        Value="Column"/>
+            <Setter Property="IsReadOnly"               Value="True"/>
+            <Setter Property="CanUserAddRows"           Value="False"/>
+            <Setter Property="CanUserDeleteRows"        Value="False"/>
+            <Setter Property="CanUserReorderColumns"    Value="False"/>
+            <Setter Property="CanUserSortColumns"       Value="False"/>
+            <Setter Property="CanUserResizeColumns"     Value="False"/>
+            <Setter Property="SelectionMode"            Value="Single"/>
+            <Setter Property="SelectionUnit"            Value="FullRow"/>
+            <Setter Property="AutoGenerateColumns"      Value="False"/>
+            <Setter Property="FontSize"                 Value="13"/>
+            <Setter Property="RowHeight"                Value="56"/>
+            <Setter Property="ColumnHeaderHeight"       Value="38"/>
+            <Setter Property="RowBackground"            Value="{DynamicResource CardBrush}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceBrush}"/>
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background"      Value="Transparent"/>
-            <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
-            <Setter Property="FontSize"        Value="10"/>
-            <Setter Property="FontWeight"      Value="Bold"/>
-            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="FontSize"        Value="11"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="Padding"         Value="8,8"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
         </Style>
@@ -64,6 +43,7 @@
         <Style TargetType="DataGridCell">
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -73,6 +53,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="SideLabel" TargetType="TextBlock">
@@ -195,49 +181,25 @@
             </Grid>
 
             <!-- Filtros -->
-            <Border Grid.Row="4" Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,10">
+            <Border Grid.Row="4" Background="{DynamicResource SurfaceBrush}"
+                    BorderThickness="0.5" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Padding="10,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="155"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="155"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="155"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="155"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="38">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center"
-                                       Margin="10,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBox x:Name="TextoBusqueda" Grid.Column="1"
-                                     Background="Transparent" BorderThickness="0"
-                                     Foreground="{DynamicResource TextPrimaryBrush}"
-                                     FontSize="13" VerticalContentAlignment="Center" Padding="0,0,10,0"/>
-                        </Grid>
-                    </Border>
+                    <DatePicker x:Name="FechaDesde" Grid.Column="0" Style="{StaticResource FilterDatePickerStyle}"/>
 
-                    <DatePicker x:Name="FechaDesde" Style="{StaticResource FilterDatePickerStyle}"/>
+                    <DatePicker x:Name="FechaHasta" Grid.Column="2" Style="{StaticResource FilterDatePickerStyle}"/>
 
-                    <DatePicker x:Name="FechaHasta" Style="{StaticResource FilterDatePickerStyle}"/>
-
-                    <ComboBox Style="{StaticResource FilterComboBoxStyle}"
+                    <ComboBox Grid.Column="4" Style="{StaticResource FilterComboBoxStyle}"
                               ItemsSource="{Binding Proveedores}"
                               SelectedItem="{Binding ProveedorFiltro}"
                               DisplayMemberPath="Nombre"/>
-
-                    <Button x:Name="Buscar" Grid.Column="8"
-                            Content="Buscar" Height="38" Padding="18,0"
-                            FontSize="13" Style="{StaticResource PrimaryButton}"/>
                 </Grid>
             </Border>
 
@@ -250,17 +212,18 @@
                               ItemsSource="{Binding Compras}" Margin="0,0">
                         <DataGrid.Columns>
 
-                            <DataGridTemplateColumn Header="N° ORDEN" Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Margin="12,0" VerticalAlignment="Center">
-                                            <Run Text="#" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
-                                            <Run Text="{Binding IdCompra}" Foreground="{DynamicResource PrimaryBrush}"
-                                                 FontWeight="SemiBold" FontSize="14" FontFamily="Consolas"/>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="N° ORDEN" Binding="{Binding IdCompra}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="FontFamily" Value="Consolas"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTemplateColumn Header="FECHA" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -276,50 +239,42 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="PROVEEDOR" Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                                            <Border Width="32" Height="32" CornerRadius="8"
-                                                    Background="{DynamicResource SurfaceBrush}">
-                                                <TextBlock Text="{Binding ProveedorInicial}" FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource PrimaryBrush}"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Margin="10,0,0,0">
-                                                <TextBlock Text="{Binding ProveedorNombre}" FontSize="13" FontWeight="Medium"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                <TextBlock Text="{Binding UsuarioNombre}" FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="PROVEEDOR" Binding="{Binding ProveedorNombre}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="PRODUCTOS" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
-                                                   VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Run Text="{Binding CantidadProductos, Mode=OneWay}"/>
-                                            <Run Text=" ítem(s)"/>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="PRODUCTOS" Binding="{Binding CantidadProductos, StringFormat='{}0 ítem(s)'}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="TOTAL" Width="130">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Total, Converter={StaticResource DecimalToMoneda}}"
-                                                   FontSize="15" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PrimaryBrush}"
-                                                   VerticalAlignment="Center" HorizontalAlignment="Right"
-                                                   Margin="0,0,20,0"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="TOTAL" Binding="{Binding Total, Converter={StaticResource DecimalToMoneda}}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="15"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTemplateColumn Width="36">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -366,9 +321,8 @@
                     <Button x:Name="PaginaAnterior" Content="← Ant"
                             Height="34" Padding="14,0" FontSize="12"
                             Style="{StaticResource PrimaryButton}" Margin="0,0,6,0"/>
-                    <Border Background="{DynamicResource CardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="14,0" Height="34">
+                    <Border Background="{DynamicResource SurfaceBrush}"
+                            BorderThickness="0.5" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="6" Padding="14,0" Height="34">
                         <TextBlock VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12">
                             <Run Text="{Binding PaginaActual, Mode=OneWay}" FontWeight="Bold"/>

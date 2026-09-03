@@ -49,53 +49,57 @@ namespace GestionComercial.Aplicacion.Servicios
             if (!_sesion.HasPermission("Compras.Crear"))
                 throw new KeyNotFoundException("No tenés permiso para crear compras.");
 
-            // ── Crear la compra con factory method (DDD) ──
-            var compra = Compra.Crear(
-                idProveedor: dto.IdProveedor,
-                idSucursal: dto.IdSucursal,
-                idUsuario: dto.IdUsuario,
-                observacion: dto.Observacion
-            );
-
-            // Batch fetch: traer todos los productos de una sola vez
+            // Batch fetch: traer todos los productos de una sola vez (fuera de transacción — solo lectura)
             var idsProductos = dto.Items.Select(i => i.IdProducto).Distinct().ToList();
             var productos = await _uow.Productos.BuscarAsync(p => idsProductos.Contains(p.Id));
             var productosDict = productos.ToDictionary(p => p.Id);
 
-            // ── Agregar detalles con factory methods (DDD) ──
-            foreach (var item in dto.Items)
+            Compra compra = null!;
+
+            await _uow.EjecutarEnTransaccionAsync(async () =>
             {
-                if (!productosDict.TryGetValue(item.IdProducto, out var producto))
-                    throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
-
-                // Factory method: CompraDetalle.Crear() calcula el subtotal SOLO
-                var detalle = CompraDetalle.Crear(producto, item.Cantidad, item.PrecioCosto);
-                
-                // Agregar a la compra — Compra recalcula el total automáticamente
-                compra.AgregarDetalle(detalle);
-
-                // Actualizar precio de costo del producto
-                producto.PrecioCostoActual = item.PrecioCosto;
-                _uow.Productos.Actualizar(producto);
-
-                // Registrar movimiento de stock (Entrada por compra)
-                // Esto también actualiza el stock del producto
-                await _inventarioServicio.RegistrarMovimientoAsync(
-                    item.IdProducto,
-                    "Entrada",
-                    item.Cantidad,
-                    $"Compra #{compra.Id} - {producto.Nombre}",
-                    dto.IdSucursal,
-                    dto.IdUsuario,
-                    guardarCambios: false,
-                    unidadTrabajo: _uow
+                // ── Crear la compra con factory method (DDD) ──
+                compra = Compra.Crear(
+                    idProveedor: dto.IdProveedor,
+                    idSucursal: dto.IdSucursal,
+                    idUsuario: dto.IdUsuario,
+                    observacion: dto.Observacion
                 );
-            }
 
-            await _uow.Compras.AgregarAsync(compra);
-            await _uow.GuardarCambiosAsync();
+                // ── Agregar detalles con factory methods (DDD) ──
+                foreach (var item in dto.Items)
+                {
+                    if (!productosDict.TryGetValue(item.IdProducto, out var producto))
+                        throw new KeyNotFoundException($"Producto {item.IdProducto} no encontrado");
 
-            return await ObtenerPorIdAsync(compra.Id) 
+                    // Factory method: CompraDetalle.Crear() calcula el subtotal SOLO
+                    var detalle = CompraDetalle.Crear(producto, item.Cantidad, item.PrecioCosto);
+
+                    // Agregar a la compra — Compra recalcula el total automáticamente
+                    compra.AgregarDetalle(detalle);
+
+                    // Actualizar precio de costo del producto
+                    producto.PrecioCostoActual = item.PrecioCosto;
+                    _uow.Productos.Actualizar(producto);
+
+                    // Registrar movimiento de stock (Entrada por compra)
+                    // Esto también actualiza el stock del producto
+                    await _inventarioServicio.RegistrarMovimientoAsync(
+                        item.IdProducto,
+                        "Entrada",
+                        item.Cantidad,
+                        $"Compra #{compra.Id} - {producto.Nombre}",
+                        dto.IdSucursal,
+                        dto.IdUsuario,
+                        guardarCambios: false,
+                        unidadTrabajo: _uow
+                    );
+                }
+
+                await _uow.Compras.AgregarAsync(compra);
+            });
+
+            return await ObtenerPorIdAsync(compra.Id)
                 ?? throw new InvalidOperationException("Error al crear la compra");
         }
 

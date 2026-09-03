@@ -218,6 +218,15 @@ public string TextoBusqueda
                         Activo = p.Activo
                     }).ToList();
                     
+                    listaProveedores.Insert(0, new ProveedorItemDto
+                    {
+                        IdProveedor = 0,
+                        Nombre = "Todos",
+                        Telefono = string.Empty,
+                        Email = string.Empty,
+                        Activo = true
+                    });
+                    
                     Proveedores = new ObservableCollection<ProveedorItemDto>(listaProveedores);
                 }
                 
@@ -229,16 +238,24 @@ public string TextoBusqueda
                 }
                 
                 // Cargar compras con filtros
-                DateTime desde = FechaDesde ?? DateTime.Now.AddMonths(-1);
-                DateTime hasta = FechaHasta ?? DateTime.Now;
-                
-                var compras = await _compraServicio.ObtenerPorPeriodoAsync(
-                    _sesion.IdSucursal, desde, hasta.AddDays(1));
+                IEnumerable<CompraDto> compras;
+                if (FechaDesde.HasValue || FechaHasta.HasValue)
+                {
+                    DateTime desde = FechaDesde ?? DateTime.MinValue;
+                    DateTime hasta = FechaHasta ?? DateTime.MaxValue;
+                    compras = await _compraServicio.ObtenerPorPeriodoAsync(
+                        _sesion.IdSucursal, desde, hasta.AddDays(1));
+                }
+                else
+                {
+                    // No period filter: fetch ALL purchases for this branch
+                    compras = await _compraServicio.ObtenerPorSucursalAsync(_sesion.IdSucursal);
+                }
                 
                 // Aplicar filtros
                 var filtered = compras.AsEnumerable();
                 
-                if (ProveedorFiltro != null)
+                if (ProveedorFiltro != null && ProveedorFiltro.IdProveedor != 0)
                 {
                     filtered = filtered.Where(c => c.Id_proveedor == ProveedorFiltro.IdProveedor);
                 }

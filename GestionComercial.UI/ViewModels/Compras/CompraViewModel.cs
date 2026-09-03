@@ -26,11 +26,42 @@ namespace GestionComercial.UI.ViewModels.Compras
         private readonly ShellViewModel _shell;
 
         // ── Proveedores ───────────────────────────────────────────────
+        private List<ProveedorItemDto> _todosProveedores = new();
         private ObservableCollection<ProveedorItemDto> _proveedores = new();
         public ObservableCollection<ProveedorItemDto> Proveedores
         {
             get => _proveedores;
             set { _proveedores = value; NotifyOfPropertyChange(() => Proveedores); }
+        }
+
+        private string _busquedaProveedor = string.Empty;
+        public string BusquedaProveedor
+        {
+            get => _busquedaProveedor;
+            set
+            {
+                _busquedaProveedor = value;
+                NotifyOfPropertyChange(() => BusquedaProveedor);
+                FiltrarProveedores();
+            }
+        }
+
+        private void FiltrarProveedores()
+        {
+            if (string.IsNullOrWhiteSpace(_busquedaProveedor))
+            {
+                Proveedores = new ObservableCollection<ProveedorItemDto>(_todosProveedores);
+            }
+            else
+            {
+                var termino = _busquedaProveedor.Trim().ToLower();
+                var filtrados = _todosProveedores
+                    .Where(p => (p.Nombre?.ToLower().Contains(termino) ?? false) ||
+                               (p.Telefono?.ToLower().Contains(termino) ?? false) ||
+                               (p.Email?.ToLower().Contains(termino) ?? false))
+                    .ToList();
+                Proveedores = new ObservableCollection<ProveedorItemDto>(filtrados);
+            }
         }
 
         private ProveedorItemDto _proveedorSeleccionado;
@@ -241,6 +272,7 @@ namespace GestionComercial.UI.ViewModels.Compras
                         Activo = p.Activo
                     }).ToList();
                 
+                _todosProveedores = listaProveedores;
                 System.Diagnostics.Debug.WriteLine($"Proveedores activos: {listaProveedores.Count}");
                 Proveedores = new ObservableCollection<ProveedorItemDto>(listaProveedores);
             }
@@ -368,9 +400,24 @@ namespace GestionComercial.UI.ViewModels.Compras
 
         public async Task ConfirmarCompra()
         {
-            if (!CanGuardar) return;
+            if (ProveedorSeleccionado == null)
+            {
+                MostrarError("Seleccioná un proveedor antes de confirmar la compra.");
+                return;
+            }
+            if (Items == null || Items.Count == 0)
+            {
+                MostrarError("Agregá al menos un producto antes de confirmar la compra.");
+                return;
+            }
+            if (Total <= 0)
+            {
+                MostrarError("El total de la compra debe ser mayor a 0.");
+                return;
+            }
 
             IsLoading = true;
+            LimpiarError();
             try
             {
                 var dto = new CompraCrearDto
