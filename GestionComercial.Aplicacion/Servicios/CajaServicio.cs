@@ -8,6 +8,7 @@ using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Aplicacion.Servicios;
+using System.Threading;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -22,11 +23,10 @@ namespace GestionComercial.Aplicacion.Servicios
             _sesion = sesion ?? throw new ArgumentNullException(nameof(sesion));
         }
 
-        // ── Existentes sin cambios ────────────────────────────────────────────
-        public async Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal)
-            => await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
+        public async Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal, ct);
 
-        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, TurnoCajaEnum? turno = null, bool esPrimaria = false)
+        public async Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, TurnoCajaEnum? turno = null, bool esPrimaria = false, CancellationToken ct = default)
         {
             if (!_sesion.HasPermission("Caja.Abrir"))
                 throw new NegocioException("No tenés permiso para abrir caja.");
@@ -37,13 +37,13 @@ namespace GestionComercial.Aplicacion.Servicios
             if (turno.HasValue)
             {
                 var turnoStr = turno.Value.ToDisplayString();
-                var cajaEnTurno = await _uow.Cajas.ObtenerCajaAbiertaPorSucursYTurnoAsync(idSucursal, turnoStr);
+                var cajaEnTurno = await _uow.Cajas.ObtenerCajaAbiertaPorSucursYTurnoAsync(idSucursal, turnoStr, ct);
                 if (cajaEnTurno != null)
                     throw new NegocioException($"Ya existe una caja abierta para el turno {turnoStr} en esta sucursal");
             }
             else
             {
-                var cajaExistente = await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal);
+                var cajaExistente = await _uow.Cajas.ObtenerCajaAbiertaAsync(idSucursal, ct);
                 if (cajaExistente != null)
                     throw new NegocioException("Ya existe una caja abierta para esta sucursal");
             }
@@ -68,7 +68,7 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.EjecutarEnTransaccionAsync(async () =>
             {
                 LogHelper.Log("[DEBUG-AbrirCaja] Paso 1: Agregando caja...");
-                await _uow.Cajas.AgregarAsync(caja);
+                await _uow.Cajas.AgregarAsync(caja, ct);
                 LogHelper.Log($"[DEBUG-AbrirCaja] Caja guardada con ID: {caja.Id}");
 
                 // Registrar auditoría de apertura de caja
@@ -85,8 +85,7 @@ namespace GestionComercial.Aplicacion.Servicios
                         valoresNuevos: valoresNuevos,
                         workstation: Environment.MachineName,
                         idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal
-                    );
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal, ct);
                     LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de caja guardada OK");
                 }
                 catch (Exception ex)
@@ -129,8 +128,7 @@ namespace GestionComercial.Aplicacion.Servicios
                         valoresNuevos: movimientoValoresNuevos,
                         workstation: Environment.MachineName,
                         idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal
-                    );
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : idSucursal, ct);
                     LogHelper.Log("[DEBUG-AbrirCaja] Auditoría de movimiento guardada OK");
                 }
                 catch (Exception ex)
@@ -141,14 +139,14 @@ namespace GestionComercial.Aplicacion.Servicios
                 LogHelper.Log("[DEBUG-AbrirCaja] Paso 4: Agregando movimiento de apertura...");
                 // Asignar navegación para que EF Core fix-up el FK Id_caja correctamente
                 movimientoApertura.Caja = caja;
-                await _uow.MovimientosCaja.AgregarAsync(movimientoApertura);
+                await _uow.MovimientosCaja.AgregarAsync(movimientoApertura, ct);
                 LogHelper.Log("[DEBUG-AbrirCaja] TODO EXITOSO!");
-            });
+            }, ct);
 
             return caja;
         }
 
-        public async Task<Caja> CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal)
+        public async Task<Caja> CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal, CancellationToken ct = default)
         {
             if (!_sesion.HasPermission("Caja.Cerrar"))
             {
@@ -157,7 +155,7 @@ namespace GestionComercial.Aplicacion.Servicios
             }
 
             LogHelper.Log("[DEBUG-CerrarCaja] Iniciando...");
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct)
                 ?? throw new CajaNoAbiertaException();
             if (!caja.EstaAbierta)
                 throw new CajaNoAbiertaException();
@@ -207,8 +205,7 @@ namespace GestionComercial.Aplicacion.Servicios
                         valoresNuevos: valoresNuevos,
                         workstation: Environment.MachineName,
                         idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-                    );
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal, ct);
                     LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de caja guardada OK");
                 }
                 catch (Exception ex)
@@ -251,8 +248,7 @@ namespace GestionComercial.Aplicacion.Servicios
                         valoresNuevos: movimientoValoresNuevos,
                         workstation: Environment.MachineName,
                         idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-                    );
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal, ct);
                     LogHelper.Log("[DEBUG-CerrarCaja] Auditoría de movimiento guardada OK");
                 }
                 catch (Exception ex)
@@ -261,17 +257,17 @@ namespace GestionComercial.Aplicacion.Servicios
                 }
 
                 LogHelper.Log("[DEBUG-CerrarCaja] Paso 4: Agregando movimiento de cierre...");
-                await _uow.MovimientosCaja.AgregarAsync(movimientoCierre);
+                await _uow.MovimientosCaja.AgregarAsync(movimientoCierre, ct);
                 LogHelper.Log("[DEBUG-CerrarCaja] TODO EXITOSO!");
-            });
+            }, ct);
 
             return caja;
         }
 
         public async Task RegistrarMovimientoAsync(int idCaja, TipoMovimientoCajaEnum tipo,
-                                                   decimal monto, string descripcion)
+                                                   decimal monto, string descripcion, CancellationToken ct = default)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct)
                 ?? throw new CajaNoAbiertaException();
             if (!caja.EstaAbierta)
                 throw new CajaNoAbiertaException();
@@ -314,10 +310,9 @@ namespace GestionComercial.Aplicacion.Servicios
                 valoresNuevos: movimientoValoresNuevos,
                 workstation: Environment.MachineName,
                 idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-            );
+                idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal, ct);
 
-            await _uow.MovimientosCaja.AgregarAsync(movimiento);
+            await _uow.MovimientosCaja.AgregarAsync(movimiento, ct);
 
             // Actualizar monto final de la caja
             caja.MontoFinal += tipo == TipoMovimientoCajaEnum.Ingreso ? monto : -monto;
@@ -342,16 +337,15 @@ namespace GestionComercial.Aplicacion.Servicios
                 valoresNuevos: valoresNuevosCaja,
                 workstation: Environment.MachineName,
                 idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-            );
+                idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal, ct);
 
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
         }
 
         // ── Nuevo: resumen automático para el cierre ──────────────────────────
-        public async Task<ResumenCierreDto> ObtenerResumenCierreAsync(int idCaja)
+        public async Task<ResumenCierreDto> ObtenerResumenCierreAsync(int idCaja, CancellationToken ct = default)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct)
                 ?? throw new CajaNoAbiertaException();
 
             var resumen = new ResumenCierreDto
@@ -366,16 +360,17 @@ namespace GestionComercial.Aplicacion.Servicios
                 caja.Id_sucursal,
                 caja.FechaApertura,
                 DateTime.Now,
-                idCaja); // Filtro por caja específica
+                idCaja, // Filtro por caja específica
+                ct);
 
             // Necesitamos saber cuáles métodos son efectivo.
             // Usamos el repositorio de MetodosPago para obtener los detalles.
             var metodosPago = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(
-                await ObtenerIdEmpresaDeSucursalAsync(caja.Id_sucursal));
+                await ObtenerIdEmpresaDeSucursalAsync(caja.Id_sucursal, ct), ct);
 
             var metodosDict = metodosPago.ToDictionary(m => m.Nombre, m => m.Categoria);
 
-            foreach (var (metodo, total) in pagosDelTurno)
+            foreach (var (metodo, total, cantidad) in pagosDelTurno)
             {
                 var categoria = metodosDict.TryGetValue(metodo, out var cat) ? cat : "Otro";
 
@@ -383,6 +378,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 {
                     Metodo     = metodo,
                     Total      = total,
+                    Cantidad   = cantidad,
                     Categoria  = categoria,
                 });
 
@@ -414,7 +410,7 @@ namespace GestionComercial.Aplicacion.Servicios
             // Los movimientos de Ingreso por venta ya están en VentasEfectivo (desde los pagos)
             // Los movimientos de Egreso INCLUYEN el vuelto (tiene Id_venta) y egresos manuales
             // Apertura/Cierre son operativos y no afectan el saldo físico
-            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
+            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja, ct);
             foreach (var mov in movimientos)
             {
                 if (mov.Tipo == (int)TipoMovimientoCajaEnum.Ingreso && mov.Id_venta == null)
@@ -429,31 +425,48 @@ namespace GestionComercial.Aplicacion.Servicios
 
         ///         /// Diferencia entre el conteo físico y el saldo esperado, calculada
         /// a partir del resumen centralizado. Devuelve 0 si la caja sigue abierta.
-        public async Task<decimal> ObtenerDiferenciaCierreAsync(int idCaja)
+        public async Task<decimal> ObtenerDiferenciaCierreAsync(int idCaja, CancellationToken ct = default)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct)
                 ?? throw new CajaNoAbiertaException();
 
             // Caja abierta: no hay conteo físico todavía, por lo que no existe diferencia.
             if (!caja.MontoFinal.HasValue)
                 return 0m;
 
-            var resumen = await ObtenerResumenCierreAsync(idCaja);
+            var resumen = await ObtenerResumenCierreAsync(idCaja, ct);
             return caja.MontoFinal.Value - resumen.SaldoEsperado;
         }
 
-            // Helper: obtener IdEmpresa desde IdSucursal
-        private async Task<int> ObtenerIdEmpresaDeSucursalAsync(int idSucursal)
+        // Helper: obtener IdEmpresa desde IdSucursal
+        private async Task<int> ObtenerIdEmpresaDeSucursalAsync(int idSucursal, CancellationToken ct = default)
         {
-            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal);
+            var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(idSucursal, ct);
             return sucursal?.Id_empresa ?? 0;
         }
 
-        public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta)
-            => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta);
+        public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta, ct);
+
+        // Nuevo: historial con proyección ligera y Take en SQL
+        public async Task<List<CajaHistorialDto>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, int take, CancellationToken ct = default)
+        {
+            var cajas = await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta, take, ct);
+            return cajas.Select(c => new CajaHistorialDto
+            {
+                Id = c.Id,
+                FechaApertura = c.FechaApertura,
+                FechaCierre = c.FechaCierre,
+                Estado = c.Estado,
+                SaldoInicial = c.SaldoInicial,
+                SaldoFinal = c.SaldoFinal,
+                SucursalNombre = c.SucursalNombre,
+                UsuarioApertura = c.UsuarioApertura
+            }).ToList();
+        }
 
         ///         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
-        public async Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia)
+        public async Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia, CancellationToken ct = default)
         {
             try
             {
@@ -469,7 +482,8 @@ namespace GestionComercial.Aplicacion.Servicios
                     valoresAnteriores: null,
                     valoresNuevos: datosAuditoriaJson,
                     workstation: Environment.MachineName,
-                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null);
+                    idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
+                    idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : null, ct);
                     
                 LogHelper.Log("[CajaServicio] Auditoría de cierre registrada exitosamente");
             }
@@ -482,16 +496,16 @@ namespace GestionComercial.Aplicacion.Servicios
 
         ///         /// Obtiene el total de efectivo recibido por caja desde las ventas.
         /// Usado para cierre automático de caja.
-        public async Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja)
+        public async Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja, CancellationToken ct = default)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct);
             if (caja == null)
                 return 0;
 
             var ventas = await _uow.Ventas.ObtenerVentasLigerasPorCajaAsync(
                 idCaja,
                 caja.FechaApertura,
-                DateTime.Now);
+                DateTime.Now, ct);
 
             return ventas
                 .Where(v => v.Estado == 2)
@@ -499,9 +513,9 @@ namespace GestionComercial.Aplicacion.Servicios
         }
 
         // ── Métodos para CajaViewModel ───────────────────────────────────────────
-        public async Task<IEnumerable<MovimientoCajaDto>> ObtenerMovimientosAsync(int idCaja)
+        public async Task<IEnumerable<MovimientoCajaDto>> ObtenerMovimientosAsync(int idCaja, CancellationToken ct = default)
         {
-            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
+            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja, ct);
             return movimientos.Select(m => new MovimientoCajaDto
             {
                 IdMovimiento = m.Id,
@@ -520,16 +534,16 @@ namespace GestionComercial.Aplicacion.Servicios
             });
         }
 
-        public async Task<IEnumerable<VentaDto>> ObtenerVentasDelDiaAsync(int idCaja)
+        public async Task<IEnumerable<VentaDto>> ObtenerVentasDelDiaAsync(int idCaja, CancellationToken ct = default)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct);
             if (caja == null)
                 return Enumerable.Empty<VentaDto>();
 
             var ventas = await _uow.Ventas.ObtenerVentasLigerasPorCajaAsync(
                 idCaja,
                 caja.FechaApertura,
-                DateTime.Now);
+                DateTime.Now, ct);
 
             return ventas
                 .Where(v => v.Estado == 2)
@@ -542,9 +556,9 @@ namespace GestionComercial.Aplicacion.Servicios
                 });
         }
 
-        public async Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja)
+        public async Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja, CancellationToken ct = default)
         {
-            var pagos = await _uow.Ventas.ObtenerPagosPorCajaAsync(idCaja);
+            var pagos = await _uow.Ventas.ObtenerPagosPorCajaAsync(idCaja, ct);
 
             return pagos.Select(p => new DesglosePagoDto
             {
@@ -554,9 +568,9 @@ namespace GestionComercial.Aplicacion.Servicios
             }).ToList();
         }
 
-        public async Task EliminarCajaAsync(int idCaja)
+        public async Task EliminarCajaAsync(int idCaja, CancellationToken ct = default)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct)
                 ?? throw new NegocioException("Caja no encontrada.");
 
             if (caja.EsPrimaria)
@@ -565,7 +579,7 @@ namespace GestionComercial.Aplicacion.Servicios
             if (caja.EstaAbierta)
                 throw new NegocioException("No se puede eliminar una caja abierta. Cerrala primero.");
 
-            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja);
+            var movimientos = await _uow.MovimientosCaja.ObtenerPorCajaAsync(idCaja, ct);
             if (movimientos.Any(m => m.Tipo == (int)TipoMovimientoCajaEnum.Ingreso
                                   || m.Tipo == (int)TipoMovimientoCajaEnum.Egreso))
                 throw new NegocioException("La caja tiene movimientos de ingreso/egreso y no puede ser eliminada.");
@@ -607,14 +621,13 @@ namespace GestionComercial.Aplicacion.Servicios
                         valoresNuevos: valoresNuevos,
                         workstation: Environment.MachineName,
                         idEmpresa: _sesion.IdEmpresa != 0 ? _sesion.IdEmpresa : null,
-                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal
-                    );
+                        idSucursal: _sesion.IdSucursal != 0 ? _sesion.IdSucursal : caja.Id_sucursal, ct);
                 }
                 catch (Exception ex)
                 {
                     LogHelper.LogError("[CajaServicio] Error al registrar auditoría de eliminación", ex);
                 }
-            });
+            }, ct);
         }
     }
 }

@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Dominio.Entidades.Compras;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using System.Threading;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -20,31 +21,31 @@ namespace GestionComercial.Aplicacion.Servicios
             _sesion = sesion;
         }
 
-        public async Task<IEnumerable<CompraDto>> ObtenerPorSucursalAsync(int idSucursal)
+        public async Task<IEnumerable<CompraDto>> ObtenerPorSucursalAsync(int idSucursal, CancellationToken ct = default)
         {
-            var compras = await _uow.Compras.ObtenerPorSucursalAsync(idSucursal);
+            var compras = await _uow.Compras.ObtenerPorSucursalAsync(idSucursal, ct);
             return compras.Select(MapearDto);
         }
 
-        public async Task<IEnumerable<CompraDto>> ObtenerPorPeriodoAsync(int idSucursal, DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<CompraDto>> ObtenerPorPeriodoAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
-            var compras = await _uow.Compras.ObtenerPorPeriodoAsync(idSucursal, desde, hasta);
+            var compras = await _uow.Compras.ObtenerPorPeriodoAsync(idSucursal, desde, hasta, ct);
             return compras.Select(MapearDto);
         }
 
-        public async Task<IEnumerable<CompraDto>> ObtenerPorProveedorAsync(int idProveedor)
+        public async Task<IEnumerable<CompraDto>> ObtenerPorProveedorAsync(int idProveedor, CancellationToken ct = default)
         {
-            var compras = await _uow.Compras.ObtenerPorProveedorAsync(idProveedor);
+            var compras = await _uow.Compras.ObtenerPorProveedorAsync(idProveedor, ct);
             return compras.Select(MapearDto);
         }
 
-        public async Task<CompraDto?> ObtenerPorIdAsync(int id)
+        public async Task<CompraDto?> ObtenerPorIdAsync(int id, CancellationToken ct = default)
         {
-            var c = await _uow.Compras.ObtenerConDetallesAsync(id);
+            var c = await _uow.Compras.ObtenerConDetallesAsync(id, ct);
             return c == null ? null : MapearDto(c);
         }
 
-        public async Task<CompraDto> CrearAsync(CompraCrearDto dto)
+        public async Task<CompraDto> CrearAsync(CompraCrearDto dto, CancellationToken ct = default)
         {
             if (!_sesion.HasPermission("Compras.Crear"))
                 throw new KeyNotFoundException("No tenés permiso para crear compras.");
@@ -101,6 +102,32 @@ namespace GestionComercial.Aplicacion.Servicios
 
             return await ObtenerPorIdAsync(compra.Id)
                 ?? throw new InvalidOperationException("Error al crear la compra");
+        }
+
+        // ── Nuevo: compras paginadas ────────────────────────────────────────────
+        public async Task<(IEnumerable<CompraDto> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize, CancellationToken ct = default)
+        {
+            var (compras, totalCount) = await _uow.Compras.ObtenerPorSucursalPaginadoAsync(
+                idSucursal, desde, hasta, page, pageSize, ct);
+            return (compras.Select(MapearDto), totalCount);
+        }
+
+        // ── Nuevo: métricas agregadas en SQL ───────────────────────────────────
+        public async Task<MetricasComprasDto?> ObtenerMetricasComprasAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            var metricas = await _uow.Compras.ObtenerMetricasComprasAsync(idSucursal, desde, hasta, ct);
+            if (metricas == null) return null;
+
+            return new MetricasComprasDto
+            {
+                Total = metricas.Value.Total,
+                Count = metricas.Value.Count,
+                Promedio = metricas.Value.Promedio,
+                ProveedorTop = metricas.Value.ProveedorTop,
+                ProductosRepuestos = metricas.Value.ProductosRepuestos
+            };
         }
 
         private static CompraDto MapearDto(Compra c) => new()

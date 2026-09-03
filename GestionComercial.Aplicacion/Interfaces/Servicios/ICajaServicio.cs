@@ -2,42 +2,61 @@ using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Enumeraciones;
+using System.Threading;
 
 namespace GestionComercial.Aplicacion.Interfaces.Servicios
 {
     public interface ICajaServicio
     {
-        Task<Caja?>           ObtenerCajaAbiertaAsync(int idSucursal);
-        Task<Caja>            AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, TurnoCajaEnum? turno = null, bool esPrimaria = false);
-        Task<Caja>            CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal);
-        Task                  RegistrarMovimientoAsync(int idCaja, TipoMovimientoCajaEnum tipo, decimal monto, string descripcion);
-        Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta);
+        Task<Caja?> ObtenerCajaAbiertaAsync(int idSucursal, CancellationToken ct = default);
+        Task<Caja> AbrirCajaAsync(int idSucursal, int idUsuario, decimal montoInicial, TurnoCajaEnum? turno = null, bool esPrimaria = false, CancellationToken ct = default);
+        Task<Caja> CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal, CancellationToken ct = default);
+        Task RegistrarMovimientoAsync(int idCaja, TipoMovimientoCajaEnum tipo, decimal monto, string descripcion, CancellationToken ct = default);
+        Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        // Nuevo: historial con proyección ligera y Take en SQL
+        Task<List<CajaHistorialDto>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, int take, CancellationToken ct = default);
 
         ///         /// Obtiene los movimientos de una caja para mostrar en la UI.
-        Task<IEnumerable<MovimientoCajaDto>> ObtenerMovimientosAsync(int idCaja);
+        Task<IEnumerable<MovimientoCajaDto>> ObtenerMovimientosAsync(int idCaja, CancellationToken ct = default);
 
         ///         /// Obtiene las ventas del día para una caja.
-        Task<IEnumerable<VentaDto>> ObtenerVentasDelDiaAsync(int idCaja);
+        Task<IEnumerable<VentaDto>> ObtenerVentasDelDiaAsync(int idCaja, CancellationToken ct = default);
 
         ///         /// Obtiene el desglose de pagos por método para una caja.
-        Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja);
+        Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja, CancellationToken ct = default);
 
         ///         /// Calcula automáticamente el resumen del turno separando efectivo
         /// de otros métodos de pago. Usar antes de mostrar el cierre.
-        Task<ResumenCierreDto> ObtenerResumenCierreAsync(int idCaja);
+        Task<ResumenCierreDto> ObtenerResumenCierreAsync(int idCaja, CancellationToken ct = default);
 
         ///         /// Calcula la diferencia entre el conteo físico (MontoFinal) y el saldo esperado.
         /// Devuelve 0 si la caja sigue abierta (sin MontoFinal).
-        Task<decimal> ObtenerDiferenciaCierreAsync(int idCaja);
+        Task<decimal> ObtenerDiferenciaCierreAsync(int idCaja, CancellationToken ct = default);
 
         ///         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
-        Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia);
+        Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia, CancellationToken ct = default);
 
         ///         /// Obtiene el total de efectivo recibido por caja desde las ventas.
         /// Usado para cierre automático de caja.
-        Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja);
+        Task<decimal> ObtenerTotalEfectivoPorCajaAsync(int idCaja, CancellationToken ct = default);
 
         ///         /// Elimina una caja (soft delete). No permite eliminar cajas primarias ni cajas abiertas.
-        Task EliminarCajaAsync(int idCaja);
+        Task EliminarCajaAsync(int idCaja, CancellationToken ct = default);
+    }
+
+    /// <summary>
+    /// DTO ligero para historial de cajas (proyección sin grafo completo).
+    /// </summary>
+    public class CajaHistorialDto
+    {
+        public int Id { get; set; }
+        public DateTime FechaApertura { get; set; }
+        public DateTime? FechaCierre { get; set; }
+        public int Estado { get; set; }
+        public decimal SaldoInicial { get; set; }
+        public decimal? SaldoFinal { get; set; }
+        public string SucursalNombre { get; set; } = string.Empty;
+        public string UsuarioApertura { get; set; } = string.Empty;
     }
 }

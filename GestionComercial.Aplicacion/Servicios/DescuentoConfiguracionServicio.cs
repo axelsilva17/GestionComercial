@@ -3,6 +3,7 @@ using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
+using System.Threading;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -23,7 +24,8 @@ namespace GestionComercial.Aplicacion.Servicios
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
             DateTime? fechaDesde, DateTime? fechaHasta,
             AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
-            decimal? montoMinimoCompra = null)
+            decimal? montoMinimoCompra = null,
+            CancellationToken ct = default)
         {
             if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
                 throw new InvalidOperationException("No tenés permiso para crear descuentos.");
@@ -49,15 +51,15 @@ namespace GestionComercial.Aplicacion.Servicios
                     }
                 }
 
-                await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento);
-            });
+                await _unitOfWork.DescuentoConfiguraciones.AgregarAsync(descuento, ct);
+            }, ct);
 
             return descuento;
         }
 
-        public async Task<DescuentoConfiguracion?> ObtenerPorIdAsync(int id)
+        public async Task<DescuentoConfiguracion?> ObtenerPorIdAsync(int id, CancellationToken ct = default)
         {
-            var resultados = await _unitOfWork.DescuentoConfiguraciones.ObtenerConMetodosPagoPorIdAsync(id);
+            var resultados = await _unitOfWork.DescuentoConfiguraciones.ObtenerConMetodosPagoPorIdAsync(id, ct);
             return resultados.FirstOrDefault();
         }
 
@@ -67,7 +69,8 @@ namespace GestionComercial.Aplicacion.Servicios
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
             DateTime? fechaDesde, DateTime? fechaHasta,
             AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
-            decimal? montoMinimoCompra = null)
+            decimal? montoMinimoCompra = null,
+            CancellationToken ct = default)
         {
             if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
                 throw new InvalidOperationException("No tenés permiso para editar descuentos.");
@@ -85,7 +88,7 @@ namespace GestionComercial.Aplicacion.Servicios
                     throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
             }
 
-            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
+            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id, ct)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
             descuento.Actualizar(nombre, valor, idProducto, idCategoria,
@@ -97,49 +100,50 @@ namespace GestionComercial.Aplicacion.Servicios
                 : (idsMetodosPago ?? new List<int>());
 
             await _unitOfWork.DescuentoConfiguraciones
-                .ActualizarMetodosPagoAsync(id, effectiveIds);
-            await _unitOfWork.GuardarCambiosAsync();
+                .ActualizarMetodosPagoAsync(id, effectiveIds, ct);
+            await _unitOfWork.GuardarCambiosAsync(ct);
         }
 
-        public async Task EliminarAsync(int id)
+        public async Task EliminarAsync(int id, CancellationToken ct = default)
         {
             if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
                 throw new InvalidOperationException("No tenés permiso para eliminar descuentos.");
 
-            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
+            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id, ct)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
             descuento.Inactivar();
             _unitOfWork.DescuentoConfiguraciones.Actualizar(descuento);
-            await _unitOfWork.GuardarCambiosAsync();
+            await _unitOfWork.GuardarCambiosAsync(ct);
         }
 
-        public async Task ActivarAsync(int id)
+        public async Task ActivarAsync(int id, CancellationToken ct = default)
         {
             if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
                 throw new InvalidOperationException("No tenés permiso para activar descuentos.");
 
-            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
+            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id, ct)
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
             descuento.Reactivar();
             _unitOfWork.DescuentoConfiguraciones.Actualizar(descuento);
-            await _unitOfWork.GuardarCambiosAsync();
+            await _unitOfWork.GuardarCambiosAsync(ct);
         }
 
-        public async Task<List<DescuentoConfiguracion>> ObtenerTodosAsync(int idEmpresa, bool? activo = null, string? texto = null)
+        public async Task<List<DescuentoConfiguracion>> ObtenerTodosAsync(int idEmpresa, bool? activo = null, string? texto = null, CancellationToken ct = default)
         {
-            return await _unitOfWork.DescuentoConfiguraciones.BuscarAsync(idEmpresa, texto, activo);
+            return await _unitOfWork.DescuentoConfiguraciones.BuscarAsync(idEmpresa, texto, activo, ct);
         }
 
-        public Task<DescuentoConfiguracion?> ObtenerDescuentoAplicableAsync(
+        public async Task<DescuentoConfiguracion?> ObtenerDescuentoAplicableAsync(
             int idEmpresa, int? idProducto, int? idCategoria,
             List<int> idsMetodosPago, bool esPagoUnico,
             List<DescuentoConfiguracion> descuentosCache,
-            Dictionary<int, Categoria> categoriasCache)
+            Dictionary<int, Categoria> categoriasCache,
+            CancellationToken ct = default)
         {
             if (descuentosCache == null || descuentosCache.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var candidates = descuentosCache
                 .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente
@@ -187,7 +191,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
             var allCandidates = productDiscounts.Concat(categoryDiscounts).ToList();
             if (allCandidates.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             // Producto gana a categoría; empate resuelto por mayor Valor.
             var winner = allCandidates
@@ -195,16 +199,17 @@ namespace GestionComercial.Aplicacion.Servicios
                 .ThenByDescending(d => d.Valor)
                 .First();
 
-            return Task.FromResult<DescuentoConfiguracion?>(winner);
+            return winner;
         }
 
-        public Task<DescuentoConfiguracion?> ObtenerDescuentoProductoAsync(
+        public async Task<DescuentoConfiguracion?> ObtenerDescuentoProductoAsync(
             int idEmpresa, int? idProducto, int? idCategoria,
             List<DescuentoConfiguracion> descuentosCache,
-            Dictionary<int, Categoria> categoriasCache)
+            Dictionary<int, Categoria> categoriasCache,
+            CancellationToken ct = default)
         {
             if (descuentosCache == null || descuentosCache.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var candidates = descuentosCache
                 .Where(d => d.Id_empresa == idEmpresa && d.Activo && d.EstaVigente)
@@ -238,23 +243,24 @@ namespace GestionComercial.Aplicacion.Servicios
 
             var allCandidates = productDiscounts.Concat(categoryDiscounts).ToList();
             if (allCandidates.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var winner = allCandidates
                 .OrderByDescending(d => d.Id_producto.HasValue)
                 .ThenByDescending(d => d.Valor)
                 .First();
 
-            return Task.FromResult<DescuentoConfiguracion?>(winner);
+            return winner;
         }
 
-        public virtual Task<DescuentoConfiguracion?> ObtenerDescuentoTotalVentaAsync(
+        public virtual async Task<DescuentoConfiguracion?> ObtenerDescuentoTotalVentaAsync(
             int idEmpresa,
             int idMetodoPago,
-            List<DescuentoConfiguracion> descuentosCache)
+            List<DescuentoConfiguracion> descuentosCache,
+            CancellationToken ct = default)
         {
             if (descuentosCache == null || descuentosCache.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var candidates = descuentosCache
                 .Where(d => d.Id_empresa == idEmpresa
@@ -266,19 +272,20 @@ namespace GestionComercial.Aplicacion.Servicios
                 .ToList();
 
             if (candidates.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var winner = candidates.OrderByDescending(d => d.Valor).First();
-            return Task.FromResult<DescuentoConfiguracion?>(winner);
+            return winner;
         }
 
-        public Task<DescuentoConfiguracion?> ObtenerDescuentoCompraMayorAsync(
+        public async Task<DescuentoConfiguracion?> ObtenerDescuentoCompraMayorAsync(
             int idEmpresa,
             decimal totalVenta,
-            List<DescuentoConfiguracion> descuentosCache)
+            List<DescuentoConfiguracion> descuentosCache,
+            CancellationToken ct = default)
         {
             if (descuentosCache == null || descuentosCache.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var candidates = descuentosCache
                 .Where(d => d.Id_empresa == idEmpresa
@@ -290,10 +297,10 @@ namespace GestionComercial.Aplicacion.Servicios
                 .ToList();
 
             if (candidates.Count == 0)
-                return Task.FromResult<DescuentoConfiguracion?>(null);
+                return null;
 
             var winner = candidates.OrderByDescending(d => d.Valor).First();
-            return Task.FromResult<DescuentoConfiguracion?>(winner);
+            return winner;
         }
     }
 }

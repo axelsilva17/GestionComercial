@@ -7,6 +7,7 @@ using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace GestionComercial.Aplicacion.Servicios
 {
@@ -34,32 +35,32 @@ public class ProductoServicio : IProductoServicio
             return await _uow.Proveedores.ObtenerTodosAsync();
         }
 
-        public async Task<IEnumerable<ProductoListadoDto>> ObtenerTodosAsync(int idEmpresa, bool soloActivos = true)
+        public async Task<IEnumerable<ProductoListadoDto>> ObtenerTodosAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default)
         {
-            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(idEmpresa, soloActivos);
+            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(idEmpresa, soloActivos, ct);
             return productos.Select(MapearListado);
         }
 
         public async Task<(IEnumerable<ProductoListadoDto> Items, int TotalCount)> ObtenerTodosPaginadoAsync(
-            int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null)
+            int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null, CancellationToken ct = default)
         {
-            var (items, totalCount) = await _uow.Productos.ObtenerPorEmpresaPaginadoAsync(idEmpresa, page, pageSize, searchTerm, idCategoria, soloActivos);
+            var (items, totalCount) = await _uow.Productos.ObtenerPorEmpresaPaginadoAsync(idEmpresa, page, pageSize, searchTerm, idCategoria, soloActivos, ct);
             return (items.Select(MapearListado), totalCount);
         }
 
-        public async Task<IEnumerable<ProductoListadoDto>> ObtenerStockCriticoAsync(int idEmpresa)
+        public async Task<IEnumerable<ProductoListadoDto>> ObtenerStockCriticoAsync(int idEmpresa, CancellationToken ct = default)
         {
-            var productos = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
+            var productos = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa, ct);
             return productos.Select(MapearListado);
         }
 
-        public async Task<ProductoDto?> ObtenerPorIdAsync(int id)
+        public async Task<ProductoDto?> ObtenerPorIdAsync(int id, CancellationToken ct = default)
         {
-            var p = await _uow.Productos.ObtenerPorIdConDetallesAsync(id);
+            var p = await _uow.Productos.ObtenerPorIdConDetallesAsync(id, ct);
             return p == null ? null : MapearDto(p);
         }
 
-        public async Task<ProductoDto> CrearAsync(ProductoCrearDto dto)
+        public async Task<ProductoDto> CrearAsync(ProductoCrearDto dto, CancellationToken ct = default)
         {
             if (_sesion != null && !_sesion.HasPermission("Productos.Crear"))
                 throw new ValidationException("No tenés permiso para crear productos.");
@@ -67,7 +68,7 @@ public class ProductoServicio : IProductoServicio
             // Validar entrada con FluentValidation
             if (_crearValidator != null)
             {
-                var result = await _crearValidator.ValidateAsync(dto);
+                var result = await _crearValidator.ValidateAsync(dto, ct);
                 if (!result.IsValid)
                     throw new ValidationException(result.Errors);
             }
@@ -85,12 +86,12 @@ public class ProductoServicio : IProductoServicio
                 Id_categoria = dto.IdCategoria,
                 Id_unidadMedida = dto.IdUnidadMedida,
             };
-            await _uow.Productos.AgregarAsync(producto);
-            await _uow.GuardarCambiosAsync();
-            return await ObtenerPorIdAsync(producto.Id) ?? throw new Exception("Error al crear producto");
+            await _uow.Productos.AgregarAsync(producto, ct);
+            await _uow.GuardarCambiosAsync(ct);
+            return await ObtenerPorIdAsync(producto.Id, ct) ?? throw new Exception("Error al crear producto");
         }
 
-        public async Task ActualizarAsync(ProductoActualizarDto dto)
+        public async Task ActualizarAsync(ProductoActualizarDto dto, CancellationToken ct = default)
         {
             if (_sesion != null && !_sesion.HasPermission("Productos.Editar"))
                 throw new ValidationException("No tenés permiso para editar productos.");
@@ -98,12 +99,12 @@ public class ProductoServicio : IProductoServicio
             // Validar entrada con FluentValidation
             if (_actualizarValidator != null)
             {
-                var result = await _actualizarValidator.ValidateAsync(dto);
+                var result = await _actualizarValidator.ValidateAsync(dto, ct);
                 if (!result.IsValid)
                     throw new ValidationException(result.Errors);
             }
 
-            var producto = await _uow.Productos.ObtenerPorIdAsync(dto.IdProducto)
+            var producto = await _uow.Productos.ObtenerPorIdAsync(dto.IdProducto, ct)
                 ?? throw new KeyNotFoundException($"Producto {dto.IdProducto} no encontrado");
             producto.Nombre = dto.Nombre;
             producto.CodigoBarra = dto.CodigoBarra;
@@ -113,15 +114,15 @@ public class ProductoServicio : IProductoServicio
             producto.Id_categoria = dto.IdCategoria;
             producto.Id_unidadMedida = dto.IdUnidadMedida;
             _uow.Productos.Actualizar(producto);
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
         }
 
-        public async Task<(ProductoDto Producto, bool FueActualizacion)> CrearOActualizarAsync(ProductoImportarDto dto, bool actualizarExistentes)
+        public async Task<(ProductoDto Producto, bool FueActualizacion)> CrearOActualizarAsync(ProductoImportarDto dto, bool actualizarExistentes, CancellationToken ct = default)
         {
             // Si tiene código de barra y la opción está activa → buscar existente
             if (!string.IsNullOrWhiteSpace(dto.CodigoBarra) && actualizarExistentes)
             {
-                var existente = await _uow.Productos.ObtenerPorCodigoBarraAsync(dto.CodigoBarra);
+                var existente = await _uow.Productos.ObtenerPorCodigoBarraAsync(dto.CodigoBarra, ct);
                 if (existente != null)
                 {
                     existente.Nombre = dto.Nombre;
@@ -132,8 +133,8 @@ public class ProductoServicio : IProductoServicio
                     existente.Id_categoria = dto.IdCategoria;
                     existente.Id_unidadMedida = dto.IdUnidadMedida;
                     _uow.Productos.Actualizar(existente);
-                    await _uow.GuardarCambiosAsync();
-                    var resultado = await ObtenerPorIdAsync(existente.Id) ?? throw new Exception("Error al actualizar");
+                    await _uow.GuardarCambiosAsync(ct);
+                    var resultado = await ObtenerPorIdAsync(existente.Id, ct) ?? throw new Exception("Error al actualizar");
                     return (resultado, true);
                 }
             }
@@ -150,7 +151,7 @@ public class ProductoServicio : IProductoServicio
                 IdCategoria = dto.IdCategoria,
                 IdUnidadMedida = dto.IdUnidadMedida,
                 IdEmpresa = dto.IdEmpresa,
-            });
+            }, ct);
             return (nuevo, false);
         }
 
@@ -160,7 +161,8 @@ public class ProductoServicio : IProductoServicio
         public async Task<ImportResult> ImportarMasivoAsync(
             IEnumerable<ProductoImportarDto> dtos,
             bool actualizarExistentes,
-            IProgress<(int current, int total, string message)>? progreso = null)
+            IProgress<(int current, int total, string message)>? progreso = null,
+            CancellationToken ct = default)
         {
             const int TAMANIO_LOTE = 50;
             var resultado = new ImportResult();
@@ -176,10 +178,10 @@ public class ProductoServicio : IProductoServicio
             }
 
             // Cargar datos existentes (UNA SOLA CONSULTA)
-            var productosPorCodigo = (await _uow.Productos.ObtenerConCodigoBarraPorEmpresaAsync(idEmpresa))
+            var productosPorCodigo = (await _uow.Productos.ObtenerConCodigoBarraPorEmpresaAsync(idEmpresa, ct))
                 .ToDictionary(p => p.CodigoBarra!, StringComparer.OrdinalIgnoreCase);
 
-            var categoriasExistentes = (await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa))
+            var categoriasExistentes = (await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa, ct))
                 .GroupBy(c => c.Nombre.ToLower().Trim(), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
 
@@ -263,13 +265,13 @@ public class ProductoServicio : IProductoServicio
                                 Nombre = nombreCat,
                                 Id_empresa = idEmpresa,
                                 Activo = true,
-                            });
+                            }, ct);
                         }
 
                         if (nuevasCategorias.Count > 0)
                         {
-                            await _uow.GuardarCambiosAsync();
-                            var catsActualizadas = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+                            await _uow.GuardarCambiosAsync(ct);
+                            var catsActualizadas = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa, ct);
                             foreach (var c in catsActualizadas)
                                 categoriasMap[c.Nombre.ToLower().Trim()] = c.Id;
                         }
@@ -298,8 +300,8 @@ public class ProductoServicio : IProductoServicio
                             });
                         }
 
-                        await _uow.Productos.AgregarRangoAsync(batchEntidades);
-                        await _uow.GuardarCambiosAsync();
+                        await _uow.Productos.AgregarRangoAsync(batchEntidades, ct);
+                        await _uow.GuardarCambiosAsync(ct);
                     });
                 }
                 catch
@@ -364,16 +366,16 @@ public class ProductoServicio : IProductoServicio
         }
 
         // Nuevo: Ajuste de precios por proveedor (global por empresa del proveedor)
-        public async Task<(int Nuevos, int Actualizados)> AjustePreciosPorProveedorAsync(int idProveedor, decimal porcentaje)
+        public async Task<(int Nuevos, int Actualizados)> AjustePreciosPorProveedorAsync(int idProveedor, decimal porcentaje, CancellationToken ct = default)
         {
             if (idProveedor <= 0) throw new ArgumentException("ID de proveedor inválido.", nameof(idProveedor));
             if (porcentaje == 0) return (0, 0);
 
-            var proveedor = await _uow.Proveedores.ObtenerPorIdAsync(idProveedor)
+            var proveedor = await _uow.Proveedores.ObtenerPorIdAsync(idProveedor, ct)
                 ?? throw new KeyNotFoundException($"Proveedor {idProveedor} no encontrado");
 
             var factor = 1 + porcentaje / 100m;
-            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(proveedor.Id_empresa);
+            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(proveedor.Id_empresa, true, ct);
             int actualizados = 0;
             foreach (var p in productos)
             {
@@ -384,25 +386,25 @@ public class ProductoServicio : IProductoServicio
                 actualizados++;
             }
 
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
             // Nuevos equivale a la cantidad de productos actualizados en este approach simple
             return (actualizados, actualizados);
         }
 
-        public async Task DesactivarAsync(int id)
+        public async Task DesactivarAsync(int id, CancellationToken ct = default)
         {
-            var producto = await _uow.Productos.ObtenerPorIdAsync(id)
+            var producto = await _uow.Productos.ObtenerPorIdAsync(id, ct)
                 ?? throw new KeyNotFoundException($"Producto {id} no encontrado");
             producto.Activo = false;
             _uow.Productos.Actualizar(producto);
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
         }
 
-        public async Task ActualizarPreciosLoteAsync(IEnumerable<ProductoActualizarDto> dtos)
+        public async Task ActualizarPreciosLoteAsync(IEnumerable<ProductoActualizarDto> dtos, CancellationToken ct = default)
         {
             var dtoList = dtos.ToList();
             var ids = dtoList.Select(d => d.IdProducto).Distinct().ToList();
-            var productos = await _uow.Productos.BuscarAsync(p => ids.Contains(p.Id));
+            var productos = await _uow.Productos.BuscarAsync(p => ids.Contains(p.Id), ct);
             var productosDict = productos.ToDictionary(p => p.Id);
 
             foreach (var dto in dtoList)
@@ -421,12 +423,13 @@ public class ProductoServicio : IProductoServicio
                 _uow.Productos.Actualizar(producto);
             }
 
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
         }
 
-        public async Task<IEnumerable<ProductoListadoDto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos)
+        // Búsqueda con StartsWith (prefijo) para uso de índices
+        public async Task<IEnumerable<ProductoListadoDto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default)
         {
-            var productos = await _uow.Productos.BuscarProductosAsync(idEmpresa, texto, idCategoria, soloActivos);
+            var productos = await _uow.Productos.BuscarProductosAsync(idEmpresa, texto, idCategoria, soloActivos, take, ct);
             return productos.Select(p => new ProductoListadoDto
             {
                 IdProducto = p.Id,
@@ -443,9 +446,9 @@ public class ProductoServicio : IProductoServicio
             });
         }
 
-        public async Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa)
+        public async Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa, CancellationToken ct = default)
         {
-            var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa);
+            var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa, ct);
             return categorias
                 .GroupBy(c => c.Nombre.Trim(), StringComparer.OrdinalIgnoreCase)
                 .Select(g => new CategoriaItemDto
@@ -457,15 +460,26 @@ public class ProductoServicio : IProductoServicio
                 .OrderBy(c => c.Nombre);
         }
 
-        public async Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync()
+        public async Task<IEnumerable<UnidadMedidaItemDto>> ObtenerUnidadesMedidaAsync(CancellationToken ct = default)
         {
-            var unidades = await _uow.Productos.ObtenerUnidadesMedidaDistintasAsync();
+            var unidades = await _uow.Productos.ObtenerUnidadesMedidaDistintasAsync(ct);
             return unidades.Select(u => new UnidadMedidaItemDto
             {
                 IdUnidadMedida = u.Id,
                 Nombre = u.Nombre,
                 Abreviatura = u.Abreviatura
             });
+        }
+
+        public async Task<IEnumerable<Proveedor>> ObtenerProveedoresAsync(CancellationToken ct = default)
+        {
+            return await _uow.Proveedores.ObtenerTodosAsync(ct);
+        }
+
+        public async Task<int> ObtenerUmbralStockCriticoAsync(int idEmpresa, CancellationToken ct = default)
+        {
+            var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Id == idEmpresa, ct);
+            return empresa?.UmbralStockCritico ?? 10;
         }
 
         private static ProductoListadoDto MapearListado(Producto p) => new()
@@ -483,7 +497,7 @@ public class ProductoServicio : IProductoServicio
             UnidadMedida = p.UnidadMedida?.Nombre ?? string.Empty,
         };
 
-        public async Task<CategoriaItemDto> CrearCategoriaAsync(int idEmpresa, string nombre)
+        public async Task<CategoriaItemDto> CrearCategoriaAsync(int idEmpresa, string nombre, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new ArgumentException("El nombre de la categoría no puede estar vacío", nameof(nombre));
@@ -495,8 +509,8 @@ public class ProductoServicio : IProductoServicio
                 Activo = true,
             };
 
-            await _uow.Categorias.AgregarAsync(categoria);
-            await _uow.GuardarCambiosAsync();
+            await _uow.Categorias.AgregarAsync(categoria, ct);
+            await _uow.GuardarCambiosAsync(ct);
 
             return new CategoriaItemDto
             {
@@ -505,25 +519,25 @@ public class ProductoServicio : IProductoServicio
             };
         }
 
-        public async Task<bool> EliminarCategoriaAsync(int idCategoria)
+        public async Task<bool> EliminarCategoriaAsync(int idCategoria, CancellationToken ct = default)
         {
             if (idCategoria <= 0) return false;
 
-            var categoria = await _uow.Categorias.ObtenerPorIdAsync(idCategoria);
+            var categoria = await _uow.Categorias.ObtenerPorIdAsync(idCategoria, ct);
             if (categoria == null) return false;
 
             // ── 1. Desvincular subcategorías (CategoriaPadre_id → null) ────────
-            var subCategorias = await _uow.Categorias.ObtenerSubCategoriasAsync(idCategoria);
+            var subCategorias = await _uow.Categorias.ObtenerSubCategoriasAsync(idCategoria, ct);
             foreach (var sub in subCategorias)
                 sub.CategoriaPadre_id = null;
 
             // ── 2. Buscar productos asociados ──────────────────────────────────
-            var productosAsociados = await _uow.Productos.ObtenerPorCategoriaAsync(idCategoria);
+            var productosAsociados = await _uow.Productos.ObtenerPorCategoriaAsync(idCategoria, ct);
 
             if (productosAsociados.Count > 0)
             {
                 // ── 2a. Buscar o crear "Sin Categoría" ────────────────────────
-                var sinCategoria = await _uow.Categorias.ObtenerPorNombreAsync("Sin Categoría", categoria.Id_empresa);
+                var sinCategoria = await _uow.Categorias.ObtenerPorNombreAsync("Sin Categoría", categoria.Id_empresa, ct);
 
                 if (sinCategoria == null)
                 {
@@ -533,7 +547,7 @@ public class ProductoServicio : IProductoServicio
                         Id_empresa = categoria.Id_empresa,
                         Activo = true,
                     };
-                    await _uow.Categorias.AgregarAsync(sinCategoria);
+                    await _uow.Categorias.AgregarAsync(sinCategoria, ct);
                 }
 
                 // ── 2b. Reasignar productos usando la NAVEGACIÓN ──────────────
@@ -548,21 +562,21 @@ public class ProductoServicio : IProductoServicio
             //   TODO en un SOLO SaveChangesAsync para mantener consistencia:
             //   EF Core ordena automáticamente INSERT → UPDATE → DELETE.
             _uow.Categorias.Eliminar(categoria);
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
             return true;
         }
 
-        public async Task<CategoriaItemDto> ActualizarCategoriaAsync(int idCategoria, string nuevoNombre)
+        public async Task<CategoriaItemDto> ActualizarCategoriaAsync(int idCategoria, string nuevoNombre, CancellationToken ct = default)
         {
             if (idCategoria <= 0) throw new ArgumentException("ID de categoría inválido", nameof(idCategoria));
             if (string.IsNullOrWhiteSpace(nuevoNombre)) throw new ArgumentException("El nombre no puede estar vacío", nameof(nuevoNombre));
 
-            var categoria = await _uow.Categorias.ObtenerPorIdAsync(idCategoria)
+            var categoria = await _uow.Categorias.ObtenerPorIdAsync(idCategoria, ct)
                 ?? throw new KeyNotFoundException($"Categoría {idCategoria} no encontrada");
 
             categoria.Nombre = nuevoNombre.Trim();
             _uow.Categorias.Actualizar(categoria);
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
 
             return new CategoriaItemDto
             {
@@ -571,23 +585,17 @@ public class ProductoServicio : IProductoServicio
             };
         }
 
-        public async Task<int> EliminarProductosPorCategoriaAsync(int idCategoria)
+        public async Task<int> EliminarProductosPorCategoriaAsync(int idCategoria, CancellationToken ct = default)
         {
             if (idCategoria <= 0) return 0;
 
-            var productos = await _uow.Productos.ObtenerPorCategoriaAsync(idCategoria);
+            var productos = await _uow.Productos.ObtenerPorCategoriaAsync(idCategoria, ct);
 
             if (productos.Count == 0) return 0;
 
             _uow.Productos.EliminarRango(productos);
-            await _uow.GuardarCambiosAsync();
+            await _uow.GuardarCambiosAsync(ct);
             return productos.Count;
-        }
-
-        public async Task<int> ObtenerUmbralStockCriticoAsync(int idEmpresa)
-        {
-            var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Id == idEmpresa);
-            return empresa?.UmbralStockCritico ?? 10;
         }
 
         private static ProductoDto MapearDto(Producto p) => new()
