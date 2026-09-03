@@ -245,9 +245,8 @@ namespace GestionComercial.UI.ViewModels.Proveedores
             
             var compraListado = IoC.Get<CompraListadoViewModel>();
             
-            // Remove period restriction to show ALL purchases for this supplier
-            compraListado.FechaDesde = null;
-            compraListado.FechaHasta = null;
+            // Use default date range (last 30 days) and filter by provider only
+            // To show all purchases, we'd need to adjust the default or add a "Sin filtro" option
             
             // Precargar proveedores para poder aplicar el filtro
             var todosProveedores = await compraListado.CargarProveedoresAsync();
