@@ -50,6 +50,8 @@ namespace GestionComercial.UI
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             var connectionString = config.GetConnectionString("DefaultConnection")!;

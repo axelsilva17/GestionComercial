@@ -24,7 +24,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public int    IdEmpresa   => _sesion.IdEmpresa;
         public string Rol         => _sesion.Rol;
         public string Nombre      => _sesion.NombreCompleto;
-        public bool   EsDesarrollador => _sesion?.Email == _devCreds?.Email;
+        public bool   EsDesarrollador => !string.IsNullOrEmpty(_devCreds?.Email) && _sesion?.Email == _devCreds.Email;
 
         // IdCaja se setea cuando se abre caja
         public int? IdCajaActual { get; set; }

@@ -39,6 +39,9 @@ check-db/
 StressTest/
 SeedDB/
 
+# Local development secrets
+appsettings.Development.json
+
 # Accidental command/stdout dumps
 --help
 engram-export.json
