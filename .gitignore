@@ -23,6 +23,9 @@ ON_DEMAND_MERGE.md
 # AI config
 opencode.json
 
+# Codegraph index
+.codegraph/
+
 # Build logs / temp output
 build_*.txt
 build_*.log
@@ -32,3 +35,10 @@ msbuild.log
 generar_test_import.py
 test_import_*.xlsx
 Instalador/Instalador/
+check-db/
+StressTest/
+SeedDB/
+
+# Accidental command/stdout dumps
+--help
+engram-export.json
