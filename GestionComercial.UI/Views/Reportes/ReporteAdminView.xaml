@@ -75,7 +75,9 @@
                 </Border>
 
                 <!-- Barra de acciones (admin = reporte diario, sin filtros de fecha) -->
-                <Border Style="{StaticResource Card}" Margin="0,0,0,14" Padding="16,12">
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderThickness="0.5" BorderBrush="{DynamicResource BorderBrush}"
+                        CornerRadius="8" Margin="0,0,0,12" Padding="14,10">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="RESUMEN DEL MES" Style="{StaticResource ColHeader}"
                                    VerticalAlignment="Center" Margin="0,0,16,0"/>

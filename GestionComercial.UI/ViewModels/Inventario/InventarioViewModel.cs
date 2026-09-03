@@ -248,6 +248,9 @@ namespace GestionComercial.UI.ViewModels.Inventario
         // ── Balance neto (Ingresadas - Egresadas) ───────────────────────────
         public int BalanceNeto => UnidadesIngresadas - UnidadesEgresadas;
 
+        // ── Para visibilidad DataGrid / estado vacío ─────────────────────────
+        public bool TieneMovimientos => TotalMovimientos > 0;
+
         // ── Panel nuevo movimiento ───────────────────────────────────────────
         private bool _panelVisible;
         public bool PanelVisible
@@ -361,6 +364,13 @@ namespace GestionComercial.UI.ViewModels.Inventario
         // ── Acciones ─────────────────────────────────────────────────────────
         public async Task Buscar()        { PaginaActual = 1; await CargarAsync(); }
         public async Task AplicarFiltros(){ PaginaActual = 1; await CargarAsync(); }
+
+        public async Task LimpiarBusqueda()
+        {
+            TextoBusqueda = string.Empty;
+            PaginaActual = 1;
+            await CargarAsync();
+        }
 
         public async Task LimpiarFiltros()
         {

@@ -46,7 +46,38 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public TimeOnly? HoraProgramada
         {
             get => _horaProgramada;
-            set { _horaProgramada = value; NotifyOfPropertyChange(() => HoraProgramada); }
+            set
+            {
+                _horaProgramada = value;
+                NotifyOfPropertyChange(() => HoraProgramada);
+                NotifyOfPropertyChange(() => HoraSeleccionada);
+                NotifyOfPropertyChange(() => MinutoSeleccionado);
+            }
+        }
+
+        public IEnumerable<int> Horas => Enumerable.Range(0, 24);
+        public IEnumerable<int> Minutos => new[] { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
+
+        public int HoraSeleccionada
+        {
+            get => HoraProgramada?.Hour ?? 0;
+            set
+            {
+                var min = HoraProgramada?.Minute ?? 0;
+                HoraProgramada = new TimeOnly(value, min);
+                NotifyOfPropertyChange(() => HoraSeleccionada);
+            }
+        }
+
+        public int MinutoSeleccionado
+        {
+            get => HoraProgramada?.Minute ?? 0;
+            set
+            {
+                var h = HoraProgramada?.Hour ?? 0;
+                HoraProgramada = new TimeOnly(h, value);
+                NotifyOfPropertyChange(() => MinutoSeleccionado);
+            }
         }
 
         private int _maxBackups = 10;
@@ -90,8 +121,28 @@ namespace GestionComercial.UI.ViewModels.Configuracion
         public IEnumerable<FrecuenciaBackupEnum> FrecuenciasDisponibles =>
             Enum.GetValues<FrecuenciaBackupEnum>();
 
-        public IEnumerable<DayOfWeek> DiasSemana =>
-            Enum.GetValues<DayOfWeek>();
+        public IEnumerable<DiaSemanaItem> DiasSemana => new[]
+        {
+            new DiaSemanaItem(DayOfWeek.Monday,    "Lunes"),
+            new DiaSemanaItem(DayOfWeek.Tuesday,   "Martes"),
+            new DiaSemanaItem(DayOfWeek.Wednesday, "Miércoles"),
+            new DiaSemanaItem(DayOfWeek.Thursday,  "Jueves"),
+            new DiaSemanaItem(DayOfWeek.Friday,    "Viernes"),
+            new DiaSemanaItem(DayOfWeek.Saturday,  "Sábado"),
+            new DiaSemanaItem(DayOfWeek.Sunday,    "Domingo"),
+        };
+
+        private DiaSemanaItem? _diaSemanaSeleccionadoItem;
+        public DiaSemanaItem? DiaSemanaSeleccionadoItem
+        {
+            get => _diaSemanaSeleccionadoItem;
+            set
+            {
+                _diaSemanaSeleccionadoItem = value;
+                DiaSemanaSeleccionado = value?.DayOfWeek;
+                NotifyOfPropertyChange(() => DiaSemanaSeleccionadoItem);
+            }
+        }
 
         private BackupInfo? _backupSeleccionado;
         public BackupInfo? BackupSeleccionado
@@ -118,6 +169,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 var config = await _backupService.ObtenerConfiguracionAsync();
                 FrecuenciaSeleccionada = config.Frecuencia;
                 DiaSemanaSeleccionado = config.DiaSemana;
+                DiaSemanaSeleccionadoItem = DiasSemana.FirstOrDefault(d => d.DayOfWeek == config.DiaSemana);
                 HoraProgramada = config.HoraProgramada;
                 MaxBackups = config.MaxBackups;
                 CarpetaDestino = config.CarpetaDestino;
@@ -210,5 +262,19 @@ namespace GestionComercial.UI.ViewModels.Configuracion
 
             return $"{tam:F1} {sufijos[i]}";
         }
+    }
+
+    public class DiaSemanaItem
+    {
+        public DayOfWeek DayOfWeek { get; }
+        public string Nombre { get; }
+
+        public DiaSemanaItem(DayOfWeek dayOfWeek, string nombre)
+        {
+            DayOfWeek = dayOfWeek;
+            Nombre = nombre;
+        }
+
+        public override string ToString() => Nombre;
     }
 }

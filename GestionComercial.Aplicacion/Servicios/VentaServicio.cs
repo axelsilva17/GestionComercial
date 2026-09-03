@@ -92,7 +92,10 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<VentaDto> CrearAsync(VentaCrearDto dto)
         {
             if (!_sesion.HasPermission("Ventas.Crear"))
+            {
+                System.Diagnostics.Debug.WriteLine($"[VentaServicio] Sin permiso Ventas.Crear. Permisos en sesión: [{string.Join(", ", _sesion.ObtenerSesion().Permisos ?? new())}]");
                 throw new NegocioException("No tenés permiso para crear ventas.");
+            }
 
             // ── Validar stock y crear venta en una TRANSACCIÓN ───────────────
             await _uow.EjecutarEnTransaccionAsync(async () =>
@@ -348,8 +351,30 @@ namespace GestionComercial.Aplicacion.Servicios
                 }
             }
 
+            // ── REGLA C: descuento CompraMayor (EXCLUSIVO con método de pago) ──
+            decimal totalDescuentoCompraMayor = 0;
+            if (idEmpresa > 0)
+            {
+                var descuentoCompraMayor = await _descuentoConfiguracionServicio.ObtenerDescuentoCompraMayorAsync(
+                    idEmpresa, venta.TotalBruto, descuentosCache);
+                if (descuentoCompraMayor != null)
+                {
+                    var baseCalculo = venta.TotalBruto - venta.TotalDescuento;
+                    totalDescuentoCompraMayor = Math.Round(
+                        baseCalculo * descuentoCompraMayor.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                }
+            }
+
+            // Exclusividad: el mayor entre método de pago y CompraMayor gana
+            bool comraMayorGano = totalDescuentoCompraMayor > totalDescuentoMetodoPago;
+            if (comraMayorGano)
+            {
+                totalDescuentoMetodoPago = totalDescuentoCompraMayor;
+            }
+
             venta.DescuentoMetodoPago = totalDescuentoMetodoPago;
-            venta.Id_metodoPagoDescuento = totalDescuentoMetodoPago > 0 && esPagoUnico ? idsMetodosPago[0] : null;
+            venta.Id_metodoPagoDescuento = !comraMayorGano && totalDescuentoMetodoPago > 0 && esPagoUnico
+                ? idsMetodosPago[0] : null;
             venta.TotalFinal = venta.TotalBruto - venta.TotalDescuento - totalDescuentoMetodoPago;
         }
 

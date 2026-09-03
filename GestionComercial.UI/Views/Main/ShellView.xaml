@@ -7,7 +7,9 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        MinWidth="900" MinHeight="600"
+        Width="1280" Height="800"
+        MinWidth="1024" MinHeight="768"
+        WindowState="Normal"
         WindowStartupLocation="CenterScreen"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         SizeChanged="Window_SizeChanged">
@@ -193,7 +195,7 @@
 
     <Border Background="{DynamicResource BackgroundBrush}"
             BorderBrush="{DynamicResource BorderBrush}"
-            BorderThickness="1" CornerRadius="12">
+            BorderThickness="0.5" CornerRadius="6">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="SidebarColumn" Width="220" MinWidth="56"/>
@@ -231,7 +233,8 @@
                     <TextBlock x:Name="LblPrincipal" Text="PRINCIPAL" FontSize="9" FontWeight="Bold"
                                Foreground="{DynamicResource TextSecondaryBrush}" Margin="12,0,0,8"/>
 
-                    <Button x:Name="IrDashboard" Style="{StaticResource NavButton}">
+                    <Button x:Name="IrDashboard" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarDashboard, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⊞" FontSize="15" VerticalAlignment="Center" Width="22"/>
                             <TextBlock x:Name="TxtDashboard" Text="Dashboard" FontSize="13"
@@ -335,14 +338,18 @@
                         </StackPanel>
                     </Button>
 
-                    <Button x:Name="IrDescuentos" Style="{StaticResource NavButton}"
-                            Visibility="{Binding MostrarDescuentos, Converter={StaticResource BoolToVisibility}}">
+                    <!-- Mantenimiento: solo visible para desarrollador -->
+                    <Button x:Name="IrMantenimiento" Style="{StaticResource NavButton}"
+                            Visibility="{Binding MostrarMantenimiento, Converter={StaticResource BoolToVisibility}}"
+                            Click="IrMantenimiento_Click">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="%" FontSize="15" VerticalAlignment="Center" Width="22"/>
-                            <TextBlock x:Name="TxtDescuentos" Text="Descuentos" FontSize="13"
+                            <TextBlock Text="&#x1f527;" FontSize="15" VerticalAlignment="Center" Width="22"/>
+                            <TextBlock Text="Mantenimiento" FontSize="13"
                                        VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Descuentos ahora es una pestaña dentro de Configuración -->
                 </StackPanel>
 
                 <!-- ── Footer usuario ── -->
@@ -486,7 +493,7 @@
                             BorderThickness="0,0,0,1" Padding="24,20">
                         <Grid>
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="44" Height="44" CornerRadius="12"
+                                <Border Width="44" Height="44" CornerRadius="6"
                                         Background="{DynamicResource PrimaryBrush}" Margin="0,0,14,0">
                                     <TextBlock Text="{Binding UsuarioInicial}" FontSize="18" FontWeight="Bold"
                                                Foreground="White"
@@ -509,10 +516,10 @@
                         <StackPanel Margin="24">
 
                             <!-- ── Datos personales ── -->
-                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10"
-                                    Padding="16" Margin="0,0,0,12">
+                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6"
+                                    Padding="12" Margin="0,0,0,10">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,14">
+                                    <Grid Margin="0,0,0,12">
                                         <StackPanel>
                                             <TextBlock Text="Datos personales" FontSize="14" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -528,7 +535,7 @@
                                         <TextBox x:Name="TxtNombre" Style="{StaticResource FormInput}" Margin="0,0,0,12"/>
                                         <TextBlock Text="APELLIDO" Style="{StaticResource FormLabel}"/>
                                         <TextBox x:Name="TxtApellido" Style="{StaticResource FormInput}" Margin="0,0,0,12"/>
-                                        <Border x:Name="ErrorDatos" Background="#1AEF4444" CornerRadius="8"
+                                        <Border x:Name="ErrorDatos" Background="#1AEF4444" CornerRadius="6"
                                                 Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
                                             <TextBlock x:Name="TxtErrorDatos" FontSize="12"
                                                        Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
@@ -544,10 +551,10 @@
                             </Border>
 
                             <!-- ── Cambiar contraseña ── -->
-                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10"
-                                    Padding="16" Margin="0,0,0,12">
+                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6"
+                                    Padding="12" Margin="0,0,0,10">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,14">
+                                    <Grid Margin="0,0,0,12">
                                         <StackPanel>
                                             <TextBlock Text="Contraseña" FontSize="14" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -568,7 +575,7 @@
                                         <TextBlock Text="CONFIRMAR CONTRASEÑA" Style="{StaticResource FormLabel}"/>
                                         <PasswordBox x:Name="PbConfirmar" Style="{StaticResource FormPassword}"
                                                      PasswordChanged="PbConfirmar_PasswordChanged" Margin="0,0,0,12"/>
-                                        <Border x:Name="ErrorPassword" Background="#1AEF4444" CornerRadius="8"
+                                        <Border x:Name="ErrorPassword" Background="#1AEF4444" CornerRadius="6"
                                                 Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
                                             <TextBlock x:Name="TxtErrorPassword" FontSize="12"
                                                        Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
@@ -584,10 +591,10 @@
                             </Border>
 
                             <!-- ── Pregunta secreta ── -->
-                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10"
-                                    Padding="16" Margin="0,0,0,12">
+                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6"
+                                    Padding="12" Margin="0,0,0,10">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,14">
+                                    <Grid Margin="0,0,0,12">
                                         <StackPanel>
                                             <TextBlock Text="Pregunta secreta" FontSize="14" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -617,7 +624,7 @@
                                                      PasswordChanged="PbConfirmarRespuesta_PasswordChanged" Margin="0,0,0,4"/>
                                         <TextBlock Text="La respuesta no distingue mayúsculas." FontSize="11"
                                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
-                                        <Border x:Name="ErrorPregunta" Background="#1AEF4444" CornerRadius="8"
+                                        <Border x:Name="ErrorPregunta" Background="#1AEF4444" CornerRadius="6"
                                                 Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
                                             <TextBlock x:Name="TxtErrorPregunta" FontSize="12"
                                                        Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/>
@@ -632,7 +639,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border x:Name="MensajeExito" Background="#1A22C55E" CornerRadius="8"
+                            <Border x:Name="MensajeExito" Background="#1A22C55E" CornerRadius="6"
                                     Padding="14,10" Visibility="Collapsed">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="✅ " FontSize="13" VerticalAlignment="Center"/>

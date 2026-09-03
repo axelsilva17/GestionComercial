@@ -10,55 +10,33 @@
         <converters:NullVisibilityConverter   x:Key="NullToVisibility"/>
         <converters:EnumToIntConverter         x:Key="EnumToIntConverter"/>
 
-        <Style x:Key="ProductoRow" TargetType="DataGridRow">
-            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridRow">
-                        <Border x:Name="rowBorder" Background="Transparent"
-                                CornerRadius="8" Margin="4,2">
-                            <DataGridCellsPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="rowBorder" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="rowBorder" Property="Background" Value="{DynamicResource PrimaryAlphaBrush}"/>
-                                <Setter TargetName="rowBorder" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                <Setter TargetName="rowBorder" Property="BorderThickness" Value="1"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="ProductosGrid" TargetType="DataGrid">
-            <Setter Property="Background"            Value="Transparent"/>
-            <Setter Property="BorderThickness"       Value="0"/>
-            <Setter Property="GridLinesVisibility"   Value="None"/>
-            <Setter Property="HeadersVisibility"     Value="Column"/>
-            <Setter Property="CanUserAddRows"        Value="False"/>
-            <Setter Property="CanUserDeleteRows"     Value="False"/>
-            <Setter Property="CanUserReorderColumns" Value="False"/>
-            <Setter Property="SelectionMode"         Value="Single"/>
-            <Setter Property="SelectionUnit"         Value="FullRow"/>
-            <Setter Property="AutoGenerateColumns"   Value="False"/>
-            <Setter Property="FontSize"              Value="13"/>
-            <Setter Property="RowHeight"             Value="54"/>
-            <Setter Property="ColumnHeaderHeight"    Value="38"/>
-            <Setter Property="RowStyle"              Value="{StaticResource ProductoRow}"/>
+            <Setter Property="Background"               Value="Transparent"/>
+            <Setter Property="BorderThickness"          Value="0"/>
+            <Setter Property="GridLinesVisibility"      Value="None"/>
+            <Setter Property="HeadersVisibility"        Value="Column"/>
+            <Setter Property="IsReadOnly"               Value="True"/>
+            <Setter Property="CanUserAddRows"           Value="False"/>
+            <Setter Property="CanUserDeleteRows"        Value="False"/>
+            <Setter Property="CanUserReorderColumns"    Value="False"/>
+            <Setter Property="CanUserSortColumns"       Value="False"/>
+            <Setter Property="CanUserResizeColumns"     Value="False"/>
+            <Setter Property="SelectionMode"            Value="Single"/>
+            <Setter Property="SelectionUnit"            Value="FullRow"/>
+            <Setter Property="AutoGenerateColumns"      Value="False"/>
+            <Setter Property="FontSize"                 Value="13"/>
+            <Setter Property="RowHeight"                Value="54"/>
+            <Setter Property="ColumnHeaderHeight"       Value="38"/>
+            <Setter Property="RowBackground"            Value="{DynamicResource CardBrush}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceBrush}"/>
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background"      Value="Transparent"/>
-            <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
-            <Setter Property="FontSize"        Value="10"/>
-            <Setter Property="FontWeight"      Value="Bold"/>
-            <Setter Property="Padding"         Value="12,0"/>
+            <Setter Property="Background"      Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="FontSize"        Value="11"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="Padding"         Value="8,8"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush"     Value="{DynamicResource BorderBrush}"/>
             <Setter Property="Cursor"          Value="Arrow"/>
@@ -67,6 +45,7 @@
         <Style TargetType="DataGridCell">
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -76,6 +55,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource BackgroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="SideLabel" TargetType="TextBlock">
@@ -201,9 +186,8 @@
             </Grid>
 
 <!-- FILTROS -->
-            <Border Grid.Row="2" Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="12" Padding="12,10"
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
+                    BorderThickness="0.5" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Padding="10,8"
                     xmlns:behaviors="clr-namespace:GestionComercial.UI.Views.Behaviors"
                     behaviors:ToolbarResponsiveBehavior.Enable="True">
                 <Grid>
@@ -224,8 +208,9 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center"
+                            <TextBlock Text="&#x1F50D;" FontSize="13" VerticalAlignment="Center"
                                        Margin="10,0,6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBox x:Name="TextoBusqueda" Grid.Column="1"
                                      Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}"
@@ -234,6 +219,25 @@
                                      FontSize="13" VerticalContentAlignment="Center"
                                      Padding="0,0,10,0"
                                      KeyDown="TextoBusqueda_KeyDown"/>
+                            <Button Grid.Column="2" Content="&#x27F3;" x:Name="LimpiarBusqueda"
+                                    Width="28" Height="28" Margin="0,0,6,0"
+                                    FontSize="14" Cursor="Hand"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    ToolTip="Limpiar búsqueda">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
                         </Grid>
                     </Border>
 
@@ -243,7 +247,7 @@
                         <!-- Filtro Categoría -->
                         <StackPanel>
                             <TextBlock Text="CATEGORÍA" FontSize="9" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                        Margin="0,0,0,3"/>
                             <StackPanel Orientation="Horizontal">
                                 <ComboBox x:Name="CategoriaSeleccionada" Width="130" Height="34"
@@ -280,7 +284,7 @@
                         <!-- Filtro Estado -->
                         <StackPanel>
                             <TextBlock Text="ESTADO" FontSize="9" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                        Margin="0,0,0,3"/>
                             <ComboBox x:Name="FiltroActivo" Width="100" Height="34"
                                       Style="{StaticResource FilterComboBoxStyle}"
@@ -316,81 +320,68 @@
                               Margin="0,0">
                         <DataGrid.Columns>
 
-                            <DataGridTemplateColumn Header="CODIGO" Width="110">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding CodigoBarra}"
-                                                   Margin="12,0" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource PrimaryBrush}"
-                                                   FontWeight="SemiBold" FontFamily="Consolas"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="CÓDIGO" Binding="{Binding CodigoBarra}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="FontFamily" Value="Consolas"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="PRODUCTO" Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal"
-                                                    VerticalAlignment="Center" Margin="12,0">
-                                            <Border Width="34" Height="34" CornerRadius="8"
-                                                    Background="{DynamicResource SurfaceBrush}">
-                                                <TextBlock Text="{Binding Inicial}"
-                                                           FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource PrimaryBrush}"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Margin="10,0,0,0">
-                                                <TextBlock Text="{Binding Nombre}"
-                                                           FontSize="13" FontWeight="Medium"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                <TextBlock Text="{Binding CategoriaNombre}"
-                                                           FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                                           Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="PRODUCTO" Binding="{Binding Nombre}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="P. VENTA" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding PrecioVentaActual, Converter={StaticResource DecimalToMoneda}}"
-                                                   FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource SuccessBrush}"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right"
-                                                   Margin="0,0,16,0"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="P. VENTA" Binding="{Binding PrecioVentaActual, Converter={StaticResource DecimalToMoneda}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="P. COSTO" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding PrecioCostoActual, Converter={StaticResource DecimalToMoneda}}"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right"
-                                                   Margin="0,0,16,0"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="P. COSTO" Binding="{Binding PrecioCostoActual, Converter={StaticResource DecimalToMoneda}}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="13"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="STOCK" Width="80">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding StockActual}"
-                                                   FontSize="14" FontWeight="SemiBold"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="STOCK" Binding="{Binding StockActual}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTemplateColumn Header="ESTADO" Width="110">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -478,9 +469,9 @@
                             Height="34" Padding="14,0" FontSize="12"
                             Style="{StaticResource PrimaryButton}" Margin="0,0,6,0"
                             Click="PaginaAnterior_Click"/>
-                    <Border Background="{DynamicResource CardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8"
+                    <Border Background="{DynamicResource SurfaceBrush}"
+                            BorderThickness="0.5" BorderBrush="{DynamicResource BorderBrush}"
+                            CornerRadius="6"
                             Padding="14,0" Height="34">
                         <TextBlock VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12">
@@ -573,7 +564,7 @@
                         <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,16"/>
 
                         <Border Background="{DynamicResource SurfaceBrush}"
-                                CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                                CornerRadius="8" Padding="14" Margin="0,0,0,16">
                             <StackPanel>
                                 <Grid Margin="0,0,0,10">
                                     <TextBlock Text="Precio Venta"
@@ -692,6 +683,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="12"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Tipo -->
@@ -704,10 +697,20 @@
                                        Foreground="White"/>
                         </StackPanel>
 
-                        <!-- Valor -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Valor (% o $):"
+                        <!-- Dirección -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Dirección:"
                                    VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0">
+                            <RadioButton x:Name="DirAumentar" Content="Aumentar (+)" GroupName="DireccionAjuste"
+                                       IsChecked="True" Foreground="White" Margin="0,0,20,0"/>
+                            <RadioButton x:Name="DirReducir" Content="Reducir (-)" GroupName="DireccionAjuste"
+                                       Foreground="White"/>
+                        </StackPanel>
+
+                        <!-- Valor -->
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Valor (% o $):"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0">
                             <TextBox x:Name="PorcentajeInput"
                                      Text="{Binding PorcentajeAjuste, UpdateSourceTrigger=PropertyChanged}"
                                      Width="100" Height="36" FontSize="14"
@@ -739,18 +742,18 @@
                         </StackPanel>
 
                         <!-- Categoría -->
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Categoría:"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Categoría:"
                                    VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <ComboBox Grid.Row="4" Grid.Column="1" 
-                                  Style="{StaticResource FilterComboBoxStyle}"
-                                  ItemsSource="{Binding Categorias}"
-                                  SelectedItem="{Binding CategoriaAjuste}"
-                                  DisplayMemberPath="Nombre"
-                                  Width="240" Height="36"
-                                  HorizontalAlignment="Left" Margin="16,0,0,0"/>
+                        <ComboBox Grid.Row="6" Grid.Column="1" 
+                                   Style="{StaticResource FilterComboBoxStyle}"
+                                   ItemsSource="{Binding Categorias}"
+                                   SelectedItem="{Binding CategoriaAjuste}"
+                                   DisplayMemberPath="Nombre"
+                                   Width="240" Height="36"
+                                   HorizontalAlignment="Left" Margin="16,0,0,0"/>
 
                         <!-- Botón -->
-                        <Button Grid.Row="6" Grid.Column="1" x:Name="GenerarPreviewBtn"
+                        <Button Grid.Row="8" Grid.Column="1" x:Name="GenerarPreviewBtn"
                                 Content="Vista Previa" Height="36" Padding="20,0"
                                 HorizontalAlignment="Left" Margin="16,8,0,0"
                                 Style="{StaticResource SecondaryButton}"

@@ -6,8 +6,9 @@ using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
-using System.Linq;
+using GestionComercial.Aplicacion.Servicios;
 using System.Threading.Tasks;
+using GestionComercial.Dominio.Entidades.Seguridad;
 
 namespace GestionComercial.UI.ViewModels.Configuracion
 {
@@ -15,6 +16,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
     {
         private readonly IUnitOfWork _uow;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly SesionServicio _sesion;
 
         // ── Lista completa ────────────────────────────────────────────────────
         private ObservableCollection<UsuarioDto> _todos = new();
@@ -138,10 +140,11 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             set { _tituloPanel = value; NotifyOfPropertyChange(() => TituloPanel); }
         }
 
-        public UsuariosViewModel(IUnitOfWork uow, IPasswordHasher passwordHasher)
+        public UsuariosViewModel(IUnitOfWork uow, IPasswordHasher passwordHasher, SesionServicio sesion)
         {
             _uow = uow;
             _passwordHasher = passwordHasher;
+            _sesion = sesion;
         }
 
         public async Task CargarAsync()
@@ -151,7 +154,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             try
             {
                 // Cargar usuarios con Sucursal y Rol incluidos
-                var usuarios = await _uow.Usuarios.Consultar()
+                var usuarios = await _uow.Usuarios.ConsultarSinTracking()
                     .Include(u => u.Sucursal)
                     .Include(u => u.Rol)
                     .ToListAsync();
@@ -253,7 +256,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                     await _uow.GuardarCambiosAsync();
 
                     // Recargar con includes para obtener datos de navegación
-                    var usuarioCompleto = await _uow.Usuarios.Consultar()
+                    var usuarioCompleto = await _uow.Usuarios.ConsultarSinTracking()
                         .Include(u => u.Sucursal)
                         .Include(u => u.Rol)
                         .FirstOrDefaultAsync(u => u.Id == usuario.Id);
@@ -275,7 +278,7 @@ namespace GestionComercial.UI.ViewModels.Configuracion
                 }
                 else if (Seleccionado != null)
                 {
-                    var usuario = await _uow.Usuarios.Consultar()
+                    var usuario = await _uow.Usuarios.ConsultarSinTracking()
                         .Include(u => u.Sucursal)
                         .Include(u => u.Rol)
                         .FirstOrDefaultAsync(u => u.Id == Seleccionado.IdUsuario);
@@ -326,7 +329,8 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             IsLoading = true;
             try
             {
-                var usuario = await _uow.Usuarios.ObtenerPorIdAsync(item.IdUsuario);
+                var usuario = await _uow.Usuarios.ConsultarSinTracking()
+                    .FirstOrDefaultAsync(u => u.Id == item.IdUsuario);
                 if (usuario != null)
                 {
                     usuario.Activo = !usuario.Activo;
@@ -345,6 +349,32 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             }
             catch (System.Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
+        }
+
+        public async Task ToggleActivoAsync(UsuarioDto item)
+        {
+            if (item == null) return;
+
+            // No allow deactivating yourself
+            if (item.IdUsuario == _sesion.IdUsuario)
+            {
+                MostrarError("No podés desactivarte a vos mismo.");
+                return;
+            }
+
+            // No permitir desactivar al último usuario con rol Gerente (ID=1)
+            if (item.Activo && item.IdRol == 1)
+            {
+                var adminsCount = await _uow.Usuarios.ConsultarSinTracking()
+                    .CountAsync(u => u.Id_rol == 1 && u.Activo);
+                if (adminsCount <= 1)
+                {
+                    MostrarError("No se puede desactivar el último usuario con rol Gerente.");
+                    return;
+                }
+            }
+
+            await ToggleActivo(item);
         }
     }
 }

@@ -90,10 +90,9 @@
 
                 <StackPanel Grid.Row="2" Grid.Column="2">
                     <TextBlock Text="ÚLTIMO BACKUP" FontSize="11" FontWeight="Bold"
-                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,6" Width="101"/>
                     <TextBlock Text="{Binding UltimoBackupFormato}" FontSize="14"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
-                               VerticalAlignment="Center" Height="38"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}" Height="38" Width="89"/>
                 </StackPanel>
 
                 <!-- Row 4: Carpeta destino full width -->
@@ -133,8 +132,7 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="None"
                           RowBackground="{DynamicResource CardBrush}"
-                          AlternatingRowBackground="{DynamicResource SurfaceBrush}"
-                          ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle}">
+                          AlternatingRowBackground="{DynamicResource SurfaceBrush}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Nombre" Binding="{Binding FileName}" Width="*">
                             <DataGridTextColumn.ElementStyle>
@@ -178,7 +176,7 @@
                     Style="{StaticResource PrimaryButton}" Height="38" Padding="16,0"
                     FontSize="13" Margin="0,0,10,0"/>
             <Button Content="Eliminar" Command="{Binding EliminarBackup}"
-                    Style="{StaticResource CancelBtn}" Height="38" Padding="16,0"
+                    Style="{StaticResource SecondaryButton}" Height="38" Padding="16,0"
                     FontSize="13"/>
         </StackPanel>
     </Grid>

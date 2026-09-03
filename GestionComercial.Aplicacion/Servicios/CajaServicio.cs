@@ -151,7 +151,10 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<Caja> CerrarCajaAsync(int idCaja, int idUsuario, decimal montoFinal)
         {
             if (!_sesion.HasPermission("Caja.Cerrar"))
+            {
+                System.Diagnostics.Debug.WriteLine($"[CajaServicio] Sin permiso Caja.Cerrar. Permisos en sesión: [{string.Join(", ", _sesion.ObtenerSesion().Permisos ?? new())}]");
                 throw new NegocioException("No tenés permiso para cerrar caja.");
+            }
 
             LogHelper.Log("[DEBUG-CerrarCaja] Iniciando...");
             var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja)
@@ -485,18 +488,14 @@ namespace GestionComercial.Aplicacion.Servicios
             if (caja == null)
                 return 0;
 
-            // Obtener ventas pagadas en efectivo de esta caja
-            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(
+            var ventas = await _uow.Ventas.ObtenerVentasLigerasPorCajaAsync(
+                idCaja,
                 caja.FechaApertura,
-                DateTime.Now,
-                caja.Id_sucursal);
+                DateTime.Now);
 
-            // Filtrar ventas de esta caja que tienen EfectivoRecibido
             return ventas
-                .Where(v => v.Id_caja == idCaja 
-                         && v.Estado == 2 // Pagada
-                         && v.EfectivoRecibido.HasValue)
-                .Sum(v => v.EfectivoRecibido!.Value);
+                .Where(v => v.Estado == 2)
+                .Sum(v => v.EfectivoRecibido ?? 0);
         }
 
         // ── Métodos para CajaViewModel ───────────────────────────────────────────
@@ -527,54 +526,32 @@ namespace GestionComercial.Aplicacion.Servicios
             if (caja == null)
                 return Enumerable.Empty<VentaDto>();
 
-            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(
+            var ventas = await _uow.Ventas.ObtenerVentasLigerasPorCajaAsync(
+                idCaja,
                 caja.FechaApertura,
-                DateTime.Now,
-                caja.Id_sucursal);
+                DateTime.Now);
 
             return ventas
-                .Where(v => v.Id_caja == idCaja && v.Estado == 2) // Solo ventas pagadas
+                .Where(v => v.Estado == 2)
                 .Select(v => new VentaDto
                 {
                     IdVenta = v.Id,
-                    Fecha = v.Fecha,
                     Total = v.TotalFinal,
                     TotalFinal = v.TotalFinal,
-                    TotalBruto = v.TotalBruto,
-                    TotalDescuento = v.TotalDescuento,
-                    Estado = v.Estado.ToString(),
-                    IdSucursal = v.Id_sucursal,
-                    IdCaja = v.Id_caja ?? 0,
                     EfectivoRecibido = v.EfectivoRecibido ?? 0
                 });
         }
 
         public async Task<IEnumerable<DesglosePagoDto>> ObtenerDesglosePorMetodoAsync(int idCaja)
         {
-            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja);
-            if (caja == null)
-                return Enumerable.Empty<DesglosePagoDto>();
+            var pagos = await _uow.Ventas.ObtenerPagosPorCajaAsync(idCaja);
 
-            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(
-                caja.FechaApertura,
-                DateTime.Now,
-                caja.Id_sucursal);
-
-            var ventasCaja = ventas.Where(v => v.Id_caja == idCaja && v.Estado == 2).ToList();
-
-            // Agrupar por método de pago
-            var desglose = ventasCaja
-                .SelectMany(v => v.Pagos)
-                .GroupBy(p => p.MetodoPago.Nombre)
-                .Select(g => new DesglosePagoDto
-                {
-                    Metodo = g.Key,
-                    Total = g.Sum(p => p.Monto),
-                    Cantidad = g.Count()
-                })
-                .ToList();
-
-            return desglose;
+            return pagos.Select(p => new DesglosePagoDto
+            {
+                Metodo = p.Metodo,
+                Total = p.Total,
+                Cantidad = p.Cantidad
+            }).ToList();
         }
 
         public async Task EliminarCajaAsync(int idCaja)

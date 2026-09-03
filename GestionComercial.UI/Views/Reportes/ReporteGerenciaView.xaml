@@ -57,15 +57,21 @@
 
         <!-- Estilos locales para DataGrid -->
         <Style x:Key="DataGridLocal" TargetType="DataGrid">
-            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="RowBackground" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="GridLinesVisibility" Value="None"/>
             <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="IsReadOnly" Value="True"/>
             <Setter Property="AutoGenerateColumns" Value="False"/>
             <Setter Property="CanUserAddRows" Value="False"/>
             <Setter Property="CanUserDeleteRows" Value="False"/>
             <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="CanUserSortColumns" Value="False"/>
+            <Setter Property="CanUserResizeColumns" Value="False"/>
+            <Setter Property="CanUserReorderColumns" Value="False"/>
             <Setter Property="SelectionMode" Value="Single"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
             <Setter Property="RowHeight" Value="40"/>
@@ -74,11 +80,11 @@
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         </Style>
         <Style x:Key="ColumnHeaderLocal" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Padding" Value="8,8"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -123,7 +129,9 @@
         <StackPanel Margin="0,0,0,28">
 
             <!-- ── Barra de filtros ─────────────────────────────────────────── -->
-            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderThickness="0.5" BorderBrush="{DynamicResource BorderBrush}"
+                    CornerRadius="8" Margin="0,0,0,12" Padding="14,10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -140,6 +148,7 @@
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
@@ -182,7 +191,16 @@
                         </Button.Template>
                     </Button>
 
-                    <Button Grid.Column="15" cal:Message.Attach="ExportarExcel"
+                    <!-- Botón Caja Auditoría - visible solo si tiene permiso Caja.Auditoria -->
+                    <Button Grid.Column="15" cal:Message.Attach="IrCajaAuditoria"
+                            Content="Caja Auditoría"
+                            Background="{DynamicResource SurfaceBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            FontWeight="SemiBold" FontSize="12" Padding="12,6" Cursor="Hand" Margin="8,0,0,0"
+                            Visibility="{Binding PuedeVerCajaAuditoria, Converter={StaticResource BoolToVisibility}}"/>
+
+                    <Button Grid.Column="16" cal:Message.Attach="ExportarExcel"
                             Content="📊  Excel"
                             Background="{DynamicResource SuccessBrush}"
                             Foreground="White"
@@ -309,7 +327,15 @@
                                   CellStyle="{StaticResource CellLocal}"
                                   RowStyle="{StaticResource RowLocal}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70"/>
+                                <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="8,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
                                 <DataGridTemplateColumn Header="VENTAS" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -322,7 +348,7 @@
                                 <DataGridTemplateColumn Header="MARGEN" Width="68">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="5"
+                                            <Border CornerRadius="5"
                                                     Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Margen, StringFormat='{}{0:N1}%'}"
                                                            FontSize="11" FontWeight="Bold"

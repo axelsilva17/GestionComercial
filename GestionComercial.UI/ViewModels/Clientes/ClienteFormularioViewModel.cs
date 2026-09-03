@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Clientes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Main;
+using GestionComercial.UI.ViewModels.Ventas;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -21,6 +22,8 @@ namespace GestionComercial.UI.ViewModels.Clientes
             _clienteServicio = clienteServicio;
             _logger = logger;
         }
+
+        public VentaViewModel? VentaOrigen { get; set; }
 
         // ── Títulos ───────────────────────────────────────────────────────────
         public override string TituloFormulario    => EsModoEdicion ? "Editar Cliente"                     : "Nuevo Cliente";
@@ -113,9 +116,26 @@ namespace GestionComercial.UI.ViewModels.Clientes
         // ── Guardar ───────────────────────────────────────────────────────────
         public async Task<bool> Guardar()
         {
+            if (string.IsNullOrWhiteSpace(Nombre))
+            {
+                MostrarError("El nombre del cliente es obligatorio.");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(Documento))
+            {
+                MostrarError("El documento del cliente es obligatorio.");
+                return false;
+            }
+            if (!int.TryParse(Documento, out var docValidado) || docValidado <= 0)
+            {
+                MostrarError("Ingresá un número de documento válido.");
+                return false;
+            }
+
             try
             {
                 IsLoading = true;
+                LimpiarError();
                 if (EsModoEdicion)
                 {
                     var dto = new ClienteActualizarDto
@@ -159,6 +179,11 @@ namespace GestionComercial.UI.ViewModels.Clientes
         }
 
         public async Task Volver()
-            => await Shell.ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(), CancellationToken.None);
+        {
+            if (VentaOrigen != null)
+                await Shell.ActivateItemAsync(VentaOrigen, CancellationToken.None);
+            else
+                await Shell.ActivateItemAsync(IoC.Get<ClienteListadoViewModel>(), CancellationToken.None);
+        }
     }
 }

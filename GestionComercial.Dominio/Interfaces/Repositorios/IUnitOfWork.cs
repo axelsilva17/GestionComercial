@@ -1,4 +1,5 @@
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 
 namespace GestionComercial.Dominio.Interfaces
 {
@@ -23,6 +24,7 @@ namespace GestionComercial.Dominio.Interfaces
         IRolRepositorio             Roles            { get; }
         IPermisoRepositorio         Permisos         { get; }
         IDescuentoConfiguracionRepositorio DescuentoConfiguraciones { get; }
+        IMantenimientoLogRepositorio MantenimientoLogs { get; }
         Task<int> GuardarCambiosAsync();
         Task      EjecutarEnTransaccionAsync(Func<Task> operacion);
     }

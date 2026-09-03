@@ -20,13 +20,16 @@ namespace GestionComercial.UI.ViewModels.Reportes
 {
     ///     /// DTO para mostrar movimientos de caja en la auditoría.
     
-
-public class CajaAuditoriaViewModel : NavigableViewModel
-{
+    
+    public class CajaAuditoriaViewModel : NavigableViewModel
+    {
         private readonly ICajaServicio _cajaServicio;
         private readonly IUnitOfWork   _uow;
         private readonly SesionServicio _sesion;
         private CancellationTokenSource? _ctsCargarDatos;
+
+        // ── Volver flag ─────────────────────────────────────────────────────
+        public bool VolverAGerencia { get; set; }
 
         // ── Turno filter ──────────────────────────────────────────────
         public ObservableCollection<string> TurnosDisponibles { get; } = new() { "Todos", "Mañana", "Tarde", "Noche" };
@@ -359,11 +362,14 @@ public class CajaAuditoriaViewModel : NavigableViewModel
             }
         }
 
-        // ── Volver a Reporte Admin ─────────────────────────────────────────────
+        // ── Volver al reporte de origen ────────────────────────────────────────
         public async Task Volver()
         {
-            var reporteAdmin = Caliburn.Micro.IoC.Get<ReporteAdminViewModel>();
-            await Caliburn.Micro.IoC.Get<ShellViewModel>().ActivateItemAsync(reporteAdmin, CancellationToken.None);
+            var shell = Caliburn.Micro.IoC.Get<ShellViewModel>();
+            var destino = VolverAGerencia
+                ? (Caliburn.Micro.Screen)Caliburn.Micro.IoC.Get<ReporteGerenciaViewModel>()
+                : Caliburn.Micro.IoC.Get<ReporteAdminViewModel>();
+            await shell.ActivateItemAsync(destino, CancellationToken.None);
         }
     }
 }

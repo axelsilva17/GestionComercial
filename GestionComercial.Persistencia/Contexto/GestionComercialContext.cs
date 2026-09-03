@@ -4,6 +4,7 @@ using GestionComercial.Dominio.Entidades.Cliente;
 using GestionComercial.Dominio.Entidades.Compras;
 using GestionComercial.Dominio.Entidades.Configuracion;
 using GestionComercial.Dominio.Entidades.Descuento;
+using GestionComercial.Dominio.Entidades.Mantenimiento;
 using GestionComercial.Dominio.Entidades.Movimientos;
 using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Pagos;
@@ -13,6 +14,7 @@ using GestionComercial.Dominio.Entidades.Seguridad;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Entidades.Vistas;
 using GestionComercial.Persistencia.Semillas;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Persistencia.Contexto
@@ -55,10 +57,34 @@ namespace GestionComercial.Persistencia.Contexto
         // ── Configuración ──────────────────────────────────────────
         public DbSet<BackupConfig> BackupConfigs { get; set; }
 
+        // ── Mantenimiento ──────────────────────────────────────────
+        public DbSet<MantenimientoLog> MantenimientoLogs { get; set; } = null!;
+
         // ── Vistas (entidades de solo lectura) ──────────────────────
         public DbSet<VistaVentasResumida> VistaVentasResumidas { get; set; }
         public DbSet<VistaProductosConStock> VistaProductosConStock { get; set; }
         public DbSet<VistaMovimientosStock> VistaMovimientosStock { get; set; }
+
+        /// <summary>
+        /// Execute SQLite PRAGMA optimizations. Call once at startup after database creation/migration.
+        /// Sets WAL journal mode, NORMAL synchronous, 64MB cache, memory temp store, and 256MB mmap.
+        /// </summary>
+        public static void EjecutarPragmas(string connectionString)
+        {
+            using var connection = new SqliteConnection(connectionString);
+            connection.Open();
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                PRAGMA journal_mode=WAL;
+                PRAGMA synchronous=NORMAL;
+                PRAGMA cache_size=-16000;
+                PRAGMA temp_store=MEMORY;
+                PRAGMA mmap_size=268435456;
+                PRAGMA optimize;
+            ";
+            cmd.ExecuteNonQuery();
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

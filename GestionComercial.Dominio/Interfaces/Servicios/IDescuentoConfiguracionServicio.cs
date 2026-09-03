@@ -9,7 +9,8 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
             DateTime? fechaDesde, DateTime? fechaHasta,
-            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto);
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
+            decimal? montoMinimoCompra = null);
 
         Task<DescuentoConfiguracion?> ObtenerPorIdAsync(int id);
 
@@ -18,9 +19,12 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
             DateTime? fechaDesde, DateTime? fechaHasta,
-            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto);
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
+            decimal? montoMinimoCompra = null);
 
         Task EliminarAsync(int id);
+
+        Task ActivarAsync(int id);
 
         Task<List<DescuentoConfiguracion>> ObtenerTodosAsync(int idEmpresa, bool? activo = null, string? texto = null);
 
@@ -38,6 +42,11 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
         Task<DescuentoConfiguracion?> ObtenerDescuentoTotalVentaAsync(
             int idEmpresa,
             int idMetodoPago,
+            List<DescuentoConfiguracion> descuentosCache);
+
+        Task<DescuentoConfiguracion?> ObtenerDescuentoCompraMayorAsync(
+            int idEmpresa,
+            decimal totalVenta,
             List<DescuentoConfiguracion> descuentosCache);
     }
 }

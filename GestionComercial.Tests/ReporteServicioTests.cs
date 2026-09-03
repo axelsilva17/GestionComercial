@@ -81,42 +81,20 @@ namespace GestionComercial.Tests
             // 2. Creamos MOCK del repositorio de ventas
             var mockVentaRepo = new Mock<IVentaRepostorio>();
             
-            // 3. Creamos datos de prueba: 2 ventas del mismo usuario
-            var ventasDePrueba = new List<Venta>
+            // 3. Creamos datos de prueba agrupados (resultado del SQL)
+            var ventasDePrueba = new List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>
             {
-                new Venta 
-                { 
-                    Id = 1, 
-                    Id_usuario = 101,
-                    Id_sucursal = 1,
-                    TotalFinal = 1000,
-                    Fecha = DateTime.Now.AddDays(-1)
-                },
-                new Venta 
-                { 
-                    Id = 2, 
-                    Id_usuario = 101, // Mismo usuario
-                    Id_sucursal = 1,
-                    TotalFinal = 2000,
-                    Fecha = DateTime.Now
-                },
-                new Venta 
-                { 
-                    Id = 3, 
-                    Id_usuario = 102, // Otro usuario
-                    Id_sucursal = 1,
-                    TotalFinal = 1500,
-                    Fecha = DateTime.Now
-                }
+                (101, "Juan Pérez", "Sucursal Central", 2, 3000m, 150m),
+                (102, "María López", "Sucursal Central", 1, 1500m, 50m),
             };
             
-            // 4. Configuramos el MOCK: cuando se llame ObtenerPorFechaAsync,
-            //    que devuelva nuestras ventas de prueba
+            // 4. Configuramos el MOCK: cuando se llame ObtenerVentasPorVendedorAgrupadoAsync,
+            //    que devuelva nuestros datos de prueba
             mockVentaRepo
-                .Setup(r => r.ObtenerPorFechaAsync(
+                .Setup(r => r.ObtenerVentasPorVendedorAgrupadoAsync(
+                    It.IsAny<int>(), 
                     It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<int>()))
+                    It.IsAny<DateTime>()))
                 .ReturnsAsync(ventasDePrueba);
             
             // 5. Configuramos el UnitOfWork para que devuelva nuestro mock
@@ -140,7 +118,7 @@ namespace GestionComercial.Tests
             
             var lista = resultado.ToList();
             
-            // Debe haber 2 grupos (usuarios 101 y 102)
+            // Debe haber 2 vendedores
             lista.Should().HaveCount(2);
             
             // El usuario 101 debe tener 2 ventas con total 3000
@@ -166,11 +144,11 @@ namespace GestionComercial.Tests
             
             // Configurar que no hay ventas
             mockVentaRepo
-                .Setup(r => r.ObtenerPorFechaAsync(
+                .Setup(r => r.ObtenerVentasPorVendedorAgrupadoAsync(
+                    It.IsAny<int>(), 
                     It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<int>()))
-                .ReturnsAsync(new List<Venta>());
+                    It.IsAny<DateTime>()))
+                .ReturnsAsync(new List<(int, string, string, int, decimal, decimal)>());
             
             mockUow.Setup(u => u.Ventas).Returns(mockVentaRepo.Object);
             

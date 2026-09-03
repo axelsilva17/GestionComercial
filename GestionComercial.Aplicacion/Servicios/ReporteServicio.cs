@@ -11,25 +11,17 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<ReporteVendedorDto>> VentasPorVendedorAsync(int idSucursal, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerPorFechaAsync(desde, hasta, idSucursal);
-            return ventas
-                .GroupBy(v => v.Id_usuario)
-                .Select(g =>
-                {
-                    var primerVenta = g.FirstOrDefault();
-                    return new ReporteVendedorDto
-                    {
-                        IdUsuario      = g.Key,
-                        UsuarioNombre  = primerVenta?.Usuario != null
-                            ? $"{primerVenta.Usuario.Nombre} {primerVenta.Usuario.Apellido}"
-                            : string.Empty,
-                        Sucursal       = primerVenta?.Sucursal?.Nombre ?? string.Empty,
-                        CantidadVentas = g.Count(),
-                        TotalVendido   = g.Sum(v => v.TotalFinal),
-                        PromedioVenta  = g.Average(v => v.TotalFinal),
-                        TotalDescuentos = g.Sum(v => v.TotalDescuento),
-                    };
-                });
+            var ventas = await _uow.Ventas.ObtenerVentasPorVendedorAgrupadoAsync(idSucursal, desde, hasta);
+            return ventas.Select(v => new ReporteVendedorDto
+            {
+                IdUsuario      = v.IdUsuario,
+                UsuarioNombre  = v.UsuarioNombre,
+                Sucursal       = v.SucursalNombre,
+                CantidadVentas = v.CantidadVentas,
+                TotalVendido   = v.TotalVendido,
+                PromedioVenta  = v.CantidadVentas > 0 ? v.TotalVendido / v.CantidadVentas : 0,
+                TotalDescuentos = v.TotalDescuentos,
+            });
         }
 
         public async Task<IEnumerable<ReporteMargenDto>> MargenPorProductoAsync(int idEmpresa, DateTime desde, DateTime hasta)
@@ -118,63 +110,47 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<VentaPorDiaDto>> VentasPorDiaAsync(int idEmpresa, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
-            return ventas
-                .GroupBy(v => v.Fecha.Date)
-                .Select(g => new VentaPorDiaDto
-                {
-                    Dia = g.Key.ToString("dd/MM"),
-                    Total = g.Sum(v => v.TotalFinal),
-                    Cantidad = g.Count(),
-                })
-                .OrderBy(d => d.Dia);
+            var ventas = await _uow.Ventas.ObtenerVentasPorDiaAgrupadoAsync(idEmpresa, desde, hasta);
+            return ventas.Select(v => new VentaPorDiaDto
+            {
+                Dia = v.Dia,
+                Total = v.Total,
+                Cantidad = v.Cantidad,
+            });
         }
 
         public async Task<IEnumerable<VentaPorSucursalDto>> VentasPorSucursalAsync(int idEmpresa, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
-            var totalGeneral = ventas.Sum(v => v.TotalFinal);
-            return ventas
-                .GroupBy(v => v.Id_sucursal)
-                .Select(g => new VentaPorSucursalDto
-                {
-                    SucursalNombre = g.FirstOrDefault()?.Sucursal?.Nombre ?? $"Sucursal {g.Key}",
-                    Total = g.Sum(v => v.TotalFinal),
-                    Cantidad = g.Count(),
-                    Porcentaje = totalGeneral > 0 ? (g.Sum(v => v.TotalFinal) / totalGeneral) * 100 : 0,
-                })
-                .OrderByDescending(s => s.Total);
+            var ventas = await _uow.Ventas.ObtenerVentasPorSucursalAgrupadoAsync(idEmpresa, desde, hasta);
+            var totalGeneral = ventas.Sum(v => v.Total);
+            return ventas.Select(v => new VentaPorSucursalDto
+            {
+                SucursalNombre = v.SucursalNombre,
+                Total = v.Total,
+                Cantidad = v.Cantidad,
+                Porcentaje = totalGeneral > 0 ? (v.Total / totalGeneral) * 100 : 0,
+            });
         }
 
         public async Task<KpiGeneralDto> KpisGeneralesAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
         {
-            var ventas = await _uow.Ventas.ObtenerConDetallesPorFechaAsync(idEmpresa, desde, hasta);
-            var totalVentas = ventas.Sum(v => v.TotalFinal);
-            var totalTransacciones = ventas.Count();
-            var stockCritico = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
+            var kpisTask = _uow.Ventas.ObtenerKpisVentasAsync(idEmpresa, idSucursal, desde, hasta);
+            var stockTask = _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
+            var topVendedorTask = _uow.Ventas.ObtenerTopVendedorAsync(idEmpresa, desde, hasta);
+            var topProductoTask = _uow.Ventas.ObtenerTopProductoAsync(idEmpresa, desde, hasta);
 
-            // Top vendedor
-            var topVendedor = ventas
-                .GroupBy(v => v.Id_usuario)
-                .OrderByDescending(g => g.Sum(v => v.TotalFinal))
-                .FirstOrDefault();
-            var nombreVendedor = topVendedor?.FirstOrDefault()?.Usuario != null
-                ? $"{topVendedor.First().Usuario.Nombre} {topVendedor.First().Usuario.Apellido}"
-                : "";
+            await Task.WhenAll(kpisTask, stockTask, topVendedorTask, topProductoTask);
 
-            // Top producto
-            var topProducto = ventas
-                .SelectMany(v => v.Detalles)
-                .GroupBy(d => d.Id_producto)
-                .OrderByDescending(g => g.Sum(d => d.Subtotal))
-                .FirstOrDefault();
-            var nombreProducto = topProducto?.FirstOrDefault()?.Producto?.Nombre ?? "";
+            var kpis = await kpisTask;
+            var stockCritico = await stockTask;
+            var nombreVendedor = await topVendedorTask ?? "";
+            var nombreProducto = await topProductoTask ?? "";
 
             return new KpiGeneralDto
             {
-                TotalVentasPeriodo = totalVentas,
-                TotalTransacciones = totalTransacciones,
-                TicketPromedio = totalTransacciones > 0 ? totalVentas / totalTransacciones : 0,
+                TotalVentasPeriodo = kpis?.TotalVentas ?? 0,
+                TotalTransacciones = kpis?.TotalTransacciones ?? 0,
+                TicketPromedio = kpis?.TicketPromedio ?? 0,
                 ProductosBajoStock = stockCritico.Count(),
                 MejorVendedor = nombreVendedor,
                 MejorProducto = nombreProducto,

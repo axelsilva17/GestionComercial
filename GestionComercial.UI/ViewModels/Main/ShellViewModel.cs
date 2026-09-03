@@ -82,6 +82,8 @@ namespace GestionComercial.UI.ViewModels.Main
                 NotifyOfPropertyChange(() => MostrarReportes);
                 NotifyOfPropertyChange(() => MostrarConfiguracion);
                 NotifyOfPropertyChange(() => MostrarDescuentos);
+                NotifyOfPropertyChange(() => MostrarMantenimiento);
+                NotifyOfPropertyChange(() => MostrarDashboard);
             }
         }
 
@@ -123,18 +125,23 @@ namespace GestionComercial.UI.ViewModels.Main
                 MessageBoxImage.Information);
         }
 
+        private bool EsDesarrollador => _sesion?.EsDesarrollador == true;
+
         // ── Visibilidad módulos (basada en permisos + demo) ───────────────────
-        public bool MostrarVentas       => HasPermission("Ventas.Ver") && DemoPuede("ventas");
-        public bool MostrarCaja         => HasPermission("Caja.Abrir") && DemoPuede("caja");
-        public bool MostrarCompras      => HasPermission("Compras.Ver") && DemoPuede("compras");
-        public bool MostrarCatalogo     => HasPermission("Productos.Ver") && DemoPuede("productos");
-        public bool MostrarProductos    => HasPermission("Productos.Ver") && DemoPuede("productos");
-        public bool MostrarInventario   => HasPermission("Productos.Ver") && DemoPuede("inventario");
-        public bool MostrarClientes     => HasPermission("Clientes.Ver") && DemoPuede("clientes");
-        public bool MostrarProveedores  => HasPermission("Compras.Ver") && DemoPuede("proveedores");
-        public bool MostrarReportes     => HasPermission("Reportes.Ver") && DemoPuede("reportes");
-        public bool MostrarConfiguracion => HasPermission("Configuracion.Ver") && DemoPuede("configuracion");
-        public bool MostrarDescuentos    => HasPermission("Descuentos.Ver") && DemoPuede("descuentos");
+        // El desarrollador SOLO ve Mantenimiento; todos los demás módulos quedan ocultos.
+        public bool MostrarVentas       => !EsDesarrollador && HasPermission("Ventas.Ver") && DemoPuede("ventas");
+        public bool MostrarCaja         => !EsDesarrollador && HasPermission("Caja.Abrir") && DemoPuede("caja");
+        public bool MostrarCompras      => !EsDesarrollador && HasPermission("Compras.Ver") && DemoPuede("compras");
+        public bool MostrarCatalogo     => !EsDesarrollador && HasPermission("Productos.Ver") && DemoPuede("productos");
+        public bool MostrarProductos    => !EsDesarrollador && HasPermission("Productos.Ver") && DemoPuede("productos");
+        public bool MostrarInventario   => !EsDesarrollador && HasPermission("Productos.Ver") && DemoPuede("inventario");
+        public bool MostrarClientes     => !EsDesarrollador && HasPermission("Clientes.Ver") && DemoPuede("clientes");
+        public bool MostrarProveedores  => !EsDesarrollador && HasPermission("Compras.Ver") && DemoPuede("proveedores");
+        public bool MostrarReportes     => !EsDesarrollador && HasPermission("Reportes.Ver") && DemoPuede("reportes");
+        public bool MostrarConfiguracion => !EsDesarrollador && HasPermission("Configuracion.Ver") && DemoPuede("configuracion");
+        public bool MostrarDescuentos    => !EsDesarrollador && HasPermission("Descuentos.Ver") && DemoPuede("descuentos");
+        public bool MostrarMantenimiento => EsDesarrollador;
+        public bool MostrarDashboard => !EsDesarrollador;
 
 
         public int              IdEmpresaActual  { get; internal set; }
@@ -176,7 +183,10 @@ namespace GestionComercial.UI.ViewModels.Main
             base.OnViewLoaded(view);
             try
             {
-                await IrDashboard();
+                if (EsDesarrollador)
+                    await IrMantenimiento();
+                else
+                    await IrDashboard();
             }
             catch (Exception ex)
             {
@@ -240,13 +250,13 @@ namespace GestionComercial.UI.ViewModels.Main
         }
         public async Task IrConfiguracion()
         {
-            if (!DemoPuede("configuracion")) { MostrarMensajeDemo(); return; }
+            if (!EsDesarrollador && !DemoPuede("configuracion")) { MostrarMensajeDemo(); return; }
             await ActivateItemAsync(IoC.Get<ConfiguracionViewModel>(), CancellationToken.None);
         }
-        public async Task IrDescuentos()
+
+        public async Task IrMantenimiento()
         {
-            if (!DemoPuede("descuentos")) { MostrarMensajeDemo(); return; }
-            await ActivateItemAsync(IoC.Get<DescuentoListadoViewModel>(), CancellationToken.None);
+            await ActivateItemAsync(IoC.Get<MantenimientoViewModel>(), CancellationToken.None);
         }
 
         // Reportes diferenciados por rol

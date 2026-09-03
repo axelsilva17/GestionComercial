@@ -185,6 +185,13 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _tipoAjuste = value; NotifyOfPropertyChange(() => TipoAjuste); }
         }
 
+        private string _direccionAjuste = "aumentar"; // "aumentar" | "reducir"
+        public string DireccionAjuste
+        {
+            get => _direccionAjuste;
+            set { _direccionAjuste = value; NotifyOfPropertyChange(() => DireccionAjuste); }
+        }
+
         private decimal _porcentajeAjuste = 0;
         public decimal PorcentajeAjuste
         {
@@ -319,6 +326,21 @@ namespace GestionComercial.UI.ViewModels.Productos
             if (!await _lock.WaitAsync(0)) return;
             try
             {
+                PaginaActual = 1;
+                await CargarAsync();
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        public async Task LimpiarBusqueda()
+        {
+            if (!await _lock.WaitAsync(0)) return;
+            try
+            {
+                TextoBusqueda = string.Empty;
                 PaginaActual = 1;
                 await CargarAsync();
             }
@@ -605,20 +627,21 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 decimal nuevoVenta = p.PrecioVentaActual;
                 decimal nuevoCosto = p.PrecioCostoActual;
+                decimal signo = DireccionAjuste == "reducir" ? -1m : 1m;
 
                 if (TipoAjuste == "porcentaje")
                 {
                     if (AplicarAPrecioVenta)
-                        nuevoVenta = Math.Round(p.PrecioVentaActual * (1 + PorcentajeAjuste / 100m), 2);
+                        nuevoVenta = Math.Round(p.PrecioVentaActual * (1 + signo * PorcentajeAjuste / 100m), 2);
                     if (AplicarAPrecioCosto)
-                        nuevoCosto = Math.Round(p.PrecioCostoActual * (1 + PorcentajeAjuste / 100m), 2);
+                        nuevoCosto = Math.Round(p.PrecioCostoActual * (1 + signo * PorcentajeAjuste / 100m), 2);
                 }
                 else if (TipoAjuste == "fijo")
                 {
                     if (AplicarAPrecioVenta)
-                        nuevoVenta = p.PrecioVentaActual + MontoFijo;
+                        nuevoVenta = p.PrecioVentaActual + signo * MontoFijo;
                     if (AplicarAPrecioCosto)
-                        nuevoCosto = p.PrecioCostoActual + MontoFijo;
+                        nuevoCosto = p.PrecioCostoActual + signo * MontoFijo;
                 }
 
                 // Siempre agregar paraver el cambio

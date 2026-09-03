@@ -46,6 +46,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
             Col_Primary, Col_Success, Col_Warning, Col_Info, Col_Positive, Col_Neutral, Col_Error,
         };
 
+        // Permiso para mostrar botón Caja Auditoría
+        public bool PuedeVerCajaAuditoria => _sesion.HasPermission("Caja.Auditoria");
+
         public ReporteGerenciaViewModel(
             IVentaServicio   ventaServicio,
             ICompraServicio  compraServicio,
@@ -462,6 +465,14 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 });
             }
             finally { IsLoading = false; }
+        }
+
+        // ── Navegar a Caja Auditoría ───────────────────────────────────────────
+        public async Task IrCajaAuditoria()
+        {
+            var vm = Caliburn.Micro.IoC.Get<CajaAuditoriaViewModel>();
+            vm.VolverAGerencia = true;
+            await Shell.ActivateItemAsync(vm, CancellationToken.None);
         }
     }
 }

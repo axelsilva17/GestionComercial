@@ -6,6 +6,7 @@ using GestionComercial.Dominio.Entidades.Proveedores;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Compras;
 using GestionComercial.UI.ViewModels.Main;
+using System.Windows;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -71,7 +72,13 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         public string TextoBusqueda
         {
             get => _textoBusqueda;
-            set { _textoBusqueda = value; NotifyOfPropertyChange(() => TextoBusqueda); }
+            set 
+            { 
+                _textoBusqueda = value; 
+                NotifyOfPropertyChange(() => TextoBusqueda);
+                PaginaActual = 1;
+                _ = CargarAsync();
+            }
         }
 
         // Filtro de estado (0=Todos, 1=Activos, 2=Inactivos)
@@ -79,7 +86,13 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         public int FiltroEstado
         {
             get => _filtroEstado;
-            set { _filtroEstado = value; NotifyOfPropertyChange(() => FiltroEstado); }
+            set 
+            { 
+                _filtroEstado = value; 
+                NotifyOfPropertyChange(() => FiltroEstado);
+                PaginaActual = 1;
+                _ = CargarAsync();
+            }
         }
 
         public string FiltroEstadoTexto => FiltroEstado switch
@@ -185,6 +198,15 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         public async Task DesactivarProveedor()
         {
             if (ProveedorSeleccionado == null) return;
+
+            var resultado = MessageBox.Show(
+                $"¿Está seguro que desea desactivar al proveedor '{ProveedorSeleccionado.Nombre}'?",
+                "Confirmar desactivación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (resultado != MessageBoxResult.Yes) return;
+
             try
             {
                 await _proveedorServicio.DesactivarAsync(ProveedorSeleccionado.IdProveedor);
@@ -221,14 +243,17 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         {
             if (ProveedorSeleccionado == null) return;
             
-            // Navegar a compras filtrado por el proveedor seleccionado
-            var compraListado = IoC.Get<GestionComercial.UI.ViewModels.Compras.CompraListadoViewModel>();
+            var compraListado = IoC.Get<CompraListadoViewModel>();
             
-            // Necesitamos cargar la lista de proveedores primero para poder aplicar el filtro
+            // Remove period restriction to show ALL purchases for this supplier
+            compraListado.FechaDesde = null;
+            compraListado.FechaHasta = null;
+            
+            // Precargar proveedores para poder aplicar el filtro
             var todosProveedores = await compraListado.CargarProveedoresAsync();
             
-            // Buscar el proveedor en la lista del listado de compras
-            var proveedorEnCompras = todosProveedores.FirstOrDefault(p => p.IdProveedor == ProveedorSeleccionado.IdProveedor);
+            var proveedorEnCompras = todosProveedores
+                .FirstOrDefault(p => p.IdProveedor == ProveedorSeleccionado.IdProveedor);
             
             if (proveedorEnCompras != null)
             {

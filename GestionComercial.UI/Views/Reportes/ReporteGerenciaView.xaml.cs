@@ -10,5 +10,10 @@ namespace GestionComercial.UI.Views.Reportes
         public ReporteGerenciaView() => InitializeComponent();
         private async void Actualizar_Click(object sender, RoutedEventArgs e)
             => await VM?.Actualizar();
+
+        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

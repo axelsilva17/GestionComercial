@@ -167,7 +167,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 15%", 15m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Once);
         }
 
@@ -183,7 +183,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Categoría Carnes 10%", 10m, null, 5,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Once);
         }
 
@@ -199,7 +199,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 7.5%", 7.5m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Once);
         }
 
@@ -215,7 +215,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 10%", 10m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Once);
         }
 
@@ -231,7 +231,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 100%", 100m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Once);
         }
 
@@ -249,7 +249,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.ActualizarAsync(
                 1, "Queso 20%", 20m, 7, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Once);
         }
 
@@ -266,7 +266,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Never);
         }
 
@@ -285,7 +285,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Never);
         }
 
@@ -323,7 +323,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
                 Times.Never);
         }
 
@@ -344,7 +344,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Método Visa 5%", 5m, null, null,
-                false, It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), AlcanceDescuentoEnum.MetodoPago),
+                false, It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), AlcanceDescuentoEnum.MetodoPago, It.IsAny<decimal?>()),
                 Times.Once);
         }
 

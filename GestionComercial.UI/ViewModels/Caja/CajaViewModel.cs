@@ -142,7 +142,9 @@ namespace GestionComercial.UI.ViewModels.Caja
             LimpiarError();
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[DEBUG-Caja] CargarAsync - IdSucursal: {_sesion.IdSucursal}");
                 var caja = await _cajaServicio.ObtenerCajaAbiertaAsync(_sesion.IdSucursal);
+                System.Diagnostics.Debug.WriteLine($"[DEBUG-Caja] Caja encontrada: {caja?.Id}, Estado: {caja?.Estado}");
 
                 if (caja == null)
                 {
@@ -167,27 +169,44 @@ namespace GestionComercial.UI.ViewModels.Caja
                 MontoInicial         = caja.MontoInicial;
                 FechaApertura        = caja.FechaApertura;
 
-                // Cargar movimientos y calcular totales
-                var movimientos = await _cajaServicio.ObtenerMovimientosAsync(caja.Id);
-                Movimientos = new ObservableCollection<MovimientoCajaDto>(movimientos);
+                try
+                {
+                    var movimientos = await _cajaServicio.ObtenerMovimientosAsync(caja.Id);
+                    Movimientos = new ObservableCollection<MovimientoCajaDto>(movimientos);
+                    TotalIngresos    = movimientos.Where(m => m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
+                    TotalEgresos     = movimientos.Where(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
+                    CantidadIngresos = movimientos.Count(m => m.EsIngreso && !m.EsApertura);
+                    CantidadEgresos  = movimientos.Count(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre"));
+                }
+                catch (Exception exMov)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ERROR-Caja] Movimientos: {exMov.Message}");
+                    Movimientos = new();
+                }
 
-                // Calcular ingresos y egresos desde los movimientos (excluir apertura/cierre que son operativos)
-                // Ventas = ingreso neto (recibido - cambio)
-                // Cambio dado = egreso
-                // La fórmula: MontoInicial + TotalIngresos - TotalEgresos es correcta
-                TotalIngresos = movimientos.Where(m => m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
-                TotalEgresos  = movimientos.Where(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre")).Sum(m => m.Monto);
-                CantidadIngresos = movimientos.Count(m => m.EsIngreso && !m.EsApertura);
-                CantidadEgresos  = movimientos.Count(m => !m.EsIngreso && !m.EsApertura && !m.Tipo.Contains("Cierre"));
+                try
+                {
+                    var ventasDia = await _cajaServicio.ObtenerVentasDelDiaAsync(caja.Id);
+                    TotalVentasDia  = ventasDia.Sum(v => v.Total);
+                    CantidadVentasDia = ventasDia.Count();
+                }
+                catch (Exception exVentas)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ERROR-Caja] Ventas: {exVentas.Message}");
+                    TotalVentasDia  = 0;
+                    CantidadVentasDia = 0;
+                }
 
-                // Calcular ventas del día
-                var ventasDia = await _cajaServicio.ObtenerVentasDelDiaAsync(caja.Id);
-                TotalVentasDia = ventasDia.Sum(v => v.Total);
-                CantidadVentasDia = ventasDia.Count();
-
-                // Desglose por método de pago
-                var desglose = await _cajaServicio.ObtenerDesglosePorMetodoAsync(caja.Id);
-                DesglosePorMetodo = new ObservableCollection<DesglosePagoDto>(desglose);
+                try
+                {
+                    var desglose = await _cajaServicio.ObtenerDesglosePorMetodoAsync(caja.Id);
+                    DesglosePorMetodo = new ObservableCollection<DesglosePagoDto>(desglose);
+                }
+                catch (Exception exDesglose)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ERROR-Caja] Desglose: {exDesglose.Message}");
+                    DesglosePorMetodo = new();
+                }
             }
             catch (Exception ex)
             {

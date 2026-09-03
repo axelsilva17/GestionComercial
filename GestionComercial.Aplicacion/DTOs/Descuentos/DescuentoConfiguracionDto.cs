@@ -11,6 +11,7 @@ namespace GestionComercial.Aplicacion.DTOs.Descuentos
         public int Id_empresa { get; set; }
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
+        public decimal? MontoMinimoCompra { get; set; }
     }
 
     public class DescuentoListadoDto
@@ -27,5 +28,30 @@ namespace GestionComercial.Aplicacion.DTOs.Descuentos
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
         public bool Activo { get; set; }
+        public string Alcance { get; set; } = string.Empty;
+        public decimal? MontoMinimoCompra { get; set; }
+
+        public string Tipo => Alcance switch
+        {
+            "Producto" => "Producto",
+            "Categoria" => "Categoría",
+            "MetodoPago" => "Método de Pago",
+            "CompraMayor" => "Compra Mayor",
+            _ => "Global"
+        };
+
+        public string ObjetoNombre => Alcance switch
+        {
+            "Producto" => ProductoNombre ?? "Todos",
+            "Categoria" => CategoriaNombre ?? "Todos",
+            "CompraMayor" => MontoMinimoCompra.HasValue
+                ? $">= ${MontoMinimoCompra.Value:N2}"
+                : "Todos",
+            _ => "Todos"
+        };
+
+        public string MetodoPagoNombre => AplicaCualquierMetodoPago
+            ? "Todos"
+            : MetodosPagoNombres;
     }
 }

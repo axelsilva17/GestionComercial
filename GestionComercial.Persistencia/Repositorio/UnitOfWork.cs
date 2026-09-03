@@ -1,8 +1,10 @@
 using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
+using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.Persistencia.Contexto;
 using GestionComercial.Persistencia.Repositorio;
+using Microsoft.EntityFrameworkCore;
 
 namespace GestionComercial.Persistencia.Repositorio
 {
@@ -29,6 +31,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public IRolRepositorio     Roles    { get; }
         public IPermisoRepositorio Permisos { get; }
         public IDescuentoConfiguracionRepositorio DescuentoConfiguraciones { get; }
+        public IMantenimientoLogRepositorio MantenimientoLogs { get; }
 
         public UnitOfWork(GestionComercialContext context)
         {
@@ -52,10 +55,16 @@ namespace GestionComercial.Persistencia.Repositorio
             Roles            = new RolRepositorio(context);
             Permisos         = new PermisoRepositorio(context);
             DescuentoConfiguraciones = new DescuentoConfiguracionRepositorio(context);
+            MantenimientoLogs = new MantenimientoLogRepositorio(context);
         }
 
         public async Task<int> GuardarCambiosAsync()
-            => await _context.SaveChangesAsync();
+        {
+            var result = await _context.SaveChangesAsync();
+            foreach (var entry in _context.ChangeTracker.Entries().ToList())
+                entry.State = EntityState.Detached;
+            return result;
+        }
 
         public async Task EjecutarEnTransaccionAsync(Func<Task> operacion)
         {

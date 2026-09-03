@@ -22,5 +22,8 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         // Consultas avanzadas
         IQueryable<T> Consultar();
         IQueryable<T> ConsultarSinTracking();
+
+        // Tracking
+        void Desadjuntar(T entidad);
     }
 }

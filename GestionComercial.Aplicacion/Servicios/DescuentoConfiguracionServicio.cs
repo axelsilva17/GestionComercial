@@ -22,14 +22,15 @@ namespace GestionComercial.Aplicacion.Servicios
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
             DateTime? fechaDesde, DateTime? fechaHasta,
-            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
+            decimal? montoMinimoCompra = null)
         {
             if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
                 throw new InvalidOperationException("No tenés permiso para crear descuentos.");
 
             var descuento = DescuentoConfiguracion.Crear(
                 nombre, valor, idEmpresa, idProducto, idCategoria,
-                aplicaCualquierMetodoPago, idsMetodosPago, fechaDesde, fechaHasta, alcance);
+                aplicaCualquierMetodoPago, idsMetodosPago, fechaDesde, fechaHasta, alcance, montoMinimoCompra);
 
             // ── Todo en una transacción: descuento + relaciones N:M ─────────────────
             await _unitOfWork.EjecutarEnTransaccionAsync(async () =>
@@ -58,7 +59,8 @@ namespace GestionComercial.Aplicacion.Servicios
             int? idProducto, int? idCategoria,
             bool aplicaCualquierMetodoPago, List<int>? idsMetodosPago,
             DateTime? fechaDesde, DateTime? fechaHasta,
-            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
+            decimal? montoMinimoCompra = null)
         {
             if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
                 throw new InvalidOperationException("No tenés permiso para editar descuentos.");
@@ -70,7 +72,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 if (idsMetodosPago == null || idsMetodosPago.Count == 0)
                     throw new InvalidOperationException("Debe seleccionar al menos un método de pago.");
             }
-            else
+            else if (alcance != AlcanceDescuentoEnum.CompraMayor)
             {
                 if (!aplicaCualquierMetodoPago && (idsMetodosPago == null || idsMetodosPago.Count == 0))
                     throw new InvalidOperationException("Debe indicar cualquier método o seleccionar al menos una tarjeta.");
@@ -80,7 +82,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
             descuento.Actualizar(nombre, valor, idProducto, idCategoria,
-                aplicaCualquierMetodoPago, fechaDesde, fechaHasta, alcance);
+                aplicaCualquierMetodoPago, fechaDesde, fechaHasta, alcance, montoMinimoCompra);
 
             // Reemplazar relaciones N:M
             var effectiveIds = aplicaCualquierMetodoPago
@@ -101,6 +103,20 @@ namespace GestionComercial.Aplicacion.Servicios
                 ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
 
             descuento.Inactivar();
+            _unitOfWork.DescuentoConfiguraciones.Actualizar(descuento);
+            await _unitOfWork.GuardarCambiosAsync();
+        }
+
+        public async Task ActivarAsync(int id)
+        {
+            if (_sesion != null && !_sesion.HasPermission("Descuentos.Ver"))
+                throw new InvalidOperationException("No tenés permiso para activar descuentos.");
+
+            var descuento = await _unitOfWork.DescuentoConfiguraciones.ObtenerPorIdAsync(id)
+                ?? throw new KeyNotFoundException($"Descuento {id} no encontrado.");
+
+            descuento.Reactivar();
+            _unitOfWork.DescuentoConfiguraciones.Actualizar(descuento);
             await _unitOfWork.GuardarCambiosAsync();
         }
 
@@ -240,6 +256,30 @@ namespace GestionComercial.Aplicacion.Servicios
                          && d.Alcance == AlcanceDescuentoEnum.MetodoPago
                          && !d.AplicaCualquierMetodoPago
                          && d.DescuentosMetodosPago.Any(dm => dm.Id_metodoPago == idMetodoPago))
+                .ToList();
+
+            if (candidates.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var winner = candidates.OrderByDescending(d => d.Valor).First();
+            return Task.FromResult<DescuentoConfiguracion?>(winner);
+        }
+
+        public Task<DescuentoConfiguracion?> ObtenerDescuentoCompraMayorAsync(
+            int idEmpresa,
+            decimal totalVenta,
+            List<DescuentoConfiguracion> descuentosCache)
+        {
+            if (descuentosCache == null || descuentosCache.Count == 0)
+                return Task.FromResult<DescuentoConfiguracion?>(null);
+
+            var candidates = descuentosCache
+                .Where(d => d.Id_empresa == idEmpresa
+                         && d.Activo
+                         && d.EstaVigente
+                         && d.Alcance == AlcanceDescuentoEnum.CompraMayor
+                         && d.MontoMinimoCompra.HasValue
+                         && totalVenta >= d.MontoMinimoCompra.Value)
                 .ToList();
 
             if (candidates.Count == 0)

@@ -109,6 +109,9 @@ namespace GestionComercial.UI.Views.Productos
                 MontoFijoInput.Visibility = Visibility.Visible;
                 SignoPesos.Visibility = Visibility.Visible;
             }
+
+            // Determine dirección del ajuste
+            ViewModel.DireccionAjuste = DirReducir.IsChecked == true ? "reducir" : "aumentar";
             
             ViewModel?.GenerarPreviewAjuste();
         }

@@ -19,6 +19,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
         public int? Id_producto { get; set; }
         public int? Id_categoria { get; set; }
         public bool AplicaCualquierMetodoPago { get; set; } = true;
+        public decimal? MontoMinimoCompra { get; set; }
         public int Id_empresa { get; set; }
         public DateTime? FechaDesde { get; set; }
         public DateTime? FechaHasta { get; set; }
@@ -45,7 +46,8 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             List<int>? idsMetodosPago = null,
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null,
-            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
+            decimal? montoMinimoCompra = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new InvalidOperationException("El nombre es requerido.");
@@ -54,7 +56,14 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             if (idEmpresa <= 0)
                 throw new InvalidOperationException("El ID de empresa debe ser mayor a 0.");
 
-            if (alcance == AlcanceDescuentoEnum.MetodoPago)
+            if (alcance == AlcanceDescuentoEnum.CompraMayor)
+            {
+                if (!montoMinimoCompra.HasValue || montoMinimoCompra <= 0)
+                    throw new InvalidOperationException("Para descuentos por compra mayor, debe indicar el monto mínimo de compra.");
+                if (idProducto.HasValue || idCategoria.HasValue)
+                    throw new InvalidOperationException("Para descuentos por compra mayor, no puede asignar producto o categoría.");
+            }
+            else if (alcance == AlcanceDescuentoEnum.MetodoPago)
             {
                 // Alcance MetodoPago: producto y categoria deben ser null
                 if (idProducto.HasValue || idCategoria.HasValue)
@@ -87,6 +96,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
                 Id_producto = idProducto,
                 Id_categoria = idCategoria,
                 AplicaCualquierMetodoPago = aplicaCualquierMetodoPago,
+                MontoMinimoCompra = montoMinimoCompra,
                 Id_empresa = idEmpresa,
                 FechaDesde = fechaDesde,
                 FechaHasta = fechaHasta,
@@ -103,14 +113,22 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             bool aplicaCualquierMetodoPago,
             DateTime? fechaDesde,
             DateTime? fechaHasta,
-            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto)
+            AlcanceDescuentoEnum alcance = AlcanceDescuentoEnum.Producto,
+            decimal? montoMinimoCompra = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new InvalidOperationException("El nombre es requerido.");
             if (valor <= 0 || valor > 100)
                 throw new InvalidOperationException("El valor debe ser mayor a 0 y menor o igual a 100.");
 
-            if (alcance == AlcanceDescuentoEnum.MetodoPago)
+            if (alcance == AlcanceDescuentoEnum.CompraMayor)
+            {
+                if (!montoMinimoCompra.HasValue || montoMinimoCompra <= 0)
+                    throw new InvalidOperationException("Para descuentos por compra mayor, debe indicar el monto mínimo de compra.");
+                if (idProducto.HasValue || idCategoria.HasValue)
+                    throw new InvalidOperationException("Para descuentos por compra mayor, no puede asignar producto o categoría.");
+            }
+            else if (alcance == AlcanceDescuentoEnum.MetodoPago)
             {
                 if (idProducto.HasValue || idCategoria.HasValue)
                     throw new InvalidOperationException("Para descuentos por método de pago, no puede asignar producto o categoría.");
@@ -133,6 +151,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
             Id_producto = idProducto;
             Id_categoria = idCategoria;
             AplicaCualquierMetodoPago = aplicaCualquierMetodoPago;
+            MontoMinimoCompra = montoMinimoCompra;
             Alcance = alcance;
             FechaDesde = fechaDesde;
             FechaHasta = fechaHasta;

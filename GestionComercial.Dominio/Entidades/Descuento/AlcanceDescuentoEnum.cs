@@ -4,6 +4,7 @@ namespace GestionComercial.Dominio.Entidades.Descuento
     {
         Producto = 1,
         Categoria = 2,
-        MetodoPago = 3
+        MetodoPago = 3,
+        CompraMayor = 4
     }
 }

@@ -72,7 +72,8 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                                 .Select(dm => dm.MetodoPago!.Nombre)),
                         FechaDesde = d.FechaDesde,
                         FechaHasta = d.FechaHasta,
-                        Activo = d.Activo
+                        Activo = d.Activo,
+                        Alcance = d.Alcance.ToString()
                     }));
             }
             finally

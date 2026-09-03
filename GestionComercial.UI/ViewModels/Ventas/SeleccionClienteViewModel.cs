@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.DTOs.Clientes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Clientes;
 using GestionComercial.UI.ViewModels.Main;
 using System;
 using System.Collections.ObjectModel;
@@ -107,6 +108,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
             VentaOrigen.ClienteId     = 1;
             VentaOrigen.ClienteNombre = "Consumidor Final";
             await IoC.Get<ShellViewModel>().ActivateItemAsync(VentaOrigen, CancellationToken.None);
+        }
+
+        public async Task NuevoCliente()
+        {
+            var vm = IoC.Get<ClienteFormularioViewModel>();
+            vm.InicializarParaCrear();
+            vm.VentaOrigen = VentaOrigen;
+            await IoC.Get<ShellViewModel>().ActivateItemAsync(vm, CancellationToken.None);
         }
 
         public async Task Volver()

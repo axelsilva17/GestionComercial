@@ -15,5 +15,6 @@
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.102.2" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
+		<PackageReference Include="QuestPDF" Version="2026.8.0" />
 	</ItemGroup>
 </Project>

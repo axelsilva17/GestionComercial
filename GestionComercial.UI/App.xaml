@@ -24,6 +24,7 @@
              <converters:TabIndexToVisibilityConverter x:Key="TabIndexToVisibility"/>
              <converters:TamanioArchivoConverter x:Key="TamanioArchivo"/>
              <converters:BoolToPrimariaConverter x:Key="BoolToPrimaria"/>
+             <converters:EnumDescriptionConverter x:Key="EnumDescription"/>
             
             <!-- Estilos globales de cursor -->
             <Style TargetType="Button">

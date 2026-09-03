@@ -265,7 +265,9 @@ namespace GestionComercial.Infraestructura.Servicios
 
         public async Task<BackupConfig> ObtenerConfiguracionAsync()
         {
-            var config = await _context.BackupConfigs.FirstOrDefaultAsync();
+            var config = await _context.BackupConfigs
+                .OrderBy(c => c.Id)
+                .FirstOrDefaultAsync();
             if (config == null)
             {
                 config = new BackupConfig
@@ -282,7 +284,9 @@ namespace GestionComercial.Infraestructura.Servicios
 
         public async Task GuardarConfiguracionAsync(BackupConfig config)
         {
-            var existing = await _context.BackupConfigs.FirstOrDefaultAsync();
+            var existing = await _context.BackupConfigs
+                .OrderBy(c => c.Id)
+                .FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.Frecuencia = config.Frecuencia;

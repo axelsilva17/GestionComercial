@@ -150,6 +150,177 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync();
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.Cantidad, r.Ingresos, r.Costo, r.UltimaFecha)).ToList();
         }
+
+        public async Task<List<(string Dia, decimal Total, int Cantidad)>>
+            ObtenerVentasPorDiaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<VentaPorDiaAgrupado>(
+                    @"SELECT strftime('%d/%m', v.Fecha) AS Dia,
+                             SUM(v.TotalFinal) AS Total,
+                             COUNT(*) AS Cantidad
+                      FROM Venta v
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE s.Id_empresa = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3
+                      GROUP BY strftime('%Y-%m-%d', v.Fecha)
+                      ORDER BY strftime('%Y-%m-%d', v.Fecha)",
+                    idEmpresa, desde, hasta)
+                .ToListAsync();
+            return rows.Select(r => (r.Dia, r.Total, r.Cantidad)).ToList();
+        }
+
+        public async Task<List<(int IdSucursal, string SucursalNombre, decimal Total, int Cantidad)>>
+            ObtenerVentasPorSucursalAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<VentaPorSucursalAgrupado>(
+                    @"SELECT v.Id_sucursal AS IdSucursal,
+                             s.Nombre AS SucursalNombre,
+                             SUM(v.TotalFinal) AS Total,
+                             COUNT(*) AS Cantidad
+                      FROM Venta v
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE s.Id_empresa = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3
+                      GROUP BY v.Id_sucursal
+                      ORDER BY Total DESC",
+                    idEmpresa, desde, hasta)
+                .ToListAsync();
+            return rows.Select(r => (r.IdSucursal, r.SucursalNombre, r.Total, r.Cantidad)).ToList();
+        }
+
+        public async Task<List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>>
+            ObtenerVentasPorVendedorAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<VentaPorVendedorAgrupado>(
+                    @"SELECT v.Id_usuario AS IdUsuario,
+                             u.Nombre || ' ' || u.Apellido AS UsuarioNombre,
+                             s.Nombre AS SucursalNombre,
+                             COUNT(*) AS CantidadVentas,
+                             SUM(v.TotalFinal) AS TotalVendido,
+                             SUM(v.TotalDescuento) AS TotalDescuentos
+                      FROM Venta v
+                      INNER JOIN Usuario u ON v.Id_usuario = u.Id
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE v.Id_sucursal = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3
+                      GROUP BY v.Id_usuario
+                      ORDER BY TotalVendido DESC",
+                    idSucursal, desde, hasta)
+                .ToListAsync();
+            return rows.Select(r => (r.IdUsuario, r.UsuarioNombre, r.SucursalNombre, r.CantidadVentas, r.TotalVendido, r.TotalDescuentos)).ToList();
+        }
+
+        public async Task<(decimal TotalVentas, int TotalTransacciones, decimal TicketPromedio)?>
+            ObtenerKpisVentasAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<KpiVentasAgrupado>(
+                    @"SELECT SUM(v.TotalFinal) AS TotalVentas,
+                             COUNT(*) AS TotalTransacciones,
+                             CASE WHEN COUNT(*) > 0 THEN SUM(v.TotalFinal) / COUNT(*) ELSE 0 END AS TicketPromedio
+                      FROM Venta v
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE s.Id_empresa = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3",
+                    idEmpresa, desde, hasta)
+                .ToListAsync();
+            var r = rows.FirstOrDefault();
+            if (r == null || r.TotalVentas == 0) return null;
+            return (r.TotalVentas, r.TotalTransacciones, r.TicketPromedio);
+        }
+
+        public async Task<string?> ObtenerTopVendedorAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<TopVendedorAgrupado>(
+                    @"SELECT u.Nombre || ' ' || u.Apellido AS Nombre
+                      FROM Venta v
+                      INNER JOIN Usuario u ON v.Id_usuario = u.Id
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE s.Id_empresa = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3
+                      GROUP BY v.Id_usuario
+                      ORDER BY SUM(v.TotalFinal) DESC
+                      LIMIT 1",
+                    idEmpresa, desde, hasta)
+                .ToListAsync();
+            return rows.FirstOrDefault()?.Nombre;
+        }
+
+        public async Task<string?> ObtenerTopProductoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<TopProductoNombreAgrupado>(
+                    @"SELECT p.Nombre
+                      FROM VentaDetalle vd
+                      INNER JOIN Venta v ON vd.Id_venta = v.Id
+                      INNER JOIN Producto p ON vd.Id_producto = p.Id
+                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      WHERE s.Id_empresa = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}
+                        AND v.Estado != 3
+                      GROUP BY vd.Id_producto
+                      ORDER BY SUM(vd.Subtotal) DESC
+                      LIMIT 1",
+                    idEmpresa, desde, hasta)
+                .ToListAsync();
+            return rows.FirstOrDefault()?.Nombre;
+        }
+
+        public async Task<IEnumerable<(int Id, decimal TotalFinal, int Estado, int? IdCaja, decimal? EfectivoRecibido)>>
+            ObtenerVentasLigerasPorCajaAsync(int idCaja, DateTime desde, DateTime hasta)
+        {
+            var resultado = await _dbSet.AsNoTracking()
+                .Where(v => v.Id_caja == idCaja
+                         && v.Fecha >= desde
+                         && v.Fecha <= hasta
+                         && v.Estado == 2)
+                .Select(v => new
+                {
+                    v.Id,
+                    v.TotalFinal,
+                    v.Estado,
+                    v.Id_caja,
+                    v.EfectivoRecibido
+                })
+                .ToListAsync();
+
+            return resultado.Select(v => (v.Id, v.TotalFinal, v.Estado, v.Id_caja, v.EfectivoRecibido));
+        }
+
+        public async Task<IEnumerable<(string Metodo, decimal Total, int Cantidad)>>
+            ObtenerPagosPorCajaAsync(int idCaja)
+        {
+            var resultado = await _context.Pagos
+                .AsNoTracking()
+                .Where(p => p.Venta.Id_caja == idCaja
+                         && p.Venta.Estado == 2)
+                .GroupBy(p => p.MetodoPago!.Nombre ?? "Sin método")
+                .Select(g => new
+                {
+                    Metodo = g.Key,
+                    Total = g.Sum(p => p.Monto),
+                    Cantidad = g.Count()
+                })
+                .OrderByDescending(x => x.Total)
+                .ToListAsync();
+
+            return resultado.Select(x => (x.Metodo, x.Total, x.Cantidad));
+        }
     }
 
     // ── Tipos para SqlQueryRaw (EF Core 8) ─────────────────────────
@@ -160,4 +331,18 @@ namespace GestionComercial.Persistencia.Repositorio
     public record RotacionProductoAgrupado(
         int IdProducto, string Nombre, string Categoria,
         decimal StockActual, int CantidadVendida, DateTime? UltimaVenta);
+
+    public record VentaPorDiaAgrupado(string Dia, decimal Total, int Cantidad);
+
+    public record VentaPorSucursalAgrupado(int IdSucursal, string SucursalNombre, decimal Total, int Cantidad);
+
+    public record VentaPorVendedorAgrupado(
+        int IdUsuario, string UsuarioNombre, string SucursalNombre,
+        int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos);
+
+    public record KpiVentasAgrupado(decimal TotalVentas, int TotalTransacciones, decimal TicketPromedio);
+
+    public record TopVendedorAgrupado(string Nombre);
+
+    public record TopProductoNombreAgrupado(string Nombre);
 }

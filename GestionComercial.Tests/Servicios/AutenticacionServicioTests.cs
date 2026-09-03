@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GestionComercial.Aplicacion.DTOs;
 using GestionComercial.Aplicacion.Excepciones;
 using GestionComercial.Aplicacion.Interfaces;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
@@ -22,7 +23,14 @@ namespace GestionComercial.Tests.Servicios
         public AutenticacionServicioTests()
         {
             _mockUow.Setup(u => u.Usuarios).Returns(_mockUsuarioRepo.Object);
-            _servicio = new AutenticacionServicio(_mockUow.Object, _mockPasswordHasher.Object);
+            _servicio = new AutenticacionServicio(_mockUow.Object, _mockPasswordHasher.Object, new DevCredencialesConfig
+            {
+                Email = "dev@gestioncomercial.com",
+                Password = "Dev#Mant2026!",
+                Nombre = "Desarrollador",
+                Apellido = "Sistema",
+                Rol = "Desarrollador"
+            });
         }
 
         // ═══════════════════════════════════════════════════════════

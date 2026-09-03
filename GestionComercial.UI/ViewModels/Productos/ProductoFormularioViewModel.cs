@@ -275,9 +275,31 @@ namespace GestionComercial.UI.ViewModels.Productos
 
         public async Task<bool> Guardar()
         {
+            if (string.IsNullOrWhiteSpace(Nombre))
+            {
+                MostrarError("El nombre del producto es obligatorio.");
+                return false;
+            }
+            if (PrecioVentaActual <= 0)
+            {
+                MostrarError("El precio de venta debe ser mayor a 0.");
+                return false;
+            }
+            if (PrecioCostoActual < 0)
+            {
+                MostrarError("El precio de costo no puede ser negativo.");
+                return false;
+            }
+            if (StockActual < 0)
+            {
+                MostrarError("El stock no puede ser negativo.");
+                return false;
+            }
+
             try
             {
                 IsLoading = true;
+                LimpiarError();
                 if (IsEditMode)
                 {
                     var dto = new ProductoActualizarDto

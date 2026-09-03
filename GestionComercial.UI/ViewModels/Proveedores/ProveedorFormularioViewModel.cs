@@ -68,7 +68,17 @@ namespace GestionComercial.UI.ViewModels.Proveedores
         // ── Guardar ───────────────────────────────────────────────────────────
         public async void Guardar()
         {
-            if (!CanGuardar) return;
+            if (string.IsNullOrWhiteSpace(Nombre))
+            {
+                MostrarError("El nombre del proveedor es obligatorio.");
+                return;
+            }
+            if (!EmailValido)
+            {
+                MostrarError("Ingresá un email válido.");
+                return;
+            }
+
             IsLoading = true;
             LimpiarError();
             try

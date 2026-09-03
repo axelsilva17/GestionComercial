@@ -33,6 +33,8 @@ namespace GestionComercial.Aplicacion.DTOs.Ventas
         public decimal PrecioUnitario { get; set; }
         public decimal CostoUnitario { get; set; }
         public decimal Subtotal { get; set; }
+        /// Stock disponible del producto al momento de agregar al carrito.
+        public decimal StockDisponible { get; set; }
         /// Descuento aplicado directamente al ítem (no al total de la venta).
         public decimal DescuentoPorItem { get; set; }
         /// Descripción del descuento aplicado al ítem (ej: "Descuento 20%").

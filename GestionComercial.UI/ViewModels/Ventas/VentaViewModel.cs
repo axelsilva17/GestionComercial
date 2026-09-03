@@ -8,6 +8,7 @@ using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.UI.Views.Comandos;
 using GestionComercial.UI.ViewModels.Base;
+using GestionComercial.UI.ViewModels.Clientes;
 using GestionComercial.UI.ViewModels.Main;
 using FluentValidation;
 using System;
@@ -91,6 +92,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 CerrarHistorialCommand = new RelayCommand(() => MostrarHistorial = false);
                 FiltrarHistorialCommand = new RelayCommand(() => FiltrarHistorial());
                 TestBarcodeCommand = new RelayCommand(TestBarcodeKeyDown);
+
 
                 _eventAggregator.SubscribeOnUIThread(this);
 
@@ -373,12 +375,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 if (validarStock && existente.Cantidad + cantidad > stockDisponible)
                 {
-                    MostrarError($"Stock máximo: {stockDisponible}");
+                    MostrarError($"Stock máximo para '{nombre}': {stockDisponible}");
                     return;
                 }
                 var idx = Items.IndexOf(existente);
                 existente.Cantidad += cantidad;
                 existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+                existente.StockDisponible = stockDisponible;
                 await ResolverDescuentoProducto(existente);
                 Items.RemoveAt(idx);
                 Items.Insert(idx, existente);
@@ -388,13 +391,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 var subtotal = cantidad * precioUnitario;
                 var newItem = new VentaItemDto
                 {
-                    ProductoId     = productoId,
-                    ProductoNombre = nombre,
-                    CodigoBarra    = codigoBarra,
-                    Cantidad       = cantidad,
-                    PrecioUnitario = precioUnitario,
-                    CostoUnitario  = costoUnitario,
-                    Subtotal       = subtotal,
+                    ProductoId       = productoId,
+                    ProductoNombre   = nombre,
+                    CodigoBarra      = codigoBarra,
+                    Cantidad         = cantidad,
+                    PrecioUnitario   = precioUnitario,
+                    CostoUnitario    = costoUnitario,
+                    Subtotal         = subtotal,
+                    StockDisponible  = stockDisponible,
                 };
                 await ResolverDescuentoProducto(newItem);
                 Items.Add(newItem);
@@ -454,8 +458,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     
                     if (value.Length >= ScannerMinLength)
                     {
-                        // Primer caracter del buffer o después de un timeout
-                        if (string.IsNullOrEmpty(_scannerBuffer))
+                        var isNumeric = value.All(char.IsDigit);
+                        
+                        if (!isNumeric)
+                        {
+                            _scannerBuffer = string.Empty;
+                            _scannerTimer.Stop();
+                        }
+                        else if (string.IsNullOrEmpty(_scannerBuffer))
                         {
                             _typingStartTime = now;
                             _scannerBuffer = value;
@@ -464,21 +474,17 @@ namespace GestionComercial.UI.ViewModels.Ventas
                         }
                         else
                         {
-                            // Ya tenemos caracteres previos - verificar si es entrada rápida
                             var elapsed = (now - _typingStartTime).TotalMilliseconds;
                             
-                            // Si vienen más de 8 chars en menos de 500ms desde el inicio → ESCÁNER
                             if (elapsed < ScannerMaxMs && value.Length >= ScannerMinLength)
                             {
-                                // ¡ESCÁNER DETECTADO! → Buscar por código de barras directamente
                                 _scannerTimer.Stop();
                                 System.Diagnostics.Debug.WriteLine($"[VentaVM] ESCÁNER DETECTADO: {value} en {elapsed}ms");
                                 _scannerBuffer = string.Empty;
                                 _ = ProcesarBarcodeEscaneadoAsync(value);
-                                return; // No hacer debounce normal
+                                return;
                             }
                             
-                            // Actualizar buffer y tiempo
                             _scannerBuffer = value;
                             _typingStartTime = now;
                         }
@@ -514,18 +520,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             try
             {
-                // Limpiar campo de búsqueda
-                _busquedaProducto = string.Empty;
                 MostrarPopupBusqueda = false;
 
-                // Buscar por código de barras exacto en cache
                 var producto = _productosCache.FirstOrDefault(p =>
                     p.CodigoBarra != null &&
                     p.CodigoBarra.Trim().Equals(barcode.Trim(), StringComparison.OrdinalIgnoreCase));
 
                 if (producto == null)
                 {
-                    // Si no está en cache, buscar en servicio
                     var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
                     producto = todos.FirstOrDefault(p =>
                         p.CodigoBarra != null &&
@@ -535,16 +537,18 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 if (producto == null)
                 {
                     System.Diagnostics.Debug.WriteLine($"[VentaVM] Escáner: código {barcode} no encontrado");
+                    BusquedaProducto = barcode;
+                    MostrarError($"No se encontró producto con código '{barcode}'.");
                     return;
                 }
 
                 if (producto.StockActual <= 0)
                 {
                     MostrarError($"'{producto.Nombre}' no tiene stock disponible.");
+                    BusquedaProducto = string.Empty;
                     return;
                 }
 
-                // Agregar el producto directamente (como si fuera el escáner físico)
                 var dtoParaAgregar = new ProductoListadoDto
                 {
                     IdProducto = producto.IdProducto,
@@ -835,7 +839,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 if (TotalFinal <= 0)
                 {
                     System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] VALIDACIÓN FALLIDA: TotalFinal={TotalFinal} <= 0");
-                    MessageBox.Show("El total debe ser mayor a cero.", "Total inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MostrarError("El total debe ser mayor a cero.");
+                    return;
+                }
+
+                if (ClienteId <= 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[VentaVM-IrACobrar] VALIDACIÓN FALLIDA: Cliente no seleccionado");
+                    MostrarError("Seleccioná un cliente antes de procesar la venta.");
                     return;
                 }
                 System.Diagnostics.Debug.WriteLine($"[VentaVM-IrACobrar] VALIDACIÓN OK: TotalFinal={TotalFinal} > 0");
@@ -936,6 +947,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         private async void SumarCantidad(VentaItemDto? item)
         {
             if (item == null) return;
+            if (item.Cantidad >= item.StockDisponible)
+            {
+                MostrarError($"Stock insuficiente para '{item.ProductoNombre}'. Disponible: {item.StockDisponible}");
+                return;
+            }
             var idx = Items.IndexOf(item);
             item.Cantidad++;
             item.Subtotal = item.Cantidad * item.PrecioUnitario;
@@ -1052,7 +1068,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public RelayCommand VerHistorialCommand { get; }
         public RelayCommand CerrarHistorialCommand { get; }
         public RelayCommand FiltrarHistorialCommand { get; }
-
         public async Task CargarHistorialAsync()
         {
             try

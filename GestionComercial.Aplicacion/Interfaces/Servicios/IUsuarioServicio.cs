@@ -9,6 +9,8 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<UsuarioDto>              CrearAsync(string nombre, string apellido, string email, string password, int idRol, int idSucursal);
         Task                          CambiarPasswordAsync(int idUsuario, string passwordActual, string passwordNuevo);
         Task                          DesactivarAsync(int id);
+        Task                          ReactivarAsync(int id);
+        Task                          EliminarAsync(int idUsuario);
         Task                          ActualizarDatosAsync(int idUsuario, string nombre, string apellido);
     }
 }

@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using FluentValidation;
+using GestionComercial.Aplicacion.DTOs;
 using GestionComercial.Aplicacion.DTOs.Clientes;
 using Microsoft.Data.Sqlite;
 using GestionComercial.Aplicacion.DTOs.Compras;
@@ -53,6 +54,18 @@ namespace GestionComercial.UI
 
             var connectionString = config.GetConnectionString("DefaultConnection")!;
 
+            // ── Dev credentials from configuration ──────────────────────────
+            var devCredsSection = config.GetSection("DevCredenciales");
+            var devCreds = new DevCredencialesConfig
+            {
+                Email = devCredsSection["Email"] ?? "",
+                Password = devCredsSection["Password"] ?? "",
+                Nombre = devCredsSection["Nombre"] ?? "",
+                Apellido = devCredsSection["Apellido"] ?? "",
+                Rol = devCredsSection["Rol"] ?? ""
+            };
+            _container.Instance(devCreds);
+
             // ── Resolver ruta relativa de SQLite ──────────────────────────────
             var connBuilder = new SqliteConnectionStringBuilder(connectionString);
             if (!Path.IsPathRooted(connBuilder.DataSource))
@@ -66,10 +79,9 @@ namespace GestionComercial.UI
 
                 connBuilder.DataSource = File.Exists(sourcePath) ? sourcePath : assemblyPath;
             }
-            // Desactivar pooling para que cada conexión arranque con PRAGMAs por defecto.
-            // Sin esto, el seeder deja foreign_keys=ON en una conexión pooled y
-            // la siguiente operación EF Core reutiliza esa conexión con FKs activas.
-            connBuilder.Pooling = false;
+            // ── PRAGMA interceptor: aplica WAL/cache en cada conexión del pool ──
+            // NOTA: NO desactivar Pooling. El interceptor se encarga de PRAGMAs
+            // en cada conexión nueva del pool, y pooling mejora rendimiento I/O.
             connectionString = connBuilder.ConnectionString;
             _connectionString = connectionString;
 
@@ -84,17 +96,21 @@ namespace GestionComercial.UI
                     PRAGMA journal_mode=WAL;
                     PRAGMA synchronous=NORMAL;
                     PRAGMA temp_store=MEMORY;
-                    PRAGMA cache_size=-64000;
+                    PRAGMA cache_size=-16000;
                     PRAGMA mmap_size=268435456;
                     PRAGMA foreign_keys=ON;";
                 cmd.ExecuteNonQuery();
             }
             sqliteConn.Close();
 
+            // ── Interceptor: PRAGMAs en cada conexión del pool ────────────────
+            var pragmaInterceptor = new GestionComercial.Persistencia.Contexto.SqlitePragmaInterceptor();
+
             _container.Handler<GestionComercialContext>(
                 _ => new GestionComercialContext(
                     new DbContextOptionsBuilder<GestionComercialContext>()
                         .UseSqlite(connectionString)
+                        .AddInterceptors(pragmaInterceptor)
                         .Options));
 
             _container.Handler<IUnitOfWork>(
@@ -128,6 +144,10 @@ namespace GestionComercial.UI
             _container.PerRequest<IUsuarioServicio, UsuarioServicio>();
             _container.PerRequest<IRolServicio, RolServicio>();
             _container.PerRequest<IDescuentoConfiguracionServicio, DescuentoConfiguracionServicio>();
+            _container.PerRequest<IDiagnosticoServicio, DiagnosticoServicio>();
+            _container.PerRequest<IActualizacionServicio, ActualizacionServicio>();
+            _container.PerRequest<IReporteMantenimientoServicio, ReporteMantenimientoServicio>();
+            _container.PerRequest<IDiagnosticoContext, DiagnosticoContext>();
             _container.PerRequest<RecuperacionContrasenaServicio>();
             _container.Singleton<DemoService>();
             _container.Singleton<DemoFeatureService>();
@@ -187,6 +207,10 @@ namespace GestionComercial.UI
                     _container.RegisterPerRequest(vmType, null, vmType);
             }
 
+            // ── Sub-ViewModels (no heredan de Screen) ────────────────────────
+            _container.PerRequest<GestionComercial.UI.ViewModels.Configuracion.DescuentoConfigViewModel>();
+            _container.PerRequest<GestionComercial.UI.ViewModels.Configuracion.DescuentoFormularioInnerViewModel>();
+
             ViewLocator.LocateTypeForModelType = (modelType, displayLocation, context) =>
             {
                 var vmName = modelType.FullName ?? string.Empty;
@@ -225,12 +249,19 @@ namespace GestionComercial.UI
             using var bootCtx = new GestionComercial.Persistencia.Contexto.GestionComercialContext(
                 new DbContextOptionsBuilder<GestionComercial.Persistencia.Contexto.GestionComercialContext>()
                     .UseSqlite(_connectionString)
+                    .AddInterceptors(new GestionComercial.Persistencia.Contexto.SqlitePragmaInterceptor())
                     .Options);
 
             try
             {
                 // ── Ejecutar migraciones ──
                 await bootCtx.Database.MigrateAsync();
+
+                // ── Reconciliar permisos semilla (idempotente, solo ADD) ──
+                await GestionComercial.Persistencia.Semillas.SemillaPermisos.ReconciliarPermisosSemillaAsync(bootCtx);
+
+                // ── PRAGMA optimizations (después de migrar para asegurar esquema) ──
+                GestionComercial.Persistencia.Contexto.GestionComercialContext.EjecutarPragmas(_connectionString);
 
                 // ── Auto-seed: si la DB está vacía, cargar datos de prueba ──
                 try

@@ -186,6 +186,23 @@ namespace GestionComercial.Tests.Servicios
             await _servicio.EliminarAsync(descuento.Id);
 
             descuento.Activo.Should().BeFalse();
+            _mockRepo.Verify(r => r.Actualizar(It.IsAny<DescuentoConfiguracion>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActivarAsync_ExistingEntity_SetsActivo()
+        {
+            var descuento = DescuentoConfiguracion.Crear(
+                "Test", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
+            descuento.Inactivar(); // Start as inactive
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+                .ReturnsAsync(descuento);
+
+            await _servicio.ActivarAsync(descuento.Id);
+
+            descuento.Activo.Should().BeTrue();
+            _mockRepo.Verify(r => r.Actualizar(It.IsAny<DescuentoConfiguracion>()), Times.Once);
             _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
         }
 

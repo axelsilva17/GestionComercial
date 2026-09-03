@@ -153,6 +153,27 @@ namespace GestionComercial.UI.Views.Configuracion
             if (!VM.Usuarios.PanelVisible) CerrarPanelActivo();
         }
 
+        private async void UsuarioToggleActivo_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.FrameworkElement fe && fe.Tag is GestionComercial.Aplicacion.DTOs.Usuarios.UsuarioDto item)
+            {
+                var nombreCompleto = $"{item.Nombre} {item.Apellido}".Trim();
+                var accion = item.Activo ? "desactivar" : "activar";
+                var mensaje = $"¿Seguro que querés {accion} al usuario {nombreCompleto}?";
+
+                var confirm = MessageBox.Show(
+                    mensaje,
+                    "Confirmar",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (confirm == MessageBoxResult.Yes)
+                {
+                    await VM?.Usuarios.ToggleActivoAsync(item);
+                }
+            }
+        }
+
         private void PbUsuario_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (VM?.Usuarios != null) VM.Usuarios.EditPassword = PbUsuario.Password;
@@ -184,13 +205,7 @@ namespace GestionComercial.UI.Views.Configuracion
         {
             if ((sender as Button)?.Tag is RolListDto item)
             {
-                var confirm = MessageBox.Show(
-                    $"¿Eliminar el rol \"{item.Nombre}\"?\nLos usuarios con este rol quedarán sin asignación.",
-                    "Confirmar eliminación",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-                if (confirm == MessageBoxResult.Yes)
-                    await VM.Roles.Eliminar(item);
+                await VM.Roles.Eliminar(item);
             }
         }
 
@@ -203,6 +218,22 @@ namespace GestionComercial.UI.Views.Configuracion
         private async void GuardarPermisos_Click(object sender, RoutedEventArgs e)
         {
             await VM.Roles.GuardarPermisos();
+        }
+
+        private async void RemoverPermiso_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string nombreModulo)
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Remover los permisos del módulo \"{nombreModulo}\" de este rol?",
+                    "Confirmar remoción",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm == MessageBoxResult.Yes)
+                {
+                    await VM.Roles.RemoverPermisoAsync(nombreModulo);
+                }
+            }
         }
 
         // ══ MÉTODOS DE PAGO ══════════════════════════════════════════════════
@@ -358,6 +389,98 @@ namespace GestionComercial.UI.Views.Configuracion
                     await VM.Backup.EliminarBackup();
                 }
             }
+        }
+
+        // ══ DESCUENTOS ═══════════════════════════════════════════════════════
+        private void NuevoDescuento_Click(object sender, RoutedEventArgs e)
+        {
+            VM?.Descuentos.NuevoDescuento();
+        }
+
+        private void EditarDescuento_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.Tag is GestionComercial.Aplicacion.DTOs.Descuentos.DescuentoListadoDto item)
+            {
+                VM?.Descuentos.EditarDescuento(item);
+            }
+        }
+
+        private async void DescuentoToggleActivo_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.FrameworkElement fe && fe.Tag is GestionComercial.Aplicacion.DTOs.Descuentos.DescuentoListadoDto item)
+            {
+                try
+                {
+                    await VM?.Descuentos.ToggleActivoAsync(item);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"No se pudo cambiar el estado: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void CerrarDescuentoForm_Click(object sender, RoutedEventArgs e)
+        {
+            VM?.Descuentos.Formulario?.Cancelar();
+        }
+
+        private void DescuentoCancelar_Click(object sender, RoutedEventArgs e)
+        {
+            VM?.Descuentos.Formulario?.Cancelar();
+        }
+
+        private async void DescuentoGuardar_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.Descuentos.Formulario != null)
+                await VM.Descuentos.Formulario.GuardarAsync();
+        }
+
+        private void AmbitoProducto_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.Descuentos.Formulario != null)
+                VM.Descuentos.Formulario.AmbitoSeleccionado = "Producto";
+        }
+
+        private void AmbitoCategoria_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.Descuentos.Formulario != null)
+                VM.Descuentos.Formulario.AmbitoSeleccionado = "Categoría";
+        }
+
+        private void AmbitoMetodoPago_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.Descuentos.Formulario != null)
+                VM.Descuentos.Formulario.AmbitoSeleccionado = "Método de Pago";
+        }
+
+        private void AmbitoCompraMayor_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.Descuentos.Formulario != null)
+                VM.Descuentos.Formulario.AmbitoSeleccionado = "Compra Mayor";
+        }
+
+        private void DescuentosDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is DataGrid dg && dg.SelectedItem is GestionComercial.Aplicacion.DTOs.Descuentos.DescuentoListadoDto item)
+            {
+                VM?.Descuentos.EditarDescuento(item);
+            }
+        }
+
+        private void BuscarProducto_Click(object sender, RoutedEventArgs e)
+        {
+            VM?.Descuentos.Formulario?.FiltrarProductos();
+        }
+
+        private void BuscarCategoria_Click(object sender, RoutedEventArgs e)
+        {
+            VM?.Descuentos.Formulario?.FiltrarCategorias();
+        }
+
+        private void LimpiarFiltros_Click(object sender, RoutedEventArgs e)
+        {
+            VM?.Descuentos.LimpiarFiltros();
         }
     }
 }

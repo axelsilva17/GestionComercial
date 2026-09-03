@@ -78,6 +78,19 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
         }
 
+        public async Task ReactivarAsync(int id)
+        {
+            if (_sesion != null && !_sesion.HasPermission("Usuarios.Gestionar"))
+                throw new InvalidOperationException("No tenés permiso para reactivar usuarios.");
+
+            var usuario = await _uow.Usuarios.ObtenerPorIdAsync(id)
+                ?? throw new KeyNotFoundException($"Usuario {id} no encontrado");
+
+            usuario.Activo = true;
+            _uow.Usuarios.Actualizar(usuario);
+            await _uow.GuardarCambiosAsync();
+        }
+
         public async Task ActualizarDatosAsync(int idUsuario, string nombre, string apellido)
         {
             var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario)
@@ -86,6 +99,52 @@ namespace GestionComercial.Aplicacion.Servicios
             usuario.Nombre = nombre;
             usuario.Apellido = apellido;
             _uow.Usuarios.Actualizar(usuario);
+            await _uow.GuardarCambiosAsync();
+        }
+
+        public async Task EliminarAsync(int idUsuario)
+        {
+            if (_sesion != null && !_sesion.HasPermission("Usuarios.Gestionar"))
+                throw new InvalidOperationException("No tenés permiso para eliminar usuarios.");
+
+            var usuario = await _uow.Usuarios.ObtenerPorIdAsync(idUsuario)
+                ?? throw new KeyNotFoundException($"Usuario {idUsuario} no encontrado");
+
+            // No permitir eliminar el último Gerente
+            if (usuario.Id_rol == 1)
+            {
+                var adminsCount = await _uow.Usuarios.ContarAsync(u => u.Id_rol == 1 && u.Activo);
+                if (adminsCount <= 1)
+                    throw new InvalidOperationException("No se puede eliminar el último usuario con rol Gerente.");
+            }
+
+            // Delegar permisos al Gerente si el usuario tiene un rol diferente
+            if (usuario.Id_rol != 1)
+            {
+                var rolesConPermisos = await _uow.Roles.ObtenerTodosConPermisosAsync();
+                var rolUsuario = rolesConPermisos.FirstOrDefault(r => r.Id == usuario.Id_rol);
+                var gerente = rolesConPermisos.FirstOrDefault(r => r.Id == 1);
+
+                if (rolUsuario?.RolPermisos != null && gerente != null)
+                {
+                    var permisosGerenteSet = new HashSet<int>(
+                        gerente.RolPermisos?.Select(rp => rp.Id_permiso) ?? Enumerable.Empty<int>());
+
+                    var permisosAgregados = rolUsuario.RolPermisos
+                        .Where(rp => !permisosGerenteSet.Contains(rp.Id_permiso))
+                        .Select(rp => rp.Id_permiso)
+                        .ToList();
+
+                    if (permisosAgregados.Count > 0)
+                    {
+                        var nuevosPermisosGerente = permisosGerenteSet.ToList();
+                        nuevosPermisosGerente.AddRange(permisosAgregados);
+                        await _uow.Roles.ActualizarPermisosRolAsync(1, nuevosPermisosGerente);
+                    }
+                }
+            }
+
+            _uow.Usuarios.Eliminar(usuario);
             await _uow.GuardarCambiosAsync();
         }
 

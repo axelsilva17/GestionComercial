@@ -70,11 +70,13 @@ namespace GestionComercial.Aplicacion.Servicios
                     usuario.IntentosFallidos = 0;
                     _uow.Usuarios.Actualizar(usuario);
                     await _uow.GuardarCambiosAsync();
+                    _uow.Usuarios.Desadjuntar(usuario);
                     throw new NegocioException($"Demasiados intentos fallidos. Cuenta bloqueada por {MinutosBloqueo} minutos.");
                 }
 
                 _uow.Usuarios.Actualizar(usuario);
                 await _uow.GuardarCambiosAsync();
+                _uow.Usuarios.Desadjuntar(usuario);
 
                 int restantes = MaxIntentos - usuario.IntentosFallidos;
                 throw new NegocioException($"Respuesta incorrecta. Te quedan {restantes} intentos.");
@@ -85,6 +87,7 @@ namespace GestionComercial.Aplicacion.Servicios
             usuario.BloqueadoHasta   = null;
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
+            _uow.Usuarios.Desadjuntar(usuario);
 
             return true;
         }
@@ -101,6 +104,7 @@ namespace GestionComercial.Aplicacion.Servicios
             usuario.ActualizarPassword(_passwordHasher.HashPassword(nuevaContrasena));
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
+            _uow.Usuarios.Desadjuntar(usuario);
         }
 
         /// Configura la pregunta secreta de un usuario.
@@ -120,6 +124,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
             _uow.Usuarios.Actualizar(usuario);
             await _uow.GuardarCambiosAsync();
+            _uow.Usuarios.Desadjuntar(usuario);
         }
     }
 }

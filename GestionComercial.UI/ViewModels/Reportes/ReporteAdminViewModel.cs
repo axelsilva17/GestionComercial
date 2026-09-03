@@ -766,13 +766,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
             public decimal Total { get; set; }
         }
 
-        // ── Navegar a Caja Auditoría ───────────────────────────────────────────
+// ── Navegar a Caja Auditoría ───────────────────────────────────────────
         public async Task IrCajaAuditoria()
         {
-            // Navega a la vista de Auditoría de Cajas
+            var vm = Caliburn.Micro.IoC.Get<CajaAuditoriaViewModel>();
+            vm.VolverAGerencia = false;
             await Caliburn.Micro.IoC.Get<Main.ShellViewModel>()
-                .ActivateItemAsync(Caliburn.Micro.IoC.Get<CajaAuditoriaViewModel>(),
-                    System.Threading.CancellationToken.None);
+                .ActivateItemAsync(vm, System.Threading.CancellationToken.None);
         }
     }
 

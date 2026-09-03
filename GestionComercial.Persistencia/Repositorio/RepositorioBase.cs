@@ -59,5 +59,8 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public IQueryable<T> ConsultarSinTracking()
             => _dbSet.AsNoTracking();
+
+        public void Desadjuntar(T entidad)
+            => _context.Entry(entidad).State = EntityState.Detached;
     }
 }
