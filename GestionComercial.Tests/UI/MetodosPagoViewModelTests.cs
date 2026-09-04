@@ -60,10 +60,10 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public void Guardar_TarjetaConSubcategoria_GuardaCorrectamente()
         {
-            _mockMetodos.Setup(r => r.AgregarAsync(It.IsAny<MetodoPago>()))
-                .ReturnsAsync((MetodoPago m) => { m.Id = 10; return m; });
-            _mockUow.Setup(u => u.GuardarCambiosAsync()).ReturnsAsync(1);
-            _mockEmpresas.Setup(r => r.PrimerODefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Empresa, bool>>>()))
+            _mockMetodos.Setup(r => r.AgregarAsync(It.IsAny<MetodoPago>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((MetodoPago m, CancellationToken ct) => { m.Id = 10; return m; });
+            _mockUow.Setup(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _mockEmpresas.Setup(r => r.PrimerODefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Empresa, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Empresa { Id = 1, Activo = true });
 
             var vm = CrearVM();
@@ -77,16 +77,16 @@ namespace GestionComercial.Tests.UI
             vm.TieneError.Should().BeFalse();
             vm.PanelVisible.Should().BeFalse();
             _mockMetodos.Verify(r => r.AgregarAsync(It.Is<MetodoPago>(
-                m => m.Subcategoria == "Credito" && m.Categoria == "Tarjeta")), Times.Once);
+                m => m.Subcategoria == "Credito" && m.Categoria == "Tarjeta"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public void Guardar_Efectivo_LimpiaSubcategoriaANull()
         {
-            _mockMetodos.Setup(r => r.AgregarAsync(It.IsAny<MetodoPago>()))
-                .ReturnsAsync((MetodoPago m) => { m.Id = 11; return m; });
-            _mockUow.Setup(u => u.GuardarCambiosAsync()).ReturnsAsync(1);
-            _mockEmpresas.Setup(r => r.PrimerODefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Empresa, bool>>>()))
+            _mockMetodos.Setup(r => r.AgregarAsync(It.IsAny<MetodoPago>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((MetodoPago m, CancellationToken ct) => { m.Id = 11; return m; });
+            _mockUow.Setup(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _mockEmpresas.Setup(r => r.PrimerODefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Empresa, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Empresa { Id = 1, Activo = true });
 
             var vm = CrearVM();
@@ -99,7 +99,7 @@ namespace GestionComercial.Tests.UI
 
             vm.TieneError.Should().BeFalse();
             _mockMetodos.Verify(r => r.AgregarAsync(It.Is<MetodoPago>(
-                m => m.Subcategoria == null && m.Categoria == "Efectivo")), Times.Once);
+                m => m.Subcategoria == null && m.Categoria == "Efectivo"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -114,8 +114,8 @@ namespace GestionComercial.Tests.UI
                 Activo = true,
                 Id_empresa = 1
             };
-            _mockMetodos.Setup(r => r.ObtenerPorIdAsync(5)).ReturnsAsync(existing);
-            _mockUow.Setup(u => u.GuardarCambiosAsync()).ReturnsAsync(1);
+            _mockMetodos.Setup(r => r.ObtenerPorIdAsync(5, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+            _mockUow.Setup(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var vm = CrearVM();
             vm.Editar(new MetodoPagoDto
@@ -153,7 +153,7 @@ namespace GestionComercial.Tests.UI
                 new() { Id = 2, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
                 new() { Id = 1, Nombre = "Efectivo", Categoria = "Efectivo", Subcategoria = null, Activo = true, Id_empresa = 1 }
             };
-            _mockMetodos.Setup(r => r.ObtenerTodosAsync()).ReturnsAsync(metodos);
+            _mockMetodos.Setup(r => r.ObtenerTodosAsync(It.IsAny<CancellationToken>())).ReturnsAsync(metodos);
 
             var vm = CrearVM();
             await vm.CargarAsync();

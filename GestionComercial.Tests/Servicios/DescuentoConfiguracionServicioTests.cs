@@ -21,8 +21,8 @@ namespace GestionComercial.Tests.Servicios
         public DescuentoConfiguracionServicioTests()
         {
             _mockUow.Setup(u => u.DescuentoConfiguraciones).Returns(_mockRepo.Object);
-            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns<Func<Task>>(callback => callback());
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>((callback, ct) => callback());
             _servicio = new DescuentoConfiguracionServicio(_mockUow.Object);
         }
 
@@ -33,8 +33,8 @@ namespace GestionComercial.Tests.Servicios
         [Fact]
         public async Task CrearAsync_Producto_CualquierMetodo_CreatesAndSaves()
         {
-            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()))
-                .Returns<DescuentoConfiguracion>(d => Task.FromResult(d));
+            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()))
+                .Returns<DescuentoConfiguracion, CancellationToken>((d, ct) => Task.FromResult(d));
 
             var resultado = await _servicio.CrearAsync(
                 idEmpresa: 1, nombre: "Test 10%", valor: 10,
@@ -46,15 +46,15 @@ namespace GestionComercial.Tests.Servicios
             resultado.Nombre.Should().Be("Test 10%");
             resultado.Valor.Should().Be(10);
             resultado.AplicaCualquierMetodoPago.Should().BeTrue();
-            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
-            _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()), Times.Once);
+            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task CrearAsync_MetodosEspecificos_PersistsRelacionesNM()
         {
-            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()))
-                .Returns<DescuentoConfiguracion>(d => Task.FromResult(d));
+            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()))
+                .Returns<DescuentoConfiguracion, CancellationToken>((d, ct) => Task.FromResult(d));
 
             var resultado = await _servicio.CrearAsync(
                 idEmpresa: 1, nombre: "Débito 5%", valor: 5,
@@ -68,15 +68,15 @@ namespace GestionComercial.Tests.Servicios
             // resuelva el FK con el Id generado del principal (evita el error 'unknown FK').
             resultado.DescuentosMetodosPago.Select(dm => dm.Id_metodoPago)
                 .Should().BeEquivalentTo(new[] { 1, 2 });
-            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
-            _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()), Times.Once);
+            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task CrearAsync_CualquierMetodo_NoPersisteNM()
         {
-            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()))
-                .Returns<DescuentoConfiguracion>(d => Task.FromResult(d));
+            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()))
+                .Returns<DescuentoConfiguracion, CancellationToken>((d, ct) => Task.FromResult(d));
 
             await _servicio.CrearAsync(
                 idEmpresa: 1, nombre: "General 5%", valor: 5,
@@ -85,7 +85,7 @@ namespace GestionComercial.Tests.Servicios
                 fechaDesde: null, fechaHasta: null);
 
             _mockRepo.Verify(r => r.ActualizarMetodosPagoAsync(
-                It.IsAny<int>(), It.IsAny<List<int>>()), Times.Never);
+                It.IsAny<int>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -130,7 +130,7 @@ namespace GestionComercial.Tests.Servicios
         {
             var descuento = DescuentoConfiguracion.Crear(
                 "Old", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
-            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             await _servicio.ActualizarAsync(
@@ -142,8 +142,8 @@ namespace GestionComercial.Tests.Servicios
             descuento.Valor.Should().Be(25);
             descuento.AplicaCualquierMetodoPago.Should().BeFalse();
             _mockRepo.Verify(r => r.ActualizarMetodosPagoAsync(
-                descuento.Id, It.Is<List<int>>(ids => ids.SequenceEqual(new[] { 1 }))), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+                descuento.Id, It.Is<List<int>>(ids => ids.SequenceEqual(new[] { 1 })), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -151,7 +151,7 @@ namespace GestionComercial.Tests.Servicios
         {
             var descuento = DescuentoConfiguracion.Crear(
                 "Old", 10, 1, idCategoria: 5, aplicaCualquierMetodoPago: true);
-            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             await _servicio.ActualizarAsync(
@@ -169,7 +169,7 @@ namespace GestionComercial.Tests.Servicios
         {
             var descuento = DescuentoConfiguracion.Crear(
                 "Old", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
-            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             Func<Task> act = async () => await _servicio.ActualizarAsync(
@@ -186,14 +186,14 @@ namespace GestionComercial.Tests.Servicios
         {
             var descuento = DescuentoConfiguracion.Crear(
                 "Test", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
-            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             await _servicio.EliminarAsync(descuento.Id);
 
             descuento.Activo.Should().BeFalse();
             _mockRepo.Verify(r => r.Actualizar(It.IsAny<DescuentoConfiguracion>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -202,14 +202,14 @@ namespace GestionComercial.Tests.Servicios
             var descuento = DescuentoConfiguracion.Crear(
                 "Test", 10, 1, idProducto: 1, aplicaCualquierMetodoPago: true);
             descuento.Inactivar(); // Start as inactive
-            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id))
+            _mockRepo.Setup(r => r.ObtenerPorIdAsync(descuento.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             await _servicio.ActivarAsync(descuento.Id);
 
             descuento.Activo.Should().BeTrue();
             _mockRepo.Verify(r => r.Actualizar(It.IsAny<DescuentoConfiguracion>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         // ── ObtenerDescuentoAplicableAsync ──────────────────────────────────
@@ -671,8 +671,8 @@ namespace GestionComercial.Tests.Servicios
         [Fact]
         public async Task CrearAsync_MetodoPago_SinProductoCategoria_Ok()
         {
-            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()))
-                .Returns<DescuentoConfiguracion>(d => Task.FromResult(d));
+            _mockRepo.Setup(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()))
+                .Returns<DescuentoConfiguracion, CancellationToken>((d, ct) => Task.FromResult(d));
 
             var resultado = await _servicio.CrearAsync(
                 idEmpresa: 1, nombre: "Visa 5%", valor: 5,
@@ -684,7 +684,7 @@ namespace GestionComercial.Tests.Servicios
             resultado.Should().NotBeNull();
             resultado.Alcance.Should().Be(AlcanceDescuentoEnum.MetodoPago);
             resultado.Id_producto.Should().BeNull();
-            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>()), Times.Once);
+            _mockRepo.Verify(r => r.AgregarAsync(It.IsAny<DescuentoConfiguracion>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]

@@ -50,7 +50,7 @@ namespace GestionComercial.Tests.Servicios
             usuario.GetType().GetProperty("Id")!.SetValue(usuario, 1);
             usuario.GetType().GetProperty("Rol")!.SetValue(usuario, new Rol { Nombre = "Vendedor" });
 
-            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(usuario);
+            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(usuario);
 
             var resultado = await _servicio.ObtenerPorIdAsync(1);
 
@@ -62,19 +62,19 @@ namespace GestionComercial.Tests.Servicios
         public async Task CrearAsync_EmailUnico_CreaUsuario()
         {
             _mockUsuarioRepo
-                .Setup(r => r.ExisteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+                .Setup(r => r.ExisteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _mockUsuarioRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<Usuario>()))
-                .Returns<Usuario>(u =>
+                .Setup(r => r.AgregarAsync(It.IsAny<Usuario>(), It.IsAny<CancellationToken>()))
+                .Returns<Usuario, CancellationToken>((u, ct) =>
                 {
                     typeof(Usuario).GetProperty("Id")!.SetValue(u, 1);
                     return Task.FromResult(u);
                 });
 
             _mockUsuarioRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() =>
                 {
                     var u = Usuario.Crear("Nuevo", "User", "nuevo@mail.com", "hash", 1, 2);
@@ -90,15 +90,15 @@ namespace GestionComercial.Tests.Servicios
             var resultado = await _servicio.CrearAsync("Nuevo", "User", "nuevo@mail.com", "pass123", 2, 1);
 
             resultado.Should().NotBeNull();
-            _mockUsuarioRepo.Verify(r => r.AgregarAsync(It.IsAny<Usuario>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUsuarioRepo.Verify(r => r.AgregarAsync(It.IsAny<Usuario>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task CrearAsync_EmailDuplicado_LanzaExcepcion()
         {
             _mockUsuarioRepo
-                .Setup(r => r.ExisteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+                .Setup(r => r.ExisteAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             var act = () => _servicio.CrearAsync("Test", "User", "existente@mail.com", "pass", 2, 1);
@@ -113,14 +113,14 @@ namespace GestionComercial.Tests.Servicios
             var usuario = Usuario.Crear("Test", "User", "test@mail.com", "hash_viejo", 1, 2);
             usuario.GetType().GetProperty("Id")!.SetValue(usuario, 1);
 
-            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(usuario);
+            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(usuario);
             _mockPasswordHasher.Setup(h => h.VerifyPassword("pass_viejo", "hash_viejo")).Returns(true);
             _mockPasswordHasher.Setup(h => h.HashPassword("pass_nuevo")).Returns("hash_nuevo");
 
             await _servicio.CambiarPasswordAsync(1, "pass_viejo", "pass_nuevo");
 
             _mockUsuarioRepo.Verify(r => r.Actualizar(It.Is<Usuario>(u => u.PasswordHash == "hash_nuevo")), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -129,7 +129,7 @@ namespace GestionComercial.Tests.Servicios
             var usuario = Usuario.Crear("Test", "User", "test@mail.com", "hash_real", 1, 2);
             usuario.GetType().GetProperty("Id")!.SetValue(usuario, 1);
 
-            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(usuario);
+            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(usuario);
             _mockPasswordHasher.Setup(h => h.VerifyPassword("wrong", "hash_real")).Returns(false);
 
             var act = () => _servicio.CambiarPasswordAsync(1, "wrong", "nuevo");
@@ -144,7 +144,7 @@ namespace GestionComercial.Tests.Servicios
             var usuario = Usuario.Crear("Test", "User", "test@mail.com", "hash", 1, 2);
             usuario.GetType().GetProperty("Id")!.SetValue(usuario, 1);
 
-            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(usuario);
+            _mockUsuarioRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(usuario);
 
             await _servicio.DesactivarAsync(1);
 

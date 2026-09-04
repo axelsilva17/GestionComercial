@@ -38,7 +38,7 @@ namespace GestionComercial.Tests.UI
             });
 
             _mockUow.Setup(u => u.Categorias).Returns(_mockCategoriaRepo.Object);
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(It.IsAny<int>()))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Categoria>());
 
             return new VentaViewModel(
@@ -137,12 +137,12 @@ namespace GestionComercial.Tests.UI
             PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
 
             _mockDescuentoServicio
-                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
             _mockDescuentoServicio
                 .Setup(s => s.ObtenerDescuentoProductoAsync(
                     1, 1, It.IsAny<int?>(),
-                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             var producto = new ProductoListadoDto
@@ -166,12 +166,12 @@ namespace GestionComercial.Tests.UI
             PoblarCachesDescuento(vm, new List<DescuentoConfiguracion>());
 
             _mockDescuentoServicio
-                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion>());
             _mockDescuentoServicio
                 .Setup(s => s.ObtenerDescuentoProductoAsync(
                     1, 1, It.IsAny<int?>(),
-                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((DescuentoConfiguracion?)null);
 
             var producto = new ProductoListadoDto
@@ -198,12 +198,12 @@ namespace GestionComercial.Tests.UI
             PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
 
             _mockDescuentoServicio
-                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
             _mockDescuentoServicio
                 .Setup(s => s.ObtenerDescuentoProductoAsync(
                     1, 1, It.IsAny<int?>(),
-                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             var producto = new ProductoListadoDto
@@ -239,12 +239,12 @@ namespace GestionComercial.Tests.UI
             PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
 
             _mockDescuentoServicio
-                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
             _mockDescuentoServicio
                 .Setup(s => s.ObtenerDescuentoProductoAsync(
                     1, 1, It.IsAny<int?>(),
-                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             var producto = new ProductoListadoDto
@@ -280,12 +280,12 @@ namespace GestionComercial.Tests.UI
             PoblarCachesDescuento(vm, new List<DescuentoConfiguracion> { descuento });
 
             _mockDescuentoServicio
-                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+                .Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<DescuentoConfiguracion> { descuento });
             _mockDescuentoServicio
                 .Setup(s => s.ObtenerDescuentoProductoAsync(
                     1, 1, It.IsAny<int?>(),
-                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>()))
+                    It.IsAny<List<DescuentoConfiguracion>>(), It.IsAny<Dictionary<int, Categoria>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             // Use SeleccionarProductoDelPopup to add with configured discount (same flow)

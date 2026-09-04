@@ -33,8 +33,8 @@ namespace GestionComercial.Tests.Servicios
 
             // Mock para EjecutarEnTransaccionAsync: ejecutar el callback inmediatamente
             _mockUow
-                .Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns<Func<Task>>(async callback => await callback());
+                .Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>(async (callback, ct) => await callback());
 
             _servicio = new CompraServicio(_mockUow.Object, _mockInventario.Object, _sesionServicio);
         }
@@ -52,20 +52,20 @@ namespace GestionComercial.Tests.Servicios
             };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
 
             _mockProductoRepo
-                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Producto, bool>>>()))
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Producto, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto> { producto });
 
             _mockCompraRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<GestionComercial.Dominio.Entidades.Compras.Compra>()))
-                .Returns<GestionComercial.Dominio.Entidades.Compras.Compra>(c => Task.FromResult(c));
+                .Setup(r => r.AgregarAsync(It.IsAny<GestionComercial.Dominio.Entidades.Compras.Compra>(), It.IsAny<CancellationToken>()))
+                .Returns<GestionComercial.Dominio.Entidades.Compras.Compra, CancellationToken>((c, ct) => Task.FromResult(c));
 
             _mockCompraRepo
-                .Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>()))
-                .ReturnsAsync((int id) =>
+                .Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((int id, CancellationToken ct) =>
                 {
                     var c = GestionComercial.Dominio.Entidades.Compras.Compra.Crear(1, 1, 1);
                     c.GetType().GetProperty("Id")!.SetValue(c, id);
@@ -101,20 +101,20 @@ namespace GestionComercial.Tests.Servicios
             };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
 
             _mockProductoRepo
-                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Producto, bool>>>()))
+                .Setup(r => r.BuscarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Producto, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto> { producto });
 
             _mockCompraRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<GestionComercial.Dominio.Entidades.Compras.Compra>()))
-                .Returns<GestionComercial.Dominio.Entidades.Compras.Compra>(c => Task.FromResult(c));
+                .Setup(r => r.AgregarAsync(It.IsAny<GestionComercial.Dominio.Entidades.Compras.Compra>(), It.IsAny<CancellationToken>()))
+                .Returns<GestionComercial.Dominio.Entidades.Compras.Compra, CancellationToken>((c, ct) => Task.FromResult(c));
 
             _mockCompraRepo
-                .Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>()))
-                .ReturnsAsync((int id) =>
+                .Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((int id, CancellationToken ct) =>
                 {
                     var c = GestionComercial.Dominio.Entidades.Compras.Compra.Crear(1, 1, 1);
                     c.GetType().GetProperty("Id")!.SetValue(c, id);

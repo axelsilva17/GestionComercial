@@ -47,7 +47,7 @@ namespace GestionComercial.Tests.UI
 
         private async Task<(ShellViewModel vm, int count)> SetupShellAsync(string rol, int usuarioCount, string[]? permisos = null)
         {
-            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(usuarioCount);
 
             var vm = new ShellViewModel();
@@ -64,7 +64,7 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public async Task ConfigurarSesion_ContarAsyncReturns1_EsUsuarioUnicoTrue()
         {
-            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
 
             var vm = CrearShell();
@@ -76,7 +76,7 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public async Task ConfigurarSesion_ContarAsyncReturns2_EsUsuarioUnicoFalse()
         {
-            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(2);
 
             var vm = CrearShell();
@@ -88,7 +88,7 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public async Task ConfigurarSesion_ContarAsyncReturns0_EsUsuarioUnicoFalse()
         {
-            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(0);
 
             var vm = CrearShell();
@@ -100,7 +100,7 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public async Task ConfigurarSesion_ContarAsyncThrows_EsUsuarioUnicoFalse()
         {
-            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>()))
+            _mockUsuarioRepo.Setup(r => r.ContarAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Usuario, bool>>>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception("DB connection failed"));
 
             var vm = CrearShell();

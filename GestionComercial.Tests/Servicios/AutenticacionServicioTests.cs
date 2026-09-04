@@ -64,7 +64,7 @@ namespace GestionComercial.Tests.Servicios
             resultado.Permisos.Should().Contain(new[] { "Ventas.Ver", "Productos.Ver", "Usuarios.Gestionar" });
 
             _mockUsuarioRepo.Verify(r => r.Actualizar(It.Is<Usuario>(u => u.UltimoAcceso != null)), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -81,7 +81,7 @@ namespace GestionComercial.Tests.Servicios
             var resultado = await _servicio.LoginAsync("nadie@mail.com", "pass123");
 
             resultado.Should().BeNull();
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -105,7 +105,7 @@ namespace GestionComercial.Tests.Servicios
                 .WithMessage("*incorrectos*");
 
             _mockUsuarioRepo.Verify(r => r.Actualizar(It.IsAny<Usuario>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         // ═══════════════════════════════════════════════════════════

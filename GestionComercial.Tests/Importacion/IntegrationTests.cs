@@ -28,12 +28,12 @@ namespace GestionComercial.Tests.Importacion
                 .Select(i => CreateDto($"Producto {i}", $"111{i:D3}"))
                 .ToList();
 
-            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1))
+            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto>());
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Categoria>());
-            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns(async (Func<Task> action) => await action());
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>(async (action, ct) => await action());
 
             var servicio = new ProductoServicio(_mockUow.Object);
             var result = await servicio.ImportarMasivoAsync(dtos, false);
@@ -52,12 +52,12 @@ namespace GestionComercial.Tests.Importacion
                 CreateDto("Producto C", "333"),
             };
 
-            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1))
+            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto>());
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Categoria>());
-            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns(async (Func<Task> action) => await action());
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>(async (action, ct) => await action());
 
             var servicio = new ProductoServicio(_mockUow.Object);
             var result = await servicio.ImportarMasivoAsync(dtos, false);
@@ -73,9 +73,9 @@ namespace GestionComercial.Tests.Importacion
                 .Select(i => CreateDto($"", $"111{i:D3}"))
                 .ToList();
 
-            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1))
+            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto>());
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Categoria>());
 
             var servicio = new ProductoServicio(_mockUow.Object);
@@ -109,12 +109,12 @@ namespace GestionComercial.Tests.Importacion
                 CreateDto("Producto B", "111"),  // Duplicado
             };
 
-            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1))
+            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto>());
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Categoria>());
-            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns(async (Func<Task> action) => await action());
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>(async (action, ct) => await action());
 
             var servicio = new ProductoServicio(_mockUow.Object);
             var result = await servicio.ImportarMasivoAsync(dtos, false);
@@ -129,12 +129,12 @@ namespace GestionComercial.Tests.Importacion
                 .Select(i => CreateDto($"Producto {i}", $"111{i:D3}"))
                 .ToList();
 
-            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1))
+            _mockProductoRepo.Setup(r => r.ObtenerConCodigoBarraPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Producto>());
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Categoria>());
-            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns(async (Func<Task> action) => await action());
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>(async (action, ct) => await action());
 
             var progressReports = new List<(int, int, string)>();
             var progress = new Progress<(int, int, string)>(p => progressReports.Add(p));

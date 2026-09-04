@@ -32,14 +32,14 @@ namespace GestionComercial.Tests.Servicios
             _mockUow.Setup(u => u.Ventas).Returns(_mockVentaRepo.Object);
             _mockUow.Setup(u => u.Pagos).Returns(_mockPagoRepo.Object);
             _mockUow.Setup(u => u.MetodosPago).Returns(_mockMetodoPagoRepo.Object);
-            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>()))
-                .Returns<Func<Task>>(callback => callback());
+            _mockUow.Setup(u => u.EjecutarEnTransaccionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<Task>, CancellationToken>((callback, ct) => callback());
 
             _mockAuditoria
                 .Setup(a => a.RegistrarAuditoriaAsync(
                     It.IsAny<string>(), It.IsAny<int>(), It.IsAny<OperacionAuditoriaEnum>(),
                     It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
-                    It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<int?>()))
+                    It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             _servicio = new CajaServicio(_mockUow.Object, _sesionServicio);
@@ -55,7 +55,7 @@ namespace GestionComercial.Tests.Servicios
             var caja = CrearCajaAbierta(montoInicial: 1000, montoFinal: 1000);
 
             _mockCajaRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(caja);
 
             await _servicio.RegistrarMovimientoAsync(
@@ -64,8 +64,8 @@ namespace GestionComercial.Tests.Servicios
             caja.MontoFinal.Should().Be(1500);
             _mockCajaRepo.Verify(r => r.Actualizar(It.Is<Caja>(c => c.MontoFinal == 1500)), Times.Once);
             _mockMovRepo.Verify(r => r.AgregarAsync(It.Is<TipoMovimientoCaja>(m =>
-                m.Tipo == (int)TipoMovimientoCajaEnum.Ingreso && m.Monto == 500)), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+                m.Tipo == (int)TipoMovimientoCajaEnum.Ingreso && m.Monto == 500), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -74,7 +74,7 @@ namespace GestionComercial.Tests.Servicios
             var caja = CrearCajaAbierta(montoInicial: 1000, montoFinal: 1000);
 
             _mockCajaRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(caja);
 
             await _servicio.RegistrarMovimientoAsync(
@@ -83,7 +83,8 @@ namespace GestionComercial.Tests.Servicios
             caja.MontoFinal.Should().Be(800);
             _mockCajaRepo.Verify(r => r.Actualizar(It.Is<Caja>(c => c.MontoFinal == 800)), Times.Once);
             _mockMovRepo.Verify(r => r.AgregarAsync(It.Is<TipoMovimientoCaja>(m =>
-                m.Tipo == (int)TipoMovimientoCajaEnum.Egreso && m.Monto == 200)), Times.Once);
+                m.Tipo == (int)TipoMovimientoCajaEnum.Egreso && m.Monto == 200), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -93,7 +94,7 @@ namespace GestionComercial.Tests.Servicios
             caja.Cerrar(1, 1000);
 
             _mockCajaRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(caja);
 
             var act = () => _servicio.RegistrarMovimientoAsync(
@@ -106,7 +107,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task RegistrarMovimientoAsync_CajaNoExiste_LanzaExcepcion()
         {
             _mockCajaRepo
-                .Setup(r => r.ObtenerPorIdAsync(999))
+                .Setup(r => r.ObtenerPorIdAsync(999, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Caja?)null);
 
             var act = () => _servicio.RegistrarMovimientoAsync(
@@ -131,7 +132,7 @@ namespace GestionComercial.Tests.Servicios
             };
 
             _mockMovRepo
-                .Setup(r => r.ObtenerPorCajaAsync(1))
+                .Setup(r => r.ObtenerPorCajaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(movimientos);
 
             var resultado = (await _servicio.ObtenerMovimientosAsync(1)).ToList();
@@ -229,8 +230,8 @@ namespace GestionComercial.Tests.Servicios
         public async Task EliminarCajaAsync_CajaNoPrimariaCerradaSinMovimientos_Elimina()
         {
             var caja = CrearCajaCerrada(esPrimaria: false);
-            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
-            _mockMovRepo.Setup(r => r.ObtenerPorCajaAsync(1))
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(caja);
+            _mockMovRepo.Setup(r => r.ObtenerPorCajaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Caja.TipoMovimientoCaja>());
 
             await _servicio.EliminarCajaAsync(1);
@@ -243,7 +244,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task EliminarCajaAsync_CajaPrimaria_LanzaExcepcion()
         {
             var caja = CrearCajaCerrada(esPrimaria: true);
-            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(caja);
 
             var act = () => _servicio.EliminarCajaAsync(1);
             await act.Should().ThrowAsync<GestionComercial.Aplicacion.Excepciones.NegocioException>()
@@ -254,7 +255,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task EliminarCajaAsync_CajaAbierta_LanzaExcepcion()
         {
             var caja = CrearCajaAbierta();
-            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(caja);
 
             var act = () => _servicio.EliminarCajaAsync(1);
             await act.Should().ThrowAsync<GestionComercial.Aplicacion.Excepciones.NegocioException>()
@@ -265,8 +266,8 @@ namespace GestionComercial.Tests.Servicios
         public async Task EliminarCajaAsync_CajaConMovimientos_LanzaExcepcion()
         {
             var caja = CrearCajaCerrada(esPrimaria: false);
-            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(caja);
-            _mockMovRepo.Setup(r => r.ObtenerPorCajaAsync(1))
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(caja);
+            _mockMovRepo.Setup(r => r.ObtenerPorCajaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Caja.TipoMovimientoCaja>
                 {
                     new() { Id = 1, Tipo = 1, Monto = 500, Id_caja = 1 }
@@ -280,7 +281,7 @@ namespace GestionComercial.Tests.Servicios
         [Fact]
         public async Task EliminarCajaAsync_CajaNoEncontrada_LanzaExcepcion()
         {
-            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(999))
+            _mockCajaRepo.Setup(r => r.ObtenerPorIdAsync(999, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Caja?)null);
 
             var act = () => _servicio.EliminarCajaAsync(999);

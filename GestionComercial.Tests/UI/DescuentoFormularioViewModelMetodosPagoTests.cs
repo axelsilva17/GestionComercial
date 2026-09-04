@@ -56,7 +56,7 @@ namespace GestionComercial.Tests.UI
                 new() { Id = 3, Nombre = "Crédito", Categoria = "Tarjeta", Subcategoria = "Credito", Activo = true, Id_empresa = 1 },
                 new() { Id = 6, Nombre = "Tarjeta sin sub", Categoria = "Tarjeta", Subcategoria = null, Activo = true, Id_empresa = 1 },
             };
-            _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1)).ReturnsAsync(metodos);
+            _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(metodos);
 
             var vm = CrearVM();
             // Trigger OnActivateAsync indirectly by calling CargarSelectoresAsync via the private method

@@ -44,17 +44,17 @@ namespace GestionComercial.Tests.Servicios
             var usuario = new Usuario { Id = 1, Nombre = "Juan", Apellido = "Pérez" };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
             _mockSucursalRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sucursal);
             _mockUsuarioRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(usuario);
             _mockMovimientosRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>()))
-                .Returns<MovimientoStock>(m => Task.FromResult(m));
+                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>(), It.IsAny<CancellationToken>()))
+                .Returns<MovimientoStock, CancellationToken>((m, ct) => Task.FromResult(m));
 
             // guardarCambios=false: el caller (VentaServicio.CrearAsync) actualiza el stock
             await _servicio.RegistrarMovimientoAsync(
@@ -71,7 +71,7 @@ namespace GestionComercial.Tests.Servicios
                     m.TipoMovimiento == (int)TipoMovimientoStockEnum.Salida &&
                     m.Cantidad == 3 &&
                     m.StockAnterior == 10 &&
-                    m.StockNuevo == 7)), Times.Once);
+                    m.StockNuevo == 7), It.IsAny<CancellationToken>()), Times.Once);
 
             // guardarCambios=false: NO actualiza el stock del producto (lo hace el caller)
             producto.StockActual.Should().Be(10);
@@ -83,7 +83,7 @@ namespace GestionComercial.Tests.Servicios
             var producto = new Producto { Id = 1, Nombre = "Prod Test", StockActual = 2 };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
 
             var act = () => _servicio.RegistrarMovimientoAsync(
@@ -106,17 +106,17 @@ namespace GestionComercial.Tests.Servicios
             var usuario = new Usuario { Id = 1, Nombre = "Juan", Apellido = "Pérez" };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
             _mockSucursalRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sucursal);
             _mockUsuarioRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(usuario);
             _mockMovimientosRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>()))
-                .Returns<MovimientoStock>(m => Task.FromResult(m));
+                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>(), It.IsAny<CancellationToken>()))
+                .Returns<MovimientoStock, CancellationToken>((m, ct) => Task.FromResult(m));
 
             await _servicio.RegistrarMovimientoAsync(
                 idProducto: 1,
@@ -127,7 +127,7 @@ namespace GestionComercial.Tests.Servicios
                 idUsuario: 1,
                 guardarCambios: false);
 
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -138,17 +138,17 @@ namespace GestionComercial.Tests.Servicios
             var usuario = new Usuario { Id = 1, Nombre = "Juan", Apellido = "Pérez" };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
             _mockSucursalRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sucursal);
             _mockUsuarioRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(usuario);
             _mockMovimientosRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>()))
-                .Returns<MovimientoStock>(m => Task.FromResult(m));
+                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>(), It.IsAny<CancellationToken>()))
+                .Returns<MovimientoStock, CancellationToken>((m, ct) => Task.FromResult(m));
 
             await _servicio.RegistrarMovimientoAsync(
                 idProducto: 1,
@@ -159,7 +159,7 @@ namespace GestionComercial.Tests.Servicios
                 idUsuario: 1,
                 guardarCambios: true);
 
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -174,17 +174,17 @@ namespace GestionComercial.Tests.Servicios
             var usuario = new Usuario { Id = 1, Nombre = "Juan", Apellido = "Pérez" };
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
             _mockSucursalRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sucursal);
             _mockUsuarioRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(usuario);
             _mockMovimientosRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>()))
-                .Returns<MovimientoStock>(m => Task.FromResult(m));
+                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>(), It.IsAny<CancellationToken>()))
+                .Returns<MovimientoStock, CancellationToken>((m, ct) => Task.FromResult(m));
 
             await _servicio.RegistrarMovimientoAsync(
                 idProducto: 1,
@@ -200,7 +200,7 @@ namespace GestionComercial.Tests.Servicios
                     m.TipoMovimiento == (int)TipoMovimientoStockEnum.Entrada &&
                     m.Cantidad == 4 &&
                     m.StockAnterior == 5 &&
-                    m.StockNuevo == 9)), Times.Once);
+                    m.StockNuevo == 9), It.IsAny<CancellationToken>()), Times.Once);
 
             producto.StockActual.Should().Be(9);
         }
@@ -230,7 +230,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task RegistrarMovimientoAsync_ProductoNoExiste_LanzaExcepcion()
         {
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdAsync(999))
+                .Setup(r => r.ObtenerPorIdAsync(999, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Producto?)null);
 
             var act = () => _servicio.RegistrarMovimientoAsync(
@@ -261,7 +261,7 @@ namespace GestionComercial.Tests.Servicios
             };
 
             _mockMovimientosRepo
-                .Setup(r => r.ObtenerPorProductoAsync(1))
+                .Setup(r => r.ObtenerPorProductoAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(movimientos);
 
             var resultado = await _servicio.ObtenerMovimientosPorProductoAsync(1);
@@ -283,7 +283,7 @@ namespace GestionComercial.Tests.Servicios
             };
 
             _mockMovimientosRepo
-                .Setup(r => r.ObtenerPorProductoAsync(1))
+                .Setup(r => r.ObtenerPorProductoAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(movimientos);
 
             var resultado = await _servicio.ObtenerMovimientosPorProductoAsync(1);
@@ -301,7 +301,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task ObtenerMovimientosPorProductoAsync_SinMovimientos_DevuelveVacio()
         {
             _mockMovimientosRepo
-                .Setup(r => r.ObtenerPorProductoAsync(999))
+                .Setup(r => r.ObtenerPorProductoAsync(999, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<MovimientoStock>());
 
             var resultado = await _servicio.ObtenerMovimientosPorProductoAsync(999);
@@ -330,7 +330,7 @@ namespace GestionComercial.Tests.Servicios
                     It.IsAny<string?>(),
                     It.IsAny<DateTime>(),
                     It.IsAny<DateTime>(),
-                    1, 15))
+                    1, 15, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((movimientos, movimientos.Count));
 
             var resultado = await _servicio.ObtenerMovimientosAsync(
@@ -365,7 +365,7 @@ namespace GestionComercial.Tests.Servicios
                 .Setup(r => r.ObtenerPaginadoAsync(
                     null, "Salida", null, null,
                     It.IsAny<DateTime>(), It.IsAny<DateTime>(),
-                    1, 15))
+                    1, 15, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((movimientos, 1));
 
             var resultado = await _servicio.ObtenerMovimientosAsync(
@@ -396,7 +396,7 @@ namespace GestionComercial.Tests.Servicios
             _mockMovimientosRepo
                 .Setup(r => r.ObtenerResumenPeriodoAsync(
                     It.IsAny<DateTime>(), It.IsAny<DateTime>(),
-                    It.IsAny<int?>(), It.IsAny<int?>()))
+                    It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(resumenDto);
 
             var resultado = await _servicio.ObtenerResumenPeriodoAsync(
@@ -416,7 +416,7 @@ namespace GestionComercial.Tests.Servicios
             _mockMovimientosRepo
                 .Setup(r => r.ObtenerResumenPeriodoAsync(
                     It.IsAny<DateTime>(), It.IsAny<DateTime>(),
-                    It.IsAny<int?>(), It.IsAny<int?>()))
+                    It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((ResumenMovimientoStockDto?)null);
 
             var resultado = await _servicio.ObtenerResumenPeriodoAsync(
@@ -438,13 +438,13 @@ namespace GestionComercial.Tests.Servicios
             var hasta = new DateTime(2025, 1, 31);
 
             _mockMovimientosRepo
-                .Setup(r => r.ObtenerResumenPeriodoAsync(desde, hasta, 5, 3))
+                .Setup(r => r.ObtenerResumenPeriodoAsync(desde, hasta, 5, 3, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ResumenMovimientoStockDto());
 
             await _servicio.ObtenerResumenPeriodoAsync(desde, hasta, 5, 3);
 
             _mockMovimientosRepo.Verify(r => r.ObtenerResumenPeriodoAsync(
-                desde, hasta, 5, 3), Times.Once);
+                desde, hasta, 5, 3, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         // ═══════════════════════════════════════════════════════════

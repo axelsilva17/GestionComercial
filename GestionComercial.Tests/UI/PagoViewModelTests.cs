@@ -52,10 +52,10 @@ namespace GestionComercial.Tests.UI
         private async Task<PagoViewModel> CrearVMConMetodosAsync(List<MetodoPago> metodos)
         {
             var sucursal = new Sucursal { Id = 1, Id_empresa = 1 };
-            _mockSucursales.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(sucursal);
-            _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1)).ReturnsAsync(metodos);
+            _mockSucursales.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(sucursal);
+            _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(metodos);
 
-            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>()))
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Venta?)null);
 
             var vm = CrearVM();
@@ -214,7 +214,7 @@ namespace GestionComercial.Tests.UI
                 producto, 2, 1000, 500, descuentoPorItem: 100);
             venta.AgregarDetalle(detalle);
 
-            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(venta);
 
             var vm = CrearVM();
             await vm.InicializarConVenta(1, "Test", 1800);
@@ -241,7 +241,7 @@ namespace GestionComercial.Tests.UI
                 producto, 1, 1000, 500);
             venta.AgregarDetalle(detalle);
 
-            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(venta);
 
             var vm = CrearVM();
             await vm.InicializarConVenta(1, "Test", 950);
@@ -266,7 +266,7 @@ namespace GestionComercial.Tests.UI
                 producto, 1, 1000, 500);
             venta.AgregarDetalle(detalle);
 
-            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1)).ReturnsAsync(venta);
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(venta);
 
             var vm = CrearVM();
             await vm.InicializarConVenta(1, "Test", 1000);
@@ -278,7 +278,7 @@ namespace GestionComercial.Tests.UI
         [Fact]
         public async Task InicializarConVenta_VentaNoExistente_NoMuestraLineas()
         {
-            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(999))
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(999, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Venta?)null);
 
             var vm = CrearVM();
@@ -306,10 +306,10 @@ namespace GestionComercial.Tests.UI
 
         private void SetupCachesVenta(int idVenta, Venta venta, List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> descuentos)
         {
-            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(idVenta)).ReturnsAsync(venta);
-            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>()))
+            _mockVentaRepo.Setup(r => r.ObtenerConDetallesAsync(idVenta, It.IsAny<CancellationToken>())).ReturnsAsync(venta);
+            _mockDescuentoConfig.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentos);
-            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1))
+            _mockCategoriaRepo.Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<GestionComercial.Dominio.Entidades.Producto.Categoria>());
         }
 
@@ -327,10 +327,12 @@ namespace GestionComercial.Tests.UI
             _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
                     1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
                     It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
-                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>()))
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
             _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoTotalVentaAsync(
-                    1, 2, It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>()))
+                    1, 2, It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuento);
 
             var vm = CrearVM();
@@ -360,7 +362,8 @@ namespace GestionComercial.Tests.UI
             _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
                     1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
                     It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
-                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>()))
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
 
             var vm = CrearVM();

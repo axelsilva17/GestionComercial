@@ -23,7 +23,7 @@ namespace GestionComercial.Tests.Dominio
             typeof(Caja).GetProperty(nameof(Caja.Id))!.SetValue(_cajaMock, 5);
 
             _mockCajaRepo
-                .Setup(r => r.ObtenerPorIdAsync(It.IsAny<int>()))
+                .Setup(r => r.ObtenerPorIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(_cajaMock);
 
             _mockUow.Setup(u => u.MovimientosCaja).Returns(_mockMovimientoRepo.Object);
@@ -50,8 +50,8 @@ namespace GestionComercial.Tests.Dominio
 
             await _strategy.ProcesarPagoAsync(pago, venta, _mockUow.Object);
 
-            _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()), Times.Never);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -63,8 +63,8 @@ namespace GestionComercial.Tests.Dominio
             // Simular que el movimiento se guarda con Id = 42
             TipoMovimientoCaja? movGuardado = null;
             _mockMovimientoRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()))
-                .Returns<TipoMovimientoCaja>(m =>
+                .Setup(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>(), It.IsAny<CancellationToken>()))
+                .Returns<TipoMovimientoCaja, CancellationToken>((m, ct) =>
                 {
                     typeof(TipoMovimientoCaja).GetProperty("Id")!.SetValue(m, 42);
                     movGuardado = m;
@@ -74,8 +74,8 @@ namespace GestionComercial.Tests.Dominio
             await _strategy.ProcesarPagoAsync(pago, venta, _mockUow.Object);
 
             // Verificar que se creó el movimiento de ingreso
-            _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
 
             // Validar datos del movimiento
             movGuardado.Should().NotBeNull();
@@ -99,8 +99,8 @@ namespace GestionComercial.Tests.Dominio
 
             var movimientosGuardados = new List<TipoMovimientoCaja>();
             _mockMovimientoRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()))
-                .Returns<TipoMovimientoCaja>(m =>
+                .Setup(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>(), It.IsAny<CancellationToken>()))
+                .Returns<TipoMovimientoCaja, CancellationToken>((m, ct) =>
                 {
                     typeof(TipoMovimientoCaja).GetProperty("Id")!.SetValue(m, 99 + movimientosGuardados.Count);
                     movimientosGuardados.Add(m);
@@ -110,8 +110,8 @@ namespace GestionComercial.Tests.Dominio
             await _strategy.ProcesarPagoAsync(pago, venta, _mockUow.Object);
 
             // Verificar que se crearon DOS movimientos
-            _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()), Times.Exactly(2));
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockMovimientoRepo.Verify(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
 
             // Primer movimiento: Ingreso por monto BRUTO recibido (1000, no 800)
             movimientosGuardados.Should().HaveCount(2);
@@ -132,8 +132,8 @@ namespace GestionComercial.Tests.Dominio
             var pago2 = Pago.Crear(monto: 300m, idVenta: 1, idMetodoPago: 1);
 
             _mockMovimientoRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>()))
-                .Returns<TipoMovimientoCaja>(m =>
+                .Setup(r => r.AgregarAsync(It.IsAny<TipoMovimientoCaja>(), It.IsAny<CancellationToken>()))
+                .Returns<TipoMovimientoCaja, CancellationToken>((m, ct) =>
                 {
                     typeof(TipoMovimientoCaja).GetProperty("Id")!.SetValue(m, 1);
                     return Task.FromResult(m);
@@ -175,7 +175,7 @@ namespace GestionComercial.Tests.Dominio
             await _strategy.ProcesarPagoAsync(pago, venta, mockUow.Object);
 
             // No debe interactuar con el UnitOfWork
-            mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 
@@ -204,7 +204,7 @@ namespace GestionComercial.Tests.Dominio
 
             await _strategy.ProcesarPagoAsync(pago, venta, mockUow.Object);
 
-            mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 
@@ -233,7 +233,7 @@ namespace GestionComercial.Tests.Dominio
 
             await _strategy.ProcesarPagoAsync(pago, venta, mockUow.Object);
 
-            mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Never);
+            mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }

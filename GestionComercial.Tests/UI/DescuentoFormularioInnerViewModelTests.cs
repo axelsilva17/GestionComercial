@@ -55,12 +55,12 @@ namespace GestionComercial.Tests.UI
                 new() { Id = 2, Nombre = "Visa", Categoria = "Tarjeta", Subcategoria = "Credito", Activo = true, Id_empresa = 1 },
                 new() { Id = 3, Nombre = "Débito", Categoria = "Tarjeta", Subcategoria = "Debito", Activo = true, Id_empresa = 1 },
             };
-            _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1)).ReturnsAsync(metodos);
-            _mockProductoServicio.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool>())).ReturnsAsync(new List<ProductoListadoDto>
+            _mockMetodos.Setup(r => r.ObtenerTodosPorEmpresaAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(metodos);
+            _mockProductoServicio.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ProductoListadoDto>
             {
                 new() { IdProducto = 10, Nombre = "Leche", CodigoBarra = "123", PrecioVentaActual = 100, StockActual = 50 },
             });
-            _mockProductoServicio.Setup(s => s.ObtenerCategoriasAsync(1)).ReturnsAsync(new List<CategoriaItemDto>
+            _mockProductoServicio.Setup(s => s.ObtenerCategoriasAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(new List<CategoriaItemDto>
             {
                 new() { IdCategoria = 5, Nombre = "Lácteos" },
             });
@@ -75,7 +75,7 @@ namespace GestionComercial.Tests.UI
             var descuentoExistente = DescuentoConfiguracion.Crear(
                 "Nombre Original 10%", 10, 1, idProducto: 10, aplicaCualquierMetodoPago: true);
             descuentoExistente.Id = 1; // Set explicit ID for testing
-            _mockServicio.Setup(s => s.ObtenerPorIdAsync(1))
+            _mockServicio.Setup(s => s.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentoExistente);
 
             var vm = CrearVM();
@@ -96,7 +96,7 @@ namespace GestionComercial.Tests.UI
                 15m,
                 10, null,
                 It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(),
-                AlcanceDescuentoEnum.Producto, It.IsAny<decimal?>()),
+                AlcanceDescuentoEnum.Producto, It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -108,7 +108,7 @@ namespace GestionComercial.Tests.UI
             var descuentoExistente = DescuentoConfiguracion.Crear(
                 "Nombre Original 10%", 10, 1, idProducto: 10, aplicaCualquierMetodoPago: true);
             descuentoExistente.Id = 2;
-            _mockServicio.Setup(s => s.ObtenerPorIdAsync(2))
+            _mockServicio.Setup(s => s.ObtenerPorIdAsync(2, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentoExistente);
 
             var vm = CrearVM();
@@ -129,7 +129,7 @@ namespace GestionComercial.Tests.UI
                 20m,
                 10, null,
                 It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(),
-                AlcanceDescuentoEnum.Producto, It.IsAny<decimal?>()),
+                AlcanceDescuentoEnum.Producto, It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -154,7 +154,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 10%", 10m, 10, null,
                 It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(),
-                AlcanceDescuentoEnum.Producto, It.IsAny<decimal?>()),
+                AlcanceDescuentoEnum.Producto, It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -170,7 +170,7 @@ namespace GestionComercial.Tests.UI
             descuentoExistente.Id = 3;
             descuentoExistente.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 2 });
 
-            _mockServicio.Setup(s => s.ObtenerPorIdAsync(3))
+            _mockServicio.Setup(s => s.ObtenerPorIdAsync(3, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentoExistente);
 
             var vm = CrearVM();
@@ -197,7 +197,7 @@ namespace GestionComercial.Tests.UI
             descuentoExistente.Id = 4;
             descuentoExistente.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 2 });
 
-            _mockServicio.Setup(s => s.ObtenerPorIdAsync(4))
+            _mockServicio.Setup(s => s.ObtenerPorIdAsync(4, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentoExistente);
 
             var vm = CrearVM();
@@ -227,7 +227,7 @@ namespace GestionComercial.Tests.UI
             descuentoExistente.Id = 5;
             descuentoExistente.DescuentosMetodosPago.Add(new DescuentoMetodoPago { Id_metodoPago = 3 });
 
-            _mockServicio.Setup(s => s.ObtenerPorIdAsync(5))
+            _mockServicio.Setup(s => s.ObtenerPorIdAsync(5, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentoExistente);
 
             var vm = CrearVM();
@@ -254,7 +254,7 @@ namespace GestionComercial.Tests.UI
                 "Leche 10% cualquier método", 10, 1, idProducto: 10, aplicaCualquierMetodoPago: true);
             descuentoExistente.Id = 6;
 
-            _mockServicio.Setup(s => s.ObtenerPorIdAsync(6))
+            _mockServicio.Setup(s => s.ObtenerPorIdAsync(6, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(descuentoExistente);
 
             var vm = CrearVM();

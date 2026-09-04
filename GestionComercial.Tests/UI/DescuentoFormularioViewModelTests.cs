@@ -167,7 +167,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 15%", 15m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -183,7 +183,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Categoría Carnes 10%", 10m, null, 5,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -199,7 +199,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 7.5%", 7.5m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -215,7 +215,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 10%", 10m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -231,7 +231,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Leche 100%", 100m, 42, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -249,7 +249,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.ActualizarAsync(
                 1, "Queso 20%", 20m, 7, null,
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -266,7 +266,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -285,7 +285,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -323,7 +323,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), It.IsAny<string>(), It.IsAny<decimal>(),
                 It.IsAny<int?>(), It.IsAny<int?>(),
-                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>()),
+                It.IsAny<bool>(), It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<AlcanceDescuentoEnum>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -344,7 +344,7 @@ namespace GestionComercial.Tests.UI
 
             _mockServicio.Verify(s => s.CrearAsync(
                 It.IsAny<int>(), "Método Visa 5%", 5m, null, null,
-                false, It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), AlcanceDescuentoEnum.MetodoPago, It.IsAny<decimal?>()),
+                false, It.IsAny<List<int>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), AlcanceDescuentoEnum.MetodoPago, It.IsAny<decimal?>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
 
@@ -358,9 +358,9 @@ namespace GestionComercial.Tests.UI
                 new() { Id = 3, Nombre = "QR", Categoria = "QR", Activo = true },
             };
             _mockUnitOfWork.Setup(u => u.MetodosPago).Returns(new Mock<GestionComercial.Dominio.Interfaces.Repositorios.IMetodoPagoRepositorio>().Object);
-            _mockUnitOfWork.Setup(u => u.MetodosPago.ObtenerTodosPorEmpresaAsync(1)).ReturnsAsync(metodos);
-            _mockProductoServicio.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool>())).ReturnsAsync(new List<ProductoListadoDto>());
-            _mockProductoServicio.Setup(s => s.ObtenerCategoriasAsync(1)).ReturnsAsync(new List<CategoriaItemDto>());
+            _mockUnitOfWork.Setup(u => u.MetodosPago.ObtenerTodosPorEmpresaAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(metodos);
+            _mockProductoServicio.Setup(s => s.ObtenerTodosAsync(1, It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ProductoListadoDto>());
+            _mockProductoServicio.Setup(s => s.ObtenerCategoriasAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(new List<CategoriaItemDto>());
 
             var vm = CrearVM();
             var method = typeof(DescuentoFormularioViewModel).GetMethod("CargarSelectoresAsync",

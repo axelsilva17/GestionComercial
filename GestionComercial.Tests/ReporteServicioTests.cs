@@ -94,7 +94,8 @@ namespace GestionComercial.Tests
                 .Setup(r => r.ObtenerVentasPorVendedorAgrupadoAsync(
                     It.IsAny<int>(), 
                     It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
+                    It.IsAny<DateTime>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync(ventasDePrueba);
             
             // 5. Configuramos el UnitOfWork para que devuelva nuestro mock
@@ -147,7 +148,8 @@ namespace GestionComercial.Tests
                 .Setup(r => r.ObtenerVentasPorVendedorAgrupadoAsync(
                     It.IsAny<int>(), 
                     It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
+                    It.IsAny<DateTime>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<(int, string, string, int, decimal, decimal)>());
             
             mockUow.Setup(u => u.Ventas).Returns(mockVentaRepo.Object);
@@ -180,7 +182,8 @@ namespace GestionComercial.Tests
                     It.IsAny<int>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>(),
-                    It.IsAny<int>()))
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<(int, string, string, int, decimal, decimal, DateTime?)>());
             
             mockUow.Setup(u => u.Ventas).Returns(mockVentaRepo.Object);

@@ -29,7 +29,7 @@ namespace GestionComercial.Tests.Servicios
                 new() { Id = 2, Nombre = "Cliente B", Documento = 456, Telefono = "3794111111", Email = "b@mail.com", Activo = true, Id_empresa = 1 },
             };
             _mockClienteRepo
-                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(clientes);
 
             var resultado = await _servicio.ObtenerTodosAsync(1);
@@ -42,7 +42,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task ObtenerTodosAsync_SinClientes_DevuelveVacio()
         {
             _mockClienteRepo
-                .Setup(r => r.ObtenerPorEmpresaAsync(1))
+                .Setup(r => r.ObtenerPorEmpresaAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<Cliente>());
 
             var resultado = await _servicio.ObtenerTodosAsync(1);
@@ -54,7 +54,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task ObtenerPorIdAsync_ClienteExistente_DevuelveDto()
         {
             var cliente = new Cliente { Id = 1, Nombre = "Test", Documento = 123456, Id_empresa = 1 };
-            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(cliente);
+            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(cliente);
 
             var resultado = await _servicio.ObtenerPorIdAsync(1);
 
@@ -66,7 +66,7 @@ namespace GestionComercial.Tests.Servicios
         [Fact]
         public async Task ObtenerPorIdAsync_ClienteNoExiste_DevuelveNull()
         {
-            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(999)).ReturnsAsync((Cliente?)null);
+            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Cliente?)null);
 
             var resultado = await _servicio.ObtenerPorIdAsync(999);
 
@@ -77,15 +77,15 @@ namespace GestionComercial.Tests.Servicios
         public async Task CrearAsync_ClienteValido_AgregaYDevuelveDto()
         {
             _mockClienteRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<Cliente>()))
-                .Returns<Cliente>(c =>
+                .Setup(r => r.AgregarAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()))
+                .Returns<Cliente, CancellationToken>((c, ct) =>
                 {
                     typeof(Cliente).GetProperty("Id")!.SetValue(c, 1);
                     return Task.FromResult(c);
                 });
 
             _mockClienteRepo
-                .Setup(r => r.ObtenerPorIdAsync(1))
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Cliente { Id = 1, Nombre = "Nuevo", Documento = 789, Id_empresa = 1 });
 
             var dto = new Aplicacion.DTOs.Clientes.ClienteCrearDto
@@ -99,15 +99,15 @@ namespace GestionComercial.Tests.Servicios
             var resultado = await _servicio.CrearAsync(dto);
 
             resultado.Should().NotBeNull();
-            _mockClienteRepo.Verify(r => r.AgregarAsync(It.IsAny<Cliente>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockClienteRepo.Verify(r => r.AgregarAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task ActualizarAsync_ClienteExistente_ActualizaPropiedades()
         {
             var cliente = new Cliente { Id = 1, Nombre = "Viejo", Documento = 111, Id_empresa = 1 };
-            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(cliente);
+            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(cliente);
 
             var dto = new Aplicacion.DTOs.Clientes.ClienteActualizarDto
             {
@@ -122,13 +122,13 @@ namespace GestionComercial.Tests.Servicios
             cliente.Nombre.Should().Be("Nuevo Nombre");
             cliente.Documento.Should().Be(222);
             _mockClienteRepo.Verify(r => r.Actualizar(cliente), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task ActualizarAsync_ClienteNoExiste_LanzaKeyNotFound()
         {
-            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(999)).ReturnsAsync((Cliente?)null);
+            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Cliente?)null);
 
             var act = () => _servicio.ActualizarAsync(new Aplicacion.DTOs.Clientes.ClienteActualizarDto
             {
@@ -145,26 +145,26 @@ namespace GestionComercial.Tests.Servicios
         public async Task DesactivarAsync_ClienteExistente_MarcaInactivo()
         {
             var cliente = new Cliente { Id = 1, Nombre = "Test", Activo = true };
-            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(cliente);
+            _mockClienteRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(cliente);
 
             await _servicio.DesactivarAsync(1);
 
             cliente.Activo.Should().BeFalse();
             _mockClienteRepo.Verify(r => r.Actualizar(cliente), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task ContarClientesConVentasAsync_DelegaEnRepositorio()
         {
             _mockClienteRepo
-                .Setup(r => r.ContarClientesConVentasAsync(1))
+                .Setup(r => r.ContarClientesConVentasAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(15);
 
             var count = await _servicio.ContarClientesConVentasAsync(1);
 
             count.Should().Be(15);
-            _mockClienteRepo.Verify(r => r.ContarClientesConVentasAsync(1), Times.Once);
+            _mockClienteRepo.Verify(r => r.ContarClientesConVentasAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

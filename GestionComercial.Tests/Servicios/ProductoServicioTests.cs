@@ -29,7 +29,7 @@ namespace GestionComercial.Tests.Servicios
                 new() { Id = 2, Nombre = "Prod B", StockActual = 2, StockMinimo = 5, PrecioVentaActual = 200, Id_empresa = 1 },
             };
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorEmpresaAsync(1, true))
+                .Setup(r => r.ObtenerPorEmpresaAsync(1, true, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(productos);
 
             var resultado = await _servicio.ObtenerTodosAsync(1);
@@ -46,7 +46,7 @@ namespace GestionComercial.Tests.Servicios
                 new() { Id = 2, Nombre = "Prod Bajo", StockActual = 2, StockMinimo = 10, PrecioVentaActual = 50, Id_empresa = 1 },
             };
             _mockProductoRepo
-                .Setup(r => r.ObtenerStockCriticoAsync(1))
+                .Setup(r => r.ObtenerStockCriticoAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(productosCriticos);
 
             var resultado = await _servicio.ObtenerStockCriticoAsync(1);
@@ -70,7 +70,7 @@ namespace GestionComercial.Tests.Servicios
                 Id_empresa = 1
             };
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdConDetallesAsync(1))
+                .Setup(r => r.ObtenerPorIdConDetallesAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(producto);
 
             var resultado = await _servicio.ObtenerPorIdAsync(1);
@@ -84,7 +84,7 @@ namespace GestionComercial.Tests.Servicios
         public async Task ObtenerPorIdAsync_ProductoNoExiste_DevuelveNull()
         {
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdConDetallesAsync(999))
+                .Setup(r => r.ObtenerPorIdConDetallesAsync(999, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Producto?)null);
 
             var resultado = await _servicio.ObtenerPorIdAsync(999);
@@ -96,15 +96,15 @@ namespace GestionComercial.Tests.Servicios
         public async Task CrearAsync_ProductoValido_AgregaYDevuelveDto()
         {
             _mockProductoRepo
-                .Setup(r => r.AgregarAsync(It.IsAny<Producto>()))
-                .Returns<Producto>(p =>
+                .Setup(r => r.AgregarAsync(It.IsAny<Producto>(), It.IsAny<CancellationToken>()))
+                .Returns<Producto, CancellationToken>((p, ct) =>
                 {
                     typeof(Producto).GetProperty("Id")!.SetValue(p, 1);
                     return Task.FromResult(p);
                 });
 
             _mockProductoRepo
-                .Setup(r => r.ObtenerPorIdConDetallesAsync(1))
+                .Setup(r => r.ObtenerPorIdConDetallesAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Producto { Id = 1, Nombre = "Nuevo", PrecioVentaActual = 100, Id_empresa = 1 });
 
             var dto = new Aplicacion.DTOs.Productos.ProductoCrearDto
@@ -122,15 +122,15 @@ namespace GestionComercial.Tests.Servicios
             var resultado = await _servicio.CrearAsync(dto);
 
             resultado.Should().NotBeNull();
-            _mockProductoRepo.Verify(r => r.AgregarAsync(It.IsAny<Producto>()), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockProductoRepo.Verify(r => r.AgregarAsync(It.IsAny<Producto>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
         public async Task ActualizarAsync_ProductoExistente_ModificaPropiedades()
         {
             var producto = new Producto { Id = 1, Nombre = "Viejo", PrecioVentaActual = 100, Id_empresa = 1 };
-            _mockProductoRepo.Setup(r => r.ObtenerPorIdAsync(1)).ReturnsAsync(producto);
+            _mockProductoRepo.Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(producto);
 
             // El servicio ProductoServicio.ActualizarAsync solo actualiza Nombre y PrecioVentaActual
             // de acuerdo al ProductoActualizarDto (no expone StockActual)
@@ -147,7 +147,7 @@ namespace GestionComercial.Tests.Servicios
             producto.Nombre.Should().Be("Nuevo Nombre");
             producto.PrecioVentaActual.Should().Be(200m);
             _mockProductoRepo.Verify(r => r.Actualizar(producto), Times.Once);
-            _mockUow.Verify(u => u.GuardarCambiosAsync(), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
