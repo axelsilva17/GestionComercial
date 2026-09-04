@@ -67,7 +67,7 @@ namespace GestionComercial.Persistencia.Contexto
 
         /// <summary>
         /// Execute SQLite PRAGMA optimizations. Call once at startup after database creation/migration.
-        /// Sets WAL journal mode, NORMAL synchronous, 64MB cache, memory temp store, and 256MB mmap.
+        /// Sets WAL journal mode, NORMAL synchronous, 16MB cache, memory temp store, and 256MB mmap.
         /// </summary>
         public static void EjecutarPragmas(string connectionString)
         {
@@ -98,11 +98,6 @@ namespace GestionComercial.Persistencia.Contexto
                 .HasDatabaseName("IX_Producto_CodigoBarra_Empresa")
                 .IsUnique();
 
-            // Producto: filtro por empresa (listado principal)
-            modelBuilder.Entity<Producto>()
-                .HasIndex(p => p.Id_empresa)
-                .HasDatabaseName("IX_Producto_IdEmpresa");
-
             // Producto: búsqueda por categoría
             modelBuilder.Entity<Producto>()
                 .HasIndex(p => p.Id_categoria)
@@ -113,20 +108,12 @@ namespace GestionComercial.Persistencia.Contexto
                 .HasIndex(p => p.Nombre)
                 .HasDatabaseName("IX_Producto_Nombre");
 
-            // Producto: búsqueda por código de barra (individual)
+            // NOTA: IX_Producto_CodigoBarra (individual) quedó redundante desde que existe
+            // IX_Producto_CodigoBarra_Empresa (que ya empieza por CodigoBarra) — se puede
+            // quitar en una futura migración para aliviar el costo de escritura por índice de más.
             modelBuilder.Entity<Producto>()
                 .HasIndex(p => p.CodigoBarra)
                 .HasDatabaseName("IX_Producto_CodigoBarra");
-
-            // Cliente: búsqueda por empresa
-            modelBuilder.Entity<Cliente>()
-                .HasIndex(c => c.Id_empresa)
-                .HasDatabaseName("IX_Cliente_IdEmpresa");
-
-            // Cliente: búsqueda por nombre
-            modelBuilder.Entity<Cliente>()
-                .HasIndex(c => c.Nombre)
-                .HasDatabaseName("IX_Cliente_Nombre");
 
             // Proveedor: búsqueda por nombre
             modelBuilder.Entity<Proveedor>()
