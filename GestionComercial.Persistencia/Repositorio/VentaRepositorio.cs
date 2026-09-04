@@ -330,24 +330,27 @@ namespace GestionComercial.Persistencia.Repositorio
             return resultado.Select(v => (v.Id, v.TotalFinal, v.Estado, v.Id_caja, v.EfectivoRecibido));
         }
 
+        // Uses SqlQueryRaw with CAST(p.Monto AS REAL) to avoid SQLite's inability to handle
+        // decimal SUM / ORDER BY on large groups. Mirrors PagoRepositorio.ObtenerTotalesPorMetodoAsync.
         public async Task<IEnumerable<(string Metodo, decimal Total, int Cantidad)>>
             ObtenerPagosPorCajaAsync(int idCaja, CancellationToken ct = default)
         {
-            var resultado = await _context.Pagos
-                .AsNoTracking()
-                .Where(p => p.Venta.Id_caja == idCaja
-                         && p.Venta.Estado == 2)
-                .GroupBy(p => p.MetodoPago!.Nombre ?? "Sin método")
-                .Select(g => new
-                {
-                    Metodo = g.Key,
-                    Total = g.Sum(p => p.Monto),
-                    Cantidad = g.Count()
-                })
-                .OrderByDescending(x => x.Total)
+            var rows = await _context.Database
+                .SqlQueryRaw<PagoCajaAgrupado>(
+                    @"SELECT mp.Nombre AS Metodo,
+                             SUM(CAST(p.Monto AS REAL)) AS Total,
+                             COUNT(*) AS Cantidad
+                      FROM Pago p
+                      INNER JOIN Venta v ON p.Id_venta = v.Id
+                      INNER JOIN MetodoPago mp ON p.Id_metodoPago = mp.Id
+                      WHERE v.Id_caja = {0}
+                        AND v.Estado = 2
+                      GROUP BY mp.Nombre
+                      ORDER BY Total DESC",
+                    idCaja)
                 .ToListAsync(ct);
 
-            return resultado.Select(x => (x.Metodo, x.Total, x.Cantidad));
+            return rows.Select(r => (r.Metodo, r.Total, r.Cantidad));
         }
     }
 
@@ -373,4 +376,6 @@ namespace GestionComercial.Persistencia.Repositorio
     public record TopVendedorAgrupado(string Nombre);
 
     public record TopProductoNombreAgrupado(string Nombre);
+
+    public record PagoCajaAgrupado(string Metodo, decimal Total, int Cantidad);
 }

@@ -37,12 +37,16 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderBy(p => p.Nombre)
                 .ToListAsync(ct);
 
+        // Materialize before ordering: SQLite does not support ORDER BY on decimal columns.
+        // The filtered set (under-stock only) is small, so in-memory sort is safe.
         public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa, CancellationToken ct = default)
-            => await _dbSet.AsNoTracking()
+        {
+            var lista = await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
                 .Include(p => p.Categoria)
-                .OrderBy(p => p.StockActual)
                 .ToListAsync(ct);
+            return lista.OrderBy(p => p.StockActual);
+        }
 
         public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default)
         {
@@ -109,16 +113,19 @@ namespace GestionComercial.Persistencia.Repositorio
                               && p.StockActual <= p.StockMinimo
                               && p.StockActual > 0, ct);
 
+        // Materialize before ordering: SQLite does not support ORDER BY on decimal columns.
+        // The filtered set (under-stock, positive stock only) is small, so in-memory sort+take is safe.
         public async Task<List<Producto>> ObtenerConStockBajoConLimiteAsync(int idEmpresa, int limite, CancellationToken ct = default)
-            => await _dbSet.AsNoTracking()
+        {
+            var lista = await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa
                          && p.Activo
                          && p.StockActual <= p.StockMinimo
                          && p.StockActual > 0)
                 .Include(p => p.Categoria)
-                .OrderBy(p => p.StockActual)
-                .Take(limite)
                 .ToListAsync(ct);
+            return lista.OrderBy(p => p.StockActual).Take(limite).ToList();
+        }
 
         // ── Búsqueda con StartsWith (prefijo) para uso de índices ────────────────
         public async Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default)
