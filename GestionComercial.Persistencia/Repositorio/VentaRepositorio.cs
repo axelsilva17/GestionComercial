@@ -157,7 +157,7 @@ namespace GestionComercial.Persistencia.Repositorio
         {
             var rows = await _context.Database
                 .SqlQueryRaw<VentaPorDiaAgrupado>(
-                    @"SELECT strftime('%d/%m', v.Fecha) AS Dia,
+                    @"SELECT strftime('%Y-%m-%d', v.Fecha) AS Dia,
                              SUM(v.TotalFinal) AS Total,
                              COUNT(*) AS Cantidad
                       FROM Venta v

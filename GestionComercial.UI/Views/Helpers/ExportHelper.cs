@@ -61,7 +61,8 @@ namespace GestionComercial.UI.Helpers
                 int fila = 2;
                 foreach (var d in datos)
                 {
-                    ws.Cell(fila, 1).Value = d.Dia;
+                    ws.Cell(fila, 1).Value = DateTime.TryParse(d.Dia, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var diaVal)
+                        ? diaVal.ToString("dd/MM") : d.Dia;
                     ws.Cell(fila, 2).Value = (double)d.Total;
                     ws.Cell(fila, 3).Value = d.Cantidad;
                     ws.Cell(fila, 2).Style.NumberFormat.Format = "$ #,##0";
@@ -416,7 +417,8 @@ namespace GestionComercial.UI.Helpers
                 int filaV = 2;
                 foreach (var d in ventaPorDia)
                 {
-                    wsVentas.Cell(filaV, 1).Value = d.Dia;
+                    wsVentas.Cell(filaV, 1).Value = DateTime.TryParse(d.Dia, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var diaVal)
+                        ? diaVal.ToString("dd/MM") : d.Dia;
                     wsVentas.Cell(filaV, 2).Value = (double)d.Total;
                     wsVentas.Cell(filaV, 3).Value = d.Cantidad;
                     wsVentas.Cell(filaV, 2).Style.NumberFormat.Format = "$ #,##0";

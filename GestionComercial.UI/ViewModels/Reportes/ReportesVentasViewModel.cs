@@ -84,7 +84,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private async Task CargarVentasPorDia(int idEmpresa)
         {
             var datos = await _reporteServicio.VentasPorDiaAsync(idEmpresa, FechaDesde, FechaHasta);
-            VentasPorDia = new ObservableCollection<VentaPorDiaDto>(datos);
+            VentasPorDia = new ObservableCollection<VentaPorDiaDto>(datos.Select(d => new VentaPorDiaDto
+            {
+                Dia = DateTime.TryParse(d.Dia, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var diaVal)
+                    ? diaVal.ToString("dd/MM") : d.Dia,
+                Total = d.Total,
+                Cantidad = d.Cantidad,
+            }));
         }
 
         private async Task CargarVentasPorMetodo(int idSucursal)
