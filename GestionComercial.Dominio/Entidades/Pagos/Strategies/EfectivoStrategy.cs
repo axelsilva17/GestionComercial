@@ -1,6 +1,7 @@
 using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
+using System.Threading;
 
 namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
 {
@@ -9,7 +10,7 @@ namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
         public bool AfectaCajaFisica => true;
         public string Categoria => "Efectivo";
 
-        public async Task ProcesarPagoAsync(Pago pago, Ventas.Venta venta, IUnitOfWork uow)
+        public async Task ProcesarPagoAsync(Pago pago, Ventas.Venta venta, IUnitOfWork uow, CancellationToken ct = default)
         {
             if (!venta.Id_caja.HasValue)
                 return;
@@ -27,18 +28,18 @@ namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
                 Id_usuario   = venta.Id_usuario,
                 Fecha        = DateTime.Now,
             };
-            await uow.MovimientosCaja.AgregarAsync(movimiento);
+            await uow.MovimientosCaja.AgregarAsync(movimiento, ct);
 
             // Actualizar saldo de caja en tiempo real
             // Neto: bruto recibido - vuelto devuelto
-            var caja = await uow.Cajas.ObtenerPorIdAsync(venta.Id_caja.Value);
+            var caja = await uow.Cajas.ObtenerPorIdAsync(venta.Id_caja.Value, ct);
             if (caja != null)
             {
                 caja.MontoFinal = (caja.MontoFinal ?? caja.MontoInicial) + pago.Monto - pago.Vuelto;
                 uow.Cajas.Actualizar(caja);
             }
 
-            await uow.GuardarCambiosAsync();
+            await uow.GuardarCambiosAsync(ct);
 
             pago.Id_movimientoCaja = movimiento.Id;
 
@@ -57,7 +58,7 @@ namespace GestionComercial.Dominio.Entidades.Pagos.Strategies
                     Id_usuario   = venta.Id_usuario,
                     Fecha        = DateTime.Now,
                 };
-                await uow.MovimientosCaja.AgregarAsync(movimientoVuelto);
+                await uow.MovimientosCaja.AgregarAsync(movimientoVuelto, ct);
             }
         }
     }
