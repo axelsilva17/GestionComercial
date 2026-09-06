@@ -8,12 +8,15 @@ using ClosedXML.Excel;
 using GestionComercial.Aplicacion.DTOs.Auditoria;
 using GestionComercial.Aplicacion.DTOs.Caja;
 using GestionComercial.Aplicacion.DTOs.Reportes;
+using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.ViewModels.Reportes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace GestionComercial.UI.Helpers
@@ -317,8 +320,11 @@ namespace GestionComercial.UI.Helpers
             });
         }
 
-        // Nuevo: exportar reporte de gerencia completo a un solo archivo
-        public static void ExportarReporteGerenciaCompleto(
+        // Nuevo: exportar reporte de gerencia completo a un solo archivo.
+        // Async: el SaveFileDialog es interacción UI y corre en el hilo UI ANTES
+        // de la tarea en background; el build de hojas + SaveAs (~12.9s medidos)
+        // no tienen dependencias del hilo UI y corren en un background task.
+        public static async Task ExportarReporteGerenciaCompleto(
             IEnumerable<VentaPorDiaDto> ventaPorDia,
             IEnumerable<ReporteMargenDto> margen,
             IEnumerable<ReporteTopProductoDto> topProductos,
@@ -334,8 +340,28 @@ namespace GestionComercial.UI.Helpers
             IEnumerable<ReporteVentaMensualDto>? ventasMensuales = null,
             IEnumerable<MetodosPagoMesDto>? metodosPagoMensual = null)
         {
-            Exportar("Reporte Gerencia", $"ReporteGerencia_{Fecha()}", wb =>
+            var dialogo = new Microsoft.Win32.SaveFileDialog
             {
+                Title            = "Exportar Reporte Gerencia",
+                FileName         = $"ReporteGerencia_{Fecha()}",
+                DefaultExt       = ".xlsx",
+                Filter           = "Excel (*.xlsx)|*.xlsx"
+            };
+
+            if (dialogo.ShowDialog() != true) return;
+
+            // Build + SaveAs on a background task. BuildAndSaveWorkbookAsync logs
+            // the workbook-build vs SaveAs split that the runtime measurements
+            // depend on; exceptions propagate through await to the caller (the
+            // ViewModel surfaces them as before).
+            await BuildAndSaveWorkbookAsync(dialogo.FileName, wb =>
+            {
+                // Times each sheet block against a consistent window (same as
+                // Exportar's "Workbook listo"): the Margen log reports elapsed
+                // since the build start; the Rotación log reports elapsed since
+                // Margen finished (swSheets is restarted between them).
+                var swSheets = Stopwatch.StartNew();
+
                 // ── Hoja 0: Resumen KPIs ─────────────────────────────────────────
                 var wsResumen = wb.Worksheets.Add("Resumen");
                 wsResumen.Cell(1, 1).Value = "REPORTE DE GERENCIA";
@@ -431,26 +457,46 @@ namespace GestionComercial.UI.Helpers
                 var wsMargen = wb.Worksheets.Add("Margen");
                 var headersMargen = new[] { "Producto", "Categoría", "Costo", "Precio Venta", "Margen Unit.", "Margen %", "Cant. Vendida", "Ganancia Total" };
                 AgregarHeaders(wsMargen, headersMargen);
-                int filaM = 2;
-                foreach (var d in margen)
+                // Bulk insert for the data rows (fast path: up to ~50K products).
+                // Value-array rows (object[]) route InsertData to ClosedXML's
+                // ArrayReader (no per-property reflection); the previous
+                // anonymous-type list went through ObjectReader (reflection per
+                // property per row). Same column order and values as before.
+                // String/date cells stay as-is (no DateTime cells written).
+                var margenRows = margen
+                    .Select(d => new object[]
+                    {
+                        d.ProductoNombre,
+                        d.Categoria,
+                        (double)d.PrecioCosto,
+                        (double)d.PrecioVenta,
+                        (double)d.MargenUnitario,
+                        (double)d.MargenPorcentaje / 100,
+                        d.CantidadVendida,
+                        (double)d.MargenTotal
+                    })
+                    .ToList();
+
+                if (margenRows.Count > 0)
                 {
-                    wsMargen.Cell(filaM, 1).Value = d.ProductoNombre;
-                    wsMargen.Cell(filaM, 2).Value = d.Categoria;
-                    wsMargen.Cell(filaM, 3).Value = (double)d.PrecioCosto;
-                    wsMargen.Cell(filaM, 4).Value = (double)d.PrecioVenta;
-                    wsMargen.Cell(filaM, 5).Value = (double)d.MargenUnitario;
-                    wsMargen.Cell(filaM, 6).Value = (double)d.MargenPorcentaje / 100;
-                    wsMargen.Cell(filaM, 7).Value = d.CantidadVendida;
-                    wsMargen.Cell(filaM, 8).Value = (double)d.MargenTotal;
-                    wsMargen.Cell(filaM, 3).Style.NumberFormat.Format = "$ #,##0";
-                    wsMargen.Cell(filaM, 4).Style.NumberFormat.Format = "$ #,##0";
-                    wsMargen.Cell(filaM, 5).Style.NumberFormat.Format = "$ #,##0";
-                    wsMargen.Cell(filaM, 6).Style.NumberFormat.Format = "0.0%";
-                    wsMargen.Cell(filaM, 8).Style.NumberFormat.Format = "$ #,##0";
-                    filaM++;
+                    // Data starts at row 2; header row 1 was written by AgregarHeaders.
+                    wsMargen.Cell(2, 1).InsertData(margenRows);
+
+                    // Apply the exact same number formats via column-level styles
+                    // (cheap: one style record per column) instead of per-cell
+                    // range styles. The InsertData'd cells have no explicit style
+                    // of their own, so they inherit the column style; the header
+                    // cell keeps its own explicit style from AgregarHeaders.
+                    wsMargen.Column(3).Style.NumberFormat.Format = "$ #,##0";
+                    wsMargen.Column(4).Style.NumberFormat.Format = "$ #,##0";
+                    wsMargen.Column(5).Style.NumberFormat.Format = "$ #,##0";
+                    wsMargen.Column(6).Style.NumberFormat.Format = "0.0%";
+                    wsMargen.Column(8).Style.NumberFormat.Format = "$ #,##0";
                 }
                 FormatearHoja(wsMargen, headersMargen.Length);
                 AgregarMetadatos(wsMargen, "Margen por Producto", desde, hasta);
+                LogHelper.Log($"[ExportHelper] Hoja Margen lista en {swSheets.ElapsedMilliseconds}ms");
+                swSheets.Restart();
 
                 // Hoja 3: Top Productos
                 var wsTop = wb.Worksheets.Add("Top Productos");
@@ -505,22 +551,38 @@ namespace GestionComercial.UI.Helpers
                 var wsRotacion = wb.Worksheets.Add("Rotación");
                 var headersRot = new[] { "Producto", "Categoría", "Stock Actual", "Cant. Vendida", "Cant. Comprada", "Índice Rotación", "Última Venta", "Última Compra" };
                 AgregarHeaders(wsRotacion, headersRot);
-                int filaRot = 2;
-                foreach (var d in rotacion)
+                // Bulk insert for the data rows (fast path: up to ~50K products).
+                // Value-array rows (object[]) route InsertData to ClosedXML's
+                // ArrayReader (no per-property reflection); the previous
+                // anonymous-type list went through ObjectReader (reflection per
+                // property per row). Same column order and values as before.
+                // Última Venta/Compra remain pre-formatted "dd/MM/yyyy" strings.
+                var rotacionRows = rotacion
+                    .Select(d => new object[]
+                    {
+                        d.ProductoNombre,
+                        d.Categoria,
+                        d.StockActual,
+                        d.CantidadVendida,
+                        d.CantidadComprada,
+                        (double)d.IndiceRotacion,
+                        d.UltimaVenta != DateTime.MinValue ? d.UltimaVenta.ToString("dd/MM/yyyy") : "-",
+                        d.UltimaCompra != DateTime.MinValue ? d.UltimaCompra.ToString("dd/MM/yyyy") : "-"
+                    })
+                    .ToList();
+
+                if (rotacionRows.Count > 0)
                 {
-                    wsRotacion.Cell(filaRot, 1).Value = d.ProductoNombre;
-                    wsRotacion.Cell(filaRot, 2).Value = d.Categoria;
-                    wsRotacion.Cell(filaRot, 3).Value = d.StockActual;
-                    wsRotacion.Cell(filaRot, 4).Value = d.CantidadVendida;
-                    wsRotacion.Cell(filaRot, 5).Value = d.CantidadComprada;
-                    wsRotacion.Cell(filaRot, 6).Value = (double)d.IndiceRotacion;
-                    wsRotacion.Cell(filaRot, 7).Value = d.UltimaVenta != DateTime.MinValue ? d.UltimaVenta.ToString("dd/MM/yyyy") : "-";
-                    wsRotacion.Cell(filaRot, 8).Value = d.UltimaCompra != DateTime.MinValue ? d.UltimaCompra.ToString("dd/MM/yyyy") : "-";
-                    wsRotacion.Cell(filaRot, 6).Style.NumberFormat.Format = "0.0";
-                    filaRot++;
+                    // Data starts at row 2; header row 1 was written by AgregarHeaders.
+                    wsRotacion.Cell(2, 1).InsertData(rotacionRows);
+
+                    // Apply the exact same number format via a column-level style
+                    // (cheap: one style record) instead of a per-cell range style.
+                    wsRotacion.Column(6).Style.NumberFormat.Format = "0.0";
                 }
                 FormatearHoja(wsRotacion, headersRot.Length);
                 AgregarMetadatos(wsRotacion, "Rotación de Stock", desde, hasta);
+                LogHelper.Log($"[ExportHelper] Hoja Rotación lista en {swSheets.ElapsedMilliseconds}ms");
 
                 // Hoja 6: Métodos de Pago
                 var wsMetodos = wb.Worksheets.Add("Métodos de Pago");
@@ -560,6 +622,20 @@ namespace GestionComercial.UI.Helpers
                     AgregarMetadatos(wsMetodosMensual, "Distribución Mensual de Métodos de Pago", desde, hasta);
                 }
             });
+
+            // Back on the UI thread (the await captured the SynchronizationContext).
+            var resultado = MessageBox.Show(
+                $"Archivo exportado correctamente.\n¿Deseá abrirlo ahora?",
+                "Exportación exitosa",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+
+            if (resultado == MessageBoxResult.Yes)
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName        = dialogo.FileName,
+                    UseShellExecute = true
+                });
         }
 
         public static void ExportarAuditoria(
@@ -750,14 +826,13 @@ namespace GestionComercial.UI.Helpers
         // ── Exportar Informe Admin Completo ─────────────────────────────────────
         public static void ExportarInformeAdmin(
             IEnumerable<AuditoriaLogDto> auditoriaCajas,
-            IEnumerable<AuditoriaLogDto> auditoriaMovimientos,
-            IEnumerable<GestionComercial.UI.ViewModels.Reportes.CajaHistorialDto>? historialCajas,
-            IEnumerable<GestionComercial.UI.ViewModels.Reportes.VentaResumenCajaDto>? ventasPorCaja,
             GestionComercial.UI.ViewModels.Reportes.ReporteAdminViewModel.ResumenAdminKpiDto? kpis,
             IEnumerable<GestionComercial.UI.ViewModels.Reportes.ReporteAdminViewModel.ResumenMetodoPagoDto>? metodosPago,
             IEnumerable<GestionComercial.UI.ViewModels.Reportes.ReporteAdminViewModel.ResumenProductoDto>? topProductos,
             DateTime desde,
             DateTime hasta,
+            int? totalRegistros = null,
+            decimal? diferenciaTotal = null,
             bool shouldOpenAfterDownload = false)
         {
             Exportar("Informe Admin", $"InformeAdmin_{Fecha()}", wb =>
@@ -1082,8 +1157,10 @@ namespace GestionComercial.UI.Helpers
                 }
 
                 // ═══ TOTAL GENERAL ═══
-                var totalRegistros = auditoriaCajas.Count();
-                var diferenciaTotal = auditoriaCajas.Sum(d =>
+                // Cuando el caller provee los totales (calculados en SQL sin materializar),
+                // se usan tal cual; si no, se calculan sobre las filas deserializadas.
+                var cantRegistros = totalRegistros ?? auditoriaCajas.Count();
+                var sumaDiferencia = diferenciaTotal ?? auditoriaCajas.Sum(d =>
                 {
                     decimal mf = 0, mi = 0;
                     if (d.ValoresNuevosDeserializados != null)
@@ -1096,16 +1173,16 @@ namespace GestionComercial.UI.Helpers
                     return mf - mi;
                 });
 
-                wsAud.Cell(filaAud, 1).Value = $"TOTAL: {totalRegistros} registros";
+                wsAud.Cell(filaAud, 1).Value = $"TOTAL: {cantRegistros} registros";
                 wsAud.Cell(filaAud, 1).Style.Font.Bold = true;
                 wsAud.Cell(filaAud, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
                 wsAud.Cell(filaAud, 1).Style.Font.FontColor = XLColor.White;
                 wsAud.Range(filaAud, 1, filaAud, 7).Merge();
                 wsAud.Cell(filaAud, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                wsAud.Cell(filaAud, 8).Value = diferenciaTotal < 0 
-                    ? $"({Math.Abs(diferenciaTotal):N0})" 
-                    : diferenciaTotal.ToString("N0");
+                wsAud.Cell(filaAud, 8).Value = sumaDiferencia < 0 
+                    ? $"({Math.Abs(sumaDiferencia):N0})" 
+                    : sumaDiferencia.ToString("N0");
                 wsAud.Cell(filaAud, 8).Style.Font.Bold = true;
                 wsAud.Cell(filaAud, 8).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
                 wsAud.Cell(filaAud, 8).Style.Font.FontColor = XLColor.White;
@@ -1281,7 +1358,7 @@ namespace GestionComercial.UI.Helpers
 
         // ── Motor genérico ───────────────────────────────────────────────────
 
-        private static void Exportar(string titulo, string nombreArchivo, Action<XLWorkbook> construir, bool shouldOpenAfterDownload = false)
+        private static void Exportar(string titulo, string nombreArchivo, Action<XLWorkbook> construir, bool shouldOpenAfterDownload = false, bool logTimes = false)
         {
             try
             {
@@ -1296,8 +1373,15 @@ namespace GestionComercial.UI.Helpers
                 if (dialogo.ShowDialog() != true) return;
 
                 using var wb = new XLWorkbook();
+                // Split the write path into workbook build vs SaveAs so future
+                // tuning knows where the time goes (only when logTimes is set).
+                var sw = Stopwatch.StartNew();
                 construir(wb);
-                wb.SaveAs(dialogo.FileName);
+                if (logTimes)
+                    LogHelper.Log($"[ExportHelper] Workbook listo en {sw.ElapsedMilliseconds}ms");
+                wb.SaveAs(dialogo.FileName, new SaveOptions { ValidatePackage = false });
+                if (logTimes)
+                    LogHelper.Log($"[ExportHelper] SaveAs en {sw.ElapsedMilliseconds}ms");
 
                 // Si shouldOpenAfterDownload es true, abrir automáticamente
                 if (shouldOpenAfterDownload)
@@ -1358,27 +1442,42 @@ namespace GestionComercial.UI.Helpers
             }
         }
 
+        // Above this used-row count the heavy per-row formatting (alternating
+        // fill + per-column AdjustToContents) is skipped to keep huge exports
+        // fast, since the data is already bulk-written via InsertData. The
+        // range-wide border is skipped as well: on huge sheets (Margen/Rotación
+        // with ~50K rows) it would create a per-cell style record for every
+        // cell. Small/medium sheets keep the full formatting (alternating rows,
+        // AdjustToContents, border).
+        private const int MaxFilasFormatoDetallado = 5000;
+
         private static void FormatearHoja(IXLWorksheet ws, int columnas)
         {
-            // Filas alternas
             var rango = ws.RangeUsed();
             int totalFilas = rango?.RowCount() ?? 1;
-            for (int f = 2; f <= totalFilas; f++)
-            {
-                if (f % 2 == 0)
-                    ws.Row(f).Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFF");
-            }
 
-            // Auto-ajustar columnas
-            for (int c = 1; c <= columnas; c++)
-                ws.Column(c).AdjustToContents();
-
-            // Borde general
-            var range = ws.RangeUsed();
-            if (range != null)
+            // Heavy formatting only for sheets small enough to stay fast
+            // (Margen/Rotación with ~50K rows skip this path automatically).
+            if (totalFilas <= MaxFilasFormatoDetallado)
             {
-                range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                range.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+                // Filas alternas
+                for (int f = 2; f <= totalFilas; f++)
+                {
+                    if (f % 2 == 0)
+                        ws.Row(f).Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFF");
+                }
+
+                // Auto-ajustar columnas
+                for (int c = 1; c <= columnas; c++)
+                    ws.Column(c).AdjustToContents();
+
+                // Borde general
+                var range = ws.RangeUsed();
+                if (range != null)
+                {
+                    range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    range.Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+                }
             }
         }
 
@@ -1392,6 +1491,27 @@ namespace GestionComercial.UI.Helpers
             ws.Cell(ultimaFila + 1, 1).Value = $"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}";
             ws.Cell(ultimaFila + 1, 1).Style.Font.Italic = true;
             ws.Cell(ultimaFila + 1, 1).Style.Font.FontColor = XLColor.Gray;
+        }
+
+        /// <summary>
+        /// Builds a workbook via <paramref name="construir"/> and writes it to
+        /// <paramref name="filePath"/> on a background thread.  No UI interaction
+        /// (dialogs, message-boxes) — callers that need a save-dialog must
+        /// show it <em>before</em> invoking this method.
+        /// </summary>
+        internal static async Task BuildAndSaveWorkbookAsync(
+            string filePath,
+            Action<XLWorkbook> construir)
+        {
+            await Task.Run(() =>
+            {
+                using var wb = new XLWorkbook();
+                var sw = Stopwatch.StartNew();
+                construir(wb);
+                LogHelper.Log($"[ExportHelper] Workbook listo en {sw.ElapsedMilliseconds}ms");
+                wb.SaveAs(filePath, new SaveOptions { ValidatePackage = false });
+                LogHelper.Log($"[ExportHelper] SaveAs en {sw.ElapsedMilliseconds}ms");
+            });
         }
 
         private static string Fecha() => DateTime.Now.ToString("yyyyMMdd_HHmm");
@@ -1453,7 +1573,7 @@ namespace GestionComercial.UI.Helpers
 
              // Guardar
              var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"AuditoriaCaja_{Fecha()}.xlsx");
-             wb.SaveAs(path);
+             wb.SaveAs(path, new SaveOptions { ValidatePackage = false });
              System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
          }
     }

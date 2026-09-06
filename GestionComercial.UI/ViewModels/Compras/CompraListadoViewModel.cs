@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace GestionComercial.UI.ViewModels.Compras
 {
@@ -30,6 +31,14 @@ namespace GestionComercial.UI.ViewModels.Compras
             _sesion = sesion;
             Titulo    = "Compras";
             Subtitulo = "Historial de órdenes de compra";
+
+            _debounceTimer.Tick += DebounceTimer_Tick;
+        }
+
+        private async void DebounceTimer_Tick(object? sender, EventArgs e)
+        {
+            _debounceTimer.Stop();
+            await RecargarAsync();
         }
 
         // ── Listas ─────────────────────────────────────────────────────────────
@@ -100,8 +109,18 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (_busquedaProveedor == value) return;
                 _busquedaProveedor = value;
                 NotifyOfPropertyChange(() => BusquedaProveedor);
+
+                // Debounce: buscar después de 300ms de inactividad
+                _debounceTimer.Stop();
+                _debounceTimer.Start();
             }
         }
+
+        // Timer para debounce de búsqueda por proveedor
+        private readonly DispatcherTimer _debounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(300)
+        };
 
         private DateTime _fechaDesde = DateTime.Today.AddDays(-30);
         public DateTime FechaDesde
@@ -136,8 +155,17 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (ReferenceEquals(_proveedorFiltro, value)) return;
                 _proveedorFiltro = value; 
                 NotifyOfPropertyChange(() => ProveedorFiltro);
+
+                // Recargar la lista filtrada por proveedor (evitar al restaurar la selección en CargarAsync)
+                if (!_restaurandoProveedor)
+                {
+                    _ = RecargarPorProveedorAsync();
+                }
             }
         }
+
+        // Flag para evitar recargar al restaurar la selección del ComboBox dentro de CargarAsync
+        private bool _restaurandoProveedor;
 
         // Paginación
         private int _paginaActual = 1;
@@ -170,6 +198,13 @@ namespace GestionComercial.UI.ViewModels.Compras
 
         protected override async Task OnActivateAsync(CancellationToken cancellationToken)
             => await CargarAsync();
+
+        protected override async Task OnDeactivateAsync(bool close, CancellationToken cancellationToken)
+        {
+            // Detener el debounce al salir de la vista para evitar recargas en segundo plano
+            _debounceTimer.Stop();
+            await base.OnDeactivateAsync(close, cancellationToken);
+        }
 
         ///         /// Método público para precargar proveedores desde otro ViewModel.
         public async Task<IEnumerable<ProveedorItemDto>> CargarProveedoresAsync()
@@ -230,10 +265,18 @@ namespace GestionComercial.UI.ViewModels.Compras
                 }
                 
                 // Restaurar la selección del proveedor anterior
-                if (proveedorSeleccionado != null)
+                _restaurandoProveedor = true;
+                try
                 {
-                    proveedorSeleccionado = Proveedores.FirstOrDefault(p => p.IdProveedor == proveedorSeleccionado.IdProveedor);
-                    _proveedorFiltro = proveedorSeleccionado;
+                    if (proveedorSeleccionado != null)
+                    {
+                        proveedorSeleccionado = Proveedores.FirstOrDefault(p => p.IdProveedor == proveedorSeleccionado.IdProveedor);
+                        _proveedorFiltro = proveedorSeleccionado;
+                    }
+                }
+                finally
+                {
+                    _restaurandoProveedor = false;
                 }
                 
                 // Cargar compras paginadas con métricas SQL
@@ -253,7 +296,9 @@ namespace GestionComercial.UI.ViewModels.Compras
                 
                 // Compras paginadas
                 var (items, totalCount) = await _compraServicio.ObtenerPorSucursalPaginadoAsync(
-                    _sesion.IdSucursal, desde, hasta, PaginaActual, 20);
+                    _sesion.IdSucursal, desde, hasta, PaginaActual, 20,
+                    ProveedorFiltro is { IdProveedor: > 0 } ? ProveedorFiltro.IdProveedor : null,
+                    string.IsNullOrWhiteSpace(BusquedaProveedor) ? null : BusquedaProveedor);
                 
                 Compras = new ObservableCollection<CompraDto>(items);
                 TotalCompras = totalCount;
@@ -262,6 +307,20 @@ namespace GestionComercial.UI.ViewModels.Compras
             }
             catch (Exception ex) { MostrarError(ex.Message); }
             finally { IsLoading = false; }
+        }
+
+        // Recarga genérica: resetea a la primera página y vuelve a cargar filtrado
+        private async Task RecargarAsync()
+        {
+            PaginaActual = 1;
+            await CargarAsync();
+        }
+
+        // Recarga específicamente al cambiar el proveedor seleccionado en el ComboBox
+        private async Task RecargarPorProveedorAsync()
+        {
+            PaginaActual = 1;
+            await CargarAsync();
         }
 
         public async Task NuevaCompra()

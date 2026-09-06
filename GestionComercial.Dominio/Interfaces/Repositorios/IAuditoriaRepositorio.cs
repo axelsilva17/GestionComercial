@@ -81,5 +81,31 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             int pagina,
             int tamanioPagina,
             CancellationToken ct = default);
+
+        /// <summary>
+        /// Totales agregados de la auditoría de cajas en el período (cantidad y suma de
+        /// diferencias MontoFinal - MontoInicial del JSON) en una sola consulta SQL.
+        /// Evita materializar las miles de filas solo para contar y sumar.
+        /// </summary>
+        Task<(int TotalRegistros, decimal DiferenciaTotal)> ObtenerAuditoriaCajaTotalesAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            CancellationToken ct = default);
+
+        /// <summary>
+        /// Últimos `take` registros de auditoría de cajas del período (proyección en SQL).
+        /// La pantalla/exportación solo muestra los más recientes; el resto se cuenta y
+        /// suma sin materializar.
+        /// </summary>
+        Task<List<AuditoriaLog>> ObtenerAuditoriaCajaRecienteAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int take,
+            CancellationToken ct = default);
     }
+
+    /// <summary>
+    /// Totales agregados de auditoría de cajas para una consulta SqlQueryRaw.
+    /// </summary>
+    public record AuditoriaCajaTotalesRaw(int TotalRegistros, decimal DiferenciaTotal);
 }

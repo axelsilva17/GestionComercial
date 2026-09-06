@@ -79,5 +79,10 @@ namespace GestionComercial.Persistencia.Repositorio
                 .Select(v => v.Id_cliente)
                 .Distinct()
                 .CountAsync(ct);
+
+        // Conteo en SQL: mismas filas que ObtenerPorEmpresaYFechaAsync sin materializarlas.
+        public async Task<int> ContarClientesNuevosAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .CountAsync(c => c.Id_empresa == idEmpresa && c.FechaAlta >= desde && c.FechaAlta <= hasta, ct);
     }
 }

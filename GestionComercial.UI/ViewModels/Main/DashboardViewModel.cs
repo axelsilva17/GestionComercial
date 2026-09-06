@@ -210,7 +210,7 @@ namespace GestionComercial.UI.ViewModels.Main
             var finMesAnterior    = inicioMes.AddDays(-1);
 
             // KPIs via IReporteServicio (SQL aggregation)
-            var kpis = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMes, hoy.AddDays(1));
+            var kpis = await _reporteServicio.KpisVentasBaseAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMes, hoy.AddDays(1));
             if (kpis != null)
             {
                 TotalVentasMes = kpis.TotalVentasPeriodo;
@@ -218,7 +218,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 TicketPromedio = kpis.TicketPromedio;
             }
 
-            var kpisAnterior = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMesAnterior, finMesAnterior);
+            var kpisAnterior = await _reporteServicio.KpisVentasBaseAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMesAnterior, finMesAnterior);
             if (kpisAnterior != null)
             {
                 TotalVentasMesAnterior = kpisAnterior.TotalVentasPeriodo;
@@ -251,7 +251,7 @@ namespace GestionComercial.UI.ViewModels.Main
             var inicioMes = new DateTime(hoy.Year, hoy.Month, 1);
 
             // KPIs via IReporteServicio
-            var kpis = await _reporteServicio.KpisGeneralesAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMes, hoy.AddDays(1));
+            var kpis = await _reporteServicio.KpisVentasBaseAsync(_sesion.IdEmpresa, _sesion.IdSucursal, inicioMes, hoy.AddDays(1));
             if (kpis != null)
             {
                 CantidadVentasMes = kpis.TotalTransacciones;

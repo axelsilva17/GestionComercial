@@ -36,6 +36,37 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderByDescending(c => c.FechaApertura)
                 .ToListAsync(ct);
 
+        // Proyección ligera: solo las últimas `take` cajas con sus ventas y navegaciones de usuario.
+        // Evita materializar todos los movimientos y cajas del período (el grafo completo).
+        public async Task<IEnumerable<Caja>> ObtenerUltimasCajasConVentasAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int take, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Include(c => c.Ventas)
+                .Include(c => c.UsuarioApertura)
+                .Include(c => c.UsuarioCierre)
+                .Where(c => c.Id_sucursal == idSucursal 
+                         && c.FechaApertura >= desde 
+                         && c.FechaApertura <= hasta 
+                         && c.Activo)
+                .OrderByDescending(c => c.FechaApertura)
+                .Take(take)
+                .ToListAsync(ct);
+
+        // Conteo ligero (total y cerradas) sin materializar el grafo.
+        public async Task<(int Total, int Cerradas)> ObtenerConteoCajasPeriodoAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            var conteos = await _dbSet.AsNoTracking()
+                .Where(c => c.Id_sucursal == idSucursal
+                         && c.FechaApertura >= desde
+                         && c.FechaApertura <= hasta
+                         && c.Activo)
+                .Select(c => new { c.Estado })
+                .ToListAsync(ct);
+
+            return (conteos.Count, conteos.Count(c => c.Estado == 2));
+        }
+
         // ── Nuevo: historial con proyección ligera y Take en SQL ────────────────
         public async Task<List<CajaHistorialDto>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, int take, CancellationToken ct = default)
         {
@@ -62,6 +93,34 @@ namespace GestionComercial.Persistencia.Repositorio
             return rows;
         }
 
+        // ── Exportación: proyecciones ligeras (sin Include, solo columnas necesarias) ──
+        public async Task<List<CajaExportRow>> ObtenerHistorialExportAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Where(c => c.Id_sucursal == idSucursal
+                         && c.FechaApertura >= desde
+                         && c.FechaApertura <= hasta
+                         && c.Activo)
+                .OrderByDescending(c => c.FechaApertura)
+                .Select(c => new CajaExportRow(
+                    c.Id,
+                    c.FechaApertura,
+                    c.FechaCierre,
+                    c.MontoInicial,
+                    c.MontoFinal,
+                    c.Estado,
+                    c.UsuarioApertura != null ? c.UsuarioApertura.Nombre : null,
+                    c.UsuarioCierre != null ? c.UsuarioCierre.Nombre : null))
+                .ToListAsync(ct);
+
+        public async Task<List<VentaExportRow>> ObtenerVentasExportPorCajaAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Where(c => c.Id_sucursal == idSucursal
+                         && c.FechaApertura >= desde
+                         && c.FechaApertura <= hasta
+                         && c.Activo)
+                .SelectMany(c => c.Ventas.Select(v => new VentaExportRow(c.Id, v.Fecha, v.TotalFinal)))
+                .ToListAsync(ct);
+
         public async Task<List<Caja>> ObtenerCajasPorTurnoAsync(int idSucursal, string turno, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_sucursal == idSucursal && c.Turno == turno)
@@ -75,5 +134,26 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet.AsNoTracking()
                 .Include(c => c.UsuarioApertura)
                 .FirstOrDefaultAsync(c => c.Id_sucursal == idSucursal && c.Turno == turno && c.Estado == 1, ct);
+
+        // ── Auditoría: proyección ligera (mismas filas que ObtenerHistorialAsync, sin grafo) ──
+        public async Task<List<CajaAuditoriaRow>> ObtenerHistorialAuditoriaAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Where(c => c.Id_sucursal == idSucursal
+                         && c.FechaApertura >= desde
+                         && c.FechaApertura <= hasta
+                         && c.Activo)
+                .OrderByDescending(c => c.FechaApertura)
+                .Select(c => new CajaAuditoriaRow(
+                    c.Id,
+                    c.FechaApertura,
+                    c.FechaCierre,
+                    c.MontoInicial,
+                    c.MontoFinal,
+                    c.Estado,
+                    c.Turno,
+                    c.UsuarioApertura != null ? c.UsuarioApertura.Nombre : null,
+                    c.UsuarioCierre != null ? c.UsuarioCierre.Nombre : null))
+                .ToListAsync(ct);
     }
 }

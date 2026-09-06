@@ -154,7 +154,7 @@ namespace GestionComercial.Aplicacion.Servicios
             for (int c = 1; c <= headers.Length; c++)
                 ws.Column(c).AdjustToContents();
 
-            wb.SaveAs(rutaDestino);
+            wb.SaveAs(rutaDestino, new SaveOptions { ValidatePackage = false });
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

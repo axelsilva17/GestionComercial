@@ -97,11 +97,9 @@ namespace GestionComercial.Persistencia.Repositorio
         }
 
         public async Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta)>>
-            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null, CancellationToken ct = default)
         {
-            var rows = await _context.Database
-                .SqlQueryRaw<RotacionProductoAgrupado>(
-                    @"SELECT vd.Id_producto AS IdProducto,
+            var sql = @"SELECT vd.Id_producto AS IdProducto,
                              p.Nombre,
                              COALESCE(c.Nombre, '') AS Categoria,
                              p.StockActual,
@@ -117,18 +115,25 @@ namespace GestionComercial.Persistencia.Repositorio
                         AND v.Fecha <= {2}
                         AND v.Estado != 3
                       GROUP BY vd.Id_producto
-                      ORDER BY CantidadVendida DESC",
-                    idEmpresa, desde, hasta)
+                      ORDER BY CantidadVendida DESC"
+                + (top.HasValue ? " LIMIT {3}" : "");
+
+            var parameters = top.HasValue
+                ? new object[] { idEmpresa, desde, hasta, top.Value }
+                : new object[] { idEmpresa, desde, hasta };
+
+            var rows = await _context.Database
+                .SqlQueryRaw<RotacionProductoAgrupado>(sql, parameters)
                 .ToListAsync(ct);
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.StockActual, r.CantidadVendida, r.UltimaVenta)).ToList();
         }
 
         public async Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>>
-            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
+            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null, CancellationToken ct = default)
         {
-            var rows = await _context.Database
-                .SqlQueryRaw<TopProductoAgrupado>(
-                    @"SELECT vd.Id_producto AS IdProducto,
+            // `top` opcional: null devuelve todos los productos sin LIMIT (exportación completa);
+            // un valor limita las filas en SQL (grillas en pantalla).
+            var sql = @"SELECT vd.Id_producto AS IdProducto,
                              p.Nombre,
                              COALESCE(c.Nombre, '') AS Categoria,
                              CAST(SUM(vd.Cantidad) AS INTEGER) AS Cantidad,
@@ -145,9 +150,15 @@ namespace GestionComercial.Persistencia.Repositorio
                         AND v.Fecha <= {2}
                         AND v.Estado != 3
                       GROUP BY vd.Id_producto
-                      ORDER BY Cantidad DESC
-                      LIMIT {3}",
-                    idEmpresa, desde, hasta, top)
+                      ORDER BY Cantidad DESC"
+                + (top.HasValue ? " LIMIT {3}" : "");
+
+            var parameters = top.HasValue
+                ? new object[] { idEmpresa, desde, hasta, top.Value }
+                : new object[] { idEmpresa, desde, hasta };
+
+            var rows = await _context.Database
+                .SqlQueryRaw<TopProductoAgrupado>(sql, parameters)
                 .ToListAsync(ct);
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.Cantidad, r.Ingresos, r.Costo, r.UltimaFecha)).ToList();
         }
@@ -268,6 +279,43 @@ namespace GestionComercial.Persistencia.Repositorio
             return (r.TotalVentas, r.TotalTransacciones, r.TicketPromedio);
         }
 
+        // Agregación SQL del resumen de ventas por sucursal y período, sin filtrar por Estado
+        // (incluye anuladas) para replicar la semántica in-memory original del reporte admin.
+        public async Task<(decimal TotalVentas, int CantidadVentas, decimal PromedioVenta)>
+            ObtenerResumenVentasPorSucursalAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<ResumenVentasSucursalRaw>(
+                    @"SELECT SUM(CAST(v.TotalFinal AS REAL)) AS TotalVentas,
+                             COUNT(*) AS CantidadVentas,
+                             CASE WHEN COUNT(*) > 0 THEN SUM(CAST(v.TotalFinal AS REAL)) / COUNT(*) ELSE 0 END AS PromedioVenta
+                      FROM Venta v
+                      WHERE v.Id_sucursal = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}",
+                    idSucursal, desde, hasta)
+                .ToListAsync(ct);
+            var r = rows.FirstOrDefault();
+            var totalVentas = r?.TotalVentas ?? 0m;
+            var cantidadVentas = r?.CantidadVentas ?? 0;
+            var promedio = cantidadVentas > 0 ? totalVentas / cantidadVentas : 0m;
+            return (totalVentas, cantidadVentas, promedio);
+        }
+
+        public async Task<int> ObtenerClientesUnicosAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<ClientesUnicosAgrupado>(
+                    @"SELECT COUNT(DISTINCT v.Id_cliente) AS Clientes
+                      FROM Venta v
+                      WHERE v.Id_sucursal = {0}
+                        AND v.Fecha >= {1}
+                        AND v.Fecha <= {2}",
+                    idSucursal, desde, hasta)
+                .ToListAsync(ct);
+            return rows.FirstOrDefault()?.Clientes ?? 0;
+        }
+
         public async Task<string?> ObtenerTopVendedorAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
@@ -378,4 +426,8 @@ namespace GestionComercial.Persistencia.Repositorio
     public record TopProductoNombreAgrupado(string Nombre);
 
     public record PagoCajaAgrupado(string Metodo, decimal Total, int Cantidad);
+
+    public record ClientesUnicosAgrupado(int Clientes);
+
+    public record ResumenVentasSucursalRaw(decimal TotalVentas, int CantidadVentas, decimal PromedioVenta);
 }

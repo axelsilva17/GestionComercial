@@ -106,10 +106,11 @@ namespace GestionComercial.Aplicacion.Servicios
 
         // ── Nuevo: compras paginadas ────────────────────────────────────────────
         public async Task<(IEnumerable<CompraDto> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize, CancellationToken ct = default)
+            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
+            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default)
         {
             var (compras, totalCount) = await _uow.Compras.ObtenerPorSucursalPaginadoAsync(
-                idSucursal, desde, hasta, page, pageSize, ct);
+                idSucursal, desde, hasta, page, pageSize, idProveedor, busquedaProveedor, ct);
             return (compras.Select(MapearDto), totalCount);
         }
 

@@ -176,8 +176,10 @@ namespace GestionComercial.UI.ViewModels.Reportes
         IsLoading = true;
         try
         {
-            var historial = await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, FechaDesde, FechaHasta.AddDays(1));
-            
+            // Historial con proyección ligera (sin ventas/movimientos/navegaciones, sin grafo completo)
+            var historial = await _cajaServicio.ObtenerHistorialAuditoriaAsync(
+                _sesion.IdSucursal, FechaDesde, FechaHasta.AddDays(1));
+
             if (token.IsCancellationRequested) return;
 
             var cajasDto = historial.Select(c => new CajaAuditoriaItemDto
@@ -185,31 +187,42 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 Id              = c.Id,
                 FechaApertura   = c.FechaApertura.ToString("dd/MM/yyyy"),
                 HoraApertura    = c.FechaApertura.ToString("HH:mm"),
-                UsuarioApertura = c.UsuarioApertura?.Nombre ?? "Desconocido",
+                UsuarioApertura = c.UsuarioAperturaNombre ?? "Desconocido",
                 MontoInicial    = c.MontoInicial,
                 MontoFinal      = c.MontoFinal,
                 FechaCierre     = c.FechaCierre?.ToString("dd/MM/yyyy"),
-                UsuarioCierre   = c.UsuarioCierre?.Nombre,
+                UsuarioCierre   = c.UsuarioCierreNombre,
                 Turno           = c.Turno ?? string.Empty,
-                Estado          = c.EstaAbierta ? "Abierta" : "Cerrada",
-                EstadoColor     = c.EstaAbierta ? "#F59E0B" : "#10B981"
+                Estado          = c.Estado == 1 ? "Abierta" : "Cerrada",
+                EstadoColor     = c.Estado == 1 ? "#F59E0B" : "#10B981"
             }).ToList();
 
             if (token.IsCancellationRequested) return;
 
-            // Obtener resumen y diferencia por caja usando el cálculo centralizado
+            // Resumen y diferencia por caja con agregación SQL en lote (reemplaza el N+1)
+            var resumenes = (await _cajaServicio.ObtenerAuditoriaResumenesAsync(
+                _sesion.IdSucursal, FechaDesde, FechaHasta.AddDays(1)))
+                .ToDictionary(r => r.IdCaja);
+
             foreach (var caja in cajasDto)
             {
-                var resumen = await _cajaServicio.ObtenerResumenCierreAsync(caja.Id);
-                var diferencia = await _cajaServicio.ObtenerDiferenciaCierreAsync(caja.Id);
+                if (!resumenes.TryGetValue(caja.Id, out var resumen))
+                {
+                    // Caja sin pagos ni movimientos: saldo esperado = monto inicial.
+                    caja.EfectivoEnCaja = caja.MontoInicial;
+                    caja.DiferenciaConEfectivo = caja.MontoFinal.HasValue
+                        ? caja.MontoFinal.Value - caja.MontoInicial
+                        : 0m;
+                }
+                else
+                {
+                    caja.VentasEfectivo = resumen.VentasEfectivo;
+                    caja.Ingresos = resumen.IngresosEfectivo;
+                    caja.Egresos = resumen.EgresosEfectivo;
+                    caja.EfectivoEnCaja = resumen.SaldoEsperado;
+                    caja.DiferenciaConEfectivo = resumen.Diferencia;
+                }
 
-                caja.VentasEfectivo = resumen.VentasEfectivo;
-                caja.Ingresos = resumen.IngresosEfectivo;
-                caja.Egresos = resumen.EgresosEfectivo;
-                caja.EfectivoEnCaja = resumen.SaldoEsperado;
-
-                // Diferencia con efectivo: fuente única de verdad (CajaServicio)
-                caja.DiferenciaConEfectivo = diferencia;
                 // Diferencia sin ventas: solo conteo físico vs monto inicial
                 caja.DiferenciaSinEfectivo = caja.MontoFinal.HasValue
                     ? caja.MontoFinal.Value - caja.MontoInicial

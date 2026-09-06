@@ -24,10 +24,12 @@ namespace GestionComercial.Aplicacion.Servicios
             });
         }
 
-        public async Task<IEnumerable<ReporteMargenDto>> MargenPorProductoAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<ReporteMargenDto>> MargenPorProductoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null)
         {
-            // Agregación SQL directa — no carga entidades a memoria
-            var productos = await _uow.Ventas.ObtenerTopProductosPorEmpresaAgrupadoAsync(idEmpresa, desde, hasta, int.MaxValue);
+            // Agregación SQL directa — no carga entidades a memoria.
+            // `top` opcional: null = todos los productos (exportación completa);
+            // un valor limita las filas en SQL (grillas en pantalla).
+            var productos = await _uow.Ventas.ObtenerTopProductosPorEmpresaAgrupadoAsync(idEmpresa, desde, hasta, top);
             return productos.Select(p => new ReporteMargenDto
             {
                 IdProducto       = p.IdProducto,
@@ -56,10 +58,12 @@ namespace GestionComercial.Aplicacion.Servicios
             });
         }
 
-        public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int idEmpresa, DateTime desde, DateTime hasta)
+        public async Task<IEnumerable<ReporteRotacionDto>> RotacionProductosAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null)
         {
-            // Agregación SQL directa — no carga entidades a memoria
-            var rotacion = await _uow.Ventas.ObtenerRotacionProductosAgrupadoAsync(idEmpresa, desde, hasta);
+            // Agregación SQL directa — no carga entidades a memoria.
+            // `top` opcional: null = todos los productos (exportación completa);
+            // un valor limita las filas en SQL (grillas en pantalla).
+            var rotacion = await _uow.Ventas.ObtenerRotacionProductosAgrupadoAsync(idEmpresa, desde, hasta, top);
             return rotacion.Select(r => new ReporteRotacionDto
             {
                 IdProducto       = r.IdProducto,
@@ -108,6 +112,19 @@ namespace GestionComercial.Aplicacion.Servicios
             });
         }
 
+        public async Task<IEnumerable<MetodosPagoMesExportDto>> MetodosPagoMensualAsync(int idSucursal, DateTime desde, DateTime hasta)
+        {
+            var pagos = await _uow.Pagos.ObtenerTotalesPorMetodoMensualAsync(idSucursal, desde, hasta);
+            return pagos.Select(p => new MetodosPagoMesExportDto
+            {
+                Mes = new DateTime(p.AnioMes / 100, p.AnioMes % 100, 1),
+                Metodo = p.Metodo,
+                Total = p.Total,
+                // Preserva el comportamiento actual del export mensual: Cantidad siempre 0.
+                Cantidad = 0,
+            });
+        }
+
         public async Task<IEnumerable<VentaPorDiaDto>> VentasPorDiaAsync(int idEmpresa, DateTime desde, DateTime hasta)
         {
             var ventas = await _uow.Ventas.ObtenerVentasPorDiaAgrupadoAsync(idEmpresa, desde, hasta);
@@ -135,7 +152,7 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<KpiGeneralDto> KpisGeneralesAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
         {
             var kpisTask = _uow.Ventas.ObtenerKpisVentasAsync(idEmpresa, idSucursal, desde, hasta);
-            var stockTask = _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
+            var stockTask = _uow.Productos.ContarStockCriticoAsync(idEmpresa);
             var topVendedorTask = _uow.Ventas.ObtenerTopVendedorAsync(idEmpresa, desde, hasta);
             var topProductoTask = _uow.Ventas.ObtenerTopProductoAsync(idEmpresa, desde, hasta);
 
@@ -151,10 +168,33 @@ namespace GestionComercial.Aplicacion.Servicios
                 TotalVentasPeriodo = kpis?.TotalVentas ?? 0,
                 TotalTransacciones = kpis?.TotalTransacciones ?? 0,
                 TicketPromedio = kpis?.TicketPromedio ?? 0,
-                ProductosBajoStock = stockCritico.Count(),
+                ProductosBajoStock = stockCritico,
                 MejorVendedor = nombreVendedor,
                 MejorProducto = nombreProducto,
             };
         }
+
+        /// <summary>
+        /// Base KPI set only (totals, transactions, average ticket) — skips the ranking/stock
+        /// extras (MejorVendedor, MejorProducto, ProductosBajoStock) that the report/dashboard
+        /// entry paths never display. Same DTO shape as KpisGeneralesAsync.
+        /// </summary>
+        public async Task<KpiGeneralDto> KpisVentasBaseAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
+        {
+            var kpis = await _uow.Ventas.ObtenerKpisVentasAsync(idEmpresa, idSucursal, desde, hasta);
+            return new KpiGeneralDto
+            {
+                TotalVentasPeriodo = kpis?.TotalVentas ?? 0,
+                TotalTransacciones = kpis?.TotalTransacciones ?? 0,
+                TicketPromedio     = kpis?.TicketPromedio ?? 0,
+            };
+        }
+
+        public async Task<int> ClientesUnicosAsync(int idSucursal, DateTime desde, DateTime hasta)
+            => await _uow.Ventas.ObtenerClientesUnicosAsync(idSucursal, desde, hasta);
+
+        public async Task<(decimal TotalVentas, int CantidadVentas, decimal PromedioVenta)>
+            ResumenVentasPorSucursalAsync(int idSucursal, DateTime desde, DateTime hasta)
+            => await _uow.Ventas.ObtenerResumenVentasPorSucursalAsync(idSucursal, desde, hasta);
     }
 }

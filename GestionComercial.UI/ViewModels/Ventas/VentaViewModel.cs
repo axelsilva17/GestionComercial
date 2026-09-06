@@ -38,7 +38,6 @@ namespace GestionComercial.UI.ViewModels.Ventas
         // ── Timer para debounce de búsqueda ──────────────────────────────────────
         private readonly DispatcherTimer _debounceTimer;
         private CancellationTokenSource?  _debounceCts;
-        private List<ProductoListadoDto> _productosCache = new(); // Cache de productos precargados
 
         // ── Scanner Fast-Entry Detection ──────────────────────────────────────────
         // Un escáner de código de barras tipea muy rápido (>8 chars en <500ms)
@@ -147,16 +146,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
         {
             System.Diagnostics.Debug.WriteLine("[VentaVM] OnActivateAsync INICIO");
 
-            // Precargar productos al abrir la vista de ventas
+            // Precargar cache de descuentos y categorías para badge en tiempo real
             if (_sesion.IdEmpresa > 0)
             {
                 try
                 {
-                    var productos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                    // Guardar en cache para búsquedas rápidas
-                    _productosCache = productos.ToList();
-                    System.Diagnostics.Debug.WriteLine($"[VentaVM] OnActivateAsync: Cargados {_productosCache.Count} productos para IdEmpresa={_sesion.IdEmpresa}");
-
                     // Precargar cache de descuentos y categorías para badge en tiempo real
                     _descuentosCache = (await _descuentoServicio.ObtenerTodosAsync(_sesion.IdEmpresa)).ToList();
                     var categorias = await _unitOfWork.Categorias.ObtenerPorEmpresaAsync(_sesion.IdEmpresa);
@@ -522,17 +516,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             {
                 MostrarPopupBusqueda = false;
 
-                var producto = _productosCache.FirstOrDefault(p =>
-                    p.CodigoBarra != null &&
-                    p.CodigoBarra.Trim().Equals(barcode.Trim(), StringComparison.OrdinalIgnoreCase));
-
-                if (producto == null)
-                {
-                    var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                    producto = todos.FirstOrDefault(p =>
-                        p.CodigoBarra != null &&
-                        p.CodigoBarra.Trim().Equals(barcode.Trim(), StringComparison.OrdinalIgnoreCase));
-                }
+                var producto = await _productoServicio.BuscarPorCodigoBarraExactoAsync(
+                    _sesion.IdEmpresa, barcode, CancellationToken.None);
 
                 if (producto == null)
                 {
@@ -549,17 +534,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     return;
                 }
 
-                var dtoParaAgregar = new ProductoListadoDto
-                {
-                    IdProducto = producto.IdProducto,
-                    Nombre = producto.Nombre,
-                    CodigoBarra = producto.CodigoBarra,
-                    PrecioVentaActual = producto.PrecioVentaActual,
-                    PrecioCostoActual = producto.PrecioCostoActual,
-                    StockActual = producto.StockActual,
-                };
-
-                await SeleccionarProductoDelPopup(dtoParaAgregar);
+                await SeleccionarProductoDelPopup(producto);
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Escáner: agregado {producto.Nombre}");
             }
             catch (Exception ex)
@@ -601,7 +576,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         public RelayCommand CerrarPopupBusquedaCommand { get; }
 
         ///         /// Busca productos con debounce de 300ms para autocompletado.
-        /// Primero usa cache local, luego consulta servicio si no hay cache.
+        /// Consulta SQL indexada (LIKE '%term%' sobre Nombre o CodigoBarra) con límite de 8 resultados.
         private async Task BuscarProductosAsync(string texto, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(texto) || texto.Length < 3)
@@ -610,43 +585,13 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"[VentaVM] BuscarProductosAsync called. Texto: {texto}, Cache count: {_productosCache.Count}");
+            System.Diagnostics.Debug.WriteLine($"[VentaVM] BuscarProductosAsync called. Texto: {texto}");
 
             BuscandoProductos = true;
             try
             {
-                IEnumerable<ProductoListadoDto> todos;
-
-                // Si tenemos productos en cache, buscar ahí primero
-                if (_productosCache.Count > 0 && _sesion.IdEmpresa > 0)
-                {
-                    var busqueda = texto.Trim().ToLowerInvariant();
-                    var resultadosCache = _productosCache
-                        .Where(p => (p.Nombre?.ToLowerInvariant().Contains(busqueda) ?? false) ||
-                                   (p.CodigoBarra?.ToLowerInvariant().Contains(busqueda) ?? false))
-                        .Take(8)
-                        .ToList();
-
-                    if (resultadosCache.Count > 0)
-                    {
-                        ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(resultadosCache);
-                        HaySinResultados = false;
-                        MostrarPopupBusqueda = true;
-                        System.Diagnostics.Debug.WriteLine($"[VentaVM] Resultados desde cache: {resultadosCache.Count}");
-                        return; // Usar cache
-                    }
-                }
-
-                // Si no hay resultados en cache o no hay cache, consultar servicio
-                todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                var textoBusqueda = texto.Trim().ToLowerInvariant();
-
-                // Buscar por nombre que contenga el texto
-                var resultados = todos
-                    .Where(p => (p.Nombre?.ToLowerInvariant().Contains(textoBusqueda) ?? false) ||
-                               (p.CodigoBarra?.ToLowerInvariant().Contains(textoBusqueda) ?? false))
-                    .Take(8) // Limitar a 8 resultados para el popup
-                    .ToList();
+                var resultados = (await _productoServicio.BuscarProductosContieneAsync(
+                    _sesion.IdEmpresa, texto, null, true, 8, ct)).ToList();
 
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] Resultados: {resultados.Count}");
                 ResultadosBusqueda = new ObservableCollection<ProductoListadoDto>(resultados);
@@ -773,16 +718,12 @@ namespace GestionComercial.UI.ViewModels.Ventas
             LimpiarError();
             try
             {
-                var todos    = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                var busqueda = BusquedaProducto.Trim().ToLower();
-
-                // Prioridad 1: código de barras exacto (escáner)
-                var producto = todos.FirstOrDefault(p =>
-                        p.CodigoBarra != null &&
-                        p.CodigoBarra.Trim().ToLower() == busqueda)
-                    // Prioridad 2: nombre contiene el texto
-                    ?? todos.FirstOrDefault(p =>
-                        p.Nombre.ToLower().Contains(busqueda));
+                // Prioridad 1: código de barras exacto (escáner, case-insensitive en SQL)
+                var producto = await _productoServicio.BuscarPorCodigoBarraExactoAsync(
+                        _sesion.IdEmpresa, BusquedaProducto, CancellationToken.None)
+                    // Prioridad 2: nombre contiene el texto (SQL LIKE, primer coincidencia por orden alfabético)
+                    ?? (await _productoServicio.BuscarProductosContieneAsync(
+                        _sesion.IdEmpresa, BusquedaProducto, null, true, 1, CancellationToken.None)).FirstOrDefault();
 
                 if (producto == null)
                 {
@@ -996,8 +937,18 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 return;
             }
 
-            var idCategoria = _productosCache
-                .FirstOrDefault(p => p.IdProducto == item.ProductoId)?.IdCategoria;
+            // La categoría se resuelve con un lookup SQL indexado por PK (solo cuando hay descuentos configurados).
+            int? idCategoria = null;
+            try
+            {
+                var producto = await _productoServicio.ObtenerPorIdAsync(item.ProductoId, CancellationToken.None);
+                idCategoria = producto?.IdCategoria;
+            }
+            catch (Exception ex)
+            {
+                // No romper el flujo de venta si falla la consulta: los descuentos por producto aún aplican.
+                System.Diagnostics.Debug.WriteLine($"[VentaVM] Error resolviendo categoría para descuento: {ex.Message}");
+            }
 
             var descuento = await _descuentoServicio.ObtenerDescuentoProductoAsync(
                 _sesion.IdEmpresa,
@@ -1122,11 +1073,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
                 System.Diagnostics.Debug.WriteLine($"[VentaVM] TestBarcodeKeyDown: {codigo}");
 
-                // Buscar por código de barras exacto
-                var todos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                var producto = todos.FirstOrDefault(p =>
-                    p.CodigoBarra != null &&
-                    p.CodigoBarra.Trim().Equals(codigo, StringComparison.OrdinalIgnoreCase));
+                // Buscar por código de barras exacto (SQL indexado, case-insensitive)
+                var producto = await _productoServicio.BuscarPorCodigoBarraExactoAsync(
+                    _sesion.IdEmpresa, codigo, CancellationToken.None);
 
                 if (producto == null)
                 {
@@ -1143,17 +1092,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 }
 
                 // Agregar el producto al carrito (usar el método existente de selección)
-                var dtoParaAgregar = new ProductoListadoDto
-                {
-                    IdProducto = producto.IdProducto,
-                    Nombre = producto.Nombre,
-                    CodigoBarra = producto.CodigoBarra,
-                    PrecioVentaActual = producto.PrecioVentaActual,
-                    PrecioCostoActual = producto.PrecioCostoActual,
-                    StockActual = producto.StockActual,
-                };
-
-                await SeleccionarProductoDelPopup(dtoParaAgregar);
+                await SeleccionarProductoDelPopup(producto);
             }
             catch (Exception ex)
             {

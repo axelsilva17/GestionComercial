@@ -24,6 +24,12 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
         // Búsqueda con StartsWith (prefijo) para uso de índices
         Task<IEnumerable<ProductoListadoDto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default);
 
+        // Búsqueda con Contains (subcadena) para búsquedas de texto libre
+        Task<IEnumerable<ProductoListadoDto>> BuscarProductosContieneAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default);
+
+        // Búsqueda exacta por código de barras (case-insensitive) para escáner
+        Task<ProductoListadoDto?> BuscarPorCodigoBarraExactoAsync(int idEmpresa, string codigoBarra, CancellationToken ct = default);
+
         // Reference data
         Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa, CancellationToken ct = default);
         Task<CategoriaItemDto> CrearCategoriaAsync(int idEmpresa, string nombre, CancellationToken ct = default);
@@ -35,5 +41,8 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
 
         ///         /// Devuelve el umbral global de stock crítico configurado en la empresa.
         Task<int> ObtenerUmbralStockCriticoAsync(int idEmpresa, CancellationToken ct = default);
+
+        ///         /// Métricas de productos (activos, stock bajo, sin stock) vía consulta SQL agregada.
+        Task<ProductoMetricasDto> ObtenerMetricasAsync(int idEmpresa, CancellationToken ct = default);
     }
 }

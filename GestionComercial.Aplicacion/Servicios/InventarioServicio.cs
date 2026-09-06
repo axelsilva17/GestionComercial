@@ -117,7 +117,7 @@ namespace GestionComercial.Aplicacion.Servicios
             ws.Columns().AdjustToContents();
 
             using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
+            workbook.SaveAs(stream, new SaveOptions { ValidatePackage = false });
             return stream.ToArray();
         }
 

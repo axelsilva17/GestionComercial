@@ -8,6 +8,10 @@ using GestionComercial.Dominio.Entidades.Caja;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Aplicacion.Servicios;
+// Aliases: evitan ambigüedad con CajaHistorialDto (Aplicacion.Interfaces.Servicios) dentro de este archivo.
+using CajaExportRow = GestionComercial.Dominio.Interfaces.Repositorios.CajaExportRow;
+using VentaExportRow = GestionComercial.Dominio.Interfaces.Repositorios.VentaExportRow;
+using CajaAuditoriaRow = GestionComercial.Dominio.Interfaces.Repositorios.CajaAuditoriaRow;
 using System.Threading;
 
 namespace GestionComercial.Aplicacion.Servicios
@@ -445,8 +449,58 @@ namespace GestionComercial.Aplicacion.Servicios
             return sucursal?.Id_empresa ?? 0;
         }
 
+        // ── Auditoría en lote: historial ligero + resúmenes por caja (sin N+1) ─────────
+        public async Task<List<CajaAuditoriaRow>> ObtenerHistorialAuditoriaAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerHistorialAuditoriaAsync(idSucursal, desde, hasta, ct);
+
+        public async Task<List<CajaAuditoriaResumenDto>> ObtenerAuditoriaResumenesAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            // Mismas filas que el historial de auditoría (mismo filtro y fuente de verdad).
+            var cajas = await _uow.Cajas.ObtenerHistorialAuditoriaAsync(idSucursal, desde, hasta, ct);
+
+            // Agregación SQL en lote: una consulta por caja para pagos y movimientos.
+            var pagos = await _uow.Pagos.ObtenerTotalesPorMetodoPorCajaAsync(idSucursal, desde, hasta, ct);
+            var movimientos = await _uow.MovimientosCaja.ObtenerResumenPorCajaEnPeriodoAsync(idSucursal, desde, hasta, ct);
+
+            // Categorías de métodos de pago una sola vez (misma lógica que ObtenerResumenCierreAsync).
+            var metodosPago = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(
+                await ObtenerIdEmpresaDeSucursalAsync(idSucursal, ct), ct);
+            var metodosDict = metodosPago.ToDictionary(m => m.Nombre, m => m.Categoria);
+
+            var ventasEfectivoPorCaja = pagos
+                .Where(p => metodosDict.TryGetValue(p.Metodo, out var categoria) && categoria == "Efectivo")
+                .GroupBy(p => p.IdCaja)
+                .ToDictionary(g => g.Key, g => g.Sum(p => p.Total));
+
+            var movimientosPorCaja = movimientos.ToDictionary(m => m.IdCaja);
+
+            return cajas.Select(c =>
+            {
+                var ventasEfectivo = ventasEfectivoPorCaja.TryGetValue(c.Id, out var efectivo) ? efectivo : 0m;
+                var ingresos = movimientosPorCaja.TryGetValue(c.Id, out var movIng) ? movIng.Ingresos : 0m;
+                var egresos = movimientosPorCaja.TryGetValue(c.Id, out var movEgr) ? movEgr.Egresos : 0m;
+                var saldoEsperado = c.MontoInicial + ventasEfectivo + ingresos - egresos;
+                var diferencia = c.MontoFinal.HasValue ? c.MontoFinal.Value - saldoEsperado : 0m;
+                return new CajaAuditoriaResumenDto(c.Id, ventasEfectivo, ingresos, egresos, saldoEsperado, diferencia);
+            }).ToList();
+        }
+
         public async Task<IEnumerable<Caja>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _uow.Cajas.ObtenerHistorialAsync(idSucursal, desde, hasta, ct);
+
+        public async Task<IEnumerable<Caja>> ObtenerUltimasCajasConVentasAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int take, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerUltimasCajasConVentasAsync(idSucursal, desde, hasta, take, ct);
+
+        public async Task<(decimal Ingresos, decimal Egresos)> ObtenerResumenMoviCajaAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.MovimientosCaja.ObtenerResumenPorSucursalAsync(idSucursal, desde, hasta, ct);
+
+        public async Task<(int Total, int Cerradas)> ObtenerConteoCajasPeriodoAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerConteoCajasPeriodoAsync(idSucursal, desde, hasta, ct);
 
         // Nuevo: historial con proyección ligera y Take en SQL
         public async Task<List<CajaHistorialDto>> ObtenerHistorialAsync(int idSucursal, DateTime desde, DateTime hasta, int take, CancellationToken ct = default)
@@ -464,6 +518,13 @@ namespace GestionComercial.Aplicacion.Servicios
                 UsuarioApertura = c.UsuarioApertura
             }).ToList();
         }
+
+        // ── Nuevo: proyecciones ligeras para exportación Excel ──────────────────
+        public async Task<List<CajaExportRow>> ObtenerHistorialExportAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerHistorialExportAsync(idSucursal, desde, hasta, ct);
+
+        public async Task<List<VentaExportRow>> ObtenerVentasExportPorCajaAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.Cajas.ObtenerVentasExportPorCajaAsync(idSucursal, desde, hasta, ct);
 
         ///         /// Registra la auditoría del cierre de caja (diferencia, modo, etc.)
         public async Task RegistrarAuditoriaCierreAsync(int idCaja, int idUsuario, string datosAuditoriaJson, decimal montoFinal, decimal diferencia, CancellationToken ct = default)

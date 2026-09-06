@@ -24,8 +24,24 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<List<Producto>> ObtenerConCodigoBarraPorEmpresaAsync(int idEmpresa, CancellationToken ct = default);
         Task<int> ContarProductosConStockBajoAsync(int idEmpresa, CancellationToken ct = default);
         Task<List<Producto>> ObtenerConStockBajoConLimiteAsync(int idEmpresa, int limite, CancellationToken ct = default);
+
+        /// <summary>
+        /// Cuenta productos con stock crítico (StockActual <= StockMinimo, Activo) en SQL.
+        /// Mismo filtro que ObtenerStockCriticoAsync sin materializar filas. Útil para KPIs.
+        /// </summary>
+        Task<int> ContarStockCriticoAsync(int idEmpresa, CancellationToken ct = default);
         
         // Búsqueda con StartsWith (prefijo) para uso de índices - reemplaza Contains/LIKE '%term%'
         Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default);
+
+        // Búsqueda con Contains (subcadena LIKE '%term%') para búsquedas de texto libre
+        Task<List<Producto>> BuscarProductosContieneAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default);
+
+        // Búsqueda exacta por código de barras (case-insensitive) para escáner
+        Task<Producto?> BuscarPorCodigoBarraExactoAsync(int idEmpresa, string codigoBarra, CancellationToken ct = default);
+
+        // Agregación SQL de métricas (activos, stock bajo, sin stock) sin materializar productos.
+        Task<(int ProductosActivos, int ProductosStockBajo, int ProductosSinStock)>
+            ObtenerMetricasAsync(int idEmpresa, CancellationToken ct = default);
     }
 }

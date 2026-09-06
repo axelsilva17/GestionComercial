@@ -48,6 +48,11 @@ namespace GestionComercial.Persistencia.Repositorio
             return lista.OrderBy(p => p.StockActual);
         }
 
+        // Conteo en SQL con el mismo filtro que ObtenerStockCriticoAsync (KPI sin materializar).
+        public async Task<int> ContarStockCriticoAsync(int idEmpresa, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .CountAsync(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo, ct);
+
         public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default)
         {
             var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
@@ -154,6 +159,48 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync(ct);
         }
 
+        // ── Búsqueda con Contains (subcadena LIKE '%term%') ──────────────────────
+        public async Task<List<Producto>> BuscarProductosContieneAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default)
+        {
+            var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
+
+            if (!string.IsNullOrWhiteSpace(texto))
+            {
+                var term = texto.Trim();
+                // Contains → EF Core traduce a LIKE '%term%' (subcadena en nombre o código de barra)
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Nombre, "%" + term + "%") ||
+                    EF.Functions.Like(p.CodigoBarra, "%" + term + "%"));
+            }
+
+            if (idCategoria.HasValue && idCategoria.Value > 0)
+                query = query.Where(p => p.Id_categoria == idCategoria.Value);
+
+            if (soloActivos.HasValue)
+                query = query.Where(p => p.Activo == soloActivos.Value);
+
+            return await query
+                .Include(p => p.Categoria)
+                .OrderBy(p => p.Nombre)
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
+        // ── Búsqueda exacta por código de barras (case-insensitive para SQLite) ──
+        public async Task<Producto?> BuscarPorCodigoBarraExactoAsync(int idEmpresa, string codigoBarra, CancellationToken ct = default)
+        {
+            var term = (codigoBarra ?? string.Empty).Trim();
+            if (term.Length == 0) return null;
+
+            return await _dbSet.AsNoTracking()
+                .Where(p => p.Id_empresa == idEmpresa
+                    && p.Activo
+                    && p.CodigoBarra != null
+                    && EF.Functions.Collate(p.CodigoBarra, "NOCASE") == term)
+                .Include(p => p.Categoria)
+                .FirstOrDefaultAsync(ct);
+        }
+
         public async Task<(IEnumerable<Producto> Items, int TotalCount)> ObtenerPorEmpresaPaginadoAsync(
             int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null, CancellationToken ct = default)
         {
@@ -186,5 +233,29 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return (items, totalCount);
         }
+
+        // Una sola consulta SQL agregada (1 fila) sobre productos activos de la empresa.
+        // Evita materializar los 50K productos en memoria para calcular las 3 métricas.
+        public async Task<(int ProductosActivos, int ProductosStockBajo, int ProductosSinStock)>
+            ObtenerMetricasAsync(int idEmpresa, CancellationToken ct = default)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<MetricasProducto>(
+                    @"SELECT
+                             COUNT(*) AS ProductosActivos,
+                             SUM(CASE WHEN StockActual > 0 AND StockActual <= 10 THEN 1 ELSE 0 END) AS ProductosStockBajo,
+                             SUM(CASE WHEN StockActual <= 0 THEN 1 ELSE 0 END) AS ProductosSinStock
+                      FROM Producto
+                      WHERE Id_empresa = {0}
+                        AND Activo = 1",
+                    idEmpresa)
+                .ToListAsync(ct);
+
+            var r = rows.FirstOrDefault() ?? new MetricasProducto(0, 0, 0);
+            return (r.ProductosActivos, r.ProductosStockBajo, r.ProductosSinStock);
+        }
     }
+
+    // ── Tipos para SqlQueryRaw (EF Core 8) ─────────────────────────
+    public record MetricasProducto(int ProductosActivos, int ProductosStockBajo, int ProductosSinStock);
 }

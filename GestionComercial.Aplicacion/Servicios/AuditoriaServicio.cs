@@ -40,6 +40,20 @@ namespace GestionComercial.Aplicacion.Servicios
             return entidades.Select(MapearADto);
         }
 
+        public async Task<(int TotalRegistros, decimal DiferenciaTotal)> ObtenerAuditoriaCajaTotalesAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta)
+            => await _uow.Auditoria.ObtenerAuditoriaCajaTotalesAsync(fechaDesde, fechaHasta);
+
+        public async Task<List<AuditoriaLogDto>> ObtenerAuditoriaCajaRecienteAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int take)
+        {
+            var entidades = await _uow.Auditoria.ObtenerAuditoriaCajaRecienteAsync(fechaDesde, fechaHasta, take);
+            return entidades.Select(MapearADto).ToList();
+        }
+
         ///         /// Mapea una entidad AuditoriaLog a AuditoriaLogDto, localizando TipoOperacion
         /// de código numérico a texto legible.
         internal static AuditoriaLogDto MapearADto(AuditoriaLog entidad)

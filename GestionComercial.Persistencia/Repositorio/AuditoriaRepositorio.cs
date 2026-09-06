@@ -232,5 +232,43 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return (items, total);
         }
+
+        // ── Totales agregados en SQL (sin materializar filas) ─────────────────────
+        public async Task<(int TotalRegistros, decimal DiferenciaTotal)> ObtenerAuditoriaCajaTotalesAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            CancellationToken ct = default)
+        {
+            // Replica el cálculo de ExportHelper (MontoFinal - MontoInicial del JSON):
+            // las filas sin clave o con JSON inválido contribuyen 0 en ambos caminos.
+            var rows = await _context.Database
+                .SqlQueryRaw<AuditoriaCajaTotalesRaw>(
+                    @"SELECT COUNT(*) AS TotalRegistros,
+                             COALESCE(SUM(CAST(json_extract(ValoresNuevos, '$.MontoFinal') AS REAL)
+                                        - CAST(json_extract(ValoresNuevos, '$.MontoInicial') AS REAL)), 0) AS DiferenciaTotal
+                      FROM AuditoriaLogs
+                      WHERE NombreTabla = 'Cajas'
+                        AND FechaOperacion >= {0}
+                        AND FechaOperacion <= {1}",
+                    fechaDesde, fechaHasta)
+                .ToListAsync(ct);
+
+            var r = rows.FirstOrDefault() ?? new AuditoriaCajaTotalesRaw(0, 0);
+            return (r.TotalRegistros, r.DiferenciaTotal);
+        }
+
+        // ── Últimos registros en SQL (proyección limitada, sin materializar todo) ──
+        public async Task<List<AuditoriaLog>> ObtenerAuditoriaCajaRecienteAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int take,
+            CancellationToken ct = default)
+            => await _context.AuditoriaLogs.AsNoTracking()
+                .Where(a => a.NombreTabla == "Cajas"
+                         && a.FechaOperacion >= fechaDesde
+                         && a.FechaOperacion <= fechaHasta)
+                .OrderByDescending(a => a.FechaOperacion)
+                .Take(take)
+                .ToListAsync(ct);
     }
 }

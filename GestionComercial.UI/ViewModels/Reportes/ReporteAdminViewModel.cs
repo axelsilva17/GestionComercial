@@ -4,6 +4,7 @@ using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
@@ -308,53 +309,64 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 LogHelper.Log($"[ReporteAdmin] Filtro: desde={desde:yyyy-MM-dd HH:mm} hasta={hasta:yyyy-MM-dd HH:mm}");
 
                 var swTotal = Stopwatch.StartNew();
-                var sw = new Stopwatch();
+                var sw = Stopwatch.StartNew();
 
-                // ── KPIs básicos (solo lo esencial) ───────────────────────────────
+                // ── Consultas independientes en paralelo (Task.WhenAll) ──────────
                 // Ventas por día via SQL (IReporteServicio) para gráfico
-                sw.Restart();
-                var ventasPorDia = await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, desde, hasta);
+                var ventasPorDiaTask = _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, desde, hasta);
+                // Stock crítico via IReporteServicio (SQL aggregation)
+                var stockCriticoTask = _reporteServicio.StockCriticoAsync(_sesion.IdEmpresa);
+                // Umbral de stock crítico
+                var umbralTask = _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
+                // Clientes nuevos
+                var clientesNuevosTask = _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
+                    _sesion.IdEmpresa, desde, hasta.AddDays(1));
+                // Compras del período (usa métricas SQL del nuevo ICompraServicio)
+                var metricasComprasTask = _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, desde, hasta);
+                // Cajas: agregaciones SQL ligeras en lugar de materializar el grafo completo.
+                var resumenMoviTask = _cajaServicio.ObtenerResumenMoviCajaAsync(_sesion.IdSucursal, desde, hasta);
+                var conteoCajasTask = _cajaServicio.ObtenerConteoCajasPeriodoAsync(_sesion.IdSucursal, desde, hasta);
+                var ultimasCajasTask = _cajaServicio.ObtenerUltimasCajasConVentasAsync(_sesion.IdSucursal, desde, hasta, 5);
+                // Métodos de pago
+                var metodosPagoTask = _reporteServicio.MetodosPagoUtilizadosAsync(_sesion.IdSucursal, desde, hasta);
+                // Top 3 Productos
+                var topProductosTask = _reporteServicio.TopProductosAsync(_sesion.IdSucursal, desde, hasta, 3);
+
+                await Task.WhenAll(ventasPorDiaTask, stockCriticoTask, umbralTask, clientesNuevosTask,
+                    metricasComprasTask, resumenMoviTask, conteoCajasTask, ultimasCajasTask,
+                    metodosPagoTask, topProductosTask);
+                LogHelper.Log($"[ReporteAdmin] Consultas paralelas: {sw.ElapsedMilliseconds}ms");
+
+                // ── Materializar resultados (en el orden original) ───────────────
+                var ventasPorDia = await ventasPorDiaTask;
                 var ventasPorDiaList = ventasPorDia.ToList();
                 var totalVentas = ventasPorDiaList.Sum(v => v.Total);
                 var cantidadVentas = ventasPorDiaList.Sum(v => v.Cantidad);
-                LogHelper.Log($"[ReporteAdmin] Ventas por día: {ventasPorDiaList.Count} días en {sw.ElapsedMilliseconds}ms");
+                LogHelper.Log($"[ReporteAdmin] Ventas por día: {ventasPorDiaList.Count} días");
 
-                // Stock crítico via IReporteServicio (SQL aggregation)
-                sw.Restart();
-                var stockCriticoList = await _reporteServicio.StockCriticoAsync(_sesion.IdEmpresa);
+                var stockCriticoList = await stockCriticoTask;
                 var criticos = stockCriticoList.ToList();
-                var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_sesion.IdEmpresa);
-                LogHelper.Log($"[ReporteAdmin] Stock crítico (umbral ≤ {umbral}): {criticos.Count} en {sw.ElapsedMilliseconds}ms");
+                var umbral = await umbralTask;
+                LogHelper.Log($"[ReporteAdmin] Stock crítico (umbral ≤ {umbral}): {criticos.Count}");
 
-                // Clientes nuevos
-                sw.Restart();
-                var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
-                    _sesion.IdEmpresa, desde, hasta.AddDays(1));
+                var clientesNuevos = await clientesNuevosTask;
                 var clientesCount = clientesNuevos.Count();
-                LogHelper.Log($"[ReporteAdmin] Clientes nuevos: {clientesCount} en {sw.ElapsedMilliseconds}ms");
+                LogHelper.Log($"[ReporteAdmin] Clientes nuevos: {clientesCount}");
 
-                // Compras del período (usa métricas SQL del nuevo ICompraServicio)
-                sw.Restart();
-                var metricasCompras = await _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, desde, hasta);
+                var metricasCompras = await metricasComprasTask;
                 var comprasCount = metricasCompras?.Count ?? 0;
-                LogHelper.Log($"[ReporteAdmin] Compras: {comprasCount} en {sw.ElapsedMilliseconds}ms");
+                LogHelper.Log($"[ReporteAdmin] Compras: {comprasCount}");
 
-                // Cajas
-                sw.Restart();
-                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
-                LogHelper.Log($"[ReporteAdmin] Cajas: {cajas.Count} en {sw.ElapsedMilliseconds}ms");
+                var (totalIng, totalEgr) = await resumenMoviTask;
+                var (totalCajas, cajasCerradas) = await conteoCajasTask;
+                var ultimasCajas = (await ultimasCajasTask).ToList();
+                LogHelper.Log($"[ReporteAdmin] Cajas: {totalCajas}");
 
-                // Métodos de pago
-                sw.Restart();
-                var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
-                    _sesion.IdSucursal, desde, hasta)).ToList();
-                LogHelper.Log($"[ReporteAdmin] Métodos pago: {metodosPago.Count} en {sw.ElapsedMilliseconds}ms");
+                var metodosPago = (await metodosPagoTask).ToList();
+                LogHelper.Log($"[ReporteAdmin] Métodos pago: {metodosPago.Count}");
 
-                // Top 3 Productos
-                sw.Restart();
-                var topProductos = (await _reporteServicio.TopProductosAsync(
-                    _sesion.IdSucursal, desde, hasta, 3)).ToList();
-                LogHelper.Log($"[ReporteAdmin] Top productos: {topProductos.Count} en {sw.ElapsedMilliseconds}ms");
+                var topProductos = (await topProductosTask).ToList();
+                LogHelper.Log($"[ReporteAdmin] Top productos: {topProductos.Count}");
 
                 // ── Gráfico línea simple: ventas por día (desde SQL aggregation) ──
                 int diasRango = (hasta - desde).Days + 1;
@@ -409,7 +421,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 // ── Historial de cajas (solo últimos 5) ───────────────────────
                 var historialList = new List<CajaHistorialDto>();
-                foreach (var caja in cajas.Take(5))
+                foreach (var caja in ultimasCajas)
                 {
                     // Materializar Ventas para evitar problemas con IQueryable o proxies de EF
                     var ventasCaja = caja.Ventas?.ToList();
@@ -432,19 +444,6 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         UsuarioCierre = caja.UsuarioCierre?.Nombre,
                         Estado = caja.Estado == 1 ? "Abierta" : "Cerrada",
                     });
-                }
-
-                // KPIs de caja
-                decimal totalIng = 0, totalEgr = 0;
-                foreach (var caja in cajas)
-                {
-                    if (caja.Movimientos != null)
-                    {
-                        foreach (var mov in caja.Movimientos)
-                        {
-                            if (mov.Tipo == 1) totalIng += mov.Monto; else totalEgr += mov.Monto;
-                        }
-                    }
                 }
 
                 // ═══════════════════════════════════════════════════════════════
@@ -524,8 +523,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 ComprasRecientes = new ObservableCollection<ReporteCompraRecienteDto>(comprasRecientesData);
 
                 // Historial de cajas
-                TotalCajas = cajas.Count;
-                CajasCerradas = cajas.Count(c => c.Estado == 2);
+                TotalCajas = totalCajas;
+                CajasCerradas = cajasCerradas;
                 HistorialCajas = new ObservableCollection<CajaHistorialDto>(historialList);
                 TotalIngresos = totalIng;
                 TotalEgresos = totalEgr;
@@ -588,19 +587,22 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var desde = FechaDesde.Date;
                 var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
 
-                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                var cajas = await _cajaServicio.ObtenerHistorialExportAsync(_sesion.IdSucursal, desde, hasta);
+                var ventas = await _cajaServicio.ObtenerVentasExportPorCajaAsync(_sesion.IdSucursal, desde, hasta);
+                var ventasPorCaja = ventas
+                    .GroupBy(v => v.CajaId)
+                    .ToDictionary(g => g.Key, g => g.Sum(v => v.TotalFinal));
                 var cajasDto = cajas.Select(c => new CajaAuditoriaItemDto
                 {
                     Id = c.Id,
                     FechaApertura = c.FechaApertura.ToString("dd/MM/yyyy"),
                     HoraApertura = c.FechaApertura.ToString("HH:mm"),
-                    UsuarioApertura = c.UsuarioApertura?.Nombre ?? "—",
+                    UsuarioApertura = c.UsuarioAperturaNombre ?? "—",
                     MontoInicial = c.MontoInicial,
-                    // Materializar Ventas para evitar problemas con IQueryable
-                    VentasEfectivo = c.Ventas == null ? 0 : c.Ventas.ToList().Sum(v => v.TotalFinal),
+                    VentasEfectivo = ventasPorCaja.TryGetValue(c.Id, out var totalCaja) ? totalCaja : 0m,
                     MontoFinal = c.MontoFinal,
                     FechaCierre = c.FechaCierre?.ToString("dd/MM/yyyy"),
-                    UsuarioCierre = c.UsuarioCierre?.Nombre,
+                    UsuarioCierre = c.UsuarioCierreNombre,
                     Estado = c.Estado == 1 ? "Abierta" : "Cerrada"
                 }).ToList();
 
@@ -625,17 +627,27 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var hasta = FechaHasta.Date.AddDays(1).AddTicks(-1);
 
                 // ── Datos de auditoría ─────────────────────────────────────────────
-                var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaAsync(desde, hasta)).ToList();
-                var auditoriaMovimientos = (await _auditoriaServicio.ObtenerAuditoriaMovimientoCajaAsync(desde, hasta)).ToList();
+                // Only caja audits are needed here: the Informe Admin sheet renders the
+                // caja audit trail and its TOTAL row; the movimientos audit trail
+                // (150K+ rows with JSON blobs) is NOT used by ExportarInformeAdmin,
+                // so loading/deserializing it was pure waste.
+                // The sheet only shows the 1000 most recent rows; the TOTAL row is
+                // computed in SQL without materializing the rest.
+                var auditoriaCajas = (await _auditoriaServicio.ObtenerAuditoriaCajaRecienteAsync(desde, hasta, 1000)).ToList();
+                var (totalRegistros, diferenciaTotal) = await _auditoriaServicio.ObtenerAuditoriaCajaTotalesAsync(desde, hasta);
 
                 foreach (var a in auditoriaCajas) a.DeserializarJson();
-                foreach (var a in auditoriaMovimientos) a.DeserializarJson();
 
-                // ── Datos de cajas ─────────────────────────────────────────────────
-                var cajas = (await _cajaServicio.ObtenerHistorialAsync(_sesion.IdSucursal, desde, hasta)).ToList();
+                // ── Datos de cajas (proyección ligera SQL, sin grafo completo) ─────────
+                var cajas = await _cajaServicio.ObtenerHistorialExportAsync(_sesion.IdSucursal, desde, hasta);
+                var ventas = await _cajaServicio.ObtenerVentasExportPorCajaAsync(_sesion.IdSucursal, desde, hasta);
+                var ventasPorCaja = ventas
+                    .GroupBy(v => v.CajaId)
+                    .ToDictionary(g => g.Key, g => g.Sum(v => v.TotalFinal));
+
                 var historialCajas = cajas.Select(caja =>
                 {
-                    var totalVentasCaja = caja.Ventas?.Sum(v => v.TotalFinal) ?? 0;
+                    var totalVentasCaja = ventasPorCaja.TryGetValue(caja.Id, out var totalVentas) ? totalVentas : 0m;
                     var diff = caja.MontoFinal.HasValue
                         ? caja.MontoFinal.Value - (caja.MontoInicial + totalVentasCaja)
                         : (decimal?)null;
@@ -648,35 +660,19 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         MontoFinal = caja.MontoFinal,
                         Diferencia = diff,
                         TipoDiferencia = diff.HasValue ? (diff.Value > 0 ? "Positivo" : diff.Value < 0 ? "Negativo" : "Cero") : "Cero",
-                        UsuarioApertura = caja.UsuarioApertura?.Nombre ?? "—",
-                        UsuarioCierre = caja.UsuarioCierre?.Nombre,
+                        UsuarioApertura = caja.UsuarioAperturaNombre ?? "—",
+                        UsuarioCierre = caja.UsuarioCierreNombre,
                         Estado = caja.Estado == 1 ? "Abierta" : "Cerrada",
                         TieneDiferencia = diff.HasValue && Math.Abs(diff.Value) > 0.01m,
                     };
                 }).ToList();
 
-                // ── Ventas por caja ────────────────────────────────────────────────
-                var ventasPorCaja = cajas
-                    .Where(c => c.Ventas != null)
-                    .SelectMany(c => c.Ventas!.Select(venta => new VentaResumenCajaDto
-                    {
-                        CajaId = c.Id,
-                        NumeroCaja = $"Caja {c.Id}",
-                        FechaVenta = venta.Fecha.ToString("dd/MM/yyyy HH:mm"),
-                        Total = venta.TotalFinal,
-                        MetodoPago = venta.Pagos?.FirstOrDefault()?.MetodoPago?.Nombre ?? "—",
-                        Vendedor = venta.Usuario?.Nombre ?? "—"
-                    }))
-                    .OrderByDescending(v => v.FechaVenta)
-                    .ToList();
-
-                // ── KPIs adicionales para el informe admin ─────────────────────────
-                var ventasPeriodo = (await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, desde, hasta)).ToList();
-                
-                decimal totalVentas = ventasPeriodo.Sum(v => v.TotalFinal);
-                decimal promedioVenta = ventasPeriodo.Any() ? totalVentas / ventasPeriodo.Count : 0;
-                var clientesUnicos = ventasPeriodo.Select(v => v.ClienteNombre).Distinct().Count();
+                // ── KPIs adicionales para el informe admin (agregación SQL, no materializa ventas) ──
+                // Per sucursal e incluyendo anuladas, replicando el alcance del flujo original.
+                var (totalVentas, cantidadVentas, promedioVenta) = await _reporteServicio.ResumenVentasPorSucursalAsync(
+                    _sesion.IdSucursal, desde, hasta);
+                var clientesUnicos = await _reporteServicio.ClientesUnicosAsync(
+                    _sesion.IdSucursal, desde, hasta);
                 
                 var metodosPago = (await _reporteServicio.MetodosPagoUtilizadosAsync(
                     _sesion.IdSucursal, desde, hasta)).ToList();
@@ -685,20 +681,16 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     _sesion.IdSucursal, desde, hasta, 10)).ToList();
 
                 // ── Datos de clientes ─────────────────────────────────────────────
-                var clientesNuevos = await _uow.Clientes.ObtenerPorEmpresaYFechaAsync(
+                var nuevosEnPeriodo = await _uow.Clientes.ContarClientesNuevosAsync(
                     _sesion.IdEmpresa, desde, hasta.AddDays(1));
-                var nuevosEnPeriodo = clientesNuevos.Count();
 
                 // Exportar informe completo
                 ExportHelper.ExportarInformeAdmin(
-                    auditoriaCajas, 
-                    auditoriaMovimientos, 
-                    historialCajas, 
-                    ventasPorCaja,
+                    auditoriaCajas,
                     new ResumenAdminKpiDto
                     {
                         TotalVentas = totalVentas,
-                        CantidadVentas = ventasPeriodo.Count,
+                        CantidadVentas = cantidadVentas,
                         PromedioVenta = promedioVenta,
                         ClientesUnicos = clientesUnicos,
                         ClientesNuevos = nuevosEnPeriodo,
@@ -720,7 +712,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
                         Total = p.Ingresos
                     }).ToList(),
                     desde, 
-                    hasta, 
+                    hasta,
+                    totalRegistros: totalRegistros,
+                    diferenciaTotal: diferenciaTotal,
                     AbrirDespuesDeExportar);
             }
             catch (Exception ex)

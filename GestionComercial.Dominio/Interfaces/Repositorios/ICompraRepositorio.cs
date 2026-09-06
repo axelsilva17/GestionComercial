@@ -17,6 +17,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
 
         // Nuevo: compras paginadas por sucursal y fecha
         Task<(IEnumerable<Compra> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize, CancellationToken ct = default);
+            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
+            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default);
     }
 }

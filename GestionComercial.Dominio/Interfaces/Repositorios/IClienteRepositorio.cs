@@ -17,5 +17,11 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             int idEmpresa, int page, int pageSize, string? searchTerm = null, bool? soloActivos = null, CancellationToken ct = default);
         Task<IEnumerable<Cliente>> ObtenerPorEmpresaYFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);
         Task<int> ContarClientesConVentasAsync(int idEmpresa, CancellationToken ct = default);
+
+        /// <summary>
+        /// Cuenta los clientes dados de alta en la empresa dentro del período, en SQL.
+        /// Misma semántica que ObtenerPorEmpresaYFechaAsync (rangos inclusivos) sin materializar filas.
+        /// </summary>
+        Task<int> ContarClientesNuevosAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);
     }
 }

@@ -78,7 +78,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
         private async Task CargarKpis(int idEmpresa, int idSucursal)
         {
-            Kpis = await _reporteServicio.KpisGeneralesAsync(idEmpresa, idSucursal, FechaDesde, FechaHasta);
+            Kpis = await _reporteServicio.KpisVentasBaseAsync(idEmpresa, idSucursal, FechaDesde, FechaHasta);
         }
 
         private async Task CargarVentasPorDia(int idEmpresa)

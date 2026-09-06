@@ -35,7 +35,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             try
             {
                 var datos = await _reporteServicio.RotacionProductosAsync(
-                    _sesion.IdEmpresa, FechaDesde, FechaHasta);
+                    _sesion.IdEmpresa, FechaDesde, FechaHasta, top: 200);
                 Items = new ObservableCollection<ReporteRotacionDto>(datos);
             }
             catch (Exception ex)

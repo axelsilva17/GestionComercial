@@ -10,5 +10,25 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         
         ///         /// Obtiene todos los movimientos de caja en un período para análisis de auditoría.
         Task<IEnumerable<TipoMovimientoCaja>> ObtenerPorPeriodoAsync(DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        /// <summary>
+        /// Resumen SQL agregado de ingresos (Tipo == 1) y egresos (Tipo != 1) para todas las
+        /// cajas de una sucursal abiertas en el período. No materializa el grafo de cajas.
+        /// </summary>
+        Task<(decimal Ingresos, decimal Egresos)> ObtenerResumenPorSucursalAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        /// <summary>
+        /// Ingresos manuales (Tipo == 1 sin venta) y egresos (Tipo == 2) por caja para TODAS las
+        /// cajas activas de la sucursal abiertas en el período. Reemplaza el N+1 de auditoría:
+        /// replica la semántica de ObtenerPorCajaAsync sin materializar cada caja.
+        /// </summary>
+        Task<List<MovimientoCajaResumenPorCajaRow>> ObtenerResumenPorCajaEnPeriodoAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
     }
+
+    /// <summary>
+    /// Resumen de movimientos manuales de una caja en su turno (para auditoría).
+    /// </summary>
+    public record MovimientoCajaResumenPorCajaRow(int IdCaja, decimal Ingresos, decimal Egresos);
 }

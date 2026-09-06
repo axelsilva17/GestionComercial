@@ -23,12 +23,14 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             ObtenerTopProductosAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
 
         ///         /// Agregación SQL de top productos por empresa (sin cargar entidades a memoria).
+        /// `top` opcional: null devuelve todos los productos (sin LIMIT).
         Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>> 
-            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
+            ObtenerTopProductosPorEmpresaAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null, CancellationToken ct = default);
 
         ///         /// Agregación SQL de rotación por producto (sin cargar entidades a memoria).
+        /// `top` opcional: null devuelve todos los productos (sin LIMIT).
         Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta)>> 
-            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);
+            ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null, CancellationToken ct = default);
 
         ///         /// Agregación SQL de ventas agrupadas por día.
         Task<List<(string Dia, decimal Total, int Cantidad)>> 
@@ -49,6 +51,20 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         ///         /// Agregación SQL de KPIs de ventas (totales, ticket promedio).
         Task<(decimal TotalVentas, int TotalTransacciones, decimal TicketPromedio)?> 
             ObtenerKpisVentasAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        /// <summary>
+        /// Cuenta los clientes distintos que tuvieron ventas en la sucursal y período.
+        /// No filtra por Estado para replicar la semántica in-memory original
+        /// (que contaba clientes sobre todas las ventas del período, incluidas las anuladas).
+        /// </summary>
+        Task<int> ObtenerClientesUnicosAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        /// <summary>
+        /// Resumen de ventas por sucursal y período (total, cantidad y promedio) como agregación SQL.
+        /// No filtra por Estado para replicar la semántica original que incluía las anuladas.
+        /// </summary>
+        Task<(decimal TotalVentas, int CantidadVentas, decimal PromedioVenta)>
+            ObtenerResumenVentasPorSucursalAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
 
         ///         /// Agregación SQL del vendedor con mayor total de ventas.
         Task<string?> ObtenerTopVendedorAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);

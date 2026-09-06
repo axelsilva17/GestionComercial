@@ -306,12 +306,11 @@ namespace GestionComercial.UI.ViewModels.Productos
                 TotalPaginas = (int)Math.Ceiling((double)totalCount / pageSize);
                 TotalProductos = totalCount;
 
-                // Métricas: se cargan por separado (baratas, solo counts)
-                var todos = await _productoServicio.ObtenerTodosAsync(_shell.IdEmpresaActual, soloActivos: true);
-                var todosList = todos.ToList();
-                ProductosActivos = todosList.Count(p => p.Activo);
-                ProductosStockBajo = todosList.Count(p => p.StockActual > 0 && p.StockActual <= 10);
-                ProductosSinStock = todosList.Count(p => p.StockActual <= 0);
+                // Métricas: consulta SQL agregada (1 fila), sin materializar los productos
+                var metricas = await _productoServicio.ObtenerMetricasAsync(_shell.IdEmpresaActual);
+                ProductosActivos = metricas.ProductosActivos;
+                ProductosStockBajo = metricas.ProductosStockBajo;
+                ProductosSinStock = metricas.ProductosSinStock;
             }
             catch (Exception ex)
             {

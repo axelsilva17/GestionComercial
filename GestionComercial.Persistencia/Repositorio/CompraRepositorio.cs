@@ -77,10 +77,20 @@ namespace GestionComercial.Persistencia.Repositorio
 
         // ── Nuevo: compras paginadas ────────────────────────────────────────────
         public async Task<(IEnumerable<Compra> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize, CancellationToken ct = default)
+            int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
+            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default)
         {
             var query = _dbSet.AsNoTracking()
-                .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta)
+                .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta);
+
+            if (idProveedor is > 0)
+                query = query.Where(c => c.Id_proveedor == idProveedor);
+
+                if (!string.IsNullOrWhiteSpace(busquedaProveedor))
+                    query = query.Where(c => c.Proveedor != null
+                        && EF.Functions.Collate(c.Proveedor.Nombre, "NOCASE").Contains(busquedaProveedor));
+
+            query = query
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
                 .OrderByDescending(c => c.Fecha);

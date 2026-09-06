@@ -42,7 +42,7 @@ namespace GestionComercial.UI.ViewModels.Reportes
             try
             {
                 var datos = await _reporteServicio.MargenPorProductoAsync(
-                    _sesion.IdEmpresa, FechaDesde, FechaHasta);
+                    _sesion.IdEmpresa, FechaDesde, FechaHasta, top: 200);
                 Items = new ObservableCollection<ReporteMargenDto>(datos);
             }
             catch (Exception ex)

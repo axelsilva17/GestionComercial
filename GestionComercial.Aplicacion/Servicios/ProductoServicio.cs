@@ -446,6 +446,33 @@ public class ProductoServicio : IProductoServicio
             });
         }
 
+        // Búsqueda con Contains (subcadena) para búsquedas de texto libre
+        public async Task<IEnumerable<ProductoListadoDto>> BuscarProductosContieneAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default)
+        {
+            var productos = await _uow.Productos.BuscarProductosContieneAsync(idEmpresa, texto, idCategoria, soloActivos, take, ct);
+            return productos.Select(p => new ProductoListadoDto
+            {
+                IdProducto = p.Id,
+                Nombre = p.Nombre,
+                CodigoBarra = p.CodigoBarra,
+                IdCategoria = p.Id_categoria,
+                PrecioVentaActual = p.PrecioVentaActual,
+                PrecioCostoActual = p.PrecioCostoActual,
+                StockActual = (int)p.StockActual,
+                StockMinimo = (int)p.StockMinimo,
+                Activo = p.Activo,
+                CategoriaNombre = p.Categoria?.Nombre ?? "",
+                UnidadMedida = ""
+            });
+        }
+
+        // Búsqueda exacta por código de barras (case-insensitive) para escáner
+        public async Task<ProductoListadoDto?> BuscarPorCodigoBarraExactoAsync(int idEmpresa, string codigoBarra, CancellationToken ct = default)
+        {
+            var producto = await _uow.Productos.BuscarPorCodigoBarraExactoAsync(idEmpresa, codigoBarra, ct);
+            return producto == null ? null : MapearListado(producto);
+        }
+
         public async Task<IEnumerable<CategoriaItemDto>> ObtenerCategoriasAsync(int idEmpresa, CancellationToken ct = default)
         {
             var categorias = await _uow.Categorias.ObtenerPorEmpresaAsync(idEmpresa, ct);
@@ -480,6 +507,17 @@ public class ProductoServicio : IProductoServicio
         {
             var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Id == idEmpresa, ct);
             return empresa?.UmbralStockCritico ?? 10;
+        }
+
+        public async Task<ProductoMetricasDto> ObtenerMetricasAsync(int idEmpresa, CancellationToken ct = default)
+        {
+            var (activos, stockBajo, sinStock) = await _uow.Productos.ObtenerMetricasAsync(idEmpresa, ct);
+            return new ProductoMetricasDto
+            {
+                ProductosActivos   = activos,
+                ProductosStockBajo = stockBajo,
+                ProductosSinStock  = sinStock,
+            };
         }
 
         private static ProductoListadoDto MapearListado(Producto p) => new()

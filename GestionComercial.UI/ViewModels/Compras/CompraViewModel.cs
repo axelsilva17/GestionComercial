@@ -333,14 +333,10 @@ namespace GestionComercial.UI.ViewModels.Compras
             
             try
             {
-                var productos = await _productoServicio.ObtenerTodosAsync(_sesion.IdEmpresa);
-                var termino = BusquedaProducto.Trim().ToLower();
+                var termino = BusquedaProducto.Trim();
                 
-                var filtered = productos
-                    .Where(p => 
-                        (p.Nombre?.ToLower().Contains(termino) ?? false) ||
-                        (p.CodigoBarra?.ToLower().Contains(termino) ?? false))
-                    .Take(8)
+                // Búsqueda SQL con Contains (subcadena) — busca en cualquier parte del nombre o código de barra.
+                var filtered = (await _productoServicio.BuscarProductosContieneAsync(_sesion.IdEmpresa, termino, null, true, 8))
                     .Select(p => new ProductoItemDto
                     {
                         IdProducto = p.IdProducto,

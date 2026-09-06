@@ -579,7 +579,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                 hoja.Column(7).Width = 15;
                 hoja.Column(8).Width = 15;
 
-                workbook.SaveAs(filePath);
+                workbook.SaveAs(filePath, new SaveOptions { ValidatePackage = false });
             });
 
             // Guardar ruta para re-importar
