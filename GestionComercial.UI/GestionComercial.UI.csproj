@@ -23,6 +23,12 @@
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<!-- Dev credentials (dev@gestioncomercial.com) must reach the output dir:
+		     Bootstrapper loads this file at startup and the dev login branch is
+		     skipped when the section is empty, denying access to Mantenimiento. -->
+		<None Update="appsettings.Development.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

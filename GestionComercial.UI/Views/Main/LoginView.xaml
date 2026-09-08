@@ -6,7 +6,7 @@
         xmlns:cal="http://www.caliburnproject.org"
         Title="Gestión Comercial - Iniciar Sesión"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
+        ResizeMode="CanResize"
         WindowStyle="None"
         AllowsTransparency="True"
         Width="1100"
@@ -19,6 +19,50 @@
         <converters:DecimalToMonedaConverter  x:Key="DecimalToMoneda"/>
         <converters:FechaToStringConverter    x:Key="FechaToString"/>
         <converters:EstadoToColorConverter    x:Key="EstadoToColor"/>
+
+        <!-- Botones de ventana (minimizar / maximizar / cerrar) -->
+        <Style x:Key="WindowButton" TargetType="Button">
+            <Setter Property="Width"           Value="32"/>
+            <Setter Property="Height"          Value="32"/>
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="FontSize"        Value="14"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="WindowButtonCerrar" TargetType="Button" BasedOn="{StaticResource WindowButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ErrorBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <Storyboard x:Key="FadeIn">
             <DoubleAnimation Storyboard.TargetProperty="Opacity"
@@ -47,6 +91,19 @@
         <Border Background="{DynamicResource BackgroundBrush}"
                 CornerRadius="20"
                 Effect="{DynamicResource CardShadow}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="20"/>
+                    <Setter Property="Effect" Value="{DynamicResource CardShadow}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=WindowState}"
+                                     Value="Maximized">
+                            <Setter Property="CornerRadius" Value="0"/>
+                            <Setter Property="Effect" Value="{x:Null}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -105,31 +162,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-
-                    <!-- Botón cerrar -->
-                    <Button Content="✕" Width="36" Height="36" FontSize="18"
-                            Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}"
-                            BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="0,20,20,0" Cursor="Hand" Click="CloseButton_Click">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
 
                     <!-- ═══════════════════════════════════════════════════
                          PANEL LOGIN
@@ -786,5 +818,23 @@
             </Grid>
         </Border>
         </Grid>
+
+        <!-- ══ BARRA DE TÍTULO PERSONALIZADA ════════════════════════════════
+             Permite arrastrar la ventana, y minimizar / maximizar / cerrar.
+             (AllowsTransparency=True impide usar WindowChrome: el drag se
+             hace manualmente con DragMove en LoginView.xaml.cs) -->
+        <Border Grid.ColumnSpan="2" Height="48" VerticalAlignment="Top"
+                Background="Transparent"
+                MouseLeftButtonDown="Header_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                        VerticalAlignment="Center" Margin="0,0,12,0">
+                <Button Content="─" Style="{StaticResource WindowButton}"
+                        Click="Minimize_Click" ToolTip="Minimizar"/>
+                <Button Content="□" Style="{StaticResource WindowButton}" Margin="4,0"
+                        Click="Maximize_Click" ToolTip="Maximizar / restaurar"/>
+                <Button Content="✕" Style="{StaticResource WindowButtonCerrar}"
+                        Click="CloseButton_Click" ToolTip="Cerrar"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

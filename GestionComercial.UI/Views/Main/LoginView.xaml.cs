@@ -23,6 +23,31 @@ namespace GestionComercial.UI.Views.Main
         private void CloseButton_Click(object sender, RoutedEventArgs e)
             => Application.Current.Shutdown();
 
+        // ══ VENTANA (chrome personalizado) ════════════════════════════════════
+        // AllowsTransparency=True impide usar WindowChrome, así que el drag de
+        // la barra superior se hace manualmente con DragMove.
+
+        private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Doble clic en la barra → maximizar / restaurar
+            if (e.ClickCount == 2)
+            {
+                Maximize_Click(sender, e);
+                return;
+            }
+
+            if (WindowState != WindowState.Maximized)
+                DragMove();
+        }
+
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+            => WindowState = WindowState.Minimized;
+
+        private void Maximize_Click(object sender, RoutedEventArgs e)
+            => WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (DataContext is LoginViewModel vm)

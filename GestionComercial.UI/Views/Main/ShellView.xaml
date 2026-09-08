@@ -12,6 +12,7 @@
         MinWidth="1024" MinHeight="768"
         WindowState="Normal"
         WindowStartupLocation="CenterScreen"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
         SizeChanged="Window_SizeChanged">
 
     <WindowChrome.WindowChrome>
@@ -439,6 +440,7 @@
 
                     <Button Grid.Column="0" x:Name="BtnToggleSidebar" Content="☰"
                             Style="{StaticResource WindowButton}" FontSize="16"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
                             Click="ToggleSidebar_Click" Margin="0,0,12,0" ToolTip="Expandir / colapsar menú"/>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -453,10 +455,13 @@
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="MinimizeWindow" Content="─"
-                                Style="{StaticResource WindowButton}" Click="Minimize_Click"/>
+                                Style="{StaticResource WindowButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Minimize_Click"/>
                         <Button x:Name="MaximizeWindow" Content="□"
-                                Style="{StaticResource WindowButton}" Click="Maximize_Click" Margin="4,0"/>
-                        <Button Content="✕" Style="{StaticResource WindowButton}" Click="Close_Click">
+                                Style="{StaticResource WindowButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Maximize_Click" Margin="4,0"/>
+                        <Button Content="✕" Style="{StaticResource WindowButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                Click="Close_Click">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="6">
@@ -517,7 +522,8 @@
                             </StackPanel>
                             <Button HorizontalAlignment="Right" VerticalAlignment="Center"
                                     Content="✕" Style="{StaticResource AccionBtn}"
-                                    FontSize="14" Click="CerrarPerfil_Click"/>
+                                    FontSize="14" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                    Click="CerrarPerfil_Click"/>
                         </Grid>
                     </Border>
 

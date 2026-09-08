@@ -157,7 +157,11 @@ namespace GestionComercial.UI.ViewModels.Configuracion
             MensajeEstado = "Reindexando base de datos...";
             try
             {
-                await _diagnostico.ReindexarAsync();
+                // REINDEX rebuilds every index and blocks for seconds on large
+                // databases (~4s measured on the 60k-row perf DB). Microsoft.Data.
+                // Sqlite async APIs run synchronously on the calling thread, so
+                // the work must be pushed to the thread pool or the UI freezes.
+                await Task.Run(() => _diagnostico.ReindexarAsync());
                 MensajeEstado = "Base de datos reindexada correctamente.";
             }
             catch (Exception ex)
