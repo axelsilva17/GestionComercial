@@ -97,8 +97,11 @@
                 <DataTrigger Binding="{Binding TipoMovimiento}" Value="Salida">
                     <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding TipoMovimiento}" Value="Ajuste">
-                    <Setter Property="Foreground" Value="#F59E0B"/>
+                <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjustePositivo">
+                    <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjusteNegativo">
+                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding TipoMovimiento}" Value="Entrada">
                     <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
@@ -133,8 +136,11 @@
                             <DataTrigger Binding="{Binding TipoMovimiento}" Value="Salida">
                                 <Setter Property="Background" Value="#1AEF4444"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding TipoMovimiento}" Value="Ajuste">
-                                <Setter Property="Background" Value="#1AF59E0B"/>
+                            <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjustePositivo">
+                                <Setter Property="Background" Value="{DynamicResource InfoAlphaBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjusteNegativo">
+                                <Setter Property="Background" Value="{DynamicResource WarningAlphaBrush}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -148,8 +154,11 @@
                                     <DataTrigger Binding="{Binding TipoMovimiento}" Value="Salida">
                                         <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding TipoMovimiento}" Value="Ajuste">
-                                        <Setter Property="Foreground" Value="#F59E0B"/>
+                                    <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjustePositivo">
+                                        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjusteNegativo">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -163,8 +172,11 @@
                                     <DataTrigger Binding="{Binding TipoMovimiento}" Value="Salida">
                                         <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding TipoMovimiento}" Value="Ajuste">
-                                        <Setter Property="Foreground" Value="#F59E0B"/>
+                                    <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjustePositivo">
+                                        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding TipoMovimiento}" Value="AjusteNegativo">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

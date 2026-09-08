@@ -46,7 +46,8 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<ReportesStockDto>> StockCriticoAsync(int idEmpresa)
         {
-            var productos = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa);
+            var umbral = await ObtenerUmbralStockCriticoAsync(idEmpresa);
+            var productos = await _uow.Productos.ObtenerStockCriticoAsync(idEmpresa, umbral);
             return productos.Select(p => new ReportesStockDto
             {
                 IdProducto     = p.Id,
@@ -151,8 +152,9 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<KpiGeneralDto> KpisGeneralesAsync(int idEmpresa, int idSucursal, DateTime desde, DateTime hasta)
         {
+            var umbral = await ObtenerUmbralStockCriticoAsync(idEmpresa);
             var kpisTask = _uow.Ventas.ObtenerKpisVentasAsync(idEmpresa, idSucursal, desde, hasta);
-            var stockTask = _uow.Productos.ContarStockCriticoAsync(idEmpresa);
+            var stockTask = _uow.Productos.ContarStockCriticoAsync(idEmpresa, umbral);
             var topVendedorTask = _uow.Ventas.ObtenerTopVendedorAsync(idEmpresa, desde, hasta);
             var topProductoTask = _uow.Ventas.ObtenerTopProductoAsync(idEmpresa, desde, hasta);
 
@@ -196,5 +198,11 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<(decimal TotalVentas, int CantidadVentas, decimal PromedioVenta)>
             ResumenVentasPorSucursalAsync(int idSucursal, DateTime desde, DateTime hasta)
             => await _uow.Ventas.ObtenerResumenVentasPorSucursalAsync(idSucursal, desde, hasta);
+
+        private async Task<int> ObtenerUmbralStockCriticoAsync(int idEmpresa)
+        {
+            var empresa = await _uow.Empresas.PrimerODefaultAsync(e => e.Id == idEmpresa);
+            return empresa?.UmbralStockCritico ?? 10;
+        }
     }
 }

@@ -44,5 +44,12 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
 
         ///         /// Métricas de productos (activos, stock bajo, sin stock) vía consulta SQL agregada.
         Task<ProductoMetricasDto> ObtenerMetricasAsync(int idEmpresa, CancellationToken ct = default);
+
+        // Ajuste masivo de precios: aplica la operación del popup a TODO el set filtrado
+        // (empresa + texto + categoría + activo) en una sola UPDATE SQL. Escala a decenas de miles.
+        Task<int> AplicarAjusteMasivoAsync(
+            int idEmpresa, string? texto, int? idCategoria, bool? soloActivos,
+            string tipoAjuste, string direccionAjuste, decimal porcentaje, decimal montoFijo,
+            bool aplicarVenta, bool aplicarCosto, CancellationToken ct = default);
     }
 }

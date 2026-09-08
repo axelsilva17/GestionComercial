@@ -89,7 +89,7 @@ namespace GestionComercial.UI.Views.Productos
             ViewModel?.AbrirAjusteMasivo();
         }
 
-        private void GenerarPreview_Click(object sender, RoutedEventArgs e)
+        private async void GenerarPreview_Click(object sender, RoutedEventArgs e)
         {
             // Determine tipo de ajuste según radio buttons seleccionados
             if (TipoPorcentaje.IsChecked == true)
@@ -113,7 +113,8 @@ namespace GestionComercial.UI.Views.Productos
             // Determine dirección del ajuste
             ViewModel.DireccionAjuste = DirReducir.IsChecked == true ? "reducir" : "aumentar";
             
-            ViewModel?.GenerarPreviewAjuste();
+            if (ViewModel != null)
+                await ViewModel.GenerarPreviewAjusteAsync();
         }
 
         private void CancelarAjuste_Click(object sender, RoutedEventArgs e)

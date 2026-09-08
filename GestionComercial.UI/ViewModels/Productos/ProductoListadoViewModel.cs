@@ -169,7 +169,7 @@ namespace GestionComercial.UI.ViewModels.Productos
                 _categoriaAjuste = value;
                 NotifyOfPropertyChange(() => CategoriaAjuste);
                 if (MostrarPopupAjuste)
-                    GenerarPreviewAjuste();
+                    _ = GenerarPreviewAjusteAsync();
             }
         }
         public bool MostrarPopupAjuste
@@ -283,6 +283,21 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 IsLoading = true;
 
+                // Stock critical shortcut: load ALL critical products directly (bypass pagination)
+                if (MostrarSoloStockCritico)
+                {
+                    var criticos = await _productoServicio.ObtenerStockCriticoAsync(_shell.IdEmpresaActual);
+                    Productos = new ObservableCollection<ProductoListadoDto>(criticos);
+                    ProductosMostrados = criticos.Count();
+                    TotalPaginas = 1;
+                    TotalProductos = criticos.Count();
+                    var metricasStock = await _productoServicio.ObtenerMetricasAsync(_shell.IdEmpresaActual);
+                    ProductosActivos = metricasStock.ProductosActivos;
+                    ProductosStockBajo = metricasStock.ProductosStockBajo;
+                    ProductosSinStock = metricasStock.ProductosSinStock;
+                    return;
+                }
+
                 // Búsqueda server-side con paginación real: filtros se aplican en SQL
                 bool? soloActivos = FiltroActivo == 1 ? true : FiltroActivo == 2 ? false : null;
                 int? idCategoria = CategoriaSeleccionada?.IdCategoria > 0 ? CategoriaSeleccionada.IdCategoria : null;
@@ -292,14 +307,6 @@ namespace GestionComercial.UI.ViewModels.Productos
                 var (productos, totalCount) = await _productoServicio.ObtenerTodosPaginadoAsync(
                     _shell.IdEmpresaActual, PaginaActual, pageSize, texto, idCategoria, soloActivos);
                 var filtradosList = productos.ToList();
-
-                // Filtro stock crítico (desde dashboard "Ver todos") — se aplica en memoria
-                // Nota: este filtro extra no afecta el totalCount real, solo la página actual
-                if (MostrarSoloStockCritico)
-                {
-                    var umbral = await _productoServicio.ObtenerUmbralStockCriticoAsync(_shell.IdEmpresaActual);
-                    filtradosList = filtradosList.Where(p => p.StockActual <= umbral).ToList();
-                }
 
                 Productos = new ObservableCollection<ProductoListadoDto>(filtradosList);
                 ProductosMostrados = filtradosList.Count;
@@ -547,10 +554,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             PorcentajeAjuste = 0;
             MontoFijo = 0;
             TipoAjuste = "porcentaje";
-            CategoriaAjuste = Categorias.FirstOrDefault(); // "Todos" por defecto
-            // Pre-cargar preview con todos los productos visibles
-            _productosPreview = new ObservableCollection<ProductoListadoDto>(Productos);
-            NotifyOfPropertyChange(() => ProductosPreview);
+            CategoriaAjuste = Categorias.FirstOrDefault(); // "Todos" por defecto: el setter regenera el preview con el total real
         }
 
         // Nueva: Ajuste por Proveedor (aplicación en modal de precios)
@@ -594,75 +598,85 @@ namespace GestionComercial.UI.ViewModels.Productos
             ProductosPreview.Clear();
         }
 
-        public void GenerarPreviewAjuste()
+        public async Task GenerarPreviewAjusteAsync()
         {
-            // Generar preview sin modificar la base de datos
-            var preview = new ObservableCollection<ProductoListadoDto>();
-
-            // Filtrar por categoría si se eligió una específica en el popup
-            var fuente = Productos.AsEnumerable();
-            if (CategoriaAjuste?.IdCategoria > 0)
-                fuente = fuente.Where(p => p.IdCategoria == CategoriaAjuste.IdCategoria);
-
-            // Si no hay valor, mostrar todos los productos actuales (filtrados por categoría)
-            if (PorcentajeAjuste == 0 && MontoFijo == 0)
+            try
             {
-                foreach (var p in fuente)
+                // El total sale de la base (muestra de 50 + total real), NO de la página actual:
+                // así el preview y el conteo reflejan todos los productos que se van a ajustar.
+                bool? soloActivos = FiltroActivo == 1 ? true : FiltroActivo == 2 ? false : null;
+                int? idCategoria = CategoriaAjuste?.IdCategoria > 0 ? CategoriaAjuste.IdCategoria : null;
+                string? texto = string.IsNullOrWhiteSpace(TextoBusqueda) ? null : TextoBusqueda.Trim();
+
+                var (items, totalCount) = await _productoServicio.ObtenerTodosPaginadoAsync(
+                    _shell.IdEmpresaActual, 1, 50, texto, idCategoria, soloActivos);
+
+                var preview = new ObservableCollection<ProductoListadoDto>();
+
+                // Si no hay valor, mostrar los productos actuales (filtrados por categoría) sin cambios
+                if (PorcentajeAjuste == 0 && MontoFijo == 0)
                 {
-                    var copia = new ProductoListadoDto
+                    foreach (var p in items)
                     {
-                        IdProducto = p.IdProducto,
-                        Nombre = p.Nombre,
-                        CodigoBarra = p.CodigoBarra,
-                        PrecioVentaActual = p.PrecioVentaActual,
-                        PrecioCostoActual = p.PrecioCostoActual,
-                        PrecioVentaNuevo = p.PrecioVentaActual,
-                        PrecioCostoNuevo = p.PrecioCostoActual,
-                    };
-                    preview.Add(copia);
+                        var copia = new ProductoListadoDto
+                        {
+                            IdProducto = p.IdProducto,
+                            Nombre = p.Nombre,
+                            CodigoBarra = p.CodigoBarra,
+                            PrecioVentaActual = p.PrecioVentaActual,
+                            PrecioCostoActual = p.PrecioCostoActual,
+                            PrecioVentaNuevo = p.PrecioVentaActual,
+                            PrecioCostoNuevo = p.PrecioCostoActual,
+                        };
+                        preview.Add(copia);
+                    }
                 }
+                else
+                {
+                    foreach (var p in items)
+                    {
+                        decimal nuevoVenta = p.PrecioVentaActual;
+                        decimal nuevoCosto = p.PrecioCostoActual;
+                        decimal signo = DireccionAjuste == "reducir" ? -1m : 1m;
+
+                        if (TipoAjuste == "porcentaje")
+                        {
+                            if (AplicarAPrecioVenta)
+                                nuevoVenta = Math.Round(p.PrecioVentaActual * (1 + signo * PorcentajeAjuste / 100m), 2);
+                            if (AplicarAPrecioCosto)
+                                nuevoCosto = Math.Round(p.PrecioCostoActual * (1 + signo * PorcentajeAjuste / 100m), 2);
+                        }
+                        else if (TipoAjuste == "fijo")
+                        {
+                            if (AplicarAPrecioVenta)
+                                nuevoVenta = p.PrecioVentaActual + signo * MontoFijo;
+                            if (AplicarAPrecioCosto)
+                                nuevoCosto = p.PrecioCostoActual + signo * MontoFijo;
+                        }
+
+                        // Siempre agregar para ver el cambio
+                        var copia = new ProductoListadoDto
+                        {
+                            IdProducto = p.IdProducto,
+                            Nombre = p.Nombre,
+                            CodigoBarra = p.CodigoBarra,
+                            PrecioVentaActual = p.PrecioVentaActual,
+                            PrecioCostoActual = p.PrecioCostoActual,
+                            PrecioVentaNuevo = nuevoVenta,
+                            PrecioCostoNuevo = nuevoCosto,
+                        };
+                        preview.Add(copia);
+                    }
+                }
+
                 ProductosPreview = preview;
-                ProductosActualizados = preview.Count;
-                return;
+                ProductosActualizados = totalCount;
             }
-            
-            foreach (var p in fuente)
+            catch (Exception ex)
             {
-                decimal nuevoVenta = p.PrecioVentaActual;
-                decimal nuevoCosto = p.PrecioCostoActual;
-                decimal signo = DireccionAjuste == "reducir" ? -1m : 1m;
-
-                if (TipoAjuste == "porcentaje")
-                {
-                    if (AplicarAPrecioVenta)
-                        nuevoVenta = Math.Round(p.PrecioVentaActual * (1 + signo * PorcentajeAjuste / 100m), 2);
-                    if (AplicarAPrecioCosto)
-                        nuevoCosto = Math.Round(p.PrecioCostoActual * (1 + signo * PorcentajeAjuste / 100m), 2);
-                }
-                else if (TipoAjuste == "fijo")
-                {
-                    if (AplicarAPrecioVenta)
-                        nuevoVenta = p.PrecioVentaActual + signo * MontoFijo;
-                    if (AplicarAPrecioCosto)
-                        nuevoCosto = p.PrecioCostoActual + signo * MontoFijo;
-                }
-
-                // Siempre agregar paraver el cambio
-                var copia = new ProductoListadoDto
-                {
-                    IdProducto = p.IdProducto,
-                    Nombre = p.Nombre,
-                    CodigoBarra = p.CodigoBarra,
-                    PrecioVentaActual = p.PrecioVentaActual,
-                    PrecioCostoActual = p.PrecioCostoActual,
-                    PrecioVentaNuevo = nuevoVenta,
-                    PrecioCostoNuevo = nuevoCosto,
-                };
-                preview.Add(copia);
+                _logger?.LogError(ex, "Error generando preview de ajuste masivo");
+                MessageBox.Show("Error al generar la vista previa: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            ProductosPreview = preview;
-            ProductosActualizados = preview.Count;
         }
 
         public async Task ConfirmarAjusteMasivo()
@@ -688,26 +702,17 @@ namespace GestionComercial.UI.ViewModels.Productos
             {
                 IsLoading = true;
 
-                var dtos = new List<ProductoActualizarDto>();
-                foreach (var p in ProductosPreview)
-                {
-                    dtos.Add(new ProductoActualizarDto
-                    {
-                        IdProducto = p.IdProducto,
-                        Nombre = p.Nombre,
-                        CodigoBarra = p.CodigoBarra,
-                        PrecioVentaActual = AplicarAPrecioVenta ? (p.PrecioVentaNuevo ?? p.PrecioVentaActual) : p.PrecioVentaActual,
-                        PrecioCostoActual = AplicarAPrecioCosto ? (p.PrecioCostoNuevo ?? p.PrecioCostoActual) : p.PrecioCostoActual,
-                        StockMinimo = p.StockMinimo,
-                        Activo = true,
-                        IdCategoria = p.IdCategoria,
-                        IdUnidadMedida = 0
-                    });
-                }
+                // Aplicar en UNA sola UPDATE SQL sobre TODO el set filtrado (no solo la página actual).
+                var actualizados = await _productoServicio.AplicarAjusteMasivoAsync(
+                    _shell.IdEmpresaActual,
+                    string.IsNullOrWhiteSpace(TextoBusqueda) ? null : TextoBusqueda.Trim(),
+                    CategoriaAjuste?.IdCategoria > 0 ? CategoriaAjuste.IdCategoria : null,
+                    FiltroActivo == 1 ? true : FiltroActivo == 2 ? false : null,
+                    TipoAjuste, DireccionAjuste, PorcentajeAjuste, MontoFijo,
+                    AplicarAPrecioVenta, AplicarAPrecioCosto);
 
-                await _productoServicio.ActualizarPreciosLoteAsync(dtos);
-
-                MessageBox.Show($"Se actualizaron {ProductosActualizados} productos correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                ProductosActualizados = actualizados;
+                MessageBox.Show($"Se actualizaron {actualizados} productos correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 
                 MostrarPopupAjuste = false;
                 await CargarAsync(); // Recargar lista
