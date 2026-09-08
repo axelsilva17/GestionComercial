@@ -5,6 +5,7 @@
 
 using ClosedXML.Excel;
 using GestionComercial.Aplicacion.DTOs.Productos;
+using GestionComercial.Aplicacion.Importacion;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,7 @@ namespace GestionComercial.Aplicacion.Servicios
     ///
     /// Columnas esperadas en la planilla (en cualquier orden, por nombre de encabezado):
     ///   Nombre         → obligatorio
-    ///   CodigoBarra    → obligatorio
+    ///   CodigoBarra    → opcional (vacío = sin código; si se provee debe ser numérico)
     ///   PrecioVenta    → obligatorio
     ///   PrecioCosto    → opcional
     ///   StockActual    → opcional (default 0)
@@ -34,7 +35,7 @@ namespace GestionComercial.Aplicacion.Servicios
             using var wb = new XLWorkbook(rutaArchivo);
             var ws = wb.Worksheet(1); // Primera hoja
 
-            // Leer encabezados de la primera fila (case-insensitive)
+            // Leer encabezados de la primera fila (case-insensitive), mapeando por número de columna real
             var columnas = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var headerRow = ws.Row(1);
             foreach (var cell in headerRow.CellsUsed())
@@ -45,6 +46,7 @@ namespace GestionComercial.Aplicacion.Servicios
             }
 
             // Validar que tenga las columnas mínimas
+            // Nota: CodigoBarra puede tener valores vacíos pero la columna debe existir.
             var requeridas = new[] { "Nombre", "CodigoBarra", "PrecioVenta" };
             foreach (var col in requeridas)
             {
@@ -54,42 +56,60 @@ namespace GestionComercial.Aplicacion.Servicios
                         "Descargá la plantilla para ver el formato correcto.");
             }
 
-            // Leer filas de datos (desde la 2)
-            int ultimaFila = ws.LastRowUsed()?.RowNumber() ?? 1;
-
-            for (int nFila = 2; nFila <= ultimaFila; nFila++)
+            // Leer filas de datos en UNA pasada sobre el rango usado
+            foreach (var row in ws.RangeUsed()?.RowsUsed() ?? Enumerable.Empty<IXLRangeRow>())
             {
-                var row = ws.Row(nFila);
+                if (row.RowNumber() == 1) continue; // encabezado
 
-                // Saltar filas completamente vacías
-                if (row.IsEmpty()) continue;
+                string Celda(string nombre)
+                    => columnas.TryGetValue(nombre, out int col) ? row.Cell(col).GetString().Trim() : string.Empty;
 
-                var fila = new FilaImportacionDto { Fila = nFila };
+                var nombre = Celda("Nombre");
+                var codigoBarra = Celda("CodigoBarra");
+                var precioVentaStr = Celda("PrecioVenta");
+                var precioCostoStr = Celda("PrecioCosto");
+                var stockStr = Celda("StockActual");
+                var stockMinStr = Celda("StockMinimo");
+                var categoria = Celda("Categoria");
+                var unidadMedida = Celda("UnidadMedida");
+
+                // Normalización: omitir filas vacías o con solo espacios en las columnas mapeadas
+                if (string.IsNullOrEmpty(nombre) && string.IsNullOrEmpty(codigoBarra)
+                    && string.IsNullOrEmpty(precioVentaStr) && string.IsNullOrEmpty(precioCostoStr)
+                    && string.IsNullOrEmpty(stockStr) && string.IsNullOrEmpty(stockMinStr)
+                    && string.IsNullOrEmpty(categoria) && string.IsNullOrEmpty(unidadMedida))
+                    continue;
+
+                var fila = new FilaImportacionDto { Fila = row.RowNumber() };
                 var errores = new List<string>();
 
                 // Nombre
-                fila.Nombre = ObtenerString(row, columnas, "Nombre");
+                fila.Nombre = nombre;
                 if (string.IsNullOrWhiteSpace(fila.Nombre))
                     errores.Add("Nombre obligatorio");
 
-                // Código de barra
-                fila.CodigoBarra = ObtenerString(row, columnas, "CodigoBarra");
-                if (string.IsNullOrWhiteSpace(fila.CodigoBarra))
-                    errores.Add("Código de barra obligatorio");
-                else if (!long.TryParse(fila.CodigoBarra, out _))
+                // Código de barra — OPTIONAL: empty/whitespace is valid (no barcode).
+                // Only validate numeric format when a value IS provided.
+                fila.CodigoBarra = codigoBarra;
+                if (!string.IsNullOrWhiteSpace(fila.CodigoBarra) && !long.TryParse(fila.CodigoBarra, out _))
                     errores.Add("Código de barra debe ser numérico");
 
-                // Precio venta
-                fila.PrecioVenta = ObtenerDecimal(row, columnas, "PrecioVenta");
-                if (fila.PrecioVenta <= 0)
+                // Precio venta (formato tolerante: "24000.50", "$1,234.56", "1.234,56")
+                if (!ImportacionNormalizacion.TryParseDecimal(precioVentaStr, out var precioVenta))
+                    errores.Add("Precio de venta inválido");
+                else if (precioVenta <= 0)
                     errores.Add("Precio de venta debe ser mayor a 0");
+                fila.PrecioVenta = precioVenta;
 
                 // Opcionales
-                fila.PrecioCosto  = ObtenerDecimal(row, columnas, "PrecioCosto");
-                fila.Stock        = ObtenerInt(row, columnas, "StockActual");
-                fila.StockMinimo  = ObtenerInt(row, columnas, "StockMinimo");
-                fila.Categoria    = ObtenerString(row, columnas, "Categoria", "Sin categoría");
-                fila.UnidadMedida = ObtenerString(row, columnas, "UnidadMedida", "Unidad");
+                fila.PrecioCosto = ImportacionNormalizacion.TryParseDecimal(precioCostoStr, out var precioCosto)
+                    ? precioCosto : 0;
+                fila.Stock = ImportacionNormalizacion.TryParseInt(stockStr, out var stock) ? stock : 0;
+                fila.StockMinimo = ImportacionNormalizacion.TryParseInt(stockMinStr, out var stockMinimo)
+                    ? stockMinimo : 0;
+
+                fila.Categoria = categoria.Length > 0 ? categoria : "Sin categoría";
+                fila.UnidadMedida = unidadMedida.Length > 0 ? unidadMedida : "Unidad";
 
                 fila.EsValida         = errores.Count == 0;
                 fila.ErrorDescripcion = string.Join(", ", errores);
@@ -145,7 +165,7 @@ namespace GestionComercial.Aplicacion.Servicios
 
             // Nota en la parte inferior
             var notaFila = ejemplos.GetLength(0) + 3;
-            ws.Cell(notaFila, 1).Value = "* Las columnas Nombre, CodigoBarra y PrecioVenta son obligatorias.";
+            ws.Cell(notaFila, 1).Value = "* Las columnas Nombre y PrecioVenta son obligatorias. CodigoBarra es opcional (vacío = sin código).";
             ws.Cell(notaFila, 1).Style.Font.Italic = true;
             ws.Cell(notaFila, 1).Style.Font.FontColor = XLColor.Gray;
             ws.Range(notaFila, 1, notaFila, headers.Length).Merge();
@@ -155,34 +175,6 @@ namespace GestionComercial.Aplicacion.Servicios
                 ws.Column(c).AdjustToContents();
 
             wb.SaveAs(rutaDestino, new SaveOptions { ValidatePackage = false });
-        }
-
-        // ── Helpers ───────────────────────────────────────────────────────────
-        private static string ObtenerString(IXLRow row, Dictionary<string, int> cols,
-            string nombre, string defecto = "")
-        {
-            if (!cols.TryGetValue(nombre, out int col)) return defecto;
-            return row.Cell(col).GetString().Trim() is { Length: > 0 } v ? v : defecto;
-        }
-
-        private static decimal ObtenerDecimal(IXLRow row, Dictionary<string, int> cols, string nombre)
-        {
-            if (!cols.TryGetValue(nombre, out int col)) return 0;
-            var cell = row.Cell(col);
-            if (cell.TryGetValue(out decimal d)) return d;
-            if (decimal.TryParse(cell.GetString().Replace("$", "").Replace(".", "").Replace(",", ".").Trim(),
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out decimal d2)) return d2;
-            return 0;
-        }
-
-        private static int ObtenerInt(IXLRow row, Dictionary<string, int> cols, string nombre)
-        {
-            if (!cols.TryGetValue(nombre, out int col)) return 0;
-            var cell = row.Cell(col);
-            if (cell.TryGetValue(out int i)) return i;
-            if (int.TryParse(cell.GetString().Trim(), out int i2)) return i2;
-            return 0;
         }
     }
 }
@@ -242,9 +234,9 @@ namespace GestionComercial.Aplicacion.Servicios
                     EsNuevo      = true,
                 };
 
-                if (string.IsNullOrWhiteSpace(fila.Nombre))     errores.Add("Nombre obligatorio");
-                if (string.IsNullOrWhiteSpace(fila.CodigoBarra)) errores.Add("Código de barra obligatorio");
-                if (fila.PrecioVenta <= 0)                       errores.Add("Precio de venta requerido");
+                if (string.IsNullOrWhiteSpace(fila.Nombre)) errores.Add("Nombre obligatorio");
+                // CodigoBarra is OPTIONAL — empty/whitespace means no barcode.
+                if (fila.PrecioVenta <= 0) errores.Add("Precio de venta requerido");
 
                 fila.EsValida         = errores.Count == 0;
                 fila.ErrorDescripcion = string.Join(", ", errores);

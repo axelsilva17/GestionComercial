@@ -252,7 +252,7 @@
                             </Button>
                         </Grid>
 
-                        <!-- Tabla preview - collapsible -->
+                        <!-- Tabla preview - collapsible (virtualized DataGrid) -->
                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                 CornerRadius="10" ClipToBounds="True"
                                 Visibility="{Binding MostrarLista, Converter={StaticResource BoolToVisibility}}">
@@ -262,180 +262,182 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Header tabla con Padding en cada celda para separar MARGEN y CATEGORÍA -->
+                                <!-- Preview notice -->
                                 <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                                    <Grid Margin="12,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="36"/>
-                                            <ColumnDefinition Width="72"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="85"/>
-                                            <ColumnDefinition Width="85"/>
-                                            <ColumnDefinition Width="55"/>
-                                            <ColumnDefinition Width="55"/>
-                                            <ColumnDefinition Width="72"/>
-                                            <ColumnDefinition Width="10"/>  <!-- separador -->
-                                            <ColumnDefinition Width="82"/>
-                                            <ColumnDefinition Width="72"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"  Text="#"         FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <TextBlock Grid.Column="1"  Text="ESTADO"    FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <TextBlock Grid.Column="2"  Text="NOMBRE"    FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <TextBlock Grid.Column="3"  Text="P. VENTA"  FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Right"/>
-                                        <TextBlock Grid.Column="4"  Text="P. COSTO"  FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Right"/>
-                                        <TextBlock Grid.Column="5"  Text="STOCK"     FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Right"/>
-                                        <TextBlock Grid.Column="6"  Text="MÍNIMO"    FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Right"/>
-                                        <TextBlock Grid.Column="7"  Text="MARGEN"    FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Right"/>
-                                        <!-- Col 8 = espaciador vacío -->
-                                        <TextBlock Grid.Column="9"  Text="CATEGORÍA" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <TextBlock Grid.Column="10" Text="UNIDAD"    FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    </Grid>
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                        Padding="12,6">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding AvisoPreview}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding AvisoPreview}" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </Border>
 
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding Filas}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding EsValida}" Value="False">
-                                                                    <Setter Property="Background" Value="#08EF4444"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <Grid Margin="12,7">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="36"/>
-                                                            <ColumnDefinition Width="72"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="85"/>
-                                                            <ColumnDefinition Width="85"/>
-                                                            <ColumnDefinition Width="55"/>
-                                                            <ColumnDefinition Width="55"/>
-                                                            <ColumnDefinition Width="72"/>
-                                                            <ColumnDefinition Width="10"/>
-                                                            <ColumnDefinition Width="82"/>
-                                                            <ColumnDefinition Width="72"/>
-                                                        </Grid.ColumnDefinitions>
-
-                                                        <TextBlock Grid.Column="0" Text="{Binding Fila}" FontSize="11"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-
-                                                        <Border Grid.Column="1" CornerRadius="6" Padding="6,3"
-                                                                HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                            <Border.Style>
-                                                                <Style TargetType="Border">
-                                                                    <Setter Property="Background" Value="#1A22C55E"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding EsValida}" Value="False">
-                                                                            <Setter Property="Background" Value="#1AEF4444"/>
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding EsNuevo}" Value="False">
-                                                                            <Setter Property="Background" Value="#1A3B82F6"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </Border.Style>
-                                                            <TextBlock Text="{Binding EstadoTexto}" FontSize="10" FontWeight="Bold">
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding EsValida}" Value="False">
-                                                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding EsNuevo}" Value="False">
-                                                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </Border>
-
-                                                        <TextBox Grid.Column="2" Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}"
-                                                                   FontSize="12" FontWeight="SemiBold"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                   Background="Transparent" BorderThickness="0"
-                                                                   VerticalAlignment="Center" Padding="0"
-                                                                   ToolTip="{Binding ErrorDescripcion}"/>
-                                                        <TextBlock Grid.Column="2" Text="{Binding ErrorDescripcion}" FontSize="10"
-                                                                   Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"
-                                                                   VerticalAlignment="Bottom" Margin="0,14,0,0"
-                                                                   Visibility="{Binding EsValida, Converter={StaticResource BoolToVisibility}}"/>
-
-                                                        <TextBox Grid.Column="3" TextAlignment="Right" FontSize="12" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                   Background="Transparent" BorderThickness="0"
-                                                                   ToolTip="Precio de venta">
-                                                            <TextBox.Text>
-                                                                <Binding Path="PrecioVenta" StringFormat="C0" UpdateSourceTrigger="PropertyChanged">
-                                                                    <Binding.FallbackValue>0</Binding.FallbackValue>
-                                                                </Binding>
-                                                            </TextBox.Text>
-                                                        </TextBox>
-
-                                                        <TextBox Grid.Column="4" TextAlignment="Right" FontSize="12" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                   Background="Transparent" BorderThickness="0"
-                                                                   ToolTip="Precio de costo">
-                                                            <TextBox.Text>
-                                                                <Binding Path="PrecioCosto" StringFormat="C0" UpdateSourceTrigger="PropertyChanged">
-                                                                    <Binding.FallbackValue>0</Binding.FallbackValue>
-                                                                </Binding>
-                                                            </TextBox.Text>
-                                                        </TextBox>
-
-                                                        <TextBox Grid.Column="5" Text="{Binding Stock, UpdateSourceTrigger=PropertyChanged}"
-                                                                   FontSize="12" TextAlignment="Right" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                   Background="Transparent" BorderThickness="0"
-                                                                   ToolTip="Stock actual"/>
-
-                                                        <TextBox Grid.Column="6" Text="{Binding StockMinimo, UpdateSourceTrigger=PropertyChanged}"
-                                                                   FontSize="12" TextAlignment="Right" VerticalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                   Background="Transparent" BorderThickness="0"
-                                                                   ToolTip="Stock mínimo"/>
-
-                                                        <TextBlock Grid.Column="7" FontSize="12" TextAlignment="Right"
-                                                                   VerticalAlignment="Center" FontWeight="SemiBold">
-                                                            <TextBlock.Text>
-                                                                <MultiBinding StringFormat="{}{0:N1} %">
-                                                                    <Binding Path="Margen"/>
-                                                                </MultiBinding>
-                                                            </TextBlock.Text>
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Margen}" Value="0">
-                                                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-
-                                                        <!-- Col 8 = espaciador -->
-
-                                                        <TextBlock Grid.Column="9" Text="{Binding Categoria}" FontSize="11"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
-
-                                                        <TextBlock Grid.Column="10" Text="{Binding UnidadMedida}" FontSize="11"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                   VerticalAlignment="Center"/>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
+                                <!-- Virtualized DataGrid (AutoGenerateColumns=False, read-only).
+                                     MaxHeight is REQUIRED for virtualization: inside this
+                                     StackPanel chain the grid otherwise measures at infinite
+                                     height and realizes every row. A bounded viewport makes the
+                                     internal ScrollViewer + virtualization kick in. -->
+                                <DataGrid Grid.Row="1"
+                                          ItemsSource="{Binding FilasPreview}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserResizeRows="False"
+                                          EnableRowVirtualization="True"
+                                          EnableColumnVirtualization="True"
+                                          VirtualizingPanel.IsVirtualizing="True"
+                                          VirtualizingPanel.VirtualizationMode="Recycling"
+                                          ScrollViewer.CanContentScroll="True"
+                                          MaxHeight="420"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="None"
+                                          BorderThickness="0"
+                                          BorderBrush="Transparent"
+                                          Background="Transparent"
+                                          RowBackground="Transparent"
+                                          AlternatingRowBackground="Transparent"
+                                          SelectionMode="Single"
+                                          CanUserSortColumns="False"
+                                          RowHeaderWidth="0">
+                                    <DataGrid.ColumnHeaderStyle>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="FontSize" Value="10"/>
+                                            <Setter Property="Padding" Value="12,8"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                        </Style>
+                                    </DataGrid.ColumnHeaderStyle>
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding EsValida}" Value="False">
+                                                    <Setter Property="Background" Value="#08EF4444"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Fila}" Width="36">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="ESTADO" Binding="{Binding EstadoTexto}" Width="72">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="10"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding EsValida}" Value="False">
+                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding EsNuevo}" Value="False">
+                                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="*">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="P. VENTA" Binding="{Binding PrecioVenta, StringFormat=C0}" Width="85">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="TextAlignment" Value="Right"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="P. COSTO" Binding="{Binding PrecioCosto, StringFormat=C0}" Width="85">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="TextAlignment" Value="Right"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="STOCK" Binding="{Binding Stock}" Width="55">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="TextAlignment" Value="Right"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="MÍNIMO" Binding="{Binding StockMinimo}" Width="55">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="TextAlignment" Value="Right"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="MARGEN" Binding="{Binding Margen, StringFormat={}{0:N1} %}" Width="72">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="TextAlignment" Value="Right"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Margen}" Value="0">
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="CATEGORÍA" Binding="{Binding Categoria}" Width="82">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="UNIDAD" Binding="{Binding UnidadMedida}" Width="72">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
 
                                 <Border Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource CardBrush}" Opacity="0.8"
                                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>

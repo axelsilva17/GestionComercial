@@ -1,8 +1,11 @@
 using Caliburn.Micro;
+using FluentValidation;
+using FluentValidation.Results;
 using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.UI.Helpers;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -335,6 +338,15 @@ namespace GestionComercial.UI.ViewModels.Productos
                 MessageBox.Show("Producto guardado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 return true;
             }
+            catch (ValidationException ex)
+            {
+                // Validation failures are business errors: show them inline in the
+                // form error surface (human-readable bullets) instead of exposing
+                // the raw "Validation failed: * CodigoBarra: ..." exception text.
+                _logger?.LogError(ex, "Error de validación guardando producto");
+                MostrarError(FormatearErroresValidacion(ex));
+                return false;
+            }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error guardando producto");
@@ -346,6 +358,36 @@ namespace GestionComercial.UI.ViewModels.Productos
                 IsLoading = false;
             }
         }
+
+        /// Formats a FluentValidation ValidationException into human-readable
+        /// bullet lines ("No se pudo guardar el producto:" + "• Campo: mensaje")
+        /// instead of exposing the raw exception text.
+        private static string FormatearErroresValidacion(ValidationException ex)
+        {
+            var errores = ex.Errors?.ToList() ?? new List<ValidationFailure>();
+            if (errores.Count == 0)
+                return "No se pudo guardar el producto: " + ex.Message;
+
+            var lineas = errores.Select(e => $"• {NombreCampoLegible(e.PropertyName)}: {e.ErrorMessage}");
+            return "No se pudo guardar el producto:\n" + string.Join("\n", lineas);
+        }
+
+        private static string NombreCampoLegible(string nombrePropiedad)
+            => NombresCampos.TryGetValue(nombrePropiedad, out var legible) ? legible : nombrePropiedad;
+
+        private static readonly Dictionary<string, string> NombresCampos = new()
+        {
+            ["Nombre"]           = "Nombre",
+            ["CodigoBarra"]      = "Código de barra",
+            ["PrecioVentaActual"]= "Precio de venta",
+            ["PrecioCostoActual"]= "Precio de costo",
+            ["StockActual"]      = "Stock actual",
+            ["StockMinimo"]      = "Stock mínimo",
+            ["IdCategoria"]      = "Categoría",
+            ["IdUnidadMedida"]   = "Unidad de medida",
+            ["IdEmpresa"]        = "Empresa",
+            ["IdProducto"]       = "Producto",
+        };
 
         public async Task Volver()
         {

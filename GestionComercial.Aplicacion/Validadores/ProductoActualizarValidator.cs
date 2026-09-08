@@ -15,11 +15,16 @@ namespace GestionComercial.Aplicacion.Validators
                 .NotEmpty().WithMessage("El nombre es obligatorio.")
                 .MinimumLength(3).WithMessage("El nombre debe tener al menos 3 caracteres.");
 
+            // CodigoBarra is optional on the manual product form: empty/null = valid.
+            // When provided it must be digits only, max 50 chars and unique
+            // among the other products (its own row is allowed).
             RuleFor(x => x.CodigoBarra)
-                .NotEmpty().WithMessage("El código de barra es obligatorio.")
-                .Matches(@"^\d+$").WithMessage("El código de barra debe contener solo números.")
+                .Must(codigo => string.IsNullOrWhiteSpace(codigo) || System.Text.RegularExpressions.Regex.IsMatch(codigo, @"^[0-9]+$"))
+                    .WithMessage("El código de barra debe contener solo números.")
+                .MaximumLength(50).WithMessage("El código de barra no puede superar los 50 caracteres.")
                 .MustAsync(async (dto, codigo, ct) =>
                 {
+                    if (string.IsNullOrWhiteSpace(codigo)) return true;
                     var existente = await productoRepo.ObtenerPorCodigoBarraAsync(codigo);
                     return existente == null || existente.Id == dto.IdProducto;
                 }).WithMessage("Ya existe otro producto con ese código de barra.");

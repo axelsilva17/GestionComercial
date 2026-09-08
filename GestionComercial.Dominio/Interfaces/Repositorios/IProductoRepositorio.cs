@@ -11,7 +11,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default);
         Task<(IEnumerable<Producto> Items, int TotalCount)> ObtenerPorEmpresaPaginadoAsync(
             int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null, CancellationToken ct = default);
-        Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa, CancellationToken ct = default);
+        Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa, int? umbral = null, CancellationToken ct = default);
         Task<Producto?> ObtenerPorIdConDetallesAsync(int id, CancellationToken ct = default);
         Task<bool> ExisteCodigoBarraAsync(string codigo, int idEmpresa, CancellationToken ct = default);
         Task<bool> ExisteNombreEnCategoriaAsync(string nombre, int idCategoria, int idEmpresa, CancellationToken ct = default);
@@ -26,10 +26,11 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<List<Producto>> ObtenerConStockBajoConLimiteAsync(int idEmpresa, int limite, CancellationToken ct = default);
 
         /// <summary>
-        /// Cuenta productos con stock crítico (StockActual <= StockMinimo, Activo) en SQL.
+        /// Cuenta productos con stock crítico (Activo) en SQL. Si se pasa umbral se compara
+        /// contra él (StockActual &lt;= umbral); si no, cae al StockMinimo de cada producto.
         /// Mismo filtro que ObtenerStockCriticoAsync sin materializar filas. Útil para KPIs.
         /// </summary>
-        Task<int> ContarStockCriticoAsync(int idEmpresa, CancellationToken ct = default);
+        Task<int> ContarStockCriticoAsync(int idEmpresa, int? umbral = null, CancellationToken ct = default);
         
         // Búsqueda con StartsWith (prefijo) para uso de índices - reemplaza Contains/LIKE '%term%'
         Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default);
@@ -43,5 +44,13 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         // Agregación SQL de métricas (activos, stock bajo, sin stock) sin materializar productos.
         Task<(int ProductosActivos, int ProductosStockBajo, int ProductosSinStock)>
             ObtenerMetricasAsync(int idEmpresa, CancellationToken ct = default);
+
+        // Ajuste masivo de precios: una sola UPDATE SQL con el MISMO filtro que el preview del popup
+        // (empresa + texto StartsWith + categoría + activo). factor/delta replican el cálculo del
+        // preview (porcentaje → factor 1±pct/100; fijo → delta ±monto). Devuelve filas afectadas.
+        Task<int> AplicarAjustePreciosMasivoAsync(
+            int idEmpresa, string? texto, int? idCategoria, bool? soloActivos,
+            decimal factor, decimal delta, bool esPorcentaje, bool aplicarVenta, bool aplicarCosto,
+            CancellationToken ct = default);
     }
 }

@@ -77,12 +77,31 @@ namespace GestionComercial.UI.ViewModels.Productos
             set { _archivoRuta = value; NotifyOfPropertyChange(() => ArchivoRuta); }
         }
 
-        // ── Filas preview ────────────────────────────────────────────────────
-        private ObservableCollection<FilaImportacionDto> _filas = new();
-        public ObservableCollection<FilaImportacionDto> Filas
+        // ── Full rows (import source; NOT bound to the UI) ────────────────────
+        // Plain List on purpose: avoids materializing a 10k+ ObservableCollection
+        // nobody binds to. The UI binds exclusively to FilasPreview.
+        private List<FilaImportacionDto> _filas = new();
+        public List<FilaImportacionDto> Filas
         {
             get => _filas;
             set { _filas = value; NotifyOfPropertyChange(() => Filas); }
+        }
+
+        // ── Filas preview (capped for UI performance) ─────────────────────────
+        private const int LimiteFilasPreview = 500;
+
+        private ObservableCollection<FilaImportacionDto> _filasPreview = new();
+        public ObservableCollection<FilaImportacionDto> FilasPreview
+        {
+            get => _filasPreview;
+            set { _filasPreview = value; NotifyOfPropertyChange(() => FilasPreview); }
+        }
+
+        private string _avisoPreview = string.Empty;
+        public string AvisoPreview
+        {
+            get => _avisoPreview;
+            set { _avisoPreview = value; NotifyOfPropertyChange(() => AvisoPreview); }
         }
 
         // ── Collapsible preview list ──────────────────────────────────────────
@@ -255,7 +274,14 @@ namespace GestionComercial.UI.ViewModels.Productos
                 FilasTotales  = filas.Count;
                 FilasValidas  = filas.Count(f => f.EsValida);
                 FilasConError = filas.Count(f => !f.EsValida);
-                Filas = new ObservableCollection<FilaImportacionDto>(filas);
+                Filas = filas;
+
+                // Cap preview collection for UI performance (500 rows max)
+                FilasPreview = new ObservableCollection<FilaImportacionDto>(
+                    filas.Take(LimiteFilasPreview));
+                AvisoPreview = FilasTotales > LimiteFilasPreview
+                    ? $"Mostrando {FilasPreview.Count} de {FilasTotales} filas (vista previa)"
+                    : string.Empty;
 
                 Estado = EstadoImportacion.Previsualizando;
             }
@@ -282,7 +308,11 @@ namespace GestionComercial.UI.ViewModels.Productos
 
                 using var workbook = new XLWorkbook(ruta);
                 var hoja = workbook.Worksheet(1);
-                var filasUsadas = hoja.RangeUsed()?.RowsUsed().ToList() ?? new List<IXLRangeRow>();
+                // RowsUsed() directly (avoids building the whole-sheet RangeUsed
+                // object, which is slower on large files). It yields the same row
+                // set: only rows with at least one used cell; all-empty rows are
+                // dropped anyway by FilaVacia below.
+                var filasUsadas = hoja.RowsUsed().ToList();
 
                 if (filasUsadas.Count < 2)
                     throw new Exception("El archivo debe tener al menos una fila de encabezado y una fila de datos.");
@@ -290,56 +320,71 @@ namespace GestionComercial.UI.ViewModels.Productos
                 var encabezado = filasUsadas[0];
                 var mapaColumnas = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-                int colIdx = 1;
+                // Mapear por NÚMERO DE COLUMNA REAL del archivo (no por índice de enumeración)
                 foreach (var celda in encabezado.CellsUsed())
                 {
                     var nombreCol = celda.GetString().Trim().ToLower();
-                    mapaColumnas[nombreCol] = colIdx;
-                    colIdx++;
+                    if (nombreCol.Length > 0)
+                        mapaColumnas[nombreCol] = celda.Address.ColumnNumber;
                 }
 
-                // Pre-validación de esquema Excel
+                string ValorCelda(IXLRow filaExcel, string nombre)
+                    => mapaColumnas.TryGetValue(nombre, out int col)
+                        ? (filaExcel.Cell(col).GetString()?.Trim() ?? string.Empty)
+                        : string.Empty;
+
+                bool FilaVacia(string nombre, string codigo, string venta, string costo,
+                    string stock, string stockMin)
+                    => string.IsNullOrEmpty(nombre) && string.IsNullOrEmpty(codigo)
+                       && string.IsNullOrEmpty(venta) && string.IsNullOrEmpty(costo)
+                       && string.IsNullOrEmpty(stock) && string.IsNullOrEmpty(stockMin);
+
+                // Guard de esquema: DataTable solo con las primeras 100 filas NO vacías
+                // (el guard valida internamente ese mismo límite). Evita materializar
+                // todo el archivo a string dos veces.
                 var table = new DataTable();
                 foreach (var col in mapaColumnas)
                     table.Columns.Add(col.Key, typeof(string));
-                foreach (var filaExcel in filasUsadas.Skip(1))
-                {
-                    var newRow = table.NewRow();
-                    foreach (var col in mapaColumnas)
-                    {
-                        try { newRow[col.Key] = filaExcel.Cell(col.Value)?.GetString()?.Trim() ?? string.Empty; }
-                        catch { newRow[col.Key] = string.Empty; }
-                    }
-                    table.Rows.Add(newRow);
-                }
 
-                var schemaResult = ImportacionSchemaGuard.Validate(table);
-                if (schemaResult.HasFatalErrors)
-                {
-                    var fatalErrors = string.Join("\n", schemaResult.Errors.Where(e => e.IsFatal).Select(e => e.Message));
-                    throw new Exception($"Error de esquema:\n{fatalErrors}");
-                }
-
-                // Construir filas desde el DataTable validado
                 var guardrails = new ProductoImportGuardrails();
                 var dtosImportacion = new List<ProductoImportarDto>();
+                int filasParaGuard = 0;
 
-                for (int i = 0; i < table.Rows.Count; i++)
+                foreach (var filaExcel in filasUsadas.Skip(1))
                 {
-                    var row = table.Rows[i];
-                    var nombre = row["Nombre"]?.ToString() ?? string.Empty;
-                    var codigoBarra = row["CodigoBarra"]?.ToString() ?? string.Empty;
-                    var pVentaStr = row["PrecioVenta"]?.ToString() ?? string.Empty;
-                    var pCostoStr = row["PrecioCosto"]?.ToString() ?? string.Empty;
-                    var stockStr = row["StockActual"]?.ToString() ?? string.Empty;
-                    var stockMinStr = row["StockMinimo"]?.ToString() ?? string.Empty;
-                    var categoria = row["Categoria"]?.ToString() ?? string.Empty;
-                    var unidadMedida = row["UnidadMedida"]?.ToString() ?? string.Empty;
+                    var nombre = ValorCelda(filaExcel, "nombre");
+                    var codigoBarra = ValorCelda(filaExcel, "codigobarra");
+                    var pVentaStr = ValorCelda(filaExcel, "precioventa");
+                    var pCostoStr = ValorCelda(filaExcel, "preciocosto");
+                    var stockStr = ValorCelda(filaExcel, "stockactual");
+                    var stockMinStr = ValorCelda(filaExcel, "stockminimo");
+                    var categoria = ValorCelda(filaExcel, "categoria");
+                    var unidadMedida = ValorCelda(filaExcel, "unidadmedida");
 
-                    decimal.TryParse(pVentaStr, out decimal precioVenta);
-                    decimal.TryParse(pCostoStr, out decimal precioCosto);
-                    int.TryParse(stockStr, out int stock);
-                    int.TryParse(stockMinStr, out int stockMinimo);
+                    // Normalización: omitir filas vacías o con solo espacios
+                    if (FilaVacia(nombre, codigoBarra, pVentaStr, pCostoStr, stockStr, stockMinStr))
+                        continue;
+
+                    if (filasParaGuard < 100)
+                    {
+                        var newRow = table.NewRow();
+                        newRow["nombre"] = nombre;
+                        newRow["codigobarra"] = codigoBarra;
+                        newRow["precioventa"] = pVentaStr;
+                        newRow["preciocosto"] = pCostoStr;
+                        newRow["stockactual"] = stockStr;
+                        newRow["stockminimo"] = stockMinStr;
+                        newRow["categoria"] = categoria;
+                        newRow["unidadmedida"] = unidadMedida;
+                        table.Rows.Add(newRow);
+                        filasParaGuard++;
+                    }
+
+                    // Parsing tolerante a la cultura ("24000.50", "$1,234.56", "1.234,56")
+                    ImportacionNormalizacion.TryParseDecimal(pVentaStr, out decimal precioVenta);
+                    ImportacionNormalizacion.TryParseDecimal(pCostoStr, out decimal precioCosto);
+                    ImportacionNormalizacion.TryParseInt(stockStr, out int stock);
+                    ImportacionNormalizacion.TryParseInt(stockMinStr, out int stockMinimo);
 
                     int? idCategoria = null;
                     if (!string.IsNullOrWhiteSpace(categoria))
@@ -353,7 +398,7 @@ namespace GestionComercial.UI.ViewModels.Productos
 
                     filas.Add(new FilaImportacionDto
                     {
-                        Fila = i + 2,
+                        Fila = filaExcel.RowNumber(), // número de fila REAL del Excel
                         Nombre = nombre,
                         CodigoBarra = codigoBarra,
                         PrecioVenta = precioVenta,
@@ -383,6 +428,13 @@ namespace GestionComercial.UI.ViewModels.Productos
                         IdCategoria = idCategoria ?? 0,
                         IdUnidadMedida = 1,
                     });
+                }
+
+                var schemaResult = ImportacionSchemaGuard.Validate(table);
+                if (schemaResult.HasFatalErrors)
+                {
+                    var fatalErrors = string.Join("\n", schemaResult.Errors.Where(e => e.IsFatal).Select(e => e.Message));
+                    throw new Exception($"Error de esquema:\n{fatalErrors}");
                 }
 
                 // Ejecutar guardrails de negocio
@@ -498,7 +550,9 @@ namespace GestionComercial.UI.ViewModels.Productos
         {
             ArchivoRuta   = string.Empty;
             ArchivoNombre = string.Empty;
-            Filas         = new ObservableCollection<FilaImportacionDto>();
+            Filas         = new List<FilaImportacionDto>();
+            FilasPreview  = new ObservableCollection<FilaImportacionDto>();
+            AvisoPreview  = string.Empty;
             FilasTotales  = 0;
             FilasValidas  = 0;
             FilasConError = 0;
@@ -527,83 +581,68 @@ namespace GestionComercial.UI.ViewModels.Productos
         }
 
         // ── Descargar plantilla ───────────────────────────────────────────────
+        private bool _descargandoPlantilla;
+
         public async Task DescargarPlantilla()
         {
-            // Usar carpeta temp del sistema
-            var tempPath = System.IO.Path.GetTempPath();
-            var fileName = $"PlantillaImportacionProductos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-            var filePath = System.IO.Path.Combine(tempPath, fileName);
+            // Guard against concurrent download requests.
+            if (_descargandoPlantilla) return;
+            _descargandoPlantilla = true;
 
-            await Task.Run(() =>
-            {
-                using var workbook = new XLWorkbook();
-                var hoja = workbook.Worksheets.Add("Productos");
-
-                var encabezados = new[] { "Nombre", "CodigoBarra", "PrecioVenta", "PrecioCosto", "StockActual", "StockMinimo", "Categoria", "UnidadMedida" };
-                for (int i = 0; i < encabezados.Length; i++)
-                {
-                    var celda = hoja.Cell(1, i + 1);
-                    celda.Value = encabezados[i];
-                    celda.Style.Font.Bold = true;
-                    celda.Style.Fill.BackgroundColor = XLColor.FromHtml("#2D5A8A");
-                    celda.Style.Font.FontColor = XLColor.White;
-                }
-
-                var ejemplos = new (string Nombre, string CodBarra, decimal PVenta, decimal PCosto, int Stock, int StockMin, string Categoria, string Unidad)[]
-                {
-                    ("Auriculares Pro X", "7890001", 24000, 15000, 8,  3, "Electronica", "Unidad"),
-                    ("Mouse Inalambrico", "7890002", 12500, 8000,  3,  2, "Perifericos", "Unidad"),
-                    ("Teclado Mecanico",  "7890003", 34000, 22000, 15, 5, "Perifericos", "Unidad"),
-                    ("Webcam HD 1080p",   "7890004", 18000, 11000, 12, 4, "Perifericos", "Unidad"),
-                    ("Cable HDMI 2m",     "7890005", 3500,  1800,  25, 5, "Accesorios",  "Unidad"),
-                };
-
-                for (int f = 0; f < ejemplos.Length; f++)
-                {
-                    hoja.Cell(f + 2, 1).Value = ejemplos[f].Nombre;
-                    hoja.Cell(f + 2, 2).Value = ejemplos[f].CodBarra;
-                    hoja.Cell(f + 2, 3).Value = ejemplos[f].PVenta;
-                    hoja.Cell(f + 2, 4).Value = ejemplos[f].PCosto;
-                    hoja.Cell(f + 2, 5).Value = ejemplos[f].Stock;
-                    hoja.Cell(f + 2, 6).Value = ejemplos[f].StockMin;
-                    hoja.Cell(f + 2, 7).Value = ejemplos[f].Categoria;
-                    hoja.Cell(f + 2, 8).Value = ejemplos[f].Unidad;
-                }
-
-                hoja.Column(1).Width = 25;
-                hoja.Column(2).Width = 15;
-                hoja.Column(3).Width = 15;
-                hoja.Column(4).Width = 15;
-                hoja.Column(5).Width = 12;
-                hoja.Column(6).Width = 12;
-                hoja.Column(7).Width = 15;
-                hoja.Column(8).Width = 15;
-
-                workbook.SaveAs(filePath, new SaveOptions { ValidatePackage = false });
-            });
-
-            // Guardar ruta para re-importar
-            RutaPlantillaTemporal = filePath;
-            ArchivoRuta = filePath;
-            ArchivoNombre = System.IO.Path.GetFileName(filePath);
-
-            // Abrir automáticamente
             try
             {
-                var startInfo = new System.Diagnostics.ProcessStartInfo
+                var dialogo = new Microsoft.Win32.SaveFileDialog
                 {
-                    FileName = filePath,
-                    UseShellExecute = true
+                    Title      = "Guardar plantilla de importación",
+                    FileName   = "Plantilla_Productos.xlsx",
+                    DefaultExt = ".xlsx",
+                    Filter     = "Excel (*.xlsx)|*.xlsx",
                 };
-                System.Diagnostics.Process.Start(startInfo);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error al abrir Excel");
-            }
 
-            // Previsualizar
-            await PrevisualizarArchivo();
+                if (dialogo.ShowDialog() != true) return;
+
+                var filePath = dialogo.FileName;
+
+                await Task.Run(() =>
+                {
+                    using var workbook = new XLWorkbook();
+                    var hoja = workbook.Worksheets.Add("Productos");
+
+                    // Exact schema headers: same names and order as ImportacionSchema.
+                    var encabezados = ImportacionSchema.SchemaDefinicion
+                        .Select(c => c.Name)
+                        .ToArray();
+
+                    for (int i = 0; i < encabezados.Length; i++)
+                    {
+                        var celda = hoja.Cell(1, i + 1);
+                        celda.Value = encabezados[i];
+                        celda.Style.Font.Bold = true;
+                        celda.Style.Font.FontColor = XLColor.White;
+                        celda.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A5F");
+                        celda.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    }
+
+                    // Sensible column widths for the schema columns.
+                    var anchos = new[] { 25, 35, 15, 15, 22, 18, 13, 13, 16 };
+                    for (int i = 0; i < anchos.Length && i < encabezados.Length; i++)
+                        hoja.Column(i + 1).Width = anchos[i];
+
+                    // Force CodigoBarra (column 5) to text so long codes and
+                    // leading zeros are preserved exactly as typed.
+                    hoja.Column(5).Style.NumberFormat.Format = "@";
+
+                    // Freeze the header row and add an auto-filter on the header.
+                    hoja.SheetView.FreezeRows(1);
+                    hoja.RangeUsed()?.SetAutoFilter();
+
+                    workbook.SaveAs(filePath, new SaveOptions { ValidatePackage = false });
+                });
+            }
+            finally
+            {
+                _descargandoPlantilla = false;
+            }
         }
 
         ///         /// Re-importa la última plantilla descargada sin pedir archivo.

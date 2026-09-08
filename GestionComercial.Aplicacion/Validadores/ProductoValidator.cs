@@ -15,10 +15,15 @@ namespace GestionComercial.Aplicacion.Validators
                     !await productoRepo.ExisteNombreEnCategoriaAsync(nombre, dto.IdCategoria, dto.IdEmpresa))
                     .WithMessage("Ya existe un producto con ese nombre en esta categoría.");
 
+            // CodigoBarra is optional on the manual product form: empty/null = valid
+            // (multiple products may have no barcode). When provided it must be
+            // digits only, max 50 chars and unique per company.
             RuleFor(x => x.CodigoBarra)
-                .NotEmpty().WithMessage("El código de barra es obligatorio.")
-                .Matches(@"^\d+$").WithMessage("El código de barra debe contener solo números.")
+                .Must(codigo => string.IsNullOrWhiteSpace(codigo) || System.Text.RegularExpressions.Regex.IsMatch(codigo, @"^[0-9]+$"))
+                    .WithMessage("El código de barra debe contener solo números.")
+                .MaximumLength(50).WithMessage("El código de barra no puede superar los 50 caracteres.")
                 .MustAsync(async (dto, codigo, ct) =>
+                    string.IsNullOrWhiteSpace(codigo) ||
                     !await productoRepo.ExisteCodigoBarraAsync(codigo, dto.IdEmpresa))
                     .WithMessage("Ya existe un producto con ese código de barra.");
 

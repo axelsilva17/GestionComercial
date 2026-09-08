@@ -12,7 +12,8 @@ namespace GestionComercial.Aplicacion.Importacion
             {
                 new("NombreVacio", GuardSeverity.Error, ValidateNombreVacio),
                 new("PrecioCero", GuardSeverity.Warning, ValidatePrecioCero),
-                new("CodigoBarraObligatorio", GuardSeverity.Error, ValidateCodigoBarraObligatorio),
+                // CodigoBarra is OPTIONAL: empty/whitespace = product without barcode.
+                // Only validate numeric format when a value IS provided.
                 new("CodigoBarraNumerico", GuardSeverity.Error, ValidateCodigoBarraNumerico),
                 new("NombreLongitud", GuardSeverity.Error, ValidateNombreLongitud),
             };
@@ -63,13 +64,6 @@ namespace GestionComercial.Aplicacion.Importacion
             if (row.PrecioVentaActual <= 0)
                 return new GuardResult(false, "Precio de venta ≤ 0", "PrecioVenta", GuardSeverity.Warning);
             return new GuardResult(true, "", "PrecioVenta", GuardSeverity.Warning);
-        }
-
-        private static GuardResult ValidateCodigoBarraObligatorio(ProductoImportarDto row)
-        {
-            if (string.IsNullOrWhiteSpace(row.CodigoBarra))
-                return new GuardResult(false, "Código de barra obligatorio", "CodigoBarra", GuardSeverity.Error);
-            return new GuardResult(true, "", "CodigoBarra", GuardSeverity.Error);
         }
 
         private static GuardResult ValidateCodigoBarraNumerico(ProductoImportarDto row)

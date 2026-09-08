@@ -75,29 +75,41 @@ namespace GestionComercial.Aplicacion.Importacion
         private static bool TryConvert(string value, Type targetType, out object? result)
         {
             result = null;
-            try
+            if (targetType == typeof(string))
             {
-                if (targetType == typeof(string))
+                result = value;
+                return true;
+            }
+            if (targetType == typeof(decimal))
+            {
+                // Culture-tolerant parsing: es-AR ("1.234,56"), en-US ("$1,234.56")
+                // and invariant ("1500.50") formats are all valid.
+                if (ImportacionNormalizacion.TryParseDecimal(value, out var dec))
                 {
-                    result = value;
-                    return true;
-                }
-                if (targetType == typeof(decimal))
-                {
-                    result = decimal.Parse(value);
-                    return true;
-                }
-                if (targetType == typeof(int))
-                {
-                    result = int.Parse(value);
+                    result = dec;
                     return true;
                 }
                 return false;
             }
-            catch
+            if (targetType == typeof(int))
             {
+                if (ImportacionNormalizacion.TryParseInt(value, out var entero))
+                {
+                    result = entero;
+                    return true;
+                }
                 return false;
             }
+            if (targetType == typeof(DateTime))
+            {
+                if (ImportacionNormalizacion.TryParseFecha(value, out var fecha))
+                {
+                    result = fecha;
+                    return true;
+                }
+                return false;
+            }
+            return false;
         }
     }
 }

@@ -39,19 +39,21 @@ namespace GestionComercial.Persistencia.Repositorio
 
         // Materialize before ordering: SQLite does not support ORDER BY on decimal columns.
         // The filtered set (under-stock only) is small, so in-memory sort is safe.
-        public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa, CancellationToken ct = default)
+        public async Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa, int? umbral = null, CancellationToken ct = default)
         {
             var lista = await _dbSet.AsNoTracking()
-                .Where(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo)
+                .Where(p => p.Id_empresa == idEmpresa && p.Activo
+                    && p.StockActual <= (umbral.HasValue && umbral.Value > 0 ? (decimal)umbral.Value : p.StockMinimo))
                 .Include(p => p.Categoria)
                 .ToListAsync(ct);
             return lista.OrderBy(p => p.StockActual);
         }
 
         // Conteo en SQL con el mismo filtro que ObtenerStockCriticoAsync (KPI sin materializar).
-        public async Task<int> ContarStockCriticoAsync(int idEmpresa, CancellationToken ct = default)
+        public async Task<int> ContarStockCriticoAsync(int idEmpresa, int? umbral = null, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
-                .CountAsync(p => p.Id_empresa == idEmpresa && p.Activo && p.StockActual <= p.StockMinimo, ct);
+                .CountAsync(p => p.Id_empresa == idEmpresa && p.Activo
+                    && p.StockActual <= (umbral.HasValue && umbral.Value > 0 ? (decimal)umbral.Value : p.StockMinimo), ct);
 
         public async Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default)
         {
@@ -253,6 +255,64 @@ namespace GestionComercial.Persistencia.Repositorio
 
             var r = rows.FirstOrDefault() ?? new MetricasProducto(0, 0, 0);
             return (r.ProductosActivos, r.ProductosStockBajo, r.ProductosSinStock);
+        }
+
+        // Ajuste masivo de precios: una sola UPDATE SQL. El filtro replica EXACTAMENTE el preview
+        // del popup (ObtenerPorEmpresaPaginadoAsync): empresa + texto (StartsWith) + categoría + activo.
+        // Los precios se tratan como REAL (las columnas decimal se almacenan como texto en SQLite) y
+        // cada fila conserva su precio si el resultado NO supera el guard de no-negativos.
+        public async Task<int> AplicarAjustePreciosMasivoAsync(
+            int idEmpresa, string? texto, int? idCategoria, bool? soloActivos,
+            decimal factor, decimal delta, bool esPorcentaje, bool aplicarVenta, bool aplicarCosto,
+            CancellationToken ct = default)
+        {
+            // {0} empresa, {1} aplicarVenta, {2} factor, {3} delta, {4} esPorcentaje, {5} aplicarCosto
+            var parametros = new List<object> { idEmpresa };
+            var sql = "UPDATE Producto SET " +
+                "PrecioVentaActual = CASE WHEN {1} = 1 THEN " +
+                "CASE WHEN {4} = 1 THEN " +
+                "CASE WHEN ROUND(CAST(PrecioVentaActual AS REAL) * {2}, 2) > 0 " +
+                "THEN ROUND(CAST(PrecioVentaActual AS REAL) * {2}, 2) ELSE PrecioVentaActual END " +
+                "ELSE " +
+                "CASE WHEN CAST(PrecioVentaActual AS REAL) + {3} > 0 " +
+                "THEN CAST(PrecioVentaActual AS REAL) + {3} ELSE PrecioVentaActual END END " +
+                "ELSE PrecioVentaActual END, " +
+                "PrecioCostoActual = CASE WHEN {5} = 1 THEN " +
+                "CASE WHEN {4} = 1 THEN " +
+                "CASE WHEN ROUND(CAST(PrecioCostoActual AS REAL) * {2}, 2) > 0 " +
+                "THEN ROUND(CAST(PrecioCostoActual AS REAL) * {2}, 2) ELSE PrecioCostoActual END " +
+                "ELSE " +
+                "CASE WHEN CAST(PrecioCostoActual AS REAL) + {3} > 0 " +
+                "THEN CAST(PrecioCostoActual AS REAL) + {3} ELSE PrecioCostoActual END END " +
+                "ELSE PrecioCostoActual END " +
+                "WHERE Id_empresa = {0}";
+
+            parametros.Add(aplicarVenta ? 1 : 0); // {1}
+            parametros.Add(factor);               // {2}
+            parametros.Add(delta);                // {3}
+            parametros.Add(esPorcentaje ? 1 : 0); // {4}
+            parametros.Add(aplicarCosto ? 1 : 0); // {5}
+
+            if (idCategoria.HasValue && idCategoria.Value > 0)
+            {
+                parametros.Add(idCategoria.Value);
+                sql += $" AND Id_categoria = {{{parametros.Count - 1}}}";
+            }
+
+            if (soloActivos.HasValue)
+            {
+                parametros.Add(soloActivos.Value ? 1 : 0);
+                sql += $" AND Activo = {{{parametros.Count - 1}}}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(texto))
+            {
+                parametros.Add(texto.Trim());
+                sql += $" AND (Nombre LIKE {{{parametros.Count - 1}}} || '%' " +
+                       $"OR CodigoBarra LIKE {{{parametros.Count - 1}}} || '%')";
+            }
+
+            return await _context.Database.ExecuteSqlRawAsync(sql, parametros.ToArray(), ct);
         }
     }
 

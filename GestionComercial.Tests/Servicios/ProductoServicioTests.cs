@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GestionComercial.Aplicacion.DTOs.Productos;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Entidades.Organizacion;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
@@ -12,11 +13,17 @@ namespace GestionComercial.Tests.Servicios
     {
         private readonly Mock<IUnitOfWork> _mockUow = new();
         private readonly Mock<IProductoRepositorio> _mockProductoRepo = new();
+        private readonly Mock<IEmpresaRepositorio> _mockEmpresasRepo = new();
         private readonly ProductoServicio _servicio;
 
         public ProductoServicioTests()
         {
             _mockUow.Setup(u => u.Productos).Returns(_mockProductoRepo.Object);
+            _mockUow.Setup(u => u.Empresas).Returns(_mockEmpresasRepo.Object);
+            _mockEmpresasRepo
+                .Setup(r => r.PrimerODefaultAsync(
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Empresa, bool>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Empresa?)null); // sin empresa → umbral por defecto 10
             _servicio = new ProductoServicio(_mockUow.Object);
         }
 
@@ -46,7 +53,7 @@ namespace GestionComercial.Tests.Servicios
                 new() { Id = 2, Nombre = "Prod Bajo", StockActual = 2, StockMinimo = 10, PrecioVentaActual = 50, Id_empresa = 1 },
             };
             _mockProductoRepo
-                .Setup(r => r.ObtenerStockCriticoAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.ObtenerStockCriticoAsync(1, It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(productosCriticos);
 
             var resultado = await _servicio.ObtenerStockCriticoAsync(1);

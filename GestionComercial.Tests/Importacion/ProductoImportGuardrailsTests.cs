@@ -63,14 +63,26 @@ namespace GestionComercial.Tests.Importacion
         }
 
         [Fact]
-        public void ValidateBatch_CodigoBarraObligatorio_RetornaError()
+        public void ValidateBatch_CodigoBarraVacia_EsValida()
         {
             var rows = new[] { CreateValidDto(codigoBarra: "") };
 
             var results = _guardrails.ValidateBatch(rows);
 
-            var codResult = results[0].Results.First(r => r.Field == "CodigoBarra" && r.Severity == GuardSeverity.Error);
-            codResult.Passed.Should().BeFalse();
+            // Empty barcode is valid — no error or failure on the CodigoBarra field
+            var codResults = results[0].Results.Where(r => r.Field == "CodigoBarra" && r.Severity == GuardSeverity.Error).ToList();
+            codResults.Should().AllSatisfy(r => r.Passed.Should().BeTrue());
+        }
+
+        [Fact]
+        public void ValidateBatch_CodigoBarraWhitespace_EsValida()
+        {
+            var rows = new[] { CreateValidDto(codigoBarra: "   ") };
+
+            var results = _guardrails.ValidateBatch(rows);
+
+            var codResults = results[0].Results.Where(r => r.Field == "CodigoBarra" && r.Severity == GuardSeverity.Error).ToList();
+            codResults.Should().AllSatisfy(r => r.Passed.Should().BeTrue());
         }
 
         [Fact]
