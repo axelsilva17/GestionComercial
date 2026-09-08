@@ -131,6 +131,7 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (_fechaDesde == value) return;
                 _fechaDesde = value; 
                 NotifyOfPropertyChange(() => FechaDesde);
+                ProgramarRecargaPorFechas();
             }
         }
 
@@ -143,7 +144,37 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (_fechaHasta == value) return;
                 _fechaHasta = value; 
                 NotifyOfPropertyChange(() => FechaHasta);
+                ProgramarRecargaPorFechas();
             }
+        }
+
+        // ── Filtro de fecha explícito ───────────────────────────────────────────
+        // Con "Todos" las fechas del rango se aplican siempre. Con un proveedor
+        // seleccionado, las fechas solo filtran cuando esta opción está activa
+        // (contrato de historial del proveedor: por defecto se ven TODAS sus compras,
+        // incluso las antiguas fuera del rango por defecto).
+        private bool _fechaFiltroActivo;
+        public bool FechaFiltroActivo
+        {
+            get => _fechaFiltroActivo;
+            set
+            {
+                if (_fechaFiltroActivo == value) return;
+                _fechaFiltroActivo = value;
+                NotifyOfPropertyChange(() => FechaFiltroActivo);
+                ProgramarRecargaPorFechas();
+            }
+        }
+
+        // El filtro por fecha solo tiene efecto adicional cuando hay un proveedor
+        // concreto seleccionado; con "Todos" las fechas ya se aplican siempre.
+        public bool FechaFiltroActivoHabilitado => ProveedorFiltro is { IdProveedor: > 0 };
+
+        // Recarga (con debounce) cuando cambian las fechas o el toggler de filtro de fecha
+        private void ProgramarRecargaPorFechas()
+        {
+            _debounceTimer.Stop();
+            _debounceTimer.Start();
         }
 
         private ProveedorItemDto _proveedorFiltro;
@@ -155,6 +186,7 @@ namespace GestionComercial.UI.ViewModels.Compras
                 if (ReferenceEquals(_proveedorFiltro, value)) return;
                 _proveedorFiltro = value; 
                 NotifyOfPropertyChange(() => ProveedorFiltro);
+                NotifyOfPropertyChange(() => FechaFiltroActivoHabilitado);
 
                 // Recargar la lista filtrada por proveedor (evitar al restaurar la selección en CargarAsync)
                 if (!_restaurandoProveedor)
@@ -278,6 +310,7 @@ namespace GestionComercial.UI.ViewModels.Compras
                 {
                     _restaurandoProveedor = false;
                 }
+                NotifyOfPropertyChange(() => FechaFiltroActivoHabilitado);
                 
                 // Cargar compras paginadas con métricas SQL
                 var desde = FechaDesde.Date;
@@ -298,7 +331,8 @@ namespace GestionComercial.UI.ViewModels.Compras
                 var (items, totalCount) = await _compraServicio.ObtenerPorSucursalPaginadoAsync(
                     _sesion.IdSucursal, desde, hasta, PaginaActual, 20,
                     ProveedorFiltro is { IdProveedor: > 0 } ? ProveedorFiltro.IdProveedor : null,
-                    string.IsNullOrWhiteSpace(BusquedaProveedor) ? null : BusquedaProveedor);
+                    string.IsNullOrWhiteSpace(BusquedaProveedor) ? null : BusquedaProveedor,
+                    FechaFiltroActivo);
                 
                 Compras = new ObservableCollection<CompraDto>(items);
                 TotalCompras = totalCount;

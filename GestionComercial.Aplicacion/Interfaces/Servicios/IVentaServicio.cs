@@ -23,5 +23,10 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         // Nuevo: ventas por vendedor (filtrado por Id_usuario en SQL)
         Task<IEnumerable<VentaResumenDto>> ObtenerVentasPorVendedorAsync(
             int idSucursal, int idUsuario, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        // Per-client sales history: light SQL projection filtered by client and date range,
+        // capped to the most recent `top` sales. Avoids loading the whole sucursal in memory.
+        Task<IEnumerable<VentaResumenDto>> ObtenerHistorialPorClienteAsync(
+            int idCliente, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
     }
 }

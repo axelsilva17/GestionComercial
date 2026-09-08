@@ -118,7 +118,10 @@ namespace GestionComercial.Persistencia.Repositorio
                          && c.FechaApertura >= desde
                          && c.FechaApertura <= hasta
                          && c.Activo)
-                .SelectMany(c => c.Ventas.Select(v => new VentaExportRow(c.Id, v.Fecha, v.TotalFinal)))
+                // SelectMany over the navigation with a result selector translates to a
+                // plain INNER JOIN on SQLite. The nested c.Ventas.Select(...) shape in
+                // the enumerable selector requires SQL APPLY, which SQLite does not support.
+                .SelectMany(c => c.Ventas, (c, v) => new VentaExportRow(c.Id, v.Fecha, v.TotalFinal))
                 .ToListAsync(ct);
 
         public async Task<List<Caja>> ObtenerCajasPorTurnoAsync(int idSucursal, string turno, CancellationToken ct = default)

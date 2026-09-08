@@ -12,7 +12,7 @@ namespace GestionComercial.Persistencia.Repositorio
 
         public async Task<Compra?> ObtenerConDetallesAsync(int idCompra, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
-                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto).ThenInclude(p => p.Categoria)
                 .Include(c => c.Proveedor)
                 .Include(c => c.Usuario)
                 .FirstOrDefaultAsync(c => c.Id == idCompra, ct);
@@ -20,7 +20,7 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<IEnumerable<Compra>> ObtenerPorProveedorAsync(int idProveedor, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_proveedor == idProveedor)
-                .Include(c => c.Detalles)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync(ct);
 
@@ -28,7 +28,7 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_sucursal == idSucursal)
                 .Include(c => c.Proveedor)
-                .Include(c => c.Detalles)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync(ct);
 
@@ -36,7 +36,7 @@ namespace GestionComercial.Persistencia.Repositorio
             => await _dbSet.AsNoTracking()
                 .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta)
                 .Include(c => c.Proveedor)
-                .Include(c => c.Detalles)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
                 .OrderByDescending(c => c.Fecha)
                 .ToListAsync(ct);
 
@@ -78,21 +78,34 @@ namespace GestionComercial.Persistencia.Repositorio
         // ── Nuevo: compras paginadas ────────────────────────────────────────────
         public async Task<(IEnumerable<Compra> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
             int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
-            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default)
+            int? idProveedor = null, string? busquedaProveedor = null, bool aplicarFechas = true, CancellationToken ct = default)
         {
-            var query = _dbSet.AsNoTracking()
-                .Where(c => c.Id_sucursal == idSucursal && c.Fecha >= desde && c.Fecha <= hasta);
+            // With "Todos" (no provider): branch-scoped list contract (branch + date window).
+            // With a specific provider selected: provider-history contract — filter by provider id
+            // only, no branch scope, so providers with old purchases show them. The date window
+            // is applied to the provider path ONLY when explicitly requested (aplicarFechas);
+            // with "Todos" the date window always applies.
+            var query = idProveedor is > 0
+                ? _dbSet.AsNoTracking().Where(c => c.Id_proveedor == idProveedor)
+                : _dbSet.AsNoTracking().Where(c => c.Id_sucursal == idSucursal);
 
-            if (idProveedor is > 0)
-                query = query.Where(c => c.Id_proveedor == idProveedor);
+            if (idProveedor is not > 0 || aplicarFechas)
+                query = query.Where(c => c.Fecha >= desde && c.Fecha <= hasta);
 
-                if (!string.IsNullOrWhiteSpace(busquedaProveedor))
-                    query = query.Where(c => c.Proveedor != null
-                        && EF.Functions.Collate(c.Proveedor.Nombre, "NOCASE").Contains(busquedaProveedor));
+            if (!string.IsNullOrWhiteSpace(busquedaProveedor))
+            {
+                // Case-insensitive provider search. SQLite's instr() (what string.Contains
+                // translates to) IGNORES the COLLATE NOCASE on the column — the search was
+                // case-sensitive. LIKE against the NOCASE-collated column is case-insensitive
+                // (LIKE in SQLite folds ASCII case and the explicit collation reinforces it).
+                var termino = busquedaProveedor.Trim();
+                query = query.Where(c => c.Proveedor != null
+                    && EF.Functions.Like(EF.Functions.Collate(c.Proveedor.Nombre, "NOCASE"), $"%{termino}%"));
+            }
 
             query = query
                 .Include(c => c.Proveedor)
-                .Include(c => c.Detalles)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
                 .OrderByDescending(c => c.Fecha);
 
             var totalCount = await query.CountAsync(ct);

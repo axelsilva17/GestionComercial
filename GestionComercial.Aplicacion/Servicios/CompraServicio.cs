@@ -107,10 +107,10 @@ namespace GestionComercial.Aplicacion.Servicios
         // ── Nuevo: compras paginadas ────────────────────────────────────────────
         public async Task<(IEnumerable<CompraDto> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
             int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
-            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default)
+            int? idProveedor = null, string? busquedaProveedor = null, bool aplicarFechas = true, CancellationToken ct = default)
         {
             var (compras, totalCount) = await _uow.Compras.ObtenerPorSucursalPaginadoAsync(
-                idSucursal, desde, hasta, page, pageSize, idProveedor, busquedaProveedor, ct);
+                idSucursal, desde, hasta, page, pageSize, idProveedor, busquedaProveedor, aplicarFechas, ct);
             return (compras.Select(MapearDto), totalCount);
         }
 
@@ -142,6 +142,9 @@ namespace GestionComercial.Aplicacion.Servicios
             Items           = c.Detalles.Select(d => new CompraDetalleDto
             {
                 IdProducto = d.Id_producto,
+                ProductoNombre = d.Producto?.Nombre ?? string.Empty,
+                CodigoBarra    = d.Producto?.CodigoBarra ?? string.Empty,
+                CategoriaNombre = d.Producto?.Categoria?.Nombre ?? string.Empty,
                 Id_proveedor = c.Id_proveedor,
                 Cantidad    = (int)d.Cantidad,
                 PrecioCosto = d.PrecioCosto,

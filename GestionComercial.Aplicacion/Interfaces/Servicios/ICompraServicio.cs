@@ -14,7 +14,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         // Nuevo: compras paginadas para listado con filtro de fecha por defecto (últimos 30 días)
         Task<(IEnumerable<CompraDto> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
             int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
-            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default);
+            int? idProveedor = null, string? busquedaProveedor = null, bool aplicarFechas = true, CancellationToken ct = default);
 
         // Nuevo: métricas agregadas en SQL
         Task<MetricasComprasDto?> ObtenerMetricasComprasAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);

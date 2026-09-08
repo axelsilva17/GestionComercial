@@ -43,5 +43,16 @@ namespace GestionComercial.Aplicacion.DTOs.Caja
         public decimal Total      { get; set; }
         public int     Cantidad   { get; set; }
         public string  Categoria  { get; set; } = "Otro";
+
+        // The desglose grid renders the method label through MetodoNombre and a
+        // category-derived icon, mirroring VentaPorMetodoDto (reports) and PagoDto (venta).
+        public string MetodoNombre => Metodo;
+        public string Icono => Categoria switch
+        {
+            "Efectivo"      => "💵",
+            "Tarjeta"       => "💳",
+            "Transferencia" => "🏦",
+            _               => "💲",
+        };
     }
 }

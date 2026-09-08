@@ -16,6 +16,9 @@ namespace GestionComercial.UI.ViewModels.Ventas
 {
     public class VentaListadoViewModel : NavigableViewModel
     {
+        // Cap for the per-client history list (most recent sales in the range).
+        private const int HistorialClienteTop = 500;
+
         private readonly IVentaServicio _ventaServicio;
         private readonly SesionServicio _sesion;
 
@@ -159,12 +162,22 @@ namespace GestionComercial.UI.ViewModels.Ventas
             LimpiarError();
             try
             {
-                var ventas = await _ventaServicio.ObtenerPorSucursalAsync(
-                    _sesion.IdSucursal, FechaDesde, FechaHasta);
+                IEnumerable<VentaResumenDto> ventas;
+                if (ClienteId > 0)
+                {
+                    // Client history: light SQL projection filtered by client + date range,
+                    // capped to the most recent sales. The old path loaded the whole sucursal's
+                    // sales for the range and filtered the client in memory.
+                    ventas = await _ventaServicio.ObtenerHistorialPorClienteAsync(
+                        ClienteId, FechaDesde, FechaHasta, HistorialClienteTop);
+                }
+                else
+                {
+                    ventas = await _ventaServicio.ObtenerPorSucursalAsync(
+                        _sesion.IdSucursal, FechaDesde, FechaHasta);
+                }
 
                 IEnumerable<VentaResumenDto> filtradas = ventas;
-                if (ClienteId > 0)
-                    filtradas = filtradas.Where(v => v.IdCliente == ClienteId);
 
                 _todasLasVentas = new ObservableCollection<VentaResumenDto>(
                     filtradas.OrderByDescending(v => v.Fecha));

@@ -9,6 +9,16 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<Venta?> ObtenerConDetallesAsync(int idVenta, CancellationToken ct = default);
         Task<IEnumerable<Venta>> ObtenerPorFechaAsync(DateTime desde, DateTime hasta, int idSucursal, CancellationToken ct = default);
         Task<IEnumerable<Venta>> ObtenerPorClienteAsync(int idCliente, CancellationToken ct = default);
+
+        /// <summary>
+        /// Client sales history with a light projection: only the columns the history list
+        /// displays (Id, Fecha, TotalFinal, Estado, ClienteNombre, UsuarioNombre), filtered in SQL
+        /// by client and date range, with AsNoTracking and an OrderByDescending(Fecha).Take(top) cap.
+        /// Avoids hydrating the full Venta graph (Detalles/Pagos navigation properties) and avoids
+        /// loading the whole sucursal just to filter a single client in memory.
+        /// </summary>
+        Task<List<VentaHistorialClienteRow>> ObtenerHistorialPorClienteAsync(
+            int idCliente, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
         Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);
         Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default);
         
@@ -44,8 +54,8 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>> 
             ObtenerVentasPorVendedorAgrupadoAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
 
-        ///         /// Agregación SQL de ventas por vendedor filtrando por Id_usuario.
-        Task<List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>> 
+        ///         /// Individual sales for a specific vendor (no aggregation), ordered by Fecha DESC.
+        Task<List<(int Id, int IdUsuario, string UsuarioNombre, DateTime Fecha, decimal TotalFinal, int Estado, string ClienteNombre)>> 
             ObtenerVentasPorVendedorAsync(int idSucursal, int idUsuario, DateTime desde, DateTime hasta, CancellationToken ct = default);
 
         ///         /// Agregación SQL de KPIs de ventas (totales, ticket promedio).
@@ -80,4 +90,16 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<IEnumerable<(string Metodo, decimal Total, int Cantidad)>>
             ObtenerPagosPorCajaAsync(int idCaja, CancellationToken ct = default);
     }
+
+    /// <summary>
+    /// Light row for a single client's sales history list (projection without the Venta graph).
+    /// </summary>
+    public record VentaHistorialClienteRow(
+        int Id,
+        DateTime Fecha,
+        decimal TotalFinal,
+        int Estado,
+        int IdCliente,
+        string ClienteNombre,
+        string UsuarioNombre);
 }

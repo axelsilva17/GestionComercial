@@ -450,20 +450,40 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default)
             => await _uow.Ventas.ObtenerTotalDelDiaAsync(idSucursal, ct);
 
-        // Nuevo: ventas por vendedor (filtrado por Id_usuario en SQL)
+        // Individual sales per vendor (no aggregation)
         public async Task<IEnumerable<VentaResumenDto>> ObtenerVentasPorVendedorAsync(
             int idSucursal, int idUsuario, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var ventas = await _uow.Ventas.ObtenerVentasPorVendedorAsync(idSucursal, idUsuario, desde, hasta, ct);
             return ventas.Select(v => new VentaResumenDto
             {
-                IdVenta       = v.IdUsuario, // Using IdUsuario as identifier since this is aggregated data
-                Fecha         = desde, // Period start as reference
-                TotalFinal    = v.TotalVendido,
-                Estado        = "Agrupado",
-                IdCliente     = 0,
-                ClienteNombre = "Ventas agrupadas por vendedor",
+                IdVenta       = v.Id,
+                Fecha         = v.Fecha,
+                TotalFinal    = v.TotalFinal,
+                Estado        = MapEstado(v.Estado),
+                ClienteNombre = v.ClienteNombre,
                 UsuarioNombre = v.UsuarioNombre,
+            });
+        }
+
+        // Per-client sales history with a light SQL projection (no full Venta graph hydration).
+        public async Task<IEnumerable<VentaResumenDto>> ObtenerHistorialPorClienteAsync(
+            int idCliente, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
+        {
+            // Normalizar: si hasta es inicio del día, usar fin del día para incluir todo el día.
+            if (hasta.TimeOfDay == TimeSpan.Zero)
+                hasta = hasta.Date.AddDays(1).AddSeconds(-1);
+
+            var rows = await _uow.Ventas.ObtenerHistorialPorClienteAsync(idCliente, desde, hasta, top, ct);
+            return rows.Select(r => new VentaResumenDto
+            {
+                IdVenta       = r.Id,
+                Fecha         = r.Fecha,
+                TotalFinal    = r.TotalFinal,
+                Estado        = MapEstado(r.Estado),
+                IdCliente     = r.IdCliente,
+                ClienteNombre = r.ClienteNombre,
+                UsuarioNombre = r.UsuarioNombre,
             });
         }
 

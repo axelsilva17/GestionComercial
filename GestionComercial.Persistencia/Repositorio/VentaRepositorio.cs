@@ -34,6 +34,26 @@ namespace GestionComercial.Persistencia.Repositorio
                 .OrderByDescending(v => v.Fecha)
                 .ToListAsync(ct);
 
+        // Light projection for the client sales-history list: only the columns the list renders,
+        // filtered in SQL by client and date range, capped with Take(top) and ordered by Fecha DESC.
+        // Avoids hydrating the full Venta graph. The client filter is applied in SQL, so it does
+        // not load the whole sucursal just to filter a single client in memory.
+        public async Task<List<VentaHistorialClienteRow>> ObtenerHistorialPorClienteAsync(
+            int idCliente, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Where(v => v.Id_cliente == idCliente && v.Fecha >= desde && v.Fecha <= hasta)
+                .OrderByDescending(v => v.Fecha)
+                .Take(top)
+                .Select(v => new VentaHistorialClienteRow(
+                    v.Id,
+                    v.Fecha,
+                    v.TotalFinal,
+                    v.Estado,
+                    v.Id_cliente,
+                    v.Cliente != null ? v.Cliente.Nombre : "Consumidor Final",
+                    v.Usuario != null ? v.Usuario.Nombre + " " + v.Usuario.Apellido : string.Empty))
+                .ToListAsync(ct);
+
         public async Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Sucursal.Id_empresa == idEmpresa
@@ -231,31 +251,28 @@ namespace GestionComercial.Persistencia.Repositorio
             return rows.Select(r => (r.IdUsuario, r.UsuarioNombre, r.SucursalNombre, r.CantidadVentas, r.TotalVendido, r.TotalDescuentos)).ToList();
         }
 
-        // ── Nuevo: ventas por vendedor filtrando por Id_usuario ────────────────
-        public async Task<List<(int IdUsuario, string UsuarioNombre, string SucursalNombre, int CantidadVentas, decimal TotalVendido, decimal TotalDescuentos)>>
+        // ── Individual sales per vendor (no GROUP BY) ────────────────────────
+        public async Task<List<(int Id, int IdUsuario, string UsuarioNombre, DateTime Fecha, decimal TotalFinal, int Estado, string ClienteNombre)>>
             ObtenerVentasPorVendedorAsync(int idSucursal, int idUsuario, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
             var rows = await _context.Database
-                .SqlQueryRaw<VentaPorVendedorAgrupado>(
-                    @"SELECT v.Id_usuario AS IdUsuario,
+                .SqlQueryRaw<VentaVendedorItem>(
+                    @"SELECT v.Id, v.Id_usuario AS IdUsuario,
                              u.Nombre || ' ' || u.Apellido AS UsuarioNombre,
-                             s.Nombre AS SucursalNombre,
-                             COUNT(*) AS CantidadVentas,
-                             SUM(v.TotalFinal) AS TotalVendido,
-                             SUM(v.TotalDescuento) AS TotalDescuentos
+                             v.Fecha, v.TotalFinal, v.Estado,
+                             COALESCE(c.Nombre, 'Consumidor Final') AS ClienteNombre
                       FROM Venta v
                       INNER JOIN Usuario u ON v.Id_usuario = u.Id
-                      INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      LEFT JOIN Cliente c ON v.Id_cliente = c.Id
                       WHERE v.Id_sucursal = {0}
-                        AND v.Id_usuario = {3}
-                        AND v.Fecha >= {1}
-                        AND v.Fecha <= {2}
+                        AND v.Id_usuario = {1}
+                        AND v.Fecha >= {2}
+                        AND v.Fecha <= {3}
                         AND v.Estado != 3
-                      GROUP BY v.Id_usuario
-                      ORDER BY TotalVendido DESC",
-                    idSucursal, desde, hasta, idUsuario)
+                      ORDER BY v.Fecha DESC",
+                    idSucursal, idUsuario, desde, hasta)
                 .ToListAsync(ct);
-            return rows.Select(r => (r.IdUsuario, r.UsuarioNombre, r.SucursalNombre, r.CantidadVentas, r.TotalVendido, r.TotalDescuentos)).ToList();
+            return rows.Select(r => (r.Id, r.IdUsuario, r.UsuarioNombre, r.Fecha, r.TotalFinal, r.Estado, r.ClienteNombre)).ToList();
         }
 
         public async Task<(decimal TotalVentas, int TotalTransacciones, decimal TicketPromedio)?>
@@ -430,4 +447,8 @@ namespace GestionComercial.Persistencia.Repositorio
     public record ClientesUnicosAgrupado(int Clientes);
 
     public record ResumenVentasSucursalRaw(decimal TotalVentas, int CantidadVentas, decimal PromedioVenta);
+
+    public record VentaVendedorItem(
+        int Id, int IdUsuario, string UsuarioNombre, DateTime Fecha,
+        decimal TotalFinal, int Estado, string ClienteNombre);
 }

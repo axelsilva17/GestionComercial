@@ -233,11 +233,11 @@ namespace GestionComercial.UI.ViewModels.Main
             MargenBrutoMes = TotalVentasMes > 0
                 ? (double)(ResultadoNeto / TotalVentasMes * 100) : 0;
 
-            // Ventas recientes via IReporteServicio.TopProductosAsync or VentasPorDia
-            var ventasRecientes = await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, inicioMes, hoy.AddDays(1));
+            // Recent individual sales (last 7 days) with proper Id and DateTime
+            var ventasRecientes = await _ventaServicio.ObtenerVentasAsync(
+                _sesion.IdSucursal, hoy.AddDays(-7), hoy.AddDays(1));
             VentasRecientes = new ObservableCollection<VentaResumenDto>(
-                ventasRecientes.OrderByDescending(v => DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null)).Take(5)
-                    .Select(v => new VentaResumenDto { IdVenta = 0, Fecha = DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null), TotalFinal = v.Total, Estado = "Pagada", ClienteNombre = "", UsuarioNombre = "" }));
+                ventasRecientes.OrderByDescending(v => v.Fecha).Take(5));
 
             NotifyOfPropertyChange(() => VentasRecientes);
             NotifyOfPropertyChange(() => ResultadoNeto);
@@ -275,11 +275,11 @@ namespace GestionComercial.UI.ViewModels.Main
                 ComprasDelMes = metricasCompras.Count;
             }
 
-            // Ventas recientes
-            var ventasRecientes = await _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, inicioMes, hoy.AddDays(1));
+            // Recent individual sales (last 7 days) with proper Id and DateTime
+            var ventasRecientes = await _ventaServicio.ObtenerVentasAsync(
+                _sesion.IdSucursal, hoy.AddDays(-7), hoy.AddDays(1));
             VentasRecientes = new ObservableCollection<VentaResumenDto>(
-                ventasRecientes.OrderByDescending(v => DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null)).Take(5)
-                    .Select(v => new VentaResumenDto { IdVenta = 0, Fecha = DateTime.ParseExact(v.Dia, "yyyy-MM-dd", null), TotalFinal = v.Total, Estado = "Pagada", ClienteNombre = "", UsuarioNombre = "" }));
+                ventasRecientes.OrderByDescending(v => v.Fecha).Take(5));
 
             NotifyOfPropertyChange(() => ProductosCriticosList);
             NotifyOfPropertyChange(() => VentasRecientes);

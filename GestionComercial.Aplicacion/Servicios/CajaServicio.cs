@@ -621,11 +621,23 @@ namespace GestionComercial.Aplicacion.Servicios
         {
             var pagos = await _uow.Ventas.ObtenerPagosPorCajaAsync(idCaja, ct);
 
+            // Resolve method categories so the desglose row can derive its icon;
+            // same lookup as ObtenerResumenCierreAsync (names are user-configurable).
+            var categoriaPorNombre = new Dictionary<string, string>();
+            var caja = await _uow.Cajas.ObtenerPorIdAsync(idCaja, ct);
+            if (caja != null)
+            {
+                var metodosPago = await _uow.MetodosPago.ObtenerTodosPorEmpresaAsync(
+                    await ObtenerIdEmpresaDeSucursalAsync(caja.Id_sucursal, ct), ct);
+                categoriaPorNombre = metodosPago.ToDictionary(m => m.Nombre, m => m.Categoria);
+            }
+
             return pagos.Select(p => new DesglosePagoDto
             {
-                Metodo = p.Metodo,
-                Total = p.Total,
-                Cantidad = p.Cantidad
+                Metodo    = p.Metodo,
+                Total     = p.Total,
+                Cantidad  = p.Cantidad,
+                Categoria = categoriaPorNombre.TryGetValue(p.Metodo, out var categoria) ? categoria : "Otro"
             }).ToList();
         }
 
