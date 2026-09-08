@@ -110,8 +110,19 @@ namespace GestionComercial.UI.ViewModels.Cajas
         public bool IsExporting
         {
             get => _isExporting;
-            set { _isExporting = value; NotifyOfPropertyChange(() => IsExporting); }
+            set
+            {
+                _isExporting = value;
+                NotifyOfPropertyChange(() => IsExporting);
+                NotifyOfPropertyChange(() => CanExportarAuditoria);
+            }
         }
+
+        /// <summary>
+        /// Guard de Caliburn para la acción ExportarAuditoria: deshabilita el botón
+        /// mientras un export está en curso (evita exports concurrentes).
+        /// </summary>
+        public bool CanExportarAuditoria => !IsExporting;
 
         public async Task CargarAuditoria()
         {
@@ -229,29 +240,42 @@ namespace GestionComercial.UI.ViewModels.Cajas
             await IoC.Get<ShellViewModel>().ActivateItemAsync(dashboard, CancellationToken.None);
         }
 
-        public void ExportarAuditoria()
+        public async Task ExportarAuditoria()
         {
-            if (Cajas == null || !Cajas.Any())
+            if (EndDate < StartDate)
             {
-                MessageBox.Show("No hay datos para exportar. Primero cargá la auditoría.", 
-                    "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("La fecha de inicio debe ser anterior o igual a la fecha de fin.",
+                    "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             try
             {
                 IsExporting = true;
-                ExportStatus = "Exportando...";
-                
-                // Usar el helper existente para exportar
-                ExportHelper.ExportarAuditoriaCaja(Cajas.ToList());
-                
-                ExportStatus = $"Exportado: {StartDate:yyyy-MM-dd} a {EndDate:yyyy-MM-dd}";
+                ExportStatus = "Exportando movimientos...";
+
+                // Proyección ligera (AsNoTracking, sin grafo completo): fecha, tipo,
+                // monto, concepto, usuario y caja — lo mismo que muestra el panel.
+                var movimientos = await _uow.MovimientosCaja.ObtenerMovimientosExportAsync(
+                    _sesion.IdSucursal, StartDate, EndDate.AddDays(1));
+
+                if (movimientos.Count == 0)
+                {
+                    ExportStatus = "No hay movimientos para exportar en el período seleccionado.";
+                    MessageBox.Show("No hay movimientos de caja para exportar en el período seleccionado.",
+                        "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Build + guardado en segundo plano (SaveFileDialog y prompt en UI thread).
+                await ExportHelper.ExportarMovimientosCompleto(movimientos, StartDate, EndDate);
+
+                ExportStatus = $"Exportado: {StartDate:dd/MM/yyyy} a {EndDate:dd/MM/yyyy}";
             }
             catch (Exception ex)
             {
                 ExportStatus = $"Error durante export: {ex.Message}";
-                MessageBox.Show("Error al exportar auditoría.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Error al exportar movimientos.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

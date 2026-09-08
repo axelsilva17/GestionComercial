@@ -616,6 +616,21 @@ namespace GestionComercial.UI.ViewModels.Reportes
             finally { IsLoading = false; }
         }
 
+        // ── IsExportando: drives the busy overlay + disables the export button ──
+        private bool _isExportando;
+        public bool IsExportando
+        {
+            get => _isExportando;
+            set
+            {
+                _isExportando = value;
+                NotifyOfPropertyChange(() => IsExportando);
+                NotifyOfPropertyChange(() => CanExportarExcel);
+            }
+        }
+
+        public bool CanExportarExcel => !IsExportando;
+
         // ── Exportar Excel: Completo (Admin Report con KPIs generales) ─────────────
         public async Task ExportarExcel()
         {
@@ -684,38 +699,43 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var nuevosEnPeriodo = await _uow.Clientes.ContarClientesNuevosAsync(
                     _sesion.IdEmpresa, desde, hasta.AddDays(1));
 
-                // Exportar informe completo
-                ExportHelper.ExportarInformeAdmin(
-                    auditoriaCajas,
-                    new ResumenAdminKpiDto
-                    {
-                        TotalVentas = totalVentas,
-                        CantidadVentas = cantidadVentas,
-                        PromedioVenta = promedioVenta,
-                        ClientesUnicos = clientesUnicos,
-                        ClientesNuevos = nuevosEnPeriodo,
-                        TotalCajas = cajas.Count,
-                        CajasCerradas = cajas.Count(c => c.Estado == 2),
-                        TotalIngresos = historialCajas.Sum(c => c.MontoInicial),
-                        TotalDiferencias = historialCajas.Where(c => c.Diferencia.HasValue).Sum(c => Math.Abs(c.Diferencia.Value)),
-                    },
-                    metodosPago.Select(m => new ResumenMetodoPagoDto
-                    {
-                        Metodo = m.Metodo,
-                        Total = m.Total,
-                        Cantidad = m.Cantidad
-                    }).ToList(),
-                    topProductos.Select(p => new ResumenProductoDto
-                    {
-                        Nombre = p.ProductoNombre,
-                        Cantidad = p.CantidadVendida,
-                        Total = p.Ingresos
-                    }).ToList(),
-                    desde, 
-                    hasta,
-                    totalRegistros: totalRegistros,
-                    diferenciaTotal: diferenciaTotal,
-                    AbrirDespuesDeExportar);
+                // Exportar informe completo (async — workbook build + SaveAs on background thread)
+                IsExportando = true;
+                try
+                {
+                    await ExportHelper.ExportarInformeAdminCompleto(
+                        auditoriaCajas,
+                        new ResumenAdminKpiDto
+                        {
+                            TotalVentas = totalVentas,
+                            CantidadVentas = cantidadVentas,
+                            PromedioVenta = promedioVenta,
+                            ClientesUnicos = clientesUnicos,
+                            ClientesNuevos = nuevosEnPeriodo,
+                            TotalCajas = cajas.Count,
+                            CajasCerradas = cajas.Count(c => c.Estado == 2),
+                            TotalIngresos = historialCajas.Sum(c => c.MontoInicial),
+                            TotalDiferencias = historialCajas.Where(c => c.Diferencia.HasValue).Sum(c => Math.Abs(c.Diferencia.Value)),
+                        },
+                        metodosPago.Select(m => new ResumenMetodoPagoDto
+                        {
+                            Metodo = m.Metodo,
+                            Total = m.Total,
+                            Cantidad = m.Cantidad
+                        }).ToList(),
+                        topProductos.Select(p => new ResumenProductoDto
+                        {
+                            Nombre = p.ProductoNombre,
+                            Cantidad = p.CantidadVendida,
+                            Total = p.Ingresos
+                        }).ToList(),
+                        desde, 
+                        hasta,
+                        totalRegistros: totalRegistros,
+                        diferenciaTotal: diferenciaTotal,
+                        AbrirDespuesDeExportar);
+                }
+                finally { IsExportando = false; }
             }
             catch (Exception ex)
             {

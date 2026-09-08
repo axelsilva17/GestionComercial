@@ -25,10 +25,23 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         /// </summary>
         Task<List<MovimientoCajaResumenPorCajaRow>> ObtenerResumenPorCajaEnPeriodoAsync(
             int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        /// <summary>
+        /// Proyección ligera para exportar movimientos de caja del período: fecha, tipo, monto,
+        /// concepto, usuario y caja, sin materializar el grafo completo (AsNoTracking, ordenado).
+        /// </summary>
+        Task<List<MovimientoCajaExportRow>> ObtenerMovimientosExportAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
     }
 
     /// <summary>
     /// Resumen de movimientos manuales de una caja en su turno (para auditoría).
     /// </summary>
     public record MovimientoCajaResumenPorCajaRow(int IdCaja, decimal Ingresos, decimal Egresos);
+
+    /// <summary>
+    /// Fila de export de movimientos de caja (proyección ligera, sin grafo de entidades).
+    /// </summary>
+    public record MovimientoCajaExportRow(
+        int Id, DateTime Fecha, int Tipo, decimal Monto, string Concepto, string UsuarioNombre, int CajaId);
 }

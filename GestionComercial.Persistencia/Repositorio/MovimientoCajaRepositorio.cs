@@ -74,6 +74,25 @@ namespace GestionComercial.Persistencia.Repositorio
 
             return rows.Select(r => new MovimientoCajaResumenPorCajaRow(r.IdCaja, r.Ingresos, r.Egresos)).ToList();
         }
+
+        // Proyección ligera para exportar movimientos: el Select se traduce a un JOIN en SQL
+        // (Caja + Usuario por nombre), sin materializar el grafo completo ni cargar Venta.
+        // AsNoTracking + ordenado por Fecha descendente (mismo criterio que la vista del módulo).
+        public async Task<List<MovimientoCajaExportRow>> ObtenerMovimientosExportAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Where(m => m.Caja.Id_sucursal == idSucursal
+                            && m.Fecha >= desde && m.Fecha <= hasta)
+                .OrderByDescending(m => m.Fecha)
+                .Select(m => new MovimientoCajaExportRow(
+                    m.Id,
+                    m.Fecha,
+                    m.Tipo,
+                    m.Monto,
+                    m.Concepto ?? "-",
+                    m.Usuario != null ? m.Usuario.Nombre : "Sistema",
+                    m.Id_caja))
+                .ToListAsync(ct);
     }
 
     // ── Tipo para SqlQueryRaw (EF Core 8) ─────────────────────────

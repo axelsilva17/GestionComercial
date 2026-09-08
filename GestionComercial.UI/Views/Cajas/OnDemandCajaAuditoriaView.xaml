@@ -47,8 +47,9 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24">
             <!-- Volver -->
             <Button x:Name="Volver" Content="← Volver"
                     Background="Transparent" BorderThickness="0"
@@ -104,6 +105,9 @@
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="b" Property="Background" Value="#0EA5E9"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter TargetName="b" Property="Opacity" Value="0.45"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -243,5 +247,19 @@
                 </Border>
             </Grid>
         </StackPanel>
-    </ScrollViewer>
+        </ScrollViewer>
+
+        <!-- Busy overlay: visible while the workbook build + SaveAs run on background -->
+        <Border Background="#CC0F172A"
+                Visibility="{Binding IsExporting, Converter={StaticResource BoolToVisibility}}"
+                IsHitTestVisible="False">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4"
+                             Foreground="{DynamicResource PrimaryBrush}" BorderThickness="0"
+                             Background="{DynamicResource SurfaceBrush}"/>
+                <TextBlock Text="Exportando movimientos..." Foreground="{DynamicResource TextSecondaryBrush}"
+                           FontSize="13" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>
