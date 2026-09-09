@@ -30,6 +30,7 @@ opencode.json
 build_*.txt
 build_*.log
 msbuild.log
+publish/
 
 # Dev test utilities
 generar_test_import.py
