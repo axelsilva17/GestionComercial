@@ -192,15 +192,14 @@ namespace GestionComercial.Aplicacion.Servicios
             if (guardarCambios)
             {
                 // ── Modo standalone (fuera de transacción) ──
-                // Se trackea todo: Producto, Sucursal, Usuario, MovimientoStock
+                // Se trackea el Producto (ya modificado) y el MovimientoStock.
+                // IMPORTANTE: NO asignar las navegaciones Sucursal/Usuario: vienen de
+                // ObtenerPorIdAsync (AsNoTracking) y EF Core las trataría como entidades
+                // nuevas al hacer Add → re-INSERT → "UNIQUE constraint failed: Sucursal.Id".
+                // Los FK Id_sucursal/Id_usuario ya los setea el factory method del movimiento.
                 producto.StockActual = movimiento.StockNuevo;
                 uow.Productos.Actualizar(producto);
 
-                var sucursal = await uow.Sucursales.ObtenerPorIdAsync(idSucursal);
-                var usuario = await uow.Usuarios.ObtenerPorIdAsync(idUsuario);
-                
-                movimiento.Sucursal = sucursal!;
-                movimiento.Usuario = usuario!;
                 movimiento.Producto = producto;
 
                 await uow.MovimientosStock.AgregarAsync(movimiento);

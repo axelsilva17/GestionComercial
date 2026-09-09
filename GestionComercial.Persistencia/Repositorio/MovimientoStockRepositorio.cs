@@ -137,7 +137,9 @@ namespace GestionComercial.Persistencia.Repositorio
                 {
                     TipoMovimiento = g.Key,
                     Cantidad = g.Count(),
-                    Unidades = g.Sum(m => m.Cantidad)
+                    // SQLite no traduce Sum sobre decimal: se suma como double (cast explícito)
+                    // y se convierte a int al mapear el DTO (líneas de abajo).
+                    Unidades = g.Sum(m => (double)m.Cantidad)
                 })
                 .ToListAsync(ct);
 

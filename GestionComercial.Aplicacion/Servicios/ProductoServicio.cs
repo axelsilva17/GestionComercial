@@ -440,7 +440,9 @@ public class ProductoServicio : IProductoServicio
                 ?? throw new KeyNotFoundException($"Proveedor {idProveedor} no encontrado");
 
             var factor = 1 + porcentaje / 100m;
-            var productos = await _uow.Productos.ObtenerPorEmpresaAsync(proveedor.Id_empresa, true, ct);
+            // Sin navegaciones materializadas: Update() de cada producto no reintenta
+            // trackear Categoria/UnidadMedida (evita el error de duplicado de key).
+            var productos = await _uow.Productos.ObtenerPorEmpresaSinNavegacionesAsync(proveedor.Id_empresa, true, ct);
             int actualizados = 0;
             foreach (var p in productos)
             {

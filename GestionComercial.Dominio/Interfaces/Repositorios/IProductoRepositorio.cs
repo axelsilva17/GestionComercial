@@ -9,6 +9,13 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<Producto?> ObtenerPorCodigoBarraAsync(string codigoBarra, CancellationToken ct = default);
         Task<IEnumerable<Producto>> ObtenerConStockBajoAsync(int idEmpresa, CancellationToken ct = default);
         Task<IEnumerable<Producto>> ObtenerPorEmpresaAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default);
+        /// <summary>
+        /// Igual que ObtenerPorEmpresaAsync pero SIN materializar navegaciones
+        /// (Categoria/UnidadMedida). Para flujos de UPDATE masivo (ej. ajuste de precios por
+        /// proveedor): evita que EF Core intente trackear otra instancia con la misma key →
+        /// "cannot be tracked because another instance with the same key value ... is already being tracked".
+        /// </summary>
+        Task<IEnumerable<Producto>> ObtenerPorEmpresaSinNavegacionesAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default);
         Task<(IEnumerable<Producto> Items, int TotalCount)> ObtenerPorEmpresaPaginadoAsync(
             int idEmpresa, int page, int pageSize, string? searchTerm = null, int? idCategoria = null, bool? soloActivos = null, CancellationToken ct = default);
         Task<IEnumerable<Producto>> ObtenerStockCriticoAsync(int idEmpresa, int? umbral = null, CancellationToken ct = default);

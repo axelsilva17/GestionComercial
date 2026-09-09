@@ -292,6 +292,9 @@ namespace GestionComercial.Aplicacion.Servicios
                 Monto    = monto,
                 Fecha    = DateTime.Now,
                 Concepto = descripcion,
+                // Id_usuario es NOT NULL: se toma de la sesión y, si la sesión no trae
+                // usuario real (dev/vacía), se usa quien abrió la caja.
+                Id_usuario = _sesion.IdUsuario > 0 ? _sesion.IdUsuario : caja.UsuarioApertura_id,
             };
 
             // Auditoría del movimiento de caja (ingreso/egreso)
@@ -301,7 +304,8 @@ namespace GestionComercial.Aplicacion.Servicios
                 movimiento.Tipo,
                 movimiento.Monto,
                 movimiento.Fecha,
-                movimiento.Concepto
+                movimiento.Concepto,
+                movimiento.Id_usuario
             });
 
             await _uow.Auditoria.RegistrarAuditoriaAsync(

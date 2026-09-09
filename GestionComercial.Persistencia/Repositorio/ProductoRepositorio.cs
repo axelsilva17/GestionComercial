@@ -67,6 +67,19 @@ namespace GestionComercial.Persistencia.Repositorio
                 .ToListAsync(ct);
         }
 
+        // Variante SIN navegaciones para flujos de actualización masiva: si se materializan
+        // Categoria/UnidadMedida (AsNoTracking) y luego se hace Update() de cada producto,
+        // EF intenta trackear cada instancia de la categoría → duplicados de clave.
+        public async Task<IEnumerable<Producto>> ObtenerPorEmpresaSinNavegacionesAsync(int idEmpresa, bool soloActivos = true, CancellationToken ct = default)
+        {
+            var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
+            if (soloActivos)
+                query = query.Where(p => p.Activo);
+            return await query
+                .OrderBy(p => p.Nombre)
+                .ToListAsync(ct);
+        }
+
         public async Task<Producto?> ObtenerPorIdConDetallesAsync(int id, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Include(p => p.Categoria)
