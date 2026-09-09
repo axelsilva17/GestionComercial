@@ -2256,19 +2256,19 @@ namespace GestionComercial.Persistencia.Migrations
                     b.Property<int>("IdProveedor")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProveedorId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductoId");
+                    b.HasIndex("IdProducto")
+                        .HasDatabaseName("IX_ProveedorProductoCostos_IdProducto");
 
-                    b.HasIndex("ProveedorId");
+                    b.HasIndex("IdProveedor")
+                        .HasDatabaseName("IX_ProveedorProductoCostos_IdProveedor");
 
-                    b.ToTable("ProveedorProductoCostos");
+                    b.HasIndex("IdProveedor", "IdProducto")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProveedorProductoCostos_ProveedorProducto");
+
+                    b.ToTable("ProveedorProductoCostos", (string)null);
                 });
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Seguridad.Permiso", b =>
@@ -4551,15 +4551,15 @@ namespace GestionComercial.Persistencia.Migrations
 
             modelBuilder.Entity("GestionComercial.Dominio.Entidades.Proveedores.ProveedorProductoCosto", b =>
                 {
-                    b.HasOne("GestionComercial.Dominio.Entidades.Proveedores.ProveedorProductoCosto", "Producto")
+                    b.HasOne("GestionComercial.Dominio.Entidades.Producto.Producto", "Producto")
                         .WithMany()
-                        .HasForeignKey("ProductoId")
+                        .HasForeignKey("IdProducto")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GestionComercial.Dominio.Entidades.Proveedores.Proveedor", "Proveedor")
                         .WithMany()
-                        .HasForeignKey("ProveedorId")
+                        .HasForeignKey("IdProveedor")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

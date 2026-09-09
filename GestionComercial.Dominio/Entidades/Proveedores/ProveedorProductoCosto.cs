@@ -11,7 +11,7 @@ namespace GestionComercial.Dominio.Entidades.Proveedores
         public decimal Costo { get; set; }
 
         public Proveedor Proveedor { get; set; } = null!;
-        public ProveedorProductoCosto Producto { get; set; } = null!;
+        public Producto.Producto Producto { get; set; } = null!;
 
         // Factory para crear con validaciones simples
         public static ProveedorProductoCosto Crear(int idProveedor, int idProducto, decimal costo)
