@@ -510,7 +510,7 @@
                                 Click="VerVentas_Click"/>
 
                         <!-- Botón dinámico: Activar o Desactivar según estado -->
-                        <Button Content="" Height="40" FontSize="13"
+                        <Button Height="40" FontSize="13"
                                 Cursor="Hand" Click="CambiarEstadoCliente_Click">
                             <Button.Style>
                                 <Style TargetType="Button">
