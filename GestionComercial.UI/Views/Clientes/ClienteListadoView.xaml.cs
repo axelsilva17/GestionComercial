@@ -30,8 +30,15 @@ namespace GestionComercial.UI.Views.Clientes
         private async void EditarCliente_Click(object sender, RoutedEventArgs e)
             => await VM?.EditarCliente();
 
-        private async void DesactivarCliente_Click(object sender, RoutedEventArgs e)
-            => await VM?.DesactivarCliente();
+        private async void CambiarEstadoCliente_Click(object sender, RoutedEventArgs e)
+        {
+            if (VM?.ClienteSeleccionado == null) return;
+
+            if (VM.ClienteSeleccionado.Activo)
+                await VM.DesactivarCliente();
+            else
+                await VM.ActivarCliente();
+        }
 
         private async void VerVentas_Click(object sender, RoutedEventArgs e)
         {

@@ -17,6 +17,15 @@ namespace GestionComercial.Tests.Servicios
         public ClienteServicioTests()
         {
             _mockUow.Setup(u => u.Clientes).Returns(_mockClienteRepo.Object);
+
+            // El refactor de TotalVentas (Fix 2) agregó el conteo agrupado de ventas
+            // pagadas al servicio; los unit tests no lo cubren: por defecto devuelve
+            // vacío (equivalente a "ningún cliente tiene ventas").
+            _mockClienteRepo
+                .Setup(r => r.ContarVentasPagadasPorClientesAsync(
+                    It.IsAny<int>(), It.IsAny<IEnumerable<int>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<int, int>());
+
             _servicio = new ClienteServicio(_mockUow.Object);
         }
 

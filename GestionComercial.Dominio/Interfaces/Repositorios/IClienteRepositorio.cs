@@ -19,6 +19,13 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         Task<int> ContarClientesConVentasAsync(int idEmpresa, CancellationToken ct = default);
 
         /// <summary>
+        /// Conteo agrupado (en SQL) de ventas PAGADAS por cliente dentro de la empresa.
+        /// Proyección sin materializar entidades; evita N+1 al listar clientes con su total de ventas.
+        /// </summary>
+        Task<Dictionary<int, int>> ContarVentasPagadasPorClientesAsync(
+            int idEmpresa, IEnumerable<int> idsClientes, CancellationToken ct = default);
+
+        /// <summary>
         /// Cuenta los clientes dados de alta en la empresa dentro del período, en SQL.
         /// Misma semántica que ObtenerPorEmpresaYFechaAsync (rangos inclusivos) sin materializar filas.
         /// </summary>

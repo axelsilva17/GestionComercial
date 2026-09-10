@@ -27,21 +27,30 @@ namespace GestionComercial.Aplicacion.Servicios
 
         public async Task<IEnumerable<ClienteDto>> ObtenerTodosAsync(int idEmpresa)
         {
-            var clientes = await _uow.Clientes.ObtenerPorEmpresaAsync(idEmpresa);
-            return clientes.Select(MapearDto);
+            var clientes = (await _uow.Clientes.ObtenerPorEmpresaAsync(idEmpresa)).ToList();
+            var conteosVentasPagadas = await _uow.Clientes
+                .ContarVentasPagadasPorClientesAsync(idEmpresa, clientes.Select(c => c.Id));
+            return clientes.Select(c => MapearDto(c, conteosVentasPagadas));
         }
 
         public async Task<(IEnumerable<ClienteDto> Items, int TotalCount)> ObtenerTodosPaginadoAsync(
             int idEmpresa, int page, int pageSize, string? searchTerm = null, bool? soloActivos = null)
         {
             var (items, totalCount) = await _uow.Clientes.ObtenerPorEmpresaPaginadoAsync(idEmpresa, page, pageSize, searchTerm, soloActivos);
-            return (items.Select(MapearDto), totalCount);
+            var lista = items.ToList();
+            var conteosVentasPagadas = await _uow.Clientes
+                .ContarVentasPagadasPorClientesAsync(idEmpresa, lista.Select(c => c.Id));
+            return (lista.Select(c => MapearDto(c, conteosVentasPagadas)), totalCount);
         }
 
         public async Task<ClienteDto?> ObtenerPorIdAsync(int id)
         {
             var c = await _uow.Clientes.ObtenerPorIdAsync(id);
-            return c == null ? null : MapearDto(c);
+            if (c == null) return null;
+
+            var conteosVentasPagadas = await _uow.Clientes
+                .ContarVentasPagadasPorClientesAsync(c.Id_empresa, new[] { c.Id });
+            return MapearDto(c, conteosVentasPagadas);
         }
 
         public async Task<ClienteDto> CrearAsync(ClienteCrearDto dto)
@@ -109,7 +118,19 @@ namespace GestionComercial.Aplicacion.Servicios
             await _uow.GuardarCambiosAsync();
         }
 
-        private static ClienteDto MapearDto(Cliente c) => new()
+        public async Task ActivarAsync(int id)
+        {
+            if (_sesion != null && !_sesion.HasPermission("Clientes.Crear"))
+                throw new InvalidOperationException("No tenés permiso para activar clientes.");
+
+            var cliente = await _uow.Clientes.ObtenerPorIdAsync(id)
+                ?? throw new KeyNotFoundException($"Cliente {id} no encontrado");
+            cliente.Reactivar();
+            _uow.Clientes.Actualizar(cliente);
+            await _uow.GuardarCambiosAsync();
+        }
+
+        private static ClienteDto MapearDto(Cliente c, IReadOnlyDictionary<int, int> conteosVentasPagadas) => new()
         {
             IdCliente = c.Id,
             Nombre    = c.Nombre,
@@ -118,7 +139,7 @@ namespace GestionComercial.Aplicacion.Servicios
             Email     = c.Email ?? string.Empty,
             IdEmpresa = c.Id_empresa,
             Activo    = c.Activo,
-            TotalVentas = c.CantidadCompras,
+            TotalVentas = conteosVentasPagadas.GetValueOrDefault(c.Id),
         };
     }
 }

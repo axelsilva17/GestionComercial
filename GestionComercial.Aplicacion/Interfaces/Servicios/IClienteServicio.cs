@@ -11,6 +11,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<ClienteDto>              CrearAsync(ClienteCrearDto dto);
         Task                          ActualizarAsync(ClienteActualizarDto dto);
         Task                          DesactivarAsync(int id);
+        Task                          ActivarAsync(int id);
         Task<int>                     ContarClientesConVentasAsync(int idEmpresa);
     }
 }

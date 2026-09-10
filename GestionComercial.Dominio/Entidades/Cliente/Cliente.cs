@@ -114,8 +114,8 @@ namespace GestionComercial.Dominio.Entidades.Cliente
             .Where(v => v.EsPagada)
             .Sum(v => v.TotalFinal);
 
-        ///         /// Cantidad de compras.
-        public int CantidadCompras => Ventas
+        ///         /// Cantidad de ventas pagadas.
+        public int CantidadVentas => Ventas
             .Where(v => v.EsPagada)
             .Count();
 

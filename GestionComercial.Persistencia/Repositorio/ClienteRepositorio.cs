@@ -1,4 +1,5 @@
 using GestionComercial.Dominio.Entidades.Cliente;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
@@ -84,5 +85,24 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<int> ContarClientesNuevosAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .CountAsync(c => c.Id_empresa == idEmpresa && c.FechaAlta >= desde && c.FechaAlta <= hasta, ct);
+
+        // Conteo agrupado en SQL de ventas PAGADAS por cliente (misma semántica que Cliente.CantidadVentas).
+        // Proyección sin materializar entidades: evita N+1 al listar clientes con su total de ventas.
+        public async Task<Dictionary<int, int>> ContarVentasPagadasPorClientesAsync(
+            int idEmpresa, IEnumerable<int> idsClientes, CancellationToken ct = default)
+        {
+            var ids = idsClientes as int[] ?? idsClientes.ToArray();
+            if (ids.Length == 0)
+                return new Dictionary<int, int>();
+
+            return await _context.Ventas
+                .AsNoTracking()
+                .Where(v => v.Estado == (int)EstadoVentaEnum.Pagada
+                         && v.Cliente.Id_empresa == idEmpresa
+                         && ids.Contains(v.Id_cliente))
+                .GroupBy(v => v.Id_cliente)
+                .Select(g => new { IdCliente = g.Key, Cantidad = g.Count() })
+                .ToDictionaryAsync(x => x.IdCliente, x => x.Cantidad, ct);
+        }
     }
 }

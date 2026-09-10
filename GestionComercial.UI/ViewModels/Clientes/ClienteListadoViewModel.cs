@@ -31,7 +31,7 @@ namespace GestionComercial.UI.ViewModels.Clientes
         // ── Enum Filtro Estado ─────────────────────────────────────────────────
         public enum EstadoFiltro { Todos = 0, Activos = 1, Inactivos = 2 }
 
-        private EstadoFiltro _filtroEstado = EstadoFiltro.Activos;
+        private EstadoFiltro _filtroEstado = EstadoFiltro.Todos;
         public EstadoFiltro FiltroEstado
         {
             get => _filtroEstado;
@@ -187,6 +187,21 @@ namespace GestionComercial.UI.ViewModels.Clientes
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error desactivando cliente");
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task ActivarCliente()
+        {
+            if (ClienteSeleccionado == null) return;
+            try
+            {
+                await _clienteServicio.ActivarAsync(ClienteSeleccionado.IdCliente);
+                await CargarAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error activando cliente");
                 MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
