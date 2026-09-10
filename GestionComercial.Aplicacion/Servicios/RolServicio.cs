@@ -20,7 +20,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Id = r.Id,
                 Nombre = r.Nombre,
                 Descripcion = r.Descripcion,
-                CantidadPermisos = r.RolPermisos?.Count ?? 0,
+                CantidadPermisos = r.RolPermisos?.Select(rp => rp.Id_permiso).Distinct().Count() ?? 0,
             }).ToList();
         }
 
@@ -44,12 +44,16 @@ namespace GestionComercial.Aplicacion.Servicios
             var rol = roles.FirstOrDefault(r => r.Id == rolId);
             return rol?.RolPermisos?
                 .Select(rp => rp.Id_permiso)
+                .Distinct()
                 .ToList() ?? new List<int>();
         }
 
         public async Task AsignarPermisosARolAsync(int rolId, List<int> permisoIds)
         {
-            await _uow.Roles.ActualizarPermisosRolAsync(rolId, permisoIds);
+            // La migración 20260909000000 crea el índice UNIQUE (Id_rol, Id_permiso):
+            // deduplicar acá evita violaciones si un caller pasa ids repetidos.
+            var idsUnicos = permisoIds.Distinct().ToList();
+            await _uow.Roles.ActualizarPermisosRolAsync(rolId, idsUnicos);
         }
     }
 }

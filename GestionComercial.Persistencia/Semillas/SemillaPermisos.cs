@@ -58,8 +58,12 @@ namespace GestionComercial.Persistencia.Semillas
 
         /// <summary>
         /// Reconcilia los permisos semilla en una BD existente (idempotente, solo ADD).
-        /// Asegura que los roles 1=Gerente, 2=Administrador, 3=Vendedor tengan
-        /// exactamente los permisos definidos en Sembrar().
+        /// SOLO garantiza el par (1,17): Gerente → Caja.Auditoria. El permiso 17 existe
+        /// desde la migración 20260903231401, pero NINGUNA migración inserta su par de
+        /// RolPermiso, así que este es el único par que el reconcile debe asegurar.
+        /// El resto de los pares de Sembrar() ya quedan cubiertos por las migraciones;
+        /// reconciliarlos de nuevo RE-INSERTABA permisos que el usuario había quitado
+        /// (bug original: los permisos se revertían al reiniciar).
         /// </summary>
         public static async Task ReconciliarPermisosSemillaAsync(
             GestionComercial.Persistencia.Contexto.GestionComercialContext context,
@@ -67,7 +71,7 @@ namespace GestionComercial.Persistencia.Semillas
         {
             try
             {
-                // Leer pares existentes (Id_rol, Id_permiso) para roles 1..3
+                // Pares existentes (Id_rol, Id_permiso) para roles 1..3
                 var existentes = await context.RolPermisos
                     .Where(rp => rp.Id_rol >= 1 && rp.Id_rol <= 3)
                     .Select(rp => new { rp.Id_rol, rp.Id_permiso })
@@ -75,20 +79,10 @@ namespace GestionComercial.Persistencia.Semillas
 
                 var existentesSet = new HashSet<(int rol, int permiso)>(existentes.Select(x => (x.Id_rol, x.Id_permiso)));
 
-                // Pares semilla según Sembrar():
-                // Gerente (1): 1..17 (todos los permisos definidos, incluido Caja.Auditoria como permiso normal)
-                // Administrador (2): 1..15 + 16
-                // Vendedor (3): 1,2,6,9,10,12,13
+                // Único par que no cubre ninguna migración: Gerente (1) → Caja.Auditoria (17)
                 var semilla = new List<(int rol, int permiso)>
                 {
-                    // Gerente
-                    (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),
-                    (1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),
-                    // Administrador
-                    (2,1),(2,2),(2,3),(2,4),(2,5),(2,6),(2,7),(2,8),
-                    (2,9),(2,10),(2,11),(2,12),(2,13),(2,14),(2,15),(2,16),
-                    // Vendedor
-                    (3,1),(3,2),(3,6),(3,9),(3,10),(3,12),(3,13)
+                    (1,17)
                 };
 
                 var faltantes = semilla.Where(p => !existentesSet.Contains(p)).ToList();
