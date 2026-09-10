@@ -101,6 +101,10 @@ namespace GestionComercial.Aplicacion.Servicios
 
             await _unitOfWork.DescuentoConfiguraciones
                 .ActualizarMetodosPagoAsync(id, effectiveIds, ct);
+
+            // ObtenerPorIdAsync usa AsNoTracking: la entidad está DETACHED y las
+            // mutaciones de Actualizar() no se persistirían sin re-adjuntarla.
+            _unitOfWork.DescuentoConfiguraciones.Actualizar(descuento);
             await _unitOfWork.GuardarCambiosAsync(ct);
         }
 

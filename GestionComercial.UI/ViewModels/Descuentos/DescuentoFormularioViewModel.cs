@@ -55,6 +55,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 NotifyOfPropertyChange(() => MuestraSelectorCategoria);
                 NotifyOfPropertyChange(() => MuestraAmbitoMetodoPago);
                 NotifyOfPropertyChange(() => MuestraSelectorMetodosPago);
+                NotifyOfPropertyChange(() => MuestraCompraMinima);
                 if (value == "Producto")
                 {
                     IdCategoria = null;
@@ -71,12 +72,19 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                     IdCategoria = null;
                     AplicaCualquierMetodoPago = false;
                 }
+                else if (value == "Compra Mayor")
+                {
+                    IdProducto = null;
+                    IdCategoria = null;
+                    AplicaCualquierMetodoPago = true;
+                }
             }
         }
 
         public bool MuestraSelectorProducto => AmbitoSeleccionado == "Producto";
         public bool MuestraSelectorCategoria => AmbitoSeleccionado == "Categoría";
         public bool MuestraAmbitoMetodoPago => AmbitoSeleccionado == "Método de Pago";
+        public bool MuestraCompraMinima => AmbitoSeleccionado == "Compra Mayor";
 
         // ── Condición de pago ────────────────────────────────────────────
         private bool _aplicaCualquierMetodoPago = true;
@@ -119,6 +127,13 @@ namespace GestionComercial.UI.ViewModels.Descuentos
         {
             get => _idProducto;
             set { _idProducto = value; NotifyOfPropertyChange(() => IdProducto); }
+        }
+
+        private decimal? _montoMinimoCompra;
+        public decimal? MontoMinimoCompra
+        {
+            get => _montoMinimoCompra;
+            set { _montoMinimoCompra = value; NotifyOfPropertyChange(() => MontoMinimoCompra); }
         }
 
         private string _productoNombre = string.Empty;
@@ -198,6 +213,11 @@ namespace GestionComercial.UI.ViewModels.Descuentos
 
         private string GenerarNombre(List<int>? idsMetodosPago = null)
         {
+            if (AmbitoSeleccionado == "Compra Mayor")
+            {
+                var monto = MontoMinimoCompra ?? 0;
+                return $"Compra Mayor >= ${monto.ToString("N2", CultureInfo.InvariantCulture)} {Valor.ToString("0.##", CultureInfo.InvariantCulture)}%";
+            }
             if (AmbitoSeleccionado == "Método de Pago" && idsMetodosPago != null && idsMetodosPago.Count > 0)
             {
                 var nombres = MetodosPagoDisponibles
@@ -227,17 +247,24 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                     Valor = descuento.Valor;
                     IdProducto = descuento.Id_producto;
                     IdCategoria = descuento.Id_categoria;
-                    AplicaCualquierMetodoPago = descuento.AplicaCualquierMetodoPago;
                     FechaDesde = descuento.FechaDesde;
                     FechaHasta = descuento.FechaHasta;
+                    Nombre = descuento.Nombre;
+                    MontoMinimoCompra = descuento.MontoMinimoCompra;
 
+                    // IMPORTANTE: set AmbitoSeleccionado PRIMERO, porque su setter
+                    // sobrescribe AplicaCualquierMetodoPago (mismo orden que el form interno).
                     // Inferir ámbito desde Alcance
                     AmbitoSeleccionado = descuento.Alcance switch
                     {
                         AlcanceDescuentoEnum.MetodoPago => "Método de Pago",
                         AlcanceDescuentoEnum.Categoria => "Categoría",
+                        AlcanceDescuentoEnum.CompraMayor => "Compra Mayor",
                         _ => "Producto"
                     };
+
+                    // AHORA restauramos el valor real de AplicaCualquierMetodoPago desde la entidad
+                    AplicaCualquierMetodoPago = descuento.AplicaCualquierMetodoPago;
 
                     if (IdProducto.HasValue)
                         ProductoSeleccionado = Productos.FirstOrDefault(p => p.IdProducto == IdProducto.Value);
@@ -298,10 +325,19 @@ namespace GestionComercial.UI.ViewModels.Descuentos
             {
                 "Método de Pago" => AlcanceDescuentoEnum.MetodoPago,
                 "Categoría" => AlcanceDescuentoEnum.Categoria,
+                "Compra Mayor" => AlcanceDescuentoEnum.CompraMayor,
                 _ => AlcanceDescuentoEnum.Producto
             };
 
-            if (alcance == AlcanceDescuentoEnum.MetodoPago)
+            if (alcance == AlcanceDescuentoEnum.CompraMayor)
+            {
+                if (!MontoMinimoCompra.HasValue || MontoMinimoCompra <= 0)
+                {
+                    MostrarError("Debe indicar el monto mínimo de compra.");
+                    return;
+                }
+            }
+            else if (alcance == AlcanceDescuentoEnum.MetodoPago)
             {
                 if (AplicaCualquierMetodoPago)
                 {
@@ -345,7 +381,15 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                 .Select(m => m.MetodoPago.Id)
                 .ToList();
 
-            Nombre = GenerarNombre(idsMetodosPago);
+            // Solo autogenerar el nombre al crear, o si el usuario lo dejó vacío en edición
+            if (!EsModoEdicion)
+            {
+                Nombre = GenerarNombre(idsMetodosPago);
+            }
+            else if (string.IsNullOrWhiteSpace(Nombre))
+            {
+                Nombre = GenerarNombre(idsMetodosPago);
+            }
 
             try
             {
@@ -355,7 +399,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                         DescuentoId, Nombre, Valor,
                         IdProducto, IdCategoria, AplicaCualquierMetodoPago,
                         AplicaCualquierMetodoPago ? null : idsMetodosPago,
-                        FechaDesde, FechaHasta, alcance);
+                        FechaDesde, FechaHasta, alcance, MontoMinimoCompra);
                 }
                 else
                 {
@@ -363,7 +407,7 @@ namespace GestionComercial.UI.ViewModels.Descuentos
                         _sesion.IdEmpresa, Nombre, Valor,
                         IdProducto, IdCategoria, AplicaCualquierMetodoPago,
                         AplicaCualquierMetodoPago ? null : idsMetodosPago,
-                        FechaDesde, FechaHasta, alcance);
+                        FechaDesde, FechaHasta, alcance, MontoMinimoCompra);
                 }
 
                 await _eventAggregator.PublishOnUIThreadAsync(new DescuentosActualizadosEvent());

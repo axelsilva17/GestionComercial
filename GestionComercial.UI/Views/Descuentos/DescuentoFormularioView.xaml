@@ -106,7 +106,10 @@
                                          IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Categoría}"
                                          Margin="0,0,20,0"/>
                             <RadioButton GroupName="Ambito" Content="Método de Pago" FontSize="13"
-                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Método de Pago}"/>
+                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Método de Pago}"
+                                         Margin="0,0,20,0"/>
+                            <RadioButton GroupName="Ambito" Content="Compra Mayor" FontSize="13"
+                                         IsChecked="{Binding AmbitoSeleccionado, Converter={StaticResource StringEquals}, ConverterParameter=Compra Mayor}"/>
                         </StackPanel>
 
                         <!-- Selector de Producto -->
@@ -133,6 +136,17 @@
                                       TextSearch.TextPath="Nombre"
                                       IsEnabled="{Binding EsModoEdicion, Converter={StaticResource InverseBool}}"
                                       Height="36" FontSize="13"/>
+                        </StackPanel>
+
+                        <!-- Compra Mayor: Monto Mínimo -->
+                        <StackPanel Visibility="{Binding MuestraCompraMinima, Converter={StaticResource BoolToVisibility}}"
+                                    Margin="0,0,0,12">
+                            <TextBlock Text="MONTO MÍNIMO DE COMPRA ($)" Style="{StaticResource FormLabel}"/>
+                            <TextBox Style="{StaticResource FormInput}"
+                                     Text="{Binding MontoMinimoCompra, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="El descuento se aplica cuando la venta supere este monto."
+                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -200,6 +214,9 @@
                 <Border Style="{StaticResource SeccionCard}">
                     <StackPanel>
                         <TextBlock Text="DATOS" Style="{StaticResource FormLabel}"/>
+
+                        <TextBlock Text="NOMBRE" Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource FormInput}" Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
 
                         <TextBlock Text="VALOR (%)" Style="{StaticResource FormLabel}"/>
                         <TextBox Style="{StaticResource FormInput}" Text="{Binding Valor, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
