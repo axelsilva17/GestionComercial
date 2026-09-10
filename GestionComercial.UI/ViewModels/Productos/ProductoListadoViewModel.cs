@@ -774,7 +774,7 @@ namespace GestionComercial.UI.ViewModels.Productos
             }
         }
 
-        public async void DesactivarProducto()
+        public async Task DesactivarProducto()
         {
             if (ProductoSeleccionado == null) return;
             var result = MessageBox.Show($"¿Desactivar producto {ProductoSeleccionado.Nombre}?",
@@ -788,6 +788,21 @@ namespace GestionComercial.UI.ViewModels.Productos
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error desactivando producto");
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task ActivarProducto()
+        {
+            if (ProductoSeleccionado == null) return;
+            try
+            {
+                await _productoServicio.ActivarAsync(ProductoSeleccionado.IdProducto);
+                await CargarAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error activando producto");
                 MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

@@ -19,6 +19,7 @@ namespace GestionComercial.Dominio.Interfaces.Servicios
         Task<(int Nuevos, int Actualizados)> AjustePreciosPorProveedorAsync(int idProveedor, decimal porcentaje, CancellationToken ct = default);
         Task<ImportResult> ImportarMasivoAsync(IEnumerable<ProductoImportarDto> dtos, bool actualizarExistentes, IProgress<(int current, int total, string message)>? progreso = null, CancellationToken ct = default);
         Task DesactivarAsync(int id, CancellationToken ct = default);
+        Task ActivarAsync(int id, CancellationToken ct = default);
         Task ActualizarPreciosLoteAsync(IEnumerable<ProductoActualizarDto> dtos, CancellationToken ct = default);
 
         // Búsqueda con StartsWith (prefijo) para uso de índices

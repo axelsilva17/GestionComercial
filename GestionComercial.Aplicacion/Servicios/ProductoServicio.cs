@@ -467,6 +467,15 @@ public class ProductoServicio : IProductoServicio
             await _uow.GuardarCambiosAsync(ct);
         }
 
+        public async Task ActivarAsync(int id, CancellationToken ct = default)
+        {
+            var producto = await _uow.Productos.ObtenerPorIdAsync(id, ct)
+                ?? throw new KeyNotFoundException($"Producto {id} no encontrado");
+            producto.Reactivar();
+            _uow.Productos.Actualizar(producto);
+            await _uow.GuardarCambiosAsync(ct);
+        }
+
         public async Task ActualizarPreciosLoteAsync(IEnumerable<ProductoActualizarDto> dtos, CancellationToken ct = default)
         {
             var dtoList = dtos.ToList();

@@ -56,10 +56,15 @@ namespace GestionComercial.UI.Views.Productos
                 await ViewModel.VerMovimientos();
         }
 
-        // Desactivar producto desde sidebar
-        private void DesactivarProducto_Click(object sender, RoutedEventArgs e)
+        // Desactivar o activar producto según su estado actual
+        private async void CambiarEstadoProducto_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel?.DesactivarProducto();
+            if (ViewModel?.ProductoSeleccionado == null) return;
+
+            if (ViewModel.ProductoSeleccionado.Activo)
+                await ViewModel.DesactivarProducto();
+            else
+                await ViewModel.ActivarProducto();
         }
 
         // Paginación
