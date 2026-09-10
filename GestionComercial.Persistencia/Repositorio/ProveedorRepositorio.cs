@@ -15,9 +15,15 @@ namespace GestionComercial.Persistencia.Repositorio
     => await _dbSet.AnyAsync(p => p.Id == idProveedor && p.Activo);
 
         public async Task<IEnumerable<Proveedor>> ObtenerPorEmpresaAsync(int idEmpresa)
-            => await _dbSet.AsNoTracking()
+        {
+            // Include(Compras) materializa la colección para poder contar las compras
+            // reales de cada proveedor de una sola consulta (evita N+1). La lista de
+            // proveedores de un POS es acotada, por lo que el costo es aceptable.
+            return await _dbSet.AsNoTracking()
                 .Where(p => p.Id_empresa == idEmpresa)
+                .Include(p => p.Compras)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
+        }
     }
 }

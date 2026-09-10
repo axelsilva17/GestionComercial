@@ -157,7 +157,7 @@ namespace GestionComercial.UI.ViewModels.Proveedores
                     Telefono = p.Telefono ?? string.Empty,
                     Email = p.Email ?? string.Empty,
                     Activo = p.Activo,
-                    TotalCompras = 0 // TODO: obtener el total de compras real
+                    TotalCompras = p.CantidadCompras
                 }).ToList();
                 
                 Proveedores           = new ObservableCollection<ProveedorItemDto>(lista);
