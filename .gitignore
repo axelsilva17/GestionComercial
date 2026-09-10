@@ -31,6 +31,7 @@ build_*.txt
 build_*.log
 msbuild.log
 publish/
+publish_bak*/
 
 # Dev test utilities
 generar_test_import.py
