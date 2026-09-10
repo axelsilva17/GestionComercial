@@ -12,6 +12,14 @@ namespace GestionComercial.UI.Views.Ventas
             InitializeComponent();
         }
 
+        // Abre (o cierra, si se vuelve a seleccionar la misma) el drawer lateral de detalle.
+        // Patrón espejo de ClienteListadoView: la selección del grid se reenvía al VM.
+        private void Ventas_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is not VentaListadoViewModel vm) return;
+            _ = vm.CargarDetalleVentaAsync(vm.VentaSeleccionada);
+        }
+
         private void VentaListadoView_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (DataContext is not VentaListadoViewModel vm) return;

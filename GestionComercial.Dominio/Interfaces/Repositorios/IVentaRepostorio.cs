@@ -19,6 +19,15 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         /// </summary>
         Task<List<VentaHistorialClienteRow>> ObtenerHistorialPorClienteAsync(
             int idCliente, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
+
+        /// <summary>
+        /// Most recent sales for a sucursal and date range as the same light projection used by
+        /// the per-client history, filtered in SQL and capped with Take(top), ordered by Fecha DESC.
+        /// Avoids hydrating the full Venta graph (Detalles/Pagos) when the standalone sales-history
+        /// list loads a wide range (e.g. 30 days on a DB with 100k+ sales).
+        /// </summary>
+        Task<List<VentaHistorialClienteRow>> ObtenerRecientesPorSucursalAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
         Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);
         Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default);
         

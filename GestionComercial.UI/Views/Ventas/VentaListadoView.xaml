@@ -114,10 +114,30 @@
             <Setter Property="CornerRadius"   Value="6"/>
             <Setter Property="Padding"        Value="8,3"/>
         </Style>
+
+        <!-- Estilos del drawer lateral (espejo de CompraListadoView) -->
+        <Style x:Key="SideLabel" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Margin"     Value="0,0,0,4"/>
+        </Style>
+        <Style x:Key="SideValue" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="14"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Margin"     Value="0,0,0,14"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- PANEL PRINCIPAL -->
+        <Grid Grid.Column="0" Margin="24">
+            <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="16"/>
             <RowDefinition Height="Auto"/>
@@ -177,7 +197,8 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Button x:Name="FiltrarHoy"        Content="hoy"         Height="32" Padding="14,0" FontSize="12" Margin="0,0,8,0"  Style="{StaticResource FiltroButton}" ToolTip="Ctrl+H - Hoy"/>
             <Button x:Name="FiltrarEstaSemana" Content="Esta semana" Height="32" Padding="14,0" FontSize="12" Margin="0,0,8,0"  Style="{StaticResource FiltroButton}" ToolTip="Ctrl+S - Esta semana"/>
-            <Button x:Name="FiltrarEsteMes"    Content="Este mes"    Height="32" Padding="14,0" FontSize="12" Margin="0,0,24,0" Style="{StaticResource FiltroButton}" ToolTip="Ctrl+M - Este mes"/>
+            <Button x:Name="FiltrarEsteMes"    Content="Este mes"    Height="32" Padding="14,0" FontSize="12" Margin="0,0,8,0"  Style="{StaticResource FiltroButton}" ToolTip="Ctrl+M - Este mes"/>
+            <Button x:Name="FiltrarUltimos30Dias" Content="Últimos 30 días" Height="32" Padding="14,0" FontSize="12" Margin="0,0,24,0" Style="{StaticResource FiltroButton}"/>
 
             <TextBlock Text="Desde:" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                        VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -203,9 +224,11 @@
         <Border Grid.Row="6" Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="12" ClipToBounds="True">
-            <DataGrid Style="{StaticResource VentasGrid}"
-                      ItemsSource="{Binding Ventas}"
-                      SelectedItem="{Binding VentaSeleccionada}">
+            <Grid>
+                <DataGrid Style="{StaticResource VentasGrid}"
+                          ItemsSource="{Binding Ventas}"
+                          SelectedItem="{Binding VentaSeleccionada}"
+                          SelectionChanged="Ventas_SelectionChanged">
 
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding IdVenta, StringFormat='#{0:D5}'}" Width="70">
@@ -304,8 +327,59 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+
+                    <!-- Chevron: affordance del drawer lateral (espejo de CompraListadoView) -->
+                    <DataGridTemplateColumn Width="36">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="›" FontSize="20"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
-            </DataGrid>
+                </DataGrid>
+
+                <!-- Banner de error -->
+                <Border Background="#1AEF4444" BorderBrush="{DynamicResource ErrorBrush}"
+                        BorderThickness="1" CornerRadius="10" Padding="16,12"
+                        Margin="16" VerticalAlignment="Top"
+                        Visibility="{Binding TieneError, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="No se pudo cargar el historial"
+                                   FontSize="13" FontWeight="Bold"
+                                   Foreground="{DynamicResource ErrorBrush}"/>
+                        <TextBlock Text="{Binding MensajeError}" FontSize="12"
+                                   Foreground="{DynamicResource ErrorBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Estado vacío -->
+                <Border Background="#CC0F172A" CornerRadius="12"
+                        Visibility="{Binding SinResultados, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="📭" FontSize="28" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No hay ventas en el período"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   FontSize="14" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                        <TextBlock Text="Probá ampliar el rango de fechas o cambiar el filtro de estado."
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Hint de lista capada -->
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="6" Padding="10,5" Margin="0,16,16,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Visibility="{Binding ListaCapada, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding MensajeCapa}" FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- Botones de acción sobre la venta seleccionada -->
@@ -404,5 +478,103 @@
                 </StackPanel>
             </Button>
         </StackPanel>
+        </Grid>
+
+        <!-- SIDEBAR DETALLE VENTA (espejo de CompraListadoView) -->
+        <Border Grid.Column="1" Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"
+                Visibility="{Binding DetalleVenta, Converter={StaticResource NullToVisibility}}">
+            <Grid Width="300">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="22,20">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="DETALLE DE LA VENTA" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock FontSize="20" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,0">
+                                    <Run Text="#" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <Run Text="{Binding DetalleVenta.IdVenta, Mode=OneWay}"
+                                         Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas"/>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button Grid.Column="1" x:Name="CerrarDetalle" Content="✕"
+                                    Width="28" Height="28" FontSize="13"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    Cursor="Hand" VerticalAlignment="Top" ToolTip="Cerrar detalle"/>
+                        </Grid>
+
+                        <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="CLIENTE" Style="{StaticResource SideLabel}"/>
+                        <TextBlock Text="{Binding DetalleVenta.ClienteNombre, Mode=OneWay}"
+                                   Style="{StaticResource SideValue}" TextWrapping="Wrap"/>
+
+                        <TextBlock Text="FECHA" Style="{StaticResource SideLabel}"/>
+                        <TextBlock Text="{Binding DetalleVenta.Fecha, StringFormat='dd/MM/yyyy   HH:mm', Mode=OneWay}"
+                                   Style="{StaticResource SideValue}"/>
+
+                        <TextBlock Text="REGISTRADO POR" Style="{StaticResource SideLabel}"/>
+                        <TextBlock Text="{Binding DetalleVenta.UsuarioNombre, Mode=OneWay}"
+                                   Style="{StaticResource SideValue}"/>
+
+                        <TextBlock Text="ESTADO" Style="{StaticResource SideLabel}"/>
+                        <TextBlock Text="{Binding DetalleVenta.Estado, Mode=OneWay}"
+                                   Style="{StaticResource SideValue}"/>
+
+                        <Separator Background="{DynamicResource BorderBrush}" Margin="0,0,0,16"/>
+
+                        <!-- Items de la venta -->
+                        <TextBlock Text="PRODUCTOS" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10"/>
+
+                        <ItemsControl ItemsSource="{Binding DetalleVenta.Items, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding ProductoNombre}" FontSize="12" FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       TextWrapping="Wrap"
+                                                       ToolTip="{Binding ProductoNombre}"/>
+                                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,2,0,0">
+                                                <Run Text="{Binding Cantidad}"/>
+                                                <Run Text=" x "/>
+                                                <Run Text="{Binding PrecioUnitario, Converter={StaticResource DecimalToMoneda}}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Subtotal, Converter={StaticResource DecimalToMoneda}}"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Separator Background="{DynamicResource BorderBrush}" Margin="0,8,0,12"/>
+
+                        <Grid>
+                            <TextBlock Text="TOTAL" FontWeight="Bold" FontSize="14"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding DetalleVenta.TotalFinal, Converter={StaticResource DecimalToMoneda}, Mode=OneWay}"
+                                       FontWeight="Bold" FontSize="20"
+                                       Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

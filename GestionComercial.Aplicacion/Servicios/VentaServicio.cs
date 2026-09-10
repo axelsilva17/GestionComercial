@@ -10,6 +10,7 @@ using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Ventas;
 using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
+using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using Microsoft.Extensions.Logging;
 using System.Threading;
@@ -475,19 +476,36 @@ namespace GestionComercial.Aplicacion.Servicios
                 hasta = hasta.Date.AddDays(1).AddSeconds(-1);
 
             var rows = await _uow.Ventas.ObtenerHistorialPorClienteAsync(idCliente, desde, hasta, top, ct);
-            return rows.Select(r => new VentaResumenDto
-            {
-                IdVenta       = r.Id,
-                Fecha         = r.Fecha,
-                TotalFinal    = r.TotalFinal,
-                Estado        = MapEstado(r.Estado),
-                IdCliente     = r.IdCliente,
-                ClienteNombre = r.ClienteNombre,
-                UsuarioNombre = r.UsuarioNombre,
-            });
+            return rows.Select(MapearResumen);
+        }
+
+        // Standalone sales-history list with the same light SQL projection, capped to the most
+        // recent `top` sales of the sucursal in the range (ordered by Fecha DESC in SQL).
+        public async Task<IEnumerable<VentaResumenDto>> ObtenerRecientesPorSucursalAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
+        {
+            // Normalizar: si hasta es inicio del día, usar fin del día para incluir todo el día.
+            if (hasta.TimeOfDay == TimeSpan.Zero)
+                hasta = hasta.Date.AddDays(1).AddSeconds(-1);
+
+            var rows = await _uow.Ventas.ObtenerRecientesPorSucursalAsync(idSucursal, desde, hasta, top, ct);
+            return rows.Select(MapearResumen);
         }
 
         // ── Mapeos ────────────────────────────────────────────────────────────
+        // Maps a light projection row (from ObtenerHistorialPorClienteAsync /
+        // ObtenerRecientesPorSucursalAsync) to the list DTO.
+        private static VentaResumenDto MapearResumen(VentaHistorialClienteRow r) => new()
+        {
+            IdVenta       = r.Id,
+            Fecha         = r.Fecha,
+            TotalFinal    = r.TotalFinal,
+            Estado        = MapEstado(r.Estado),
+            IdCliente     = r.IdCliente,
+            ClienteNombre = r.ClienteNombre,
+            UsuarioNombre = r.UsuarioNombre,
+        };
+
         private static VentaResumenDto MapearResumen(Venta v) => new()
         {
             IdVenta       = v.Id,

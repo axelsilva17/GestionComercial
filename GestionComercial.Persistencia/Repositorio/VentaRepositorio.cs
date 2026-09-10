@@ -54,6 +54,26 @@ namespace GestionComercial.Persistencia.Repositorio
                     v.Usuario != null ? v.Usuario.Nombre + " " + v.Usuario.Apellido : string.Empty))
                 .ToListAsync(ct);
 
+        // Same light projection as ObtenerHistorialPorClienteAsync but for the standalone
+        // sales-history list: all sales of the sucursal in the date range, capped with Take(top)
+        // and ordered by Fecha DESC, so a 30-day range on a large DB never materializes the whole
+        // range in memory just to render the most recent rows.
+        public async Task<List<VentaHistorialClienteRow>> ObtenerRecientesPorSucursalAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
+            => await _dbSet.AsNoTracking()
+                .Where(v => v.Id_sucursal == idSucursal && v.Fecha >= desde && v.Fecha <= hasta)
+                .OrderByDescending(v => v.Fecha)
+                .Take(top)
+                .Select(v => new VentaHistorialClienteRow(
+                    v.Id,
+                    v.Fecha,
+                    v.TotalFinal,
+                    v.Estado,
+                    v.Id_cliente,
+                    v.Cliente != null ? v.Cliente.Nombre : "Consumidor Final",
+                    v.Usuario != null ? v.Usuario.Nombre + " " + v.Usuario.Apellido : string.Empty))
+                .ToListAsync(ct);
+
         public async Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
                 .Where(v => v.Sucursal.Id_empresa == idEmpresa

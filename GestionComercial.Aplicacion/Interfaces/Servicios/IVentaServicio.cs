@@ -28,5 +28,10 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         // capped to the most recent `top` sales. Avoids loading the whole sucursal in memory.
         Task<IEnumerable<VentaResumenDto>> ObtenerHistorialPorClienteAsync(
             int idCliente, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
+
+        // Standalone sales-history list: most recent `top` sales of the sucursal in the date range
+        // (light SQL projection, ordered by Fecha DESC). Avoids loading the whole range on big DBs.
+        Task<IEnumerable<VentaResumenDto>> ObtenerRecientesPorSucursalAsync(
+            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
     }
 }
