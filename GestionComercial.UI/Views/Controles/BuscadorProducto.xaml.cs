@@ -53,6 +53,8 @@ namespace GestionComercial.UI.Controles
 
         private async void TxtBusqueda_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (_seleccionandoItem) return;
+
             var texto = TxtBusqueda.Text.Trim();
             BtnLimpiar.Visibility = string.IsNullOrEmpty(texto) ? Visibility.Collapsed : Visibility.Visible;
 
@@ -104,10 +106,8 @@ namespace GestionComercial.UI.Controles
 
         private void ItemResultado_Click(object sender, MouseButtonEventArgs e)
         {
-            _seleccionandoItem = true;
             if ((sender as Border)?.DataContext is ProductoDto producto)
                 SeleccionarProducto(producto);
-            _seleccionandoItem = false;
         }
 
         private void BtnLimpiar_Click(object sender, RoutedEventArgs e)
@@ -154,11 +154,20 @@ namespace GestionComercial.UI.Controles
 
         private void SeleccionarProducto(ProductoDto producto)
         {
-            ProductoSeleccionado = producto;
-            TxtBusqueda.Text     = producto.Nombre;
-            BtnLimpiar.Visibility = Visibility.Visible;
-            CerrarDropdown();
-            ProductoElegido?.Invoke(this, producto);
+            _seleccionandoItem = true;
+            try
+            {
+                _cts?.Cancel();
+                ProductoSeleccionado = producto;
+                TxtBusqueda.Text     = producto.Nombre;
+                BtnLimpiar.Visibility = Visibility.Visible;
+                CerrarDropdown();
+                ProductoElegido?.Invoke(this, producto);
+            }
+            finally
+            {
+                _seleccionandoItem = false;
+            }
         }
 
         // ── Mock para desarrollo (reemplazar con servicio real) ───────────────
