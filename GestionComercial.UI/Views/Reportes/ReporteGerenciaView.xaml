@@ -331,7 +331,7 @@
                                       CellStyle="{StaticResource CellLocal}"
                                       RowStyle="{StaticResource RowLocal}">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="70">
+                                    <DataGridTextColumn Header="MES"    Binding="{Binding Mes}"    Width="90">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -349,7 +349,25 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="MARGEN" Width="68">
+                                    <DataGridTemplateColumn Header="COMPRAS" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Compras, Converter={StaticResource DecimalToMoneda}}"
+                                                           Foreground="{DynamicResource ErrorBrush}" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" Margin="8,0"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="RESULTADO" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Resultado, Converter={StaticResource DecimalToMoneda}}"
+                                                           Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" Margin="8,0"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="MARGEN" Width="95">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border CornerRadius="5"
