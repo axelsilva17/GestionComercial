@@ -147,7 +147,7 @@ namespace GestionComercial.Persistencia.Repositorio
             return lista.OrderBy(p => p.StockActual).Take(limite).ToList();
         }
 
-        // ── Búsqueda con StartsWith (prefijo) para uso de índices ────────────────
+        // ── Búsqueda con Contains (subcadena LIKE '%term%') — case-insensitive ──
         public async Task<List<Producto>> BuscarProductosAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default)
         {
             var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
@@ -155,10 +155,12 @@ namespace GestionComercial.Persistencia.Repositorio
             if (!string.IsNullOrWhiteSpace(texto))
             {
                 var term = texto.Trim();
-                // StartsWith → EF Core traduce a LIKE 'term%' (usa índice)
+                // Contains + NOCASE: LIKE '%term%' on NOCASE-collated column is
+                // case-insensitive (LIKE in SQLite folds ASCII case and the
+                // explicit collation reinforces it). Matches CompraRepositorio pattern.
                 query = query.Where(p =>
-                    EF.Functions.Like(p.Nombre, term + "%") ||
-                    EF.Functions.Like(p.CodigoBarra, term + "%"));
+                    EF.Functions.Like(EF.Functions.Collate(p.Nombre, "NOCASE"), $"%{term}%") ||
+                    EF.Functions.Like(EF.Functions.Collate(p.CodigoBarra, "NOCASE"), $"%{term}%"));
             }
 
             if (idCategoria.HasValue && idCategoria.Value > 0)
@@ -175,31 +177,10 @@ namespace GestionComercial.Persistencia.Repositorio
         }
 
         // ── Búsqueda con Contains (subcadena LIKE '%term%') ──────────────────────
+        // Delegates to BuscarProductosAsync which already performs a case-insensitive
+        // CONTAINS search using EF.Functions.Collate(NOCASE) + LIKE '%term%'.
         public async Task<List<Producto>> BuscarProductosContieneAsync(int idEmpresa, string? texto, int? idCategoria, bool? soloActivos, int take = 10, CancellationToken ct = default)
-        {
-            var query = _dbSet.AsNoTracking().Where(p => p.Id_empresa == idEmpresa);
-
-            if (!string.IsNullOrWhiteSpace(texto))
-            {
-                var term = texto.Trim();
-                // Contains → EF Core traduce a LIKE '%term%' (subcadena en nombre o código de barra)
-                query = query.Where(p =>
-                    EF.Functions.Like(p.Nombre, "%" + term + "%") ||
-                    EF.Functions.Like(p.CodigoBarra, "%" + term + "%"));
-            }
-
-            if (idCategoria.HasValue && idCategoria.Value > 0)
-                query = query.Where(p => p.Id_categoria == idCategoria.Value);
-
-            if (soloActivos.HasValue)
-                query = query.Where(p => p.Activo == soloActivos.Value);
-
-            return await query
-                .Include(p => p.Categoria)
-                .OrderBy(p => p.Nombre)
-                .Take(take)
-                .ToListAsync(ct);
-        }
+            => await BuscarProductosAsync(idEmpresa, texto, idCategoria, soloActivos, take, ct);
 
         // ── Búsqueda exacta por código de barras (case-insensitive para SQLite) ──
         public async Task<Producto?> BuscarPorCodigoBarraExactoAsync(int idEmpresa, string codigoBarra, CancellationToken ct = default)
