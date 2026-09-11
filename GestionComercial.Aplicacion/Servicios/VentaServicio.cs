@@ -482,13 +482,13 @@ namespace GestionComercial.Aplicacion.Servicios
         // Standalone sales-history list with the same light SQL projection, capped to the most
         // recent `top` sales of the sucursal in the range (ordered by Fecha DESC in SQL).
         public async Task<IEnumerable<VentaResumenDto>> ObtenerRecientesPorSucursalAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
+            int idSucursal, DateTime desde, DateTime hasta, int top, int? estado = null, CancellationToken ct = default)
         {
             // Normalizar: si hasta es inicio del día, usar fin del día para incluir todo el día.
             if (hasta.TimeOfDay == TimeSpan.Zero)
                 hasta = hasta.Date.AddDays(1).AddSeconds(-1);
 
-            var rows = await _uow.Ventas.ObtenerRecientesPorSucursalAsync(idSucursal, desde, hasta, top, ct);
+            var rows = await _uow.Ventas.ObtenerRecientesPorSucursalAsync(idSucursal, desde, hasta, top, estado, ct);
             return rows.Select(MapearResumen);
         }
 

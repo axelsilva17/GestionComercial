@@ -27,7 +27,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
         /// list loads a wide range (e.g. 30 days on a DB with 100k+ sales).
         /// </summary>
         Task<List<VentaHistorialClienteRow>> ObtenerRecientesPorSucursalAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
+            int idSucursal, DateTime desde, DateTime hasta, int top, int? estado = null, CancellationToken ct = default);
         Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default);
         Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default);
         

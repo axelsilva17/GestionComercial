@@ -21,7 +21,7 @@ namespace GestionComercial.Tests.UI
             _mockServicio = new Mock<IVentaServicio>();
             _mockServicio
                 .Setup(s => s.ObtenerRecientesPorSucursalAsync(
-                    It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                    It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new System.Collections.Generic.List<VentaResumenDto>());
             _vm = new VentaListadoViewModel(_mockServicio.Object, new SesionServicio());
         }

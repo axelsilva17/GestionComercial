@@ -1,4 +1,5 @@
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Persistencia.Contexto;
 using Microsoft.EntityFrameworkCore;
@@ -59,9 +60,15 @@ namespace GestionComercial.Persistencia.Repositorio
         // and ordered by Fecha DESC, so a 30-day range on a large DB never materializes the whole
         // range in memory just to render the most recent rows.
         public async Task<List<VentaHistorialClienteRow>> ObtenerRecientesPorSucursalAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default)
-            => await _dbSet.AsNoTracking()
-                .Where(v => v.Id_sucursal == idSucursal && v.Fecha >= desde && v.Fecha <= hasta)
+            int idSucursal, DateTime desde, DateTime hasta, int top, int? estado = null, CancellationToken ct = default)
+        {
+            var query = _dbSet.AsNoTracking()
+                .Where(v => v.Id_sucursal == idSucursal && v.Fecha >= desde && v.Fecha <= hasta);
+
+            if (estado.HasValue)
+                query = query.Where(v => v.Estado == estado.Value);
+
+            return await query
                 .OrderByDescending(v => v.Fecha)
                 .Take(top)
                 .Select(v => new VentaHistorialClienteRow(
@@ -73,6 +80,7 @@ namespace GestionComercial.Persistencia.Repositorio
                     v.Cliente != null ? v.Cliente.Nombre : "Consumidor Final",
                     v.Usuario != null ? v.Usuario.Nombre + " " + v.Usuario.Apellido : string.Empty))
                 .ToListAsync(ct);
+        }
 
         public async Task<IEnumerable<Venta>> ObtenerConDetallesPorFechaAsync(int idEmpresa, DateTime desde, DateTime hasta, CancellationToken ct = default)
             => await _dbSet.AsNoTracking()
@@ -303,7 +311,7 @@ namespace GestionComercial.Persistencia.Repositorio
                         AND v.Id_usuario = {1}
                         AND v.Fecha >= {2}
                         AND v.Fecha <= {3}
-                        AND v.Estado != 3
+                        AND v.Estado = 2
                       ORDER BY v.Fecha DESC",
                     idSucursal, idUsuario, desde, hasta)
                 .ToListAsync(ct);

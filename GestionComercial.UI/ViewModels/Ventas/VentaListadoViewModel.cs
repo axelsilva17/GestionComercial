@@ -2,6 +2,7 @@ using Caliburn.Micro;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.UI.ViewModels.Base;
 using GestionComercial.UI.ViewModels.Main;
 using System;
@@ -221,7 +222,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     // nor renders the whole range (previously the full range was materialized).
                     cap = ListadoTop;
                     ventas = await _ventaServicio.ObtenerRecientesPorSucursalAsync(
-                        _sesion.IdSucursal, FechaDesde, FechaHasta, cap);
+                        _sesion.IdSucursal, FechaDesde, FechaHasta, cap,
+                        MapFiltroEstado(FiltroEstado));
                 }
 
                 IEnumerable<VentaResumenDto> filtradas = ventas;
@@ -379,6 +381,14 @@ namespace GestionComercial.UI.ViewModels.Ventas
             // (o al revés, dejar un overlay "sin resultados" tapando datos).
             SinResultados = !TieneError && Ventas.Count == 0;
         }
+
+        private static int? MapFiltroEstado(string? filtro) => filtro switch
+        {
+            "Pendiente" => (int)EstadoVentaEnum.Pendiente,
+            "Pagada"    => (int)EstadoVentaEnum.Pagada,
+            "Anulada"   => (int)EstadoVentaEnum.Anulada,
+            _           => null // "Todos" or null → all states
+        };
 
         public async Task Volver()
         {

@@ -3,6 +3,7 @@ using GestionComercial.Aplicacion.DTOs.Reportes;
 using GestionComercial.Aplicacion.DTOs.Ventas;
 using GestionComercial.Aplicacion.Interfaces.Servicios;
 using GestionComercial.Aplicacion.Servicios;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces.Servicios;
 using GestionComercial.UI.ViewModels.Base;
 using System;
@@ -233,9 +234,9 @@ namespace GestionComercial.UI.ViewModels.Main
             MargenBrutoMes = TotalVentasMes > 0
                 ? (double)(ResultadoNeto / TotalVentasMes * 100) : 0;
 
-            // Recent individual sales (last 7 days) with proper Id and DateTime
+            // Recent individual sales (last 7 days) — Pagada only (exclude Pendiente/Anulada)
             var ventasRecientes = await _ventaServicio.ObtenerVentasAsync(
-                _sesion.IdSucursal, hoy.AddDays(-7), hoy.AddDays(1));
+                _sesion.IdSucursal, hoy.AddDays(-7), hoy.AddDays(1), estado: (int)EstadoVentaEnum.Pagada);
             VentasRecientes = new ObservableCollection<VentaResumenDto>(
                 ventasRecientes.OrderByDescending(v => v.Fecha).Take(5));
 
@@ -257,7 +258,7 @@ namespace GestionComercial.UI.ViewModels.Main
                 CantidadVentasMes = kpis.TotalTransacciones;
             }
 
-            // Stock crítico via IProductoServicio.BuscarProductosAsync (prefix search) + IReporteServicio.StockCriticoAsync
+            // Stock crítico via IReporteServicio.StockCriticoAsync
             var stockCritico = await _reporteServicio.StockCriticoAsync(_sesion.IdEmpresa);
             var criticos = stockCritico.Take(8).ToList();
             ProductosCriticos = stockCritico.Count();
@@ -275,9 +276,9 @@ namespace GestionComercial.UI.ViewModels.Main
                 ComprasDelMes = metricasCompras.Count;
             }
 
-            // Recent individual sales (last 7 days) with proper Id and DateTime
+            // Recent individual sales (last 7 days) — Pagada only (exclude Pendiente/Anulada)
             var ventasRecientes = await _ventaServicio.ObtenerVentasAsync(
-                _sesion.IdSucursal, hoy.AddDays(-7), hoy.AddDays(1));
+                _sesion.IdSucursal, hoy.AddDays(-7), hoy.AddDays(1), estado: (int)EstadoVentaEnum.Pagada);
             VentasRecientes = new ObservableCollection<VentaResumenDto>(
                 ventasRecientes.OrderByDescending(v => v.Fecha).Take(5));
 

@@ -32,6 +32,6 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         // Standalone sales-history list: most recent `top` sales of the sucursal in the date range
         // (light SQL projection, ordered by Fecha DESC). Avoids loading the whole range on big DBs.
         Task<IEnumerable<VentaResumenDto>> ObtenerRecientesPorSucursalAsync(
-            int idSucursal, DateTime desde, DateTime hasta, int top, CancellationToken ct = default);
+            int idSucursal, DateTime desde, DateTime hasta, int top, int? estado = null, CancellationToken ct = default);
     }
 }
