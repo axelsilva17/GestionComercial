@@ -72,12 +72,12 @@ namespace GestionComercial.Aplicacion.Servicios
                 Categoria        = r.Categoria,
                 StockActual      = (int)r.StockActual,
                 CantidadVendida  = r.CantidadVendida,
-                CantidadComprada = 0,
+                CantidadComprada = r.CantidadComprada,
                 IndiceRotacion   = r.StockActual > 0
                     ? r.CantidadVendida / r.StockActual
                     : 0,
                 UltimaVenta  = r.UltimaVenta ?? DateTime.MinValue,
-                UltimaCompra = DateTime.MinValue,
+                UltimaCompra = r.UltimaCompra ?? DateTime.MinValue,
             });
         }
 
@@ -108,7 +108,7 @@ namespace GestionComercial.Aplicacion.Servicios
             {
                 Metodo = p.Metodo,
                 Total = p.Total,
-                Cantidad = 0,
+                Cantidad = p.Cantidad,
                 Porcentaje = totalGeneral > 0 ? (double)(p.Total / totalGeneral) * 100 : 0,
             });
         }
@@ -121,8 +121,7 @@ namespace GestionComercial.Aplicacion.Servicios
                 Mes = new DateTime(p.AnioMes / 100, p.AnioMes % 100, 1),
                 Metodo = p.Metodo,
                 Total = p.Total,
-                // Preserva el comportamiento actual del export mensual: Cantidad siempre 0.
-                Cantidad = 0,
+                Cantidad = p.Cantidad,
             });
         }
 

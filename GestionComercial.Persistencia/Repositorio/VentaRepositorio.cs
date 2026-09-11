@@ -136,7 +136,7 @@ namespace GestionComercial.Persistencia.Repositorio
             return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.Cantidad, r.Ingresos, r.Costo, r.UltimaFecha)).ToList();
         }
 
-        public async Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta)>>
+        public async Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta, int CantidadComprada, DateTime? UltimaCompra)>>
             ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null, CancellationToken ct = default)
         {
             var sql = @"SELECT vd.Id_producto AS IdProducto,
@@ -144,12 +144,27 @@ namespace GestionComercial.Persistencia.Repositorio
                              COALESCE(c.Nombre, '') AS Categoria,
                              p.StockActual,
                              CAST(SUM(vd.Cantidad) AS INTEGER) AS CantidadVendida,
-                             MAX(v.Fecha) AS UltimaVenta
+                             MAX(v.Fecha) AS UltimaVenta,
+                             COALESCE(cp.CantidadComprada, 0) AS CantidadComprada,
+                             cp.UltimaCompra AS UltimaCompra
                       FROM VentaDetalle vd
                       INNER JOIN Venta v ON vd.Id_venta = v.Id
                       INNER JOIN Producto p ON vd.Id_producto = p.Id
                       LEFT JOIN Categoria c ON p.Id_categoria = c.Id
                       INNER JOIN Sucursal s ON v.Id_sucursal = s.Id
+                      LEFT JOIN (
+                          SELECT cd.Id_producto,
+                                 CAST(SUM(cd.Cantidad) AS INTEGER) AS CantidadComprada,
+                                 MAX(c.Fecha) AS UltimaCompra
+                          FROM CompraDetalle cd
+                          INNER JOIN Compra c ON cd.Id_compra = c.Id
+                          INNER JOIN Sucursal sc ON c.Id_sucursal = sc.Id
+                          WHERE sc.Id_empresa = {0}
+                            AND c.Fecha >= {1}
+                            AND c.Fecha <= {2}
+                            AND c.Estado != 3
+                          GROUP BY cd.Id_producto
+                      ) cp ON cp.Id_producto = vd.Id_producto
                       WHERE s.Id_empresa = {0}
                         AND v.Fecha >= {1}
                         AND v.Fecha <= {2}
@@ -165,7 +180,7 @@ namespace GestionComercial.Persistencia.Repositorio
             var rows = await _context.Database
                 .SqlQueryRaw<RotacionProductoAgrupado>(sql, parameters)
                 .ToListAsync(ct);
-            return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.StockActual, r.CantidadVendida, r.UltimaVenta)).ToList();
+            return rows.Select(r => (r.IdProducto, r.Nombre, r.Categoria, r.StockActual, r.CantidadVendida, r.UltimaVenta, r.CantidadComprada, r.UltimaCompra)).ToList();
         }
 
         public async Task<List<(int IdProducto, string Nombre, string Categoria, int Cantidad, decimal Ingresos, decimal Costo, DateTime? UltimaFecha)>>
@@ -446,7 +461,8 @@ namespace GestionComercial.Persistencia.Repositorio
 
     public record RotacionProductoAgrupado(
         int IdProducto, string Nombre, string Categoria,
-        decimal StockActual, int CantidadVendida, DateTime? UltimaVenta);
+        decimal StockActual, int CantidadVendida, DateTime? UltimaVenta,
+        int CantidadComprada, DateTime? UltimaCompra);
 
     public record VentaPorDiaAgrupado(string Dia, decimal Total, int Cantidad);
 

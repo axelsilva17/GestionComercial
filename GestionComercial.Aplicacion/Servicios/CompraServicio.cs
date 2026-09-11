@@ -131,6 +131,10 @@ namespace GestionComercial.Aplicacion.Servicios
             };
         }
 
+        public async Task<List<(int AnioMes, decimal Total)>> ObtenerComprasPorMesAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+            => await _uow.Compras.ObtenerComprasPorMesAsync(idSucursal, desde, hasta, ct);
+
         private static CompraDto MapearDto(Compra c) => new()
         {
             IdCompra        = c.Id,

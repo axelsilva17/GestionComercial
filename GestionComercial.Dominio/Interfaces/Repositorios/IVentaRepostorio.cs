@@ -48,7 +48,7 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
 
         ///         /// Agregación SQL de rotación por producto (sin cargar entidades a memoria).
         /// `top` opcional: null devuelve todos los productos (sin LIMIT).
-        Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta)>> 
+        Task<List<(int IdProducto, string Nombre, string Categoria, decimal StockActual, int CantidadVendida, DateTime? UltimaVenta, int CantidadComprada, DateTime? UltimaCompra)>> 
             ObtenerRotacionProductosAgrupadoAsync(int idEmpresa, DateTime desde, DateTime hasta, int? top = null, CancellationToken ct = default);
 
         ///         /// Agregación SQL de ventas agrupadas por día.

@@ -44,35 +44,40 @@ namespace GestionComercial.Persistencia.Repositorio
         public async Task<(decimal Total, int Count, decimal Promedio, string ProveedorTop, int ProductosRepuestos)?> 
             ObtenerMetricasComprasAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
         {
+            // NOTA: las métricas se calculan con subconsultas escalares SIN unir CompraDetalle.
+            // Un LEFT JOIN a los detalles multiplicaba SUM(c.Total) y COUNT(*) por la cantidad
+            // de líneas de cada compra (ej.: una compra con 3 detalles triplicaba su total en
+            // el Resumen gerencial). También se excluyen las compras anuladas (Estado = 3),
+            // igual que el resto de las agregaciones de reportes.
             var rows = await _context.Database
                 .SqlQueryRaw<MetricasComprasRaw>(
-                    @"SELECT 
-                          COALESCE(SUM(c.Total), 0) AS Total,
-                          COUNT(*) AS Count,
-                          CASE WHEN COUNT(*) > 0 THEN COALESCE(SUM(c.Total), 0) / COUNT(*) ELSE 0 END AS Promedio,
+                    @"SELECT
+                          (SELECT COALESCE(SUM(c2.Total), 0) FROM Compra c2
+                           WHERE c2.Id_sucursal = {0} AND c2.Fecha >= {1} AND c2.Fecha <= {2} AND c2.Estado != 3) AS Total,
+                          (SELECT COUNT(*) FROM Compra c2
+                           WHERE c2.Id_sucursal = {0} AND c2.Fecha >= {1} AND c2.Fecha <= {2} AND c2.Estado != 3) AS Count,
                           (
                               SELECT p.Nombre
                               FROM Compra c2
                               INNER JOIN Proveedor p ON c2.Id_proveedor = p.Id
-                              WHERE c2.Id_sucursal = c.Id_sucursal
+                              WHERE c2.Id_sucursal = {0}
                                 AND c2.Fecha >= {1}
                                 AND c2.Fecha <= {2}
+                                AND c2.Estado != 3
                               GROUP BY c2.Id_proveedor
                               ORDER BY COUNT(*) DESC
                               LIMIT 1
                           ) AS ProveedorTop,
-                          COALESCE(SUM(cd.Cantidad), 0) AS ProductosRepuestos
-                      FROM Compra c
-                      LEFT JOIN CompraDetalle cd ON c.Id = cd.Id_compra
-                      WHERE c.Id_sucursal = {0}
-                        AND c.Fecha >= {1}
-                        AND c.Fecha <= {2}",
+                          (SELECT COALESCE(SUM(cd.Cantidad), 0) FROM CompraDetalle cd
+                           INNER JOIN Compra c3 ON cd.Id_compra = c3.Id
+                           WHERE c3.Id_sucursal = {0} AND c3.Fecha >= {1} AND c3.Fecha <= {2} AND c3.Estado != 3) AS ProductosRepuestos",
                     idSucursal, desde, hasta)
                 .ToListAsync(ct);
 
             var r = rows.FirstOrDefault();
             if (r == null || r.Count == 0) return null;
-            return (r.Total, r.Count, r.Promedio, r.ProveedorTop ?? "—", r.ProductosRepuestos);
+            var promedio = r.Total / r.Count;
+            return (r.Total, r.Count, promedio, r.ProveedorTop ?? "—", r.ProductosRepuestos);
         }
 
         // ── Nuevo: compras paginadas ────────────────────────────────────────────
@@ -117,12 +122,34 @@ namespace GestionComercial.Persistencia.Repositorio
             return (items, totalCount);
         }
 
-        // Tipo para SqlQueryRaw
+        // Tipo para SqlQueryRaw — Promedio no se mapea desde SQL: se calcula en C# (Total / Count)
         private record MetricasComprasRaw(
             decimal Total,
             int Count,
-            decimal Promedio,
             string? ProveedorTop,
             int ProductosRepuestos);
+
+        // ── Compras agrupadas por mes para reporte gerencial ──────────────────
+        public async Task<List<(int AnioMes, decimal Total)>> ObtenerComprasPorMesAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default)
+        {
+            var rows = await _context.Database
+                .SqlQueryRaw<CompraMesRaw>(
+                    @"SELECT CAST(strftime('%Y', c.Fecha) AS INTEGER) * 100 + CAST(strftime('%m', c.Fecha) AS INTEGER) AS AnioMes,
+                             COALESCE(SUM(c.Total), 0) AS Total
+                      FROM Compra c
+                      WHERE c.Id_sucursal = {0}
+                        AND c.Fecha >= {1}
+                        AND c.Fecha <= {2}
+                        AND c.Estado != 3
+                      GROUP BY strftime('%Y-%m', c.Fecha)
+                      ORDER BY AnioMes ASC",
+                    idSucursal, desde, hasta)
+                .ToListAsync(ct);
+
+            return rows.Select(r => (r.AnioMes, r.Total)).ToList();
+        }
+
+        private record CompraMesRaw(int AnioMes, decimal Total);
     }
 }

@@ -201,11 +201,13 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 var kpisTask = _reporteServicio.KpisVentasBaseAsync(_sesion.IdEmpresa, _sesion.IdSucursal, desde, hasta);
                 // Compras metrics via ICompraServicio (new SQL aggregation)
                 var metricasComprasTask = _compraServicio.ObtenerMetricasComprasAsync(_sesion.IdSucursal, desde, hasta);
+                // Compras por mes (new SQL aggregation) for real monthly breakdown
+                var comprasPorMesTask = _compraServicio.ObtenerComprasPorMesAsync(_sesion.IdSucursal, desde, hasta);
                 // Ventas por día (SQL aggregation) para gráfico mensual
                 var ventasPorDiaTask = _reporteServicio.VentasPorDiaAsync(_sesion.IdEmpresa, desde, hasta);
                 // Torta: métodos de pago reales (IReporteServicio)
                 var metodosPagoTask = _reporteServicio.MetodosPagoUtilizadosAsync(_sesion.IdSucursal, desde, hasta);
-                await Task.WhenAll(kpisTask, metricasComprasTask, ventasPorDiaTask, metodosPagoTask);
+                await Task.WhenAll(kpisTask, metricasComprasTask, comprasPorMesTask, ventasPorDiaTask, metodosPagoTask);
                 LogHelper.Log($"[ReporteGerencia] Consultas paralelas: {sw.ElapsedMilliseconds}ms");
 
                 // ── KPIs ─────────────────────────────────────────────────────────
@@ -229,7 +231,8 @@ namespace GestionComercial.UI.ViewModels.Reportes
 
                 // ── Ventas por día (SQL aggregation) para gráfico mensual ───────────
                 var ventasPorDia = await ventasPorDiaTask;
-                var meses = GenerarMesesDesdeVentasPorDia(desde, hasta, ventasPorDia, metricasCompras);
+                var comprasPorMes = await comprasPorMesTask;
+                var meses = GenerarMesesDesdeVentasPorDia(desde, hasta, ventasPorDia, metricasCompras, comprasPorMes);
                 VentasMensuales = new ObservableCollection<ReporteVentaMensualDto>(meses);
                 LogHelper.Log($"[ReporteGerencia] Meses calculados: {meses.Count}");
 
@@ -331,14 +334,18 @@ namespace GestionComercial.UI.ViewModels.Reportes
         private static List<ReporteVentaMensualDto> GenerarMesesDesdeVentasPorDia(
             DateTime desde, DateTime hasta,
             IEnumerable<VentaPorDiaDto> ventasPorDia,
-            MetricasComprasDto? metricasCompras)
+            MetricasComprasDto? metricasCompras,
+            List<(int AnioMes, decimal Total)>? comprasPorMes = null)
         {
             var result = new List<ReporteVentaMensualDto>();
             var cursor = new DateTime(desde.Year, desde.Month, 1);
             var fin    = new DateTime(hasta.Year, hasta.Month, 1);
 
-            // Agrupar compras por mes (aproximado - distribuir total proporcionalmente)
-            // Nota: IReporteServicio no tiene compras por día, usamos métrica total
+            // Build a lookup from the real monthly purchase data (AnioMes -> Total).
+            var comprasLookup = comprasPorMes?
+                .ToDictionary(c => c.AnioMes, c => c.Total);
+
+            // Fallback: if the real source is empty, keep the old average behavior.
             decimal totalCompras = metricasCompras?.Total ?? 0;
             int mesesEnRango = 0;
             var tempCursor = new DateTime(desde.Year, desde.Month, 1);
@@ -347,7 +354,9 @@ namespace GestionComercial.UI.ViewModels.Reportes
                 mesesEnRango++;
                 tempCursor = tempCursor.AddMonths(1);
             }
-            decimal comprasPorMes = mesesEnRango > 0 ? totalCompras / mesesEnRango : 0;
+            decimal comprasPromedio = mesesEnRango > 0 ? totalCompras / mesesEnRango : 0;
+
+            bool useRealMonthly = comprasLookup != null && comprasLookup.Count > 0;
 
             while (cursor <= fin)
             {
@@ -357,7 +366,18 @@ namespace GestionComercial.UI.ViewModels.Reportes
                     .Where(x => DateTime.TryParseExact(x.Dia, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var dt) 
                              && dt >= inicio && dt <= finMes)
                     .Sum(x => x.Total);
-                var c = comprasPorMes;
+
+                decimal c;
+                if (useRealMonthly)
+                {
+                    var anioMes = cursor.Year * 100 + cursor.Month;
+                    c = comprasLookup!.GetValueOrDefault(anioMes, 0);
+                }
+                else
+                {
+                    c = comprasPromedio;
+                }
+
                 result.Add(new ReporteVentaMensualDto
                 {
                     Mes       = cursor.ToString("MMM yy"),

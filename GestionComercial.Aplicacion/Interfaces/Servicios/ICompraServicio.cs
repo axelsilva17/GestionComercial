@@ -18,5 +18,9 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
 
         // Nuevo: métricas agregadas en SQL
         Task<MetricasComprasDto?> ObtenerMetricasComprasAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
+
+        // Totales de compras agrupados por mes para el reporte gerencial.
+        Task<List<(int AnioMes, decimal Total)>> ObtenerComprasPorMesAsync(
+            int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
     }
 }
