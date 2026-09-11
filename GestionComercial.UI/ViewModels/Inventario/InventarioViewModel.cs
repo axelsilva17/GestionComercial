@@ -243,7 +243,12 @@ namespace GestionComercial.UI.ViewModels.Inventario
         public string NuevoTipo
         {
             get => _nuevoTipo;
-            set { _nuevoTipo = value; NotifyOfPropertyChange(() => NuevoTipo); }
+            set
+            {
+                _nuevoTipo = value;
+                NotifyOfPropertyChange(() => NuevoTipo);
+                NotifyOfPropertyChange(() => EtiquetaCantidad);
+            }
         }
 
         private int _nuevaCantidad = 1;
@@ -271,6 +276,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
                 NotifyOfPropertyChange(() => ProductoSeleccionado);
                 NotifyOfPropertyChange(() => TieneProducto);
                 NotifyOfPropertyChange(() => StockActualProducto);
+                NotifyOfPropertyChange(() => EtiquetaCantidad);
             }
         }
 
@@ -278,6 +284,12 @@ namespace GestionComercial.UI.ViewModels.Inventario
         public string StockActualProducto => ProductoSeleccionado != null
             ? $"Stock actual: {ProductoSeleccionado.StockActual} unidades"
             : string.Empty;
+
+        public string EtiquetaCantidad => string.Equals(NuevoTipo, "Ajuste", StringComparison.OrdinalIgnoreCase)
+            ? (ProductoSeleccionado != null
+                ? $"STOCK FINAL (actual: {ProductoSeleccionado.StockActual})"
+                : "STOCK FINAL")
+            : "CANTIDAD";
 
         public ObservableCollection<string> TiposMovimiento { get; } = new()
         {
@@ -439,12 +451,29 @@ namespace GestionComercial.UI.ViewModels.Inventario
 
         public void CerrarPanel() => PanelVisible = false;
 
+        public bool CanGuardarMovimiento => !IsLoading;
+
         public async Task GuardarMovimiento()
         {
+            if (IsLoading) return;
             if (ProductoSeleccionado == null) { MostrarError("Seleccioná un producto.");        return; }
             if (NuevaCantidad <= 0)           { MostrarError("La cantidad debe ser mayor a 0."); return; }
 
+            // Pre-validate Ajuste: the service treats NuevaCantidad as absolute target stock.
+            // If the user entered the current stock, the delta would be zero → cryptic error.
+            bool esAjuste = string.Equals(NuevoTipo, "Ajuste", StringComparison.OrdinalIgnoreCase);
+            if (esAjuste)
+            {
+                int stockActual = ProductoSeleccionado.StockActual;
+                if (NuevaCantidad == stockActual)
+                {
+                    MostrarError("El ajuste no puede ser cero. Ingresá un stock final distinto al actual.");
+                    return;
+                }
+            }
+
             IsLoading = true;
+            NotifyOfPropertyChange(() => CanGuardarMovimiento);
             LimpiarError();
             try
             {
@@ -463,12 +492,40 @@ namespace GestionComercial.UI.ViewModels.Inventario
                 PanelVisible = false;
                 await CargarAsync();
             }
+            catch (ArgumentException ex)
+            {
+                _logger?.LogWarning(ex, "Validación al guardar movimiento de stock");
+                MostrarError(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger?.LogWarning(ex, "Regla de negocio al guardar movimiento de stock");
+                // Map domain messages to friendly Spanish when possible
+                var msg = ex.Message ?? string.Empty;
+                if (msg.Contains("Stock insuficiente", StringComparison.OrdinalIgnoreCase))
+                {
+                    MostrarError(msg); // Already descriptive: "Stock insuficiente. Actual: X, solicitado: Y."
+                }
+                else
+                {
+                    MostrarError(string.IsNullOrWhiteSpace(msg) ? "Ocurrió un error al guardar el movimiento." : msg);
+                }
+            }
+            catch (KeyNotFoundException)
+            {
+                MostrarError("Seleccioná un producto.");
+            }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error al guardar movimiento de stock");
-                MostrarError(ex.Message);
+                var msg = ex.Message?.Trim();
+                MostrarError(string.IsNullOrWhiteSpace(msg) ? "Ocurrió un error al guardar el movimiento." : msg);
             }
-            finally { IsLoading = false; }
+            finally
+            {
+                IsLoading = false;
+                NotifyOfPropertyChange(() => CanGuardarMovimiento);
+            }
         }
 
         // ── Propiedades auxiliares para el ViewModel ─────────────────────────

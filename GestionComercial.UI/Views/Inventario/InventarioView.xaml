@@ -833,8 +833,8 @@
                                Margin="0,0,0,16"
                                Visibility="{Binding TieneProducto, Converter={StaticResource BoolToVisibility}}"/>
 
-                    <!-- Cantidad -->
-                    <TextBlock Text="CANTIDAD" Style="{StaticResource FormLabel}"/>
+                    <!-- Cantidad / Stock Final (Ajuste) -->
+                    <TextBlock Text="{Binding EtiquetaCantidad}" Style="{StaticResource FormLabel}"/>
                     <controles:NumericUpDown
                         Value="{Binding NuevaCantidad, Mode=TwoWay}"
                         MinValue="1" MaxValue="9999" Step="1"
