@@ -408,6 +408,163 @@ namespace GestionComercial.Tests.UI
             vm.TotalVenta.Should().Be(1000m);
         }
 
+        [Fact]
+        public async Task Preview_CompraMayor_AplicaDescuento()
+        {
+            // Compra mayor: 10% when total >= 500. Total is 1000.
+            var venta = CrearVentaParaPreview(1000m);
+            var descuento = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Compra Mayor 10%", 10, 1,
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.CompraMayor,
+                montoMinimoCompra: 500m);
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoCompraMayorAsync(
+                    1, It.IsAny<decimal>(), It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(descuento);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            // Pago único con Efectivo (no tiene descuento MTP configurado)
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 1, NombreMetodo = "Efectivo", Categoria = "Efectivo" };
+            vm.MontoIngresado = "1000";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            // 1000 - 10% = 900
+            vm.TotalVenta.Should().Be(900m);
+            vm.LineasDescuento.Should().Contain(l => l.EsMetodoPago && l.Monto == 100m);
+        }
+
+        [Fact]
+        public async Task Preview_CompraMayor_YMetodoPago_ExclusividadMayor()
+        {
+            // Compra mayor 10% vs método de pago 5%: compra mayor gana (100 > 50)
+            var venta = CrearVentaParaPreview(1000m);
+            var descuentoMtp = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Visa 5%", 5, 1, idProducto: null, idCategoria: null,
+                aplicaCualquierMetodoPago: false, idsMetodosPago: new List<int> { 2 },
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.MetodoPago);
+            descuentoMtp.DescuentosMetodosPago.Add(new GestionComercial.Dominio.Entidades.Descuento.DescuentoMetodoPago { Id_metodoPago = 2 });
+
+            var descuentoCm = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Compra Mayor 10%", 10, 1,
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.CompraMayor,
+                montoMinimoCompra: 500m);
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { descuentoMtp, descuentoCm });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoTotalVentaAsync(
+                    1, 2, It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(descuentoMtp);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoCompraMayorAsync(
+                    1, It.IsAny<decimal>(), It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(descuentoCm);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            // Pago único con Visa → tiene 5% MTP + 10% compra mayor → compra mayor gana
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 2, NombreMetodo = "Visa", Categoria = "Tarjeta" };
+            vm.MontoIngresado = "900";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            // Compra mayor gana: 1000 - 10% = 900
+            vm.TotalVenta.Should().Be(900m);
+            vm.LineasDescuento.Should().Contain(l => l.EsMetodoPago && l.Monto == 100m);
+            vm.LineasDescuento.First(l => l.EsMetodoPago).ProductoNombre.Should().Be("Compra Mayor");
+        }
+
+        [Fact]
+        public async Task Preview_CompraMayor_NoSupera_Umbbral_NoAplica()
+        {
+            // Compra mayor requires total >= 500, but total is 300
+            var venta = CrearVentaParaPreview(300m);
+            var descuento = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Compra Mayor 10%", 10, 1,
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.CompraMayor,
+                montoMinimoCompra: 500m);
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoCompraMayorAsync(
+                    1, It.IsAny<decimal>(), It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 300);
+
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 1, NombreMetodo = "Efectivo", Categoria = "Efectivo" };
+            vm.MontoIngresado = "300";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            // Umbbral no superado → sin descuento
+            vm.TotalVenta.Should().Be(300m);
+            vm.LineasDescuento.Should().NotContain(l => l.EsMetodoPago);
+        }
+
+        [Fact]
+        public async Task Preview_CompraMayor_PagoMixto_AplicaCompraMayor()
+        {
+            // Mixed payment: compra mayor applies (MTP doesn't apply for mixed)
+            var venta = CrearVentaParaPreview(1000m);
+            var descuento = GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion.Crear(
+                "Compra Mayor 10%", 10, 1,
+                alcance: GestionComercial.Dominio.Entidades.Descuento.AlcanceDescuentoEnum.CompraMayor,
+                montoMinimoCompra: 500m);
+
+            SetupCachesVenta(1, venta, new List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion> { descuento });
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoAplicableAsync(
+                    1, 1, It.IsAny<int?>(), It.IsAny<List<int>>(), It.IsAny<bool>(),
+                    It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<Dictionary<int, GestionComercial.Dominio.Entidades.Producto.Categoria>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion?)null);
+            _mockDescuentoConfig.Setup(s => s.ObtenerDescuentoCompraMayorAsync(
+                    1, It.IsAny<decimal>(), It.IsAny<List<GestionComercial.Dominio.Entidades.Descuento.DescuentoConfiguracion>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(descuento);
+
+            var vm = CrearVM();
+            await vm.InicializarConVenta(1, "Test", 1000);
+
+            // Pago mixto: Efectivo + Visa
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 1, NombreMetodo = "Efectivo", Categoria = "Efectivo" };
+            vm.MontoIngresado = "600";
+            vm.AgregarPago();
+            vm.MetodoSeleccionado = new PagoItemDto { IdMetodoPago = 2, NombreMetodo = "Visa", Categoria = "Tarjeta" };
+            vm.MontoIngresado = "400";
+            vm.AgregarPago();
+            await InvocarRecalcularDescuentoPreviewAsync(vm);
+
+            // Compra mayor aplica: 1000 - 10% = 900
+            vm.TotalVenta.Should().Be(900m);
+            vm.LineasDescuento.Should().Contain(l => l.EsMetodoPago && l.Monto == 100m);
+        }
+
         private static async Task InvocarRecalcularDescuentoPreviewAsync(PagoViewModel vm)
         {
             var method = typeof(PagoViewModel).GetMethod("RecalcularDescuentoPreviewAsync",

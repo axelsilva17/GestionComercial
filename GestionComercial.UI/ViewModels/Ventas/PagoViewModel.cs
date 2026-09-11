@@ -712,25 +712,60 @@ namespace GestionComercial.UI.ViewModels.Ventas
                 }
             }
 
-            TotalVenta = _totalVentaOriginal - totalDescuentoMetodoPago;
-            System.Diagnostics.Debug.WriteLine($"[PagoVM-RecalcDesc] TotalVenta={TotalVenta}, descuento={totalDescuentoMetodoPago}, base={_totalVentaOriginal}");
-
-            // Sincronizar línea de descuento por método de pago en el preview
-            var lineaMetodo = LineasDescuento.FirstOrDefault(l => l.EsMetodoPago);
-            if (totalDescuentoMetodoPago > 0)
+            // ── REGLA C: descuento CompraMayor (EXCLUSIVO con método de pago) ──
+            // Matches VentaServicio.AplicarDescuentosPorMetodoPagoAsync REGLA C.
+            // Evaluated independently of REGLA B; exclusivity picks the larger.
+            decimal totalDescuentoCompraMayor = 0;
+            decimal porcentajeDescuentoCompraMayor = 0;
+            if (_sesion.IdEmpresa > 0)
             {
-                var descuentoTexto = porcentajeDescuentoMetodo > 0
-                    ? $"Método de pago -{porcentajeDescuentoMetodo:0.##}%"
-                    : "Método de pago";
+                var descuentoCompraMayor = await _descuentoConfiguracionServicio.ObtenerDescuentoCompraMayorAsync(
+                    _sesion.IdEmpresa, _ventaCompleta.TotalBruto, _descuentosCache);
+                if (descuentoCompraMayor != null)
+                {
+                    totalDescuentoCompraMayor = Math.Round(
+                        _totalVentaOriginal * descuentoCompraMayor.Valor / 100, 2, MidpointRounding.AwayFromZero);
+                    porcentajeDescuentoCompraMayor = descuentoCompraMayor.Valor;
+                }
+            }
+
+            // Exclusividad: el mayor entre método de pago y CompraMayor gana
+            bool compraMayorGano = totalDescuentoCompraMayor > totalDescuentoMetodoPago;
+            decimal totalDescuento = compraMayorGano ? totalDescuentoCompraMayor : totalDescuentoMetodoPago;
+            decimal porcentajeDescuento = compraMayorGano ? porcentajeDescuentoCompraMayor : porcentajeDescuentoMetodo;
+
+            TotalVenta = _totalVentaOriginal - totalDescuento;
+            System.Diagnostics.Debug.WriteLine($"[PagoVM-RecalcDesc] TotalVenta={TotalVenta}, mtp={totalDescuentoMetodoPago}, compraMayor={totalDescuentoCompraMayor}, ganador={(compraMayorGano ? "CompraMayor" : "MetodoPago")}, base={_totalVentaOriginal}");
+
+            // Sincronizar línea de descuento dinámica en el preview
+            // (método de pago o compra mayor — la que ganó la exclusividad)
+            var lineaMetodo = LineasDescuento.FirstOrDefault(l => l.EsMetodoPago);
+            if (totalDescuento > 0)
+            {
+                string nombreLinea = compraMayorGano ? "Compra Mayor" : "Método de pago";
+                string descuentoTexto;
+                if (compraMayorGano)
+                {
+                    descuentoTexto = porcentajeDescuento > 0
+                        ? $"Compra Mayor -{porcentajeDescuento:0.##}%"
+                        : "Compra Mayor";
+                }
+                else
+                {
+                    descuentoTexto = porcentajeDescuento > 0
+                        ? $"Método de pago -{porcentajeDescuento:0.##}%"
+                        : "Método de pago";
+                }
+
                 if (lineaMetodo == null)
                 {
                     LineasDescuento.Add(new DescuentoLineaVm
                     {
-                        ProductoNombre = "Método de pago",
-                        Monto = totalDescuentoMetodoPago,
+                        ProductoNombre = nombreLinea,
+                        Monto = totalDescuento,
                         Descripcion = descuentoTexto,
                         EsMetodoPago = true,
-                        Porcentaje = porcentajeDescuentoMetodo
+                        Porcentaje = porcentajeDescuento
                     });
                 }
                 else
@@ -738,11 +773,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
                     var idx = LineasDescuento.IndexOf(lineaMetodo);
                     LineasDescuento[idx] = new DescuentoLineaVm
                     {
-                        ProductoNombre = "Método de pago",
-                        Monto = totalDescuentoMetodoPago,
+                        ProductoNombre = nombreLinea,
+                        Monto = totalDescuento,
                         Descripcion = descuentoTexto,
                         EsMetodoPago = true,
-                        Porcentaje = porcentajeDescuentoMetodo
+                        Porcentaje = porcentajeDescuento
                     };
                 }
             }
