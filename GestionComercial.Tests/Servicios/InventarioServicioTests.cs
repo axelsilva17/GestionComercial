@@ -206,6 +206,116 @@ namespace GestionComercial.Tests.Servicios
         }
 
         // ═══════════════════════════════════════════════════════════
+        // RegistrarMovimientoAsync — Ajuste Positivo
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task RegistrarMovimientoAsync_AjustePositivo_AgregaStock()
+        {
+            var producto = new Producto { Id = 1, Nombre = "Prod Test", StockActual = 10 };
+            var sucursal = new Sucursal { Id = 1, Nombre = "Sucursal A" };
+            var usuario = new Usuario { Id = 1, Nombre = "Juan", Apellido = "Pérez" };
+
+            _mockProductoRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(producto);
+            _mockSucursalRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(sucursal);
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(usuario);
+            _mockMovimientosRepo
+                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>(), It.IsAny<CancellationToken>()))
+                .Returns<MovimientoStock, CancellationToken>((m, ct) => Task.FromResult(m));
+
+            await _servicio.RegistrarMovimientoAsync(
+                idProducto: 1,
+                tipoMovimiento: "Ajuste",
+                cantidad: 5,
+                observacion: "Ajuste positivo",
+                idSucursal: 1,
+                idUsuario: 1,
+                guardarCambios: true,
+                esAjustePositivo: true);
+
+            _mockMovimientosRepo.Verify(r => r.AgregarAsync(
+                It.Is<MovimientoStock>(m =>
+                    m.TipoMovimiento == (int)TipoMovimientoStockEnum.AjustePositivo &&
+                    m.Cantidad == 5 &&
+                    m.StockAnterior == 10 &&
+                    m.StockNuevo == 15), It.IsAny<CancellationToken>()), Times.Once);
+
+            producto.StockActual.Should().Be(15);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RegistrarMovimientoAsync — Ajuste Negativo
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task RegistrarMovimientoAsync_AjusteNegativo_RestaStock()
+        {
+            var producto = new Producto { Id = 1, Nombre = "Prod Test", StockActual = 10 };
+            var sucursal = new Sucursal { Id = 1, Nombre = "Sucursal A" };
+            var usuario = new Usuario { Id = 1, Nombre = "Juan", Apellido = "Pérez" };
+
+            _mockProductoRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(producto);
+            _mockSucursalRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(sucursal);
+            _mockUsuarioRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(usuario);
+            _mockMovimientosRepo
+                .Setup(r => r.AgregarAsync(It.IsAny<MovimientoStock>(), It.IsAny<CancellationToken>()))
+                .Returns<MovimientoStock, CancellationToken>((m, ct) => Task.FromResult(m));
+
+            await _servicio.RegistrarMovimientoAsync(
+                idProducto: 1,
+                tipoMovimiento: "Ajuste",
+                cantidad: 3,
+                observacion: "Ajuste negativo",
+                idSucursal: 1,
+                idUsuario: 1,
+                guardarCambios: true,
+                esAjustePositivo: false);
+
+            _mockMovimientosRepo.Verify(r => r.AgregarAsync(
+                It.Is<MovimientoStock>(m =>
+                    m.TipoMovimiento == (int)TipoMovimientoStockEnum.AjusteNegativo &&
+                    m.Cantidad == 3 &&
+                    m.StockAnterior == 10 &&
+                    m.StockNuevo == 7), It.IsAny<CancellationToken>()), Times.Once);
+
+            producto.StockActual.Should().Be(7);
+        }
+
+        [Fact]
+        public async Task RegistrarMovimientoAsync_AjusteNegativo_StockInsuficiente_LanzaExcepcion()
+        {
+            var producto = new Producto { Id = 1, Nombre = "Prod Test", StockActual = 2 };
+
+            _mockProductoRepo
+                .Setup(r => r.ObtenerPorIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(producto);
+
+            var act = () => _servicio.RegistrarMovimientoAsync(
+                idProducto: 1,
+                tipoMovimiento: "Ajuste",
+                cantidad: 5,
+                observacion: null,
+                idSucursal: 1,
+                idUsuario: 1,
+                esAjustePositivo: false);
+
+            await act.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("*Stock insuficiente*");
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // RegistrarMovimientoAsync — Validaciones
         // ═══════════════════════════════════════════════════════════
 

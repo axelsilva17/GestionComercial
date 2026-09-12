@@ -38,6 +38,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task<IEnumerable<ProductoListadoDto>> ObtenerStockCriticoAsync(int idEmpresa);
 
         ///         /// Registra un nuevo movimiento de inventario y actualiza el stock del producto.
+        ///         /// Para tipoMovimiento == "Ajuste", esAjustePositivo indica el signo del delta.
         Task RegistrarMovimientoAsync(
             int idProducto,
             string tipoMovimiento,
@@ -46,7 +47,8 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
             int idSucursal,
             int idUsuario,
             bool guardarCambios = true,
-            IUnitOfWork? unidadTrabajo = null);
+            IUnitOfWork? unidadTrabajo = null,
+            bool esAjustePositivo = true);
 
         Task<ResumenMovimientoStockDto> ObtenerResumenPeriodoAsync(
             DateTime fechaDesde,

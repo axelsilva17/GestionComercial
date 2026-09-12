@@ -144,7 +144,8 @@ namespace GestionComercial.Tests.Servicios
                 It.IsAny<int>(),
                 It.IsAny<int>(),
                 false,
-                It.Is<IUnitOfWork?>(u => u != null)), Times.AtLeastOnce);
+                It.Is<IUnitOfWork?>(u => u != null),
+                It.IsAny<bool>()), Times.AtLeastOnce);
         }
     }
 }

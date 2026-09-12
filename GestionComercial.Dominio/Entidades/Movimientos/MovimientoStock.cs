@@ -87,12 +87,15 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
             return Crear(TipoMovimientoStockEnum.Salida, cantidad, stockActual, idProducto, idSucursal, idUsuario, observacion, referenciaId);
         }
 
-        ///         /// Crea un movimiento de ajuste con signo.
+        /// <summary>
+        /// Crea un movimiento de ajuste con signo.
         /// 'delta' es el cambio firmado sobre el stock anterior:
         ///   delta > 0 -> AjustePositivo (aumenta stock)
         ///   delta < 0 -> AjusteNegativo (disminuye stock)
-        /// El stock nuevo se calcula como stockAnterior + delta (piso 0)
-        /// y la Cantidad almacenada queda como el valor absoluto del delta.
+        /// El stock nuevo se calcula como stockAnterior + delta y la Cantidad
+        /// almacenada queda como el valor absoluto del delta. Un ajuste negativo
+        /// que supere el stock disponible lanza una excepción.
+        /// </summary>
         public static MovimientoStock Ajuste(decimal delta, decimal stockAnterior,
             int idProducto, int idSucursal, int idUsuario, string? observacion = null, int? referenciaId = null)
         {
@@ -126,12 +129,19 @@ namespace GestionComercial.Dominio.Entidades.Movimientos
                     stockNuevo = stockAnterior - cantidad;
                     break;
                 case TipoMovimientoStockEnum.AjustePositivo:
-                case TipoMovimientoStockEnum.AjusteNegativo:
-                    // 'cantidad' es el delta CON SIGNO. Validamos que la magnitud sea > 0.
-                    if (cantidad == 0)
+                    // 'cantidad' es el delta POSITIVO. Validamos que sea > 0.
+                    if (cantidad <= 0)
                         throw new ArgumentException("El ajuste no puede ser cero.", nameof(cantidad));
-                    stockNuevo = Math.Max(0, stockAnterior + cantidad);
-                    cantidad = Math.Abs(cantidad);  // Guardar magnitud (consistente con Entrada/Salida)
+                    stockNuevo = stockAnterior + cantidad;
+                    break;
+                case TipoMovimientoStockEnum.AjusteNegativo:
+                    // 'cantidad' es el delta NEGATIVO (valor negativo). Validamos la magnitud.
+                    if (cantidad >= 0)
+                        throw new ArgumentException("El ajuste negativo debe tener un delta negativo.", nameof(cantidad));
+                    if (stockAnterior < -cantidad)
+                        throw new InvalidOperationException($"Stock insuficiente. Actual: {stockAnterior}, solicitado: {-cantidad}");
+                    stockNuevo = stockAnterior + cantidad;  // cantidad es negativo
+                    cantidad = -cantidad;  // Guardar magnitud (consistente con Entrada/Salida)
                     break;
                 default:
                     throw new ArgumentException($"Tipo de movimiento inválido: {tipo}");

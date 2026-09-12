@@ -242,7 +242,8 @@ namespace GestionComercial.Tests.Servicios
                 1, "Salida", 2,
                 It.IsAny<string>(), 1, 1,
                 false,
-                It.IsAny<IUnitOfWork?>()), Times.Once);
+                It.IsAny<IUnitOfWork?>(),
+                It.IsAny<bool>()), Times.Once);
 
             // Verificar que se guardó en repositorio
             _mockVentaRepo.Verify(r => r.AgregarAsync(It.IsAny<Venta>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
@@ -308,7 +309,8 @@ namespace GestionComercial.Tests.Servicios
                 It.IsAny<int>(),
                 It.IsAny<int>(),
                 false,
-                It.Is<IUnitOfWork?>(u => u != null)), Times.AtLeastOnce);
+                It.Is<IUnitOfWork?>(u => u != null),
+                It.IsAny<bool>()), Times.AtLeastOnce);
         }
 
         [Fact]

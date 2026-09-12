@@ -144,7 +144,8 @@ namespace GestionComercial.Aplicacion.Servicios
             int idSucursal,
             int idUsuario,
             bool guardarCambios = true,
-            IUnitOfWork? unidadTrabajo = null)
+            IUnitOfWork? unidadTrabajo = null,
+            bool esAjustePositivo = true)
         {
             var uow = unidadTrabajo ?? _uow;
 
@@ -166,11 +167,9 @@ namespace GestionComercial.Aplicacion.Servicios
             MovimientoStock movimiento;
             if (esAjuste)
             {
-                // La UI envía "Ajuste" con una cantidad que representa el STOCK OBJETIVO
-                // absoluto (NuevaCantidad, siempre > 0). Calculamos el delta firmado
-                // respecto al stock anterior y el factory lo clasifica como
-                // AjustePositivo (delta >= 0) o AjusteNegativo (delta < 0), conservando el signo.
-                var delta = cantidad - stockAnterior;
+                // El usuario elige el signo (Ajuste Positivo / Negativo) y una cantidad (> 0).
+                // El delta se calcula como ±cantidad según la selección.
+                var delta = esAjustePositivo ? cantidad : -cantidad;
                 movimiento = MovimientoStock.Ajuste(
                     delta, stockAnterior, idProducto, idSucursal, idUsuario, observacion);
             }

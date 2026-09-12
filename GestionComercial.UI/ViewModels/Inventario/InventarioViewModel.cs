@@ -265,6 +265,21 @@ namespace GestionComercial.UI.ViewModels.Inventario
             set { _nuevaObservacion = value; NotifyOfPropertyChange(() => NuevaObservacion); }
         }
 
+        private bool _ajustePositivoSeleccionado = true;
+        public bool AjustePositivoSeleccionado
+        {
+            get => _ajustePositivoSeleccionado;
+            set
+            {
+                _ajustePositivoSeleccionado = value;
+                NotifyOfPropertyChange(() => AjustePositivoSeleccionado);
+                NotifyOfPropertyChange(() => AjusteNegativoSeleccionado);
+                NotifyOfPropertyChange(() => EtiquetaCantidad);
+            }
+        }
+
+        public bool AjusteNegativoSeleccionado => !AjustePositivoSeleccionado;
+
         // ProductoDto viene de GestionComercial.Aplicacion.DTOs.Productos
         private ProductoDto _productoSeleccionado;
         public ProductoDto ProductoSeleccionado
@@ -286,9 +301,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
             : string.Empty;
 
         public string EtiquetaCantidad => string.Equals(NuevoTipo, "Ajuste", StringComparison.OrdinalIgnoreCase)
-            ? (ProductoSeleccionado != null
-                ? $"STOCK FINAL (actual: {ProductoSeleccionado.StockActual})"
-                : "STOCK FINAL")
+            ? (AjustePositivoSeleccionado ? "CANTIDAD A SUMAR" : "CANTIDAD A RESTAR")
             : "CANTIDAD";
 
         public ObservableCollection<string> TiposMovimiento { get; } = new()
@@ -445,6 +458,7 @@ namespace GestionComercial.UI.ViewModels.Inventario
             NuevaCantidad        = 1;
             NuevaObservacion     = string.Empty;
             ProductoSeleccionado = null;
+            AjustePositivoSeleccionado = true;
             LimpiarError();
             PanelVisible = true;
         }
@@ -459,15 +473,14 @@ namespace GestionComercial.UI.ViewModels.Inventario
             if (ProductoSeleccionado == null) { MostrarError("Seleccioná un producto.");        return; }
             if (NuevaCantidad <= 0)           { MostrarError("La cantidad debe ser mayor a 0."); return; }
 
-            // Pre-validate Ajuste: the service treats NuevaCantidad as absolute target stock.
-            // If the user entered the current stock, the delta would be zero → cryptic error.
             bool esAjuste = string.Equals(NuevoTipo, "Ajuste", StringComparison.OrdinalIgnoreCase);
-            if (esAjuste)
+            if (esAjuste && !AjustePositivoSeleccionado)
             {
+                // Pre-validate: negative adjustment cannot exceed current stock
                 int stockActual = ProductoSeleccionado.StockActual;
-                if (NuevaCantidad == stockActual)
+                if (NuevaCantidad > stockActual)
                 {
-                    MostrarError("El ajuste no puede ser cero. Ingresá un stock final distinto al actual.");
+                    MostrarError($"Stock insuficiente. Actual: {stockActual}, solicitado: {NuevaCantidad}.");
                     return;
                 }
             }
@@ -487,7 +500,8 @@ namespace GestionComercial.UI.ViewModels.Inventario
                     NuevaCantidad,
                     string.IsNullOrWhiteSpace(NuevaObservacion) ? null : NuevaObservacion,
                     idSucursal,
-                    idUsuario);
+                    idUsuario,
+                    esAjustePositivo: esAjuste ? AjustePositivoSeleccionado : true);
 
                 PanelVisible = false;
                 await CargarAsync();
