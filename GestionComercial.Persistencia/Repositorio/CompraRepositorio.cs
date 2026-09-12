@@ -83,19 +83,17 @@ namespace GestionComercial.Persistencia.Repositorio
         // ── Nuevo: compras paginadas ────────────────────────────────────────────
         public async Task<(IEnumerable<Compra> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
             int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
-            int? idProveedor = null, string? busquedaProveedor = null, bool aplicarFechas = true, CancellationToken ct = default)
+            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default)
         {
-            // With "Todos" (no provider): branch-scoped list contract (branch + date window).
-            // With a specific provider selected: provider-history contract — filter by provider id
-            // only, no branch scope, so providers with old purchases show them. The date window
-            // is applied to the provider path ONLY when explicitly requested (aplicarFechas);
-            // with "Todos" the date window always applies.
-            var query = idProveedor is > 0
-                ? _dbSet.AsNoTracking().Where(c => c.Id_proveedor == idProveedor)
-                : _dbSet.AsNoTracking().Where(c => c.Id_sucursal == idSucursal);
+            // Date range always applies (both "Todos" and specific provider).
+            // Provider scope: specific provider → filter by provider id;
+            // "Todos" → filter by branch (sucursal).
+            var query = _dbSet.AsNoTracking()
+                .Where(c => c.Fecha >= desde && c.Fecha <= hasta);
 
-            if (idProveedor is not > 0 || aplicarFechas)
-                query = query.Where(c => c.Fecha >= desde && c.Fecha <= hasta);
+            query = idProveedor is > 0
+                ? query.Where(c => c.Id_proveedor == idProveedor)
+                : query.Where(c => c.Id_sucursal == idSucursal);
 
             if (!string.IsNullOrWhiteSpace(busquedaProveedor))
             {

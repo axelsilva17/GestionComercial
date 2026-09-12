@@ -191,8 +191,6 @@
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="150"/>
                         <ColumnDefinition Width="14"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
@@ -206,18 +204,8 @@
                               DisplayMemberPath="Nombre"
                               ToolTip="Filtrar por proveedor"/>
 
-                    <!-- Filtro de fecha explícito: con "Todos" las fechas siempre filtran;
-                         con un proveedor seleccionado, activar esta opción aplica también las fechas -->
-                    <CheckBox Grid.Column="6" Content="Filtrar por fecha"
-                              IsChecked="{Binding FechaFiltroActivo}"
-                              IsEnabled="{Binding FechaFiltroActivoHabilitado}"
-                              VerticalAlignment="Center"
-                              Foreground="{DynamicResource TextPrimaryBrush}"
-                              FontSize="12"
-                              ToolTip="Con 'Todos' las fechas se aplican siempre. Activá esta opción para que las fechas también filtren cuando hay un proveedor seleccionado."/>
-
                     <!-- Búsqueda libre por proveedor -->
-                    <Border Grid.Column="8" Background="{DynamicResource CardBrush}"
+                    <Border Grid.Column="6" Background="{DynamicResource CardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" Height="38">
                         <TextBox Background="Transparent" BorderThickness="0"

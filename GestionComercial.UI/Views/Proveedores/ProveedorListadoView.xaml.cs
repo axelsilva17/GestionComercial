@@ -41,7 +41,7 @@ namespace GestionComercial.UI.Views.Proveedores
         {
             if (VM?.ProveedorSeleccionado == null) return;
             
-            // Navegar a compras para ver historial del proveedor
+            // Navegar a compras (listado con el periodo de fechas configurado)
             await VM.VerCompras();
         }
 

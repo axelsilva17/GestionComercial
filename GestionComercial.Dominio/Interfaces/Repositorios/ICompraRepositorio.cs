@@ -16,12 +16,10 @@ namespace GestionComercial.Dominio.Interfaces.Repositorios
             ObtenerMetricasComprasAsync(int idSucursal, DateTime desde, DateTime hasta, CancellationToken ct = default);
 
         // Nuevo: compras paginadas por sucursal y fecha.
-        // aplicarFechas: con "Todos" (idProveedor null/0) las fechas siempre se aplican;
-        // con un proveedor seleccionado las fechas solo filtran si aplicarFechas es true
-        // (contrato de historial del proveedor: muestra todas sus compras por defecto).
+        // El rango de fechas se aplica siempre, tanto con "Todos" como con un proveedor específico.
         Task<(IEnumerable<Compra> Items, int TotalCount)> ObtenerPorSucursalPaginadoAsync(
             int idSucursal, DateTime desde, DateTime hasta, int page, int pageSize,
-            int? idProveedor = null, string? busquedaProveedor = null, bool aplicarFechas = true, CancellationToken ct = default);
+            int? idProveedor = null, string? busquedaProveedor = null, CancellationToken ct = default);
 
         // Totales de compras agrupados por mes para el reporte gerencial.
         Task<List<(int AnioMes, decimal Total)>> ObtenerComprasPorMesAsync(
