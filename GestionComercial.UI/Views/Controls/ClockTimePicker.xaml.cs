@@ -11,7 +11,7 @@ namespace GestionComercial.UI.Views.Controls
     {
         private const int ClockSize = 180;
         private const int NumberRadius = 68;
-        private const int HandLength = 52;
+        private const int HandLength = 46;
         private const int Center = 90;
         private const int NumberSize = 22;
         private const int NumberHalf = 11;
@@ -206,7 +206,7 @@ namespace GestionComercial.UI.Views.Controls
             MinuteText.Text = Minute.ToString("D2");
 
             int selected = _isSelectingHours ? Hour : Minute;
-            int total = _isSelectingHours ? 24 : 12;
+            int total = _isSelectingHours ? 24 : 60;
 
             double angle = (selected * 360.0 / total) * Math.PI / 180.0;
             _hand.X2 = Center + HandLength * Math.Sin(angle);
