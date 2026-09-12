@@ -107,6 +107,13 @@
             <Setter Property="CornerRadius"   Value="6"/>
             <Setter Property="Padding"        Value="8,3"/>
         </Style>
+        <Style x:Key="BadgeEnProceso" TargetType="Border">
+            <Setter Property="Background"     Value="#1A38BDF8"/>
+            <Setter Property="BorderBrush"    Value="#38BDF8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="6"/>
+            <Setter Property="Padding"        Value="8,3"/>
+        </Style>
         <Style x:Key="BadgeAnulada" TargetType="Border">
             <Setter Property="Background"     Value="#1AEF4444"/>
             <Setter Property="BorderBrush"    Value="#EF4444"/>
@@ -297,6 +304,10 @@
                                     <Border.Style>
                                         <Style TargetType="Border" BasedOn="{StaticResource BadgePagada}">
                                             <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Estado}" Value="En proceso">
+                                                    <Setter Property="Background"     Value="#1A38BDF8"/>
+                                                    <Setter Property="BorderBrush"    Value="#38BDF8"/>
+                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding Estado}" Value="Pendiente">
                                                     <Setter Property="Background"     Value="#1AF59E0B"/>
                                                     <Setter Property="BorderBrush"    Value="#F59E0B"/>
@@ -313,6 +324,9 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#10B981"/>
                                                 <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Estado}" Value="En proceso">
+                                                        <Setter Property="Foreground" Value="#38BDF8"/>
+                                                    </DataTrigger>
                                                     <DataTrigger Binding="{Binding Estado}" Value="Pendiente">
                                                         <Setter Property="Foreground" Value="#F59E0B"/>
                                                     </DataTrigger>

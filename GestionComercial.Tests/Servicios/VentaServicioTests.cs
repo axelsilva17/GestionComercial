@@ -634,7 +634,7 @@ namespace GestionComercial.Tests.Servicios
             var act = () => _servicio.CobrarVentaAsync(1);
 
             await act.Should().ThrowAsync<VentaInvalidaException>()
-                .WithMessage("*Solo se pueden cobrar ventas pendientes*");
+                .WithMessage("*Solo se pueden cobrar ventas en proceso o pendientes*");
         }
 
         [Fact]
@@ -898,6 +898,81 @@ namespace GestionComercial.Tests.Servicios
             venta.Id_metodoPagoDescuento.Should().BeNull();
             venta.TotalFinal.Should().Be(1000m);
             venta.EsPagada.Should().BeTrue();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // MarcarPendienteAsync — service-level guard
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public async Task MarcarPendienteAsync_VentaEnProceso_CambiaAPendiente()
+        {
+            var venta = CrearVentaPendiente(); // Estado = EnProceso
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(venta);
+
+            await _servicio.MarcarPendienteAsync(1);
+
+            venta.Estado.Should().Be(1); // Pendiente
+            _mockVentaRepo.Verify(r => r.Actualizar(It.Is<Venta>(v => v.Estado == 1)), Times.Once);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task MarcarPendienteAsync_VentaPagada_NoCambiaEstado()
+        {
+            var venta = CrearVentaPendiente();
+            venta.AgregarDetalle(CrearDetalle(100m, 50m, 1));
+            venta.MarcarPagada(); // Estado = Pagada
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(venta);
+
+            await _servicio.MarcarPendienteAsync(1);
+
+            venta.Estado.Should().Be(2); // Still Pagada — no-op
+            _mockVentaRepo.Verify(r => r.Actualizar(It.IsAny<Venta>()), Times.Never);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task MarcarPendienteAsync_VentaYaPendiente_NoopIdempotente()
+        {
+            var venta = CrearVentaPendiente();
+            venta.MarcarPendiente(); // Already Pendiente
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(venta);
+
+            await _servicio.MarcarPendienteAsync(1);
+
+            venta.Estado.Should().Be(1); // Still Pendiente
+            _mockVentaRepo.Verify(r => r.Actualizar(It.IsAny<Venta>()), Times.Never);
+            _mockUow.Verify(u => u.GuardarCambiosAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task MarcarPendienteAsync_VentaAnulada_NoCambiaEstado()
+        {
+            var venta = CrearVentaPendiente();
+            venta.Anular("Motivo", 1); // Estado = Anulada
+            venta.GetType().GetProperty("Id")!.SetValue(venta, 1);
+
+            _mockVentaRepo
+                .Setup(r => r.ObtenerConDetallesAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(venta);
+
+            await _servicio.MarcarPendienteAsync(1);
+
+            venta.Estado.Should().Be(3); // Still Anulada — no-op
+            _mockVentaRepo.Verify(r => r.Actualizar(It.IsAny<Venta>()), Times.Never);
         }
 
         // ═══════════════════════════════════════════════════════════

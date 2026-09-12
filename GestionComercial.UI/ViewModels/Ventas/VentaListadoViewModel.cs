@@ -124,7 +124,7 @@ namespace GestionComercial.UI.ViewModels.Ventas
         }
 
         public ObservableCollection<string> EstadosFiltro { get; } =
-            new() { "Todos", "Pendiente", "Pagada", "Anulada" };
+            new() { "Todos", "En proceso", "Pendiente", "Pagada", "Anulada" };
 
         // ── Ventas ────────────────────────────────────────────────────────────
         private ObservableCollection<VentaResumenDto> _todasLasVentas = new();
@@ -153,8 +153,8 @@ namespace GestionComercial.UI.ViewModels.Ventas
             }
         }
 
-        public bool PuedeAnular     => VentaSeleccionada?.Estado is "Pendiente" or "Pagada";
-        public bool PuedeCobrar     => VentaSeleccionada?.Estado == "Pendiente";
+        public bool PuedeAnular     => VentaSeleccionada?.Estado is "En proceso" or "Pendiente" or "Pagada";
+        public bool PuedeCobrar     => VentaSeleccionada?.Estado is "En proceso" or "Pendiente";
         public bool PuedeVerDetalle => VentaSeleccionada != null;
 
         // ── Detalle de la venta (drawer lateral) ─────────────────────────────
@@ -384,10 +384,11 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         private static int? MapFiltroEstado(string? filtro) => filtro switch
         {
-            "Pendiente" => (int)EstadoVentaEnum.Pendiente,
-            "Pagada"    => (int)EstadoVentaEnum.Pagada,
-            "Anulada"   => (int)EstadoVentaEnum.Anulada,
-            _           => null // "Todos" or null → all states
+            "En proceso" => (int)EstadoVentaEnum.EnProceso,
+            "Pendiente"  => (int)EstadoVentaEnum.Pendiente,
+            "Pagada"     => (int)EstadoVentaEnum.Pagada,
+            "Anulada"    => (int)EstadoVentaEnum.Anulada,
+            _            => null // "Todos" or null → all states
         };
 
         public async Task Volver()

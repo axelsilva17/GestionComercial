@@ -4,6 +4,7 @@ namespace GestionComercial.Dominio.Enumeraciones
     {
         Pendiente = 1,
         Pagada = 2,
-        Anulada = 3
+        Anulada = 3,
+        EnProceso = 4
     }
 }

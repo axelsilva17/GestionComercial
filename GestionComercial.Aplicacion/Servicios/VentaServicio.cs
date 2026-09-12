@@ -192,7 +192,7 @@ namespace GestionComercial.Aplicacion.Servicios
             // Obtener la venta recien creada por recientes, si no existe lanzar error
             var ventasRecientes = await _uow.Ventas.ObtenerPorFechaAsync(DateTime.Now.AddDays(-1), DateTime.Now, dto.IdSucursal, ct);
             var ventaResult = ventasRecientes
-                .Where(v => v.Estado == (int)EstadoVentaEnum.Pendiente && v.Id_usuario == dto.IdUsuario)
+                .Where(v => v.Estado == (int)EstadoVentaEnum.EnProceso && v.Id_usuario == dto.IdUsuario)
                 .OrderByDescending(v => v.Fecha)
                 .FirstOrDefault();
 
@@ -268,8 +268,8 @@ namespace GestionComercial.Aplicacion.Servicios
             var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta, ct)
                 ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
 
-            if (venta.Estado != (int)EstadoVentaEnum.Pendiente)
-                throw new VentaInvalidaException("Solo se pueden cobrar ventas pendientes.");
+            if (venta.Estado != (int)EstadoVentaEnum.EnProceso && venta.Estado != (int)EstadoVentaEnum.Pendiente)
+                throw new VentaInvalidaException("Solo se pueden cobrar ventas en proceso o pendientes.");
 
             // Buscar método de pago en efectivo
             var sucursal = await _uow.Sucursales.ObtenerPorIdAsync(venta.Id_sucursal, ct);
@@ -451,6 +451,30 @@ namespace GestionComercial.Aplicacion.Servicios
         public async Task<decimal> ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default)
             => await _uow.Ventas.ObtenerTotalDelDiaAsync(idSucursal, ct);
 
+        ///         /// Marca una venta como pendiente de cobro (intención explícita del usuario).
+        /// Solo permite la transición EnProceso → Pendiente. Si la venta ya es Pendiente
+        /// es idempotente (no-op). Si está Pagada o Anulada, la deja sin cambios.
+        public async Task MarcarPendienteAsync(int idVenta, CancellationToken ct = default)
+        {
+            if (!_sesion.HasPermission("Ventas.Crear"))
+                throw new NegocioException("No tenés permiso para modificar ventas.");
+
+            var venta = await _uow.Ventas.ObtenerConDetallesAsync(idVenta, ct)
+                ?? throw new VentaInvalidaException($"Venta #{idVenta} no encontrada.");
+
+            // Guard: only transition EnProceso → Pendiente.
+            // Pendiente → no-op (idempotent). Pagada/Anulada → silent no-op (do not revert).
+            if (venta.Estado == (int)EstadoVentaEnum.Pendiente)
+                return; // Already pending — nothing to do.
+
+            if (venta.Estado != (int)EstadoVentaEnum.EnProceso)
+                return; // Pagada, Anulada, or unknown — leave unchanged silently.
+
+            venta.MarcarPendiente();
+            _uow.Ventas.Actualizar(venta);
+            await _uow.GuardarCambiosAsync(ct);
+        }
+
         // Individual sales per vendor (no aggregation)
         public async Task<IEnumerable<VentaResumenDto>> ObtenerVentasPorVendedorAsync(
             int idSucursal, int idUsuario, DateTime desde, DateTime hasta, CancellationToken ct = default)
@@ -569,6 +593,7 @@ namespace GestionComercial.Aplicacion.Servicios
             1 => "Pendiente",
             2 => "Pagada",
             3 => "Anulada",
+            4 => "En proceso",
             _ => "Desconocido",
         };
     }

@@ -5,6 +5,7 @@ using GestionComercial.Aplicacion.Servicios;
 using GestionComercial.Dominio.Entidades.Descuento;
 using GestionComercial.Dominio.Entidades.Producto;
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Dominio.Enumeraciones;
 using GestionComercial.Dominio.Interfaces;
 using GestionComercial.Dominio.Interfaces.Repositorios;
 using GestionComercial.Dominio.Interfaces.Servicios;
@@ -644,7 +645,25 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
         public async Task Cancelar()
         {
-            // La venta queda en Pendiente — el operador puede anularla desde el historial
+            // Abandoning the sale: mark as Pendiente so it is recoverable
+            // from the history / "Cobrar Pendiente" shortcut.
+            // If the sale is already Pagada (edge: Cancelar invoked after payment),
+            // leave it untouched. A failure here must NOT navigate — the user
+            // stays on the pay screen so they can retry or investigate.
+            if (_idVenta > 0 && _ventaCompleta != null
+                && _ventaCompleta.Estado == (int)EstadoVentaEnum.EnProceso)
+            {
+                try
+                {
+                    await _ventaServicio.MarcarPendienteAsync(_idVenta);
+                }
+                catch (Exception ex)
+                {
+                    MostrarError($"Error al abandonar la venta: {ex.Message}");
+                    return;
+                }
+            }
+
             await IoC.Get<ShellViewModel>()
                      .ActivateItemAsync(IoC.Get<VentaViewModel>(), CancellationToken.None);
         }
@@ -659,16 +678,30 @@ namespace GestionComercial.UI.ViewModels.Ventas
 
             if (confirmacion != System.Windows.MessageBoxResult.Yes) return;
 
-            // No registrar pago, no marcar pagada, no revertir stock.
-            // La venta ya existe en BD con Estado Pendiente y stock descontado.
-            await IoC.Get<ShellViewModel>()
-                     .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
+            IsLoading = true;
+            LimpiarError();
+            try
+            {
+                // Marcar la venta como Pendiente (el usuario decide que queda pendiente).
+                // La venta existe en BD con Estado EnProceso y stock descontado.
+                await _ventaServicio.MarcarPendienteAsync(_idVenta);
 
-            System.Windows.MessageBox.Show(
-                "Venta guardada como pendiente.",
-                "Información",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+                await IoC.Get<ShellViewModel>()
+                         .ActivateItemAsync(IoC.Get<VentaListadoViewModel>(), CancellationToken.None);
+
+                System.Windows.MessageBox.Show(
+                    "Venta guardada como pendiente.",
+                    "Información",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                var mensaje = $"Error al guardar como pendiente: {ex.Message}";
+                MostrarError(mensaje);
+                System.Windows.MessageBox.Show(mensaje, "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally { IsLoading = false; }
         }
 
         private void RecalcularTotalPagado()

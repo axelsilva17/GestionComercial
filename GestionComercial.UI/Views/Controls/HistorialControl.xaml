@@ -149,6 +149,7 @@
                               SelectedValuePath="Tag"
                               SelectionChanged="EstadoFiltro_SelectionChanged">
                         <ComboBoxItem Content="Todos" Tag="{x:Null}"/>
+                        <ComboBoxItem Content="En proceso" Tag="4"/>
                         <ComboBoxItem Content="Pendiente" Tag="1"/>
                         <ComboBoxItem Content="Pagada" Tag="2"/>
                         <ComboBoxItem Content="Anulada" Tag="3"/>

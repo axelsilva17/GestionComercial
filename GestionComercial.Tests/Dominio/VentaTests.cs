@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GestionComercial.Dominio.Entidades.Pagos;
 using GestionComercial.Dominio.Entidades.Ventas;
+using GestionComercial.Dominio.Enumeraciones;
 using ProdEntity = GestionComercial.Dominio.Entidades.Producto.Producto;
 
 namespace GestionComercial.Tests.Dominio
@@ -20,8 +21,9 @@ namespace GestionComercial.Tests.Dominio
             venta.Id_cliente.Should().Be(2);
             venta.Id_usuario.Should().Be(3);
             venta.Id_caja.Should().Be(5);
-            venta.Estado.Should().Be(1); // Pendiente
-            venta.EsPendiente.Should().BeTrue();
+            venta.Estado.Should().Be(4); // EnProceso
+            venta.EsEnProceso.Should().BeTrue();
+            venta.EsPendiente.Should().BeFalse();
             venta.PuedePagarse.Should().BeFalse(); // Sin detalles
             venta.PuedeModificarse.Should().BeTrue();
             venta.TotalBruto.Should().Be(0);
@@ -191,6 +193,47 @@ namespace GestionComercial.Tests.Dominio
 
             var act = () => venta.MarcarPagada();
             act.Should().Throw<InvalidOperationException>();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // EnProceso: newly created venta starts as EnProceso
+        // ═══════════════════════════════════════════════════════════
+
+        [Fact]
+        public void Crear_VentaNueva_EsEnProceso()
+        {
+            var venta = Venta.Crear(1, 1, 1);
+
+            venta.Estado.Should().Be((int)EstadoVentaEnum.EnProceso);
+            venta.EsEnProceso.Should().BeTrue();
+            venta.EsPendiente.Should().BeFalse();
+        }
+
+        [Fact]
+        public void MarcarPagada_VentaEnProceso_CambiaEstado()
+        {
+            var venta = Venta.Crear(1, 1, 1);
+            venta.AgregarDetalle(CrearDetalle(100m, 50m, 1));
+            venta.EsEnProceso.Should().BeTrue();
+
+            venta.MarcarPagada();
+
+            venta.EsPagada.Should().BeTrue();
+            venta.EsEnProceso.Should().BeFalse();
+            venta.Estado.Should().Be(2); // Pagada
+        }
+
+        [Fact]
+        public void MarcarPendiente_VentaEnProceso_RevierteAEstado()
+        {
+            var venta = Venta.Crear(1, 1, 1);
+            venta.EsEnProceso.Should().BeTrue();
+
+            venta.MarcarPendiente();
+
+            venta.EsPendiente.Should().BeTrue();
+            venta.EsEnProceso.Should().BeFalse();
+            venta.Estado.Should().Be(1); // Pendiente
         }
 
         // ═══════════════════════════════════════════════════════════

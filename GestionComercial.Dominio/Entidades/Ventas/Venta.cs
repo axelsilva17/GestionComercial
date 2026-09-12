@@ -16,7 +16,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         private decimal _totalBruto;
         private decimal _totalDescuento;
         private decimal _totalFinal;
-        private int _estado = 1;  // Pendiente por defecto
+        private int _estado = (int)EstadoVentaEnum.EnProceso;  // EnProceso por defecto
         private string? _observacion;
         private int _id_sucursal;
         private int _id_cliente;
@@ -105,7 +105,7 @@ namespace GestionComercial.Dominio.Entidades.Ventas
                 _id_usuario = idUsuario,
                 _id_caja = idCaja,
                 _fecha = DateTime.Now,
-                _estado = (int)EstadoVentaEnum.Pendiente,
+                _estado = (int)EstadoVentaEnum.EnProceso,
                 FechaAlta = DateTime.Now,
                 Activo = true
             };
@@ -151,10 +151,10 @@ namespace GestionComercial.Dominio.Entidades.Ventas
             _totalFinal = _totalBruto - _totalDescuento;
         }
 
-        ///         /// Marcar como pagada. Solo si está pendiente.
+        ///         /// Marcar como pagada. Solo si está en proceso o pendiente.
         public void MarcarPagada()
         {
-            if (_estado != (int)EstadoVentaEnum.Pendiente)
+            if (_estado != (int)EstadoVentaEnum.EnProceso && _estado != (int)EstadoVentaEnum.Pendiente)
                 throw new InvalidOperationException(
                     $"No se puede pagar. Estado actual: {Estado}");
 
@@ -210,7 +210,8 @@ namespace GestionComercial.Dominio.Entidades.Ventas
         public bool EsPendiente => _estado == (int)EstadoVentaEnum.Pendiente;
         public bool EsPagada => _estado == (int)EstadoVentaEnum.Pagada;
         public bool EsAnulada => _estado == (int)EstadoVentaEnum.Anulada;
-        public bool PuedeModificarse => EsPendiente;
-        public bool PuedePagarse => EsPendiente && Detalles.Any();
+        public bool EsEnProceso => _estado == (int)EstadoVentaEnum.EnProceso;
+        public bool PuedeModificarse => EsPendiente || EsEnProceso;
+        public bool PuedePagarse => (EsPendiente || EsEnProceso) && Detalles.Any();
     }
 }

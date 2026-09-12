@@ -45,6 +45,7 @@ namespace GestionComercial.Tests.Integracion
 
                 // Pendiente
                 var v1 = Venta.Crear(sucursalId, cliente.Id, usuarioId);
+                v1.Estado = (int)EstadoVentaEnum.Pendiente;
                 v1.Fecha = DateTime.Now.AddHours(-3);
                 ctx.Ventas.Add(v1);
                 await ctx.SaveChangesAsync();
@@ -115,6 +116,7 @@ namespace GestionComercial.Tests.Integracion
                 for (int i = 0; i < 2; i++)
                 {
                     var v = Venta.Crear(sucursalId, cliente.Id, usuarioId);
+                    v.Estado = (int)EstadoVentaEnum.Pendiente;
                     v.Fecha = DateTime.Now.AddHours(-10 + i);
                     ctx.Ventas.Add(v);
                 }

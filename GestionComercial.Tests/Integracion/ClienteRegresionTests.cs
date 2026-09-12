@@ -38,7 +38,8 @@ namespace GestionComercial.Tests.Integracion
 
                 var pagada = Venta.Crear(escenario.SucursalId, clienteId, escenario.UsuarioId);
                 pagada.Estado = (int)EstadoVentaEnum.Pagada;
-                var pendiente = Venta.Crear(escenario.SucursalId, clienteId, escenario.UsuarioId); // Pendiente por defecto
+                var pendiente = Venta.Crear(escenario.SucursalId, clienteId, escenario.UsuarioId);
+                pendiente.Estado = (int)EstadoVentaEnum.Pendiente; // Pendiente por decisión del usuario
 
                 setup.Ventas.AddRange(pagada, pendiente);
                 await setup.SaveChangesAsync();

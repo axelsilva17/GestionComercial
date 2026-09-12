@@ -18,6 +18,7 @@ namespace GestionComercial.Aplicacion.Interfaces.Servicios
         Task              RegistrarPagoAsync(int idVenta, List<PagoItemDto> pagos, CancellationToken ct = default);
         Task              CobrarVentaAsync(int idVenta, CancellationToken ct = default);
         Task              CancelarAsync(int id, string motivo, CancellationToken ct = default);
+        Task              MarcarPendienteAsync(int idVenta, CancellationToken ct = default);
         Task<decimal>     ObtenerTotalDelDiaAsync(int idSucursal, CancellationToken ct = default);
 
         // Nuevo: ventas por vendedor (filtrado por Id_usuario en SQL)
