@@ -721,11 +721,6 @@
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Nombre}" FontSize="13" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                        <TextBlock FontSize="10"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0">
-                                                            <Run Text="{Binding CantidadPermisos}"/>
-                                                            <Run Text=" permisos"/>
-                                                        </TextBlock>
                                                     </StackPanel>
                                                     <Button Grid.Column="2" Content="✏️"
                                                             Style="{StaticResource AccionBtn}"
